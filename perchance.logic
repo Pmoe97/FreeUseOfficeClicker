@@ -1,0 +1,10 @@
+kv = {import:kv-plugin}
+generateText = {import:ai-text-plugin}
+
+// Note: Text that comes after "//" is ignored, which allows
+// you to write notes - like the one you're reading now!
+
+title
+  Free-Use Office Clicker
+
+

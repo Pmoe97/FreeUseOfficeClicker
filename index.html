@@ -1,0 +1,1738 @@
+<!-- Top Bar -->
+<div id="topBar" style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#1a1a2e; color:white;">
+  <div style="display:flex; gap:20px;">
+    <div>Cash: $<span id="cashEl">0</span></div>
+    <div>$/sec: $<span id="cashPerSecEl">0</span></div>
+    <div>Employees: <span id="employeeCountEl">0</span></div>
+    <div>Products: <span id="productCountEl">0</span></div>
+  </div>
+  <button id="settingsBtn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">⚙️</button>
+</div>
+
+<!-- News Ticker -->
+<div id="newsTicker" style="background:#0f3460; color:#e94560; padding:8px 20px; white-space:nowrap; overflow:hidden; font-size:0.9rem;">
+  <span id="newsContent">Welcome to your new business venture! Start clicking products to earn cash.</span>
+</div>
+
+<!-- Tab Navigation -->
+<div id="tabNav" style="display:flex; background:#16213e; padding:0; overflow-x:auto;">
+  <button class="tab-btn active" data-tab="dashboard" style="padding:15px 20px; background:transparent; border:none; color:#e94560; cursor:pointer; font-weight:bold;">Dashboard</button>
+  <button class="tab-btn" data-tab="business" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Business</button>
+  <button class="tab-btn" data-tab="people" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">People</button>
+  <button class="tab-btn" data-tab="social" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Social</button>
+  <button class="tab-btn" data-tab="gifts" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Gifts</button>
+  <button class="tab-btn" data-tab="hr" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">HR</button>
+  <button class="tab-btn" data-tab="invest" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Invest</button>
+</div>
+
+<!-- Main Content Area -->
+<div id="mainContent" style="padding:20px; background:#0f1419; min-height:calc(100vh - 140px); color:white;">
+  
+  <!-- Dashboard Tab -->
+  <div id="dashboardTab" class="tab-content active">
+    <h2 style="margin-top:0;">Business Overview</h2>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin-top:20px;">
+      <div class="card" style="background:#16213e; border-radius:10px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+        <h3>Revenue</h3>
+        <p style="font-size:2rem; margin:10px 0;">$<span id="revenueEl">0</span></p>
+        <p style="color:#aaa;">Total earnings</p>
+      </div>
+      <div class="card" style="background:#16213e; border-radius:10px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+        <h3>Employees</h3>
+        <p style="font-size:2rem; margin:10px 0;"><span id="employeeCountDashboardEl">0</span></p>
+        <p style="color:#aaa;">Team members</p>
+      </div>
+      <div class="card" style="background:#16213e; border-radius:10px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+        <h3>Products</h3>
+        <p style="font-size:2rem; margin:10px 0;"><span id="productCountDashboardEl">0</span></p>
+        <p style="color:#aaa;">Active products</p>
+      </div>
+      <div class="card" style="background:#16213e; border-radius:10px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+        <h3>Efficiency</h3>
+        <p style="font-size:2rem; margin:10px 0;"><span id="efficiencyEl">100</span>%</p>
+        <p style="color:#aaa;">Team productivity</p>
+      </div>
+    </div>
+    
+    <h3 style="margin-top:30px;">Recent News</h3>
+    <div id="newsFeed" style="margin-top:15px; max-height:300px; overflow-y:auto;">
+      <!-- News items will be populated here -->
+    </div>
+  </div>
+  
+  <!-- Business Tab -->
+  <div id="businessTab" class="tab-content" hidden>
+    <h2 style="margin-top:0;">Business Operations</h2>
+    
+    <div style="margin-top:20px;">
+      <h3>Locations</h3>
+      <div id="locationsList" style="display:flex; gap:15px; margin-top:10px; overflow-x:auto; padding-bottom:10px;">
+        <!-- Location cards will be populated here -->
+      </div>
+    </div>
+    
+    <div style="margin-top:30px;">
+      <h3>Products</h3>
+      <div id="productsList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px; margin-top:10px;">
+        <!-- Product cards will be populated here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- People Tab -->
+  <div id="peopleTab" class="tab-content" hidden>
+    <h2 style="margin-top:0;">Team Management</h2>
+    
+    <div style="margin-top:20px;">
+      <h3>Employees</h3>
+      <div id="employeesList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:15px; margin-top:10px;">
+        <!-- Employee cards will be populated here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Social Tab -->
+  <div id="socialTab" class="tab-content" hidden>
+    <h2 style="margin-top:0;">Social Hub</h2>
+    <p style="margin-top:20px; color:#aaa;">Social features coming soon...</p>
+  </div>
+  
+  <!-- Gifts Tab -->
+  <div id="giftsTab" class="tab-content" hidden>
+    <h2 style="margin-top:0;">Gift Catalog</h2>
+    <div id="giftsList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px; margin-top:20px;">
+      <!-- Gift items will be populated here -->
+    </div>
+  </div>
+  
+  <!-- HR Tab -->
+  <div id="hrTab" class="tab-content" hidden>
+    <h2 style="margin-top:0;">HR Policies</h2>
+    
+    <div style="margin-top:20px;">
+      <h3>Workplace Policies</h3>
+      <div style="background:#16213e; border-radius:10px; padding:20px; margin-top:10px;">
+        <div style="margin-bottom:15px;">
+          <label>Office Atmosphere: <span id="atmosphereValue">Balanced</span></label>
+          <input type="range" id="atmosphereSlider" min="0" max="100" value="50" style="width:100%; margin-top:5px;">
+        </div>
+        <div style="margin-bottom:15px;">
+          <label>Interaction Guidelines: <span id="guidelinesValue">Standard</span></label>
+          <input type="range" id="guidelinesSlider" min="0" max="100" value="50" style="width:100%; margin-top:5px;">
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top:30px;">
+      <h3>Consent Settings</h3>
+      <div style="background:#16213e; border-radius:10px; padding:20px; margin-top:10px;">
+        <p style="color:#aaa; margin-bottom:15px;">Manage workplace interaction preferences</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="policy-btn" data-policy="casual" style="padding:8px 15px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer;">Casual</button>
+          <button class="policy-btn" data-policy="professional" style="padding:8px 15px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer;">Professional</button>
+          <button class="policy-btn" data-policy="open" style="padding:8px 15px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer;">Open</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Invest Tab -->
+  <div id="investTab" class="tab-content" hidden>
+    <h2 style="margin-top:0;">Investment & Prestige</h2>
+    <p style="margin-top:20px; color:#aaa;">Prestige system coming soon...</p>
+  </div>
+</div>
+
+<!-- Settings Panel -->
+<div id="settingsPanel" class="settings-panel" hidden style="position:fixed; top:0; right:0; width:350px; height:100%; background:#16213e; color:white; z-index:1000; box-shadow:-5px 0 15px rgba(0,0,0,0.5); overflow-y:auto;">
+  <div style="padding:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="margin:0;">Settings</h2>
+      <button id="closeSettingsBtn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <div style="margin-bottom:20px;">
+      <h3>Game Preferences</h3>
+      <div style="background:#0f3460; border-radius:10px; padding:15px; margin-top:10px;">
+        <div style="margin-bottom:15px;">
+          <label>Strictness Level: <span id="strictnessValue">50%</span></label>
+          <input type="range" id="strictnessSlider" min="0" max="100" value="50" style="width:100%; margin-top:5px;">
+        </div>
+        <div style="margin-bottom:15px;">
+          <label>UI Density: <span id="densityValue">Normal</span></label>
+          <input type="range" id="densitySlider" min="0" max="100" value="50" style="width:100%; margin-top:5px;">
+        </div>
+        <div style="margin-bottom:15px;">
+          <label style="display:flex; align-items:center; gap:10px;">
+            <input type="checkbox" id="autosaveToggle" checked style="width:18px; height:18px;">
+            <span>Autosave</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:20px;">
+      <h3>Data Management</h3>
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button id="saveBtn" style="flex:1; padding:10px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer;">Save Game</button>
+        <button id="loadBtn" style="flex:1; padding:10px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer;">Load Game</button>
+      </div>
+      <button id="exportBtn" style="width:100%; padding:10px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer; margin-top:10px;">Export Save Data</button>
+      <button id="resetBtn" style="width:100%; padding:10px; background:#533483; border:none; border-radius:5px; color:white; cursor:pointer; margin-top:10px;">Reset Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Modal -->
+<div id="chatModal" class="modal" hidden style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; display:flex; justify-content:center; align-items:center;">
+  <div style="background:#16213e; width:90%; max-width:500px; height:80%; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column;">
+    <div style="padding:15px; border-bottom:1px solid #0f3460; display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img id="chatAvatar" src="" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+        <div>
+          <h3 id="chatName" style="margin:0;"></h3>
+          <p id="chatStatus" style="margin:0; font-size:0.8rem; color:#aaa;">Online</p>
+        </div>
+      </div>
+      <button id="closeChatBtn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <div id="chatMessages" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+      <!-- Chat messages will appear here -->
+    </div>
+    
+    <div style="padding:15px; border-top:1px solid #0f3460; display:flex; gap:10px;">
+      <button id="chatAttachBtn" style="padding:8px 12px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer;">+</button>
+      <input id="chatInput" type="text" placeholder="Type a message..." style="flex:1; padding:10px; background:#0f1419; border:none; border-radius:5px; color:white;">
+      <button id="chatSendBtn" style="padding:8px 15px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer;">Send</button>
+    </div>
+    
+    <div id="chatTypingIndicator" style="padding:10px 15px; color:#aaa; font-style:italic; display:none;">
+      <span id="chatTypingName"></span> is typing...
+    </div>
+  </div>
+</div>
+
+<script>
+  // Game Constants
+  const GAME_TICK_INTERVAL = 100; // ms
+  const INITIAL_CASH = 100;
+  const NEWS_UPDATE_INTERVAL = 30000; // ms
+  
+  // ----- PRODUCT HELPERS -----
+  function getManagerSpeedMultiplier(p) {
+    // 12% per level, curved, capped at managerSpeedCapPct
+    const raw = 1 - Math.pow(1 / (1 + 0.12 * p.managerLevel), 0.85); // fraction faster
+    const capped = Math.min(raw, p.managerSpeedCapPct);
+    return 1 - capped; // multiplier applied to baseTimeMs
+  }
+
+  function currentCycleTimeMs(p) {
+    return Math.max(500, Math.floor(p.baseTimeMs * getManagerSpeedMultiplier(p)));
+  }
+
+  function currentValue(p) {
+    // valuePerUnit grows by (1 + valuePerUpgrade) ^ level
+    return +(p.valuePerUnit * Math.pow(1 + p.valuePerUpgrade, p.level)).toFixed(2);
+  }
+
+  function clickReductionMs(p) {
+    // later you can add global upgrades here
+    const perClickSeconds = p.clickSecondsBase + (gameState.playerUpgrades?.clickPower || 0);
+    return perClickSeconds * 1000;
+  }
+
+  // Game State
+  let gameState = {
+    cash: INITIAL_CASH,
+    playerUpgrades: { clickPower: 0 }, // each +1 = +1s per click
+    totalEarnings: 0,
+    onboarding: [], // tracks employees being onboarded
+    locations: [
+      {
+        id: 'garage',
+        name: 'Garage',
+        cost: 0,
+        owned: true,
+        products: []
+      }
+    ],
+    products: [
+      {
+        id: 'website',
+        name: 'Website Development',
+        locationId: 'garage',
+        // economy
+        valuePerUnit: 3,          // $ earned per completed cycle
+        level: 0,                 // product upgrade level
+        upgradeCost: 50,          // cost to raise valuePerUnit
+        valuePerUpgrade: 0.20,    // +20% per upgrade
+        // timing
+        baseTimeMs: 6000,         // 6s cycle base
+        running: false,
+        timeRemainingMs: 0,
+        // clicking
+        clickSecondsBase: 1,      // each click removes 1 second by default
+        // manager
+        managerHired: false,
+        managerLevel: 0,
+        managerHireCost: 500,
+        managerUpgradeCost: 250,
+        // caps
+        managerSpeedCapPct: 0.50  // at most 50% faster (i.e., half the time)
+      },
+      {
+        id: 'app',
+        name: 'Mobile App',
+        locationId: 'garage',
+        valuePerUnit: 9, level: 0, upgradeCost: 150, valuePerUpgrade: 0.20,
+        baseTimeMs: 10000, running:false, timeRemainingMs:0,
+        clickSecondsBase: 1,
+        managerHired:false, managerLevel:0, managerHireCost:1500, managerUpgradeCost:750,
+        managerSpeedCapPct:0.50
+      },
+      {
+        id: 'consulting',
+        name: 'IT Consulting',
+        locationId: 'garage',
+        valuePerUnit: 18, level: 0, upgradeCost: 300, valuePerUpgrade: 0.20,
+        baseTimeMs: 14000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:3000, managerUpgradeCost:1500,
+        managerSpeedCapPct:0.50
+      },
+      {
+        id: 'cloud',
+        name: 'Cloud Services',
+        locationId: 'garage',
+        valuePerUnit: 32, level: 0, upgradeCost: 500, valuePerUpgrade: 0.20,
+        baseTimeMs: 20000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:5000, managerUpgradeCost:2500,
+        managerSpeedCapPct:0.50
+      }
+    ],
+    employees: [],
+    gifts: [
+      { id: 'coffee', name: 'Coffee', cost: 10, effect: { productivity: 5 }, description: 'Boosts productivity' },
+      { id: 'giftcard', name: 'Gift Card', cost: 50, effect: { affection: 10 }, description: 'Increases affection' },
+      { id: 'lunch', name: 'Lunch', cost: 30, effect: { comfort: 15 }, description: 'Improves comfort' },
+      { id: 'bonus', name: 'Cash Bonus', cost: 100, effect: { desire: 20 }, description: 'Raises desire' }
+    ],
+    news: [
+      "Tech startup raises $1M in seed funding",
+      "New productivity app trends in office spaces",
+      "Remote work policies reshape company cultures",
+      "AI integration boosts efficiency across industries"
+    ],
+    settings: {
+      autosave: true,
+      strictness: 50,
+      uiDensity: 50,
+      atmosphere: 50,
+      guidelines: 50,
+      policy: 'professional'
+    },
+    activeTab: 'dashboard',
+    activeChat: null,
+    chatHistory: {}
+  };
+
+  // Helper function to get DOM elements safely
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  // Get all DOM element references
+  const settingsBtn = $('settingsBtn');
+  const closeSettingsBtn = $('closeSettingsBtn');
+  const strictnessSlider = $('strictnessSlider');
+  const strictnessValue = $('strictnessValue');
+  const densitySlider = $('densitySlider');
+  const densityValue = $('densityValue');
+  const autosaveToggle = $('autosaveToggle');
+  const atmosphereSlider = $('atmosphereSlider');
+  const atmosphereValue = $('atmosphereValue');
+  const guidelinesSlider = $('guidelinesSlider');
+  const guidelinesValue = $('guidelinesValue');
+  const saveBtn = $('saveBtn');
+  const loadBtn = $('loadBtn');
+  const exportBtn = $('exportBtn');
+  const resetBtn = $('resetBtn');
+
+  const cashEl = $('cashEl');
+  const cashPerSecEl = $('cashPerSecEl');
+  const employeeCountEl = $('employeeCountEl');
+  const productCountEl = $('productCountEl');
+  const revenueEl = $('revenueEl');
+  const employeeCountDashboardEl = $('employeeCountDashboardEl');
+  const productCountDashboardEl = $('productCountDashboardEl');
+  const efficiencyEl = $('efficiencyEl');
+
+  const locationsList = $('locationsList');
+  const productsList = $('productsList');
+  const employeesList = $('employeesList');
+  const giftsList = $('giftsList');
+
+  const newsFeed = $('newsFeed');
+  const newsContent = $('newsContent');
+
+  const settingsPanel = $('settingsPanel');
+
+  const chatModal = $('chatModal');
+  const chatName = $('chatName');
+  const chatAvatar = $('chatAvatar');
+  const chatMessages = $('chatMessages');
+  const chatTypingIndicator = $('chatTypingIndicator');
+  const chatTypingName = $('chatTypingName');
+  const chatInput = $('chatInput');
+  const chatSendBtn = $('chatSendBtn');
+  const closeChatBtn = $('closeChatBtn');
+  const topBar = $('topBar'); // add near other DOM refs
+
+
+  // Initialize game
+  function initGame() {
+    try {
+      // Ensure all DOM elements are loaded before proceeding
+      if (!topBar) {
+        console.error('DOM elements not loaded yet');
+        setTimeout(initGame, 100);
+        return;
+      }
+
+      // Handle external plugin dependencies
+      if (typeof generateText === 'undefined') {
+        console.warn('AI text plugin not loaded - chat features will be limited');
+        window.generateText = async (prompt) => "I'm having trouble responding right now.";
+      }
+
+      // Ensure onboarding array exists
+      if (!gameState.onboarding) {
+        gameState.onboarding = [];
+      }
+
+      // Ensure employees array exists
+      if (!Array.isArray(gameState.employees)) {
+        gameState.employees = [];
+      }
+
+      // Load saved game if exists
+      loadGame();
+
+      // Set up UI
+      setupEventListeners();
+      updateUI();
+
+      // Set up autosave
+      setupAutosave();
+    } catch (error) {
+      console.error('Error initializing game:', error);
+      showNotification('Failed to initialize game. Please refresh the page.');
+    }
+
+    // Add event delegation for product buttons once
+    if (!window.__productsDelegationBound__) {
+      if (productsList) {
+        productsList.addEventListener('click', (e) => {
+          const btn = e.target.closest('button');
+          if (!btn) return;
+          const id = btn.dataset.id;
+          if (!id) return;
+
+          if (btn.classList.contains('sell-btn')) {
+            startOrClickProduct(id);
+            // instant label feedback
+            const p = gameState.products.find(x => x.id === id);
+            const sellTxt = $(`selltxt-${id}`);
+            if (sellTxt) sellTxt.textContent = p?.running ? 'Click: -1s' : 'Sell';
+            return;
+          }
+          if (btn.classList.contains('upgrade-product-btn')) return upgradeProduct(id);
+          if (btn.classList.contains('manager-btn')) return hireOrUpgradeManager(id);
+        });
+        window.__productsDelegationBound__ = true;
+      }
+    }
+
+    // Start game loop
+    setInterval(gameTick, GAME_TICK_INTERVAL);
+
+    // Start news updates
+    setInterval(updateNews, NEWS_UPDATE_INTERVAL);
+  }
+
+  // Generate a pool of potential hires
+    function generatePotentialHires(productId) {
+    const firstNames = ['Alex','Sam','Jordan','Taylor','Casey','Morgan','Riley','Avery','Eva','Maya','Lena','Zoe','Mia','Chloe','Aria'];
+    const lastNames  = ['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Lopez','Martinez','Lee','Clark','Young','Hall'];
+    const personalities = ['Playful','Reserved','Confident','Witty','Thoughtful','Cheeky','Dry-humored','Warm','Ambitious','Chill'];
+    const traits = ['Charismatic','Analytical','Creative','Detail-oriented','Adaptable','Empathetic','Organized','Bold'];
+    const hobbies = ['Reading','Photography','Hiking','Gaming','Cooking','Traveling','Music','Art','Yoga','Dancing','Climbing','Baking','Thrifting'];
+    const kinks = ['Roleplay','Bondage','Exhibitionism','Voyeurism','Dom/sub','Praise','Teasing','Spanking','Light impact','Dirty talk'];
+    const ages = [22,23,24,25,26,27,28,29,30,31,32];
+
+    const pickSome = (arr, min, max) => {
+        const n = Math.max(min, Math.min(max, Math.floor(Math.random()*(max-min+1))+min));
+        const out = new Set();
+        while(out.size < n) out.add(arr[Math.floor(Math.random()*arr.length)]);
+        return [...out];
+    };
+
+    const candidates = [];
+    for (let i = 0; i < 3; i++) {
+        const cand = {
+        id: `emp_${Date.now()}_${i}`,
+        name: `${firstNames[Math.floor(Math.random()*firstNames.length)]} ${lastNames[Math.floor(Math.random()*lastNames.length)]}`,
+        age: ages[Math.floor(Math.random()*ages.length)],
+        position: 'Manager Candidate',
+        productId,
+        // personality & interests
+        personalityTraits: pickSome(personalities, 3, 5),
+        keyTrait: traits[Math.floor(Math.random()*traits.length)],
+        hobbies: pickSome(hobbies, 1, 2),
+        kinks: pickSome(kinks, 2, 4),
+        // stats (new names)
+        stats: {
+            efficiency: 50 + Math.floor(Math.random()*30), // job performance
+            comfort:    40 + Math.floor(Math.random()*30), // how friendly talking to you
+            love:       20 + Math.floor(Math.random()*25), // romantic inclination
+            anger:      10 + Math.floor(Math.random()*20), // higher = touchier/irritable
+        },
+        // onboarding + bio fields
+        hired: false,
+        onboarding: true,
+        bioComplete: false,
+        productManaged: null,
+        physical: {
+            heightBuild: null,
+            hair: { color: null, style: null, length: null },
+            eyes: { color: null, shape: null },
+            skinTone: null,
+            bodyShape: null,
+            breastSize: null,
+            buttSize: null,
+            fashion: null
+        },
+        profileImage: null,
+        bio: null
+        };
+        candidates.push(cand);
+    }
+    return candidates;
+    }
+
+  // Handle manager hiring UI
+  function showManagerHiringModal(productId) {
+    const candidates = generatePotentialHires(productId);
+    const product = gameState.products.find(p => p.id === productId);
+
+    const modal = document.createElement('div');
+    modal.id = 'hiringModal';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:3000; display:flex; justify-content:center; align-items:center;';
+
+    const cards = candidates.map((c, i) => `
+        <div class="candidate-card" style="background:#16213e; border-radius:10px; padding:16px; margin:10px; width:300px;">
+        <h3 style="margin:0 0 4px 0;">${c.name} ${c.age ? `• ${c.age}` : ''}</h3>
+        <p style="margin:0; color:#aaa;">Key trait: ${c.keyTrait}</p>
+        <p style="margin:6px 0 0 0; font-size:.9rem;">Personality: ${c.personalityTraits.join(', ')}</p>
+        <p style="margin:6px 0 10px 0; color:#aaa; font-size:.9rem;">Hobbies: ${c.hobbies.join(', ')}</p>
+
+        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-bottom:12px;">
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Efficiency</div>
+            <div>${c.stats.efficiency}%</div>
+            </div>
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Comfort</div>
+            <div>${c.stats.comfort}%</div>
+            </div>
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Love</div>
+            <div>${c.stats.love}%</div>
+            </div>
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Anger</div>
+            <div>${c.stats.anger}%</div>
+            </div>
+        </div>
+
+        <button class="select-candidate-btn" data-index="${i}" style="width:100%; padding:10px; background:#e94560; border:none; border-radius:6px; color:#fff; cursor:pointer;">
+            Select ${c.name}
+        </button>
+        </div>
+    `).join('');
+
+    modal.innerHTML = `
+        <div style="background:#0f1419; width:92%; max-width:1000px; padding:18px; border-radius:14px; box-shadow:0 5px 25px rgba(0,0,0,0.5);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0;">Select a Manager for ${product.name}</h2>
+            <button class="close-modal-btn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+        </div>
+        <div style="display:flex; justify-content:center; flex-wrap:wrap;">
+            ${cards}
+        </div>
+        <p style="margin-top:12px; color:#aaa; font-size:.9rem;">You’ll be charged <strong>${product.managerHireCost}</strong> when you choose a candidate.</p>
+        </div>
+    `;
+
+    modal.addEventListener('click', (e) => {
+        if (e.target.classList.contains('close-modal-btn') || e.target === modal) closeHiringModal();
+        if (e.target.classList.contains('select-candidate-btn')) {
+        const index = parseInt(e.target.dataset.index, 10);
+        selectManagerCandidate(index);
+        }
+    });
+    document.body.appendChild(modal);
+    gameState.currentCandidates = candidates;
+
+    // Allow Esc to close
+    const esc = (ev) => { if (ev.key === 'Escape') { closeHiringModal(); window.removeEventListener('keydown', esc); } };
+    window.addEventListener('keydown', esc);
+  }  
+
+
+  // Close hiring modal
+  function closeHiringModal() {
+    const modal = $('hiringModal');
+    if (modal) {
+      modal.remove();
+      gameState.currentCandidates = null;
+    }
+  }
+
+  // Select and onboard a manager candidate
+    async function selectManagerCandidate(index) {
+    const candidate = gameState.currentCandidates?.[index];
+    const product = gameState.products.find(p => p.id === candidate?.productId);
+    if (!candidate || !product) return;
+
+    // funds check happens before modal in hireOrUpgradeManager, but double-guard:
+    if (gameState.cash < product.managerHireCost) { showNotification('Not enough cash!'); return; }
+
+    // mark & queue onboarding
+    candidate.hired = true;
+    candidate.position = `Manager – ${product.name}`;
+    candidate.productManaged = product.name;
+    candidate.onboarding = true;
+    candidate.bioComplete = false;
+
+    // show in People tab as a badge
+    gameState.onboarding.push(candidate);
+    closeHiringModal();
+    updatePeopleTab();
+
+    // --- AI generation (guarded) ---
+    try {
+        const profilePrompt = `
+    Create an in-world, adult NPC profile (no meta-talk) for: ${candidate.name}, age ${candidate.age}.
+    Role: ${candidate.position}. Product managed: ${product.name}.
+    Personality traits: ${candidate.personalityTraits.join(', ')}. Key trait: ${candidate.keyTrait}.
+    Hobbies: ${candidate.hobbies.join(', ')}. Kink preferences: ${candidate.kinks.join(', ')}.
+
+    Respond as a compact JSON object with these keys ONLY:
+    {
+    "name": {"first":"", "last":""},
+    "age": <number>,
+    "productManaged": "${product.name}",
+    "bio": "<2-3 sentence personality/background, world-grounded>",
+    "appearance": {
+    "heightBuild": "",
+    "hair": {"color":"","style":"","length":""},
+    "eyes": {"color":"","shape":""},
+    "skinTone": "",
+    "bodyShape": "",
+    "breastSize": "",
+    "buttSize": "",
+    "fashion": ""
+    },
+    "personalityTraits": [${candidate.personalityTraits.map(s=>`"${s}"`).join(', ')}],
+    "kinks": [${candidate.kinks.map(s=>`"${s}"`).join(', ')}]
+    }
+    `;
+
+        // fallbacks if plugin missing
+        const aiRaw = typeof generateText === 'function'
+        ? await generateText(profilePrompt)
+        : `{"name":{"first":"${candidate.name.split(' ')[0]}","last":"${candidate.name.split(' ')[1]||''}"},"age":${candidate.age},"productManaged":"${product.name}","bio":"Quick learner; keeps launches smooth.","appearance":{"heightBuild":"average","hair":{"color":"brown","style":"soft waves","length":"shoulder"},"eyes":{"color":"green","shape":"almond"},"skinTone":"light","bodyShape":"curvy","breastSize":"medium","buttSize":"full","fashion":"smart casual"},"personalityTraits":["${candidate.personalityTraits.join('","')}"],"kinks":["${candidate.kinks.join('","')}"]}`;
+
+        let parsed;
+        try { parsed = JSON.parse(aiRaw); } catch { parsed = null; }
+
+        if (parsed && parsed.name) {
+        candidate.name = `${parsed.name.first} ${parsed.name.last}`.trim() || candidate.name;
+        candidate.age = parsed.age ?? candidate.age;
+        candidate.productManaged = parsed.productManaged || product.name;
+        candidate.bio = parsed.bio || "Keeps things moving; loves clean launches.";
+        const ap = parsed.appearance || {};
+        candidate.physical.heightBuild = ap.heightBuild || "average";
+        candidate.physical.hair = ap.hair || candidate.physical.hair;
+        candidate.physical.eyes = ap.eyes || candidate.physical.eyes;
+        candidate.physical.skinTone = ap.skinTone || candidate.physical.skinTone;
+        candidate.physical.bodyShape = ap.bodyShape || candidate.physical.bodyShape;
+        candidate.physical.breastSize = ap.breastSize || candidate.physical.breastSize;
+        candidate.physical.buttSize = ap.buttSize || candidate.physical.buttSize;
+        candidate.physical.fashion = ap.fashion || candidate.physical.fashion;
+        candidate.personalityTraits = parsed.personalityTraits || candidate.personalityTraits;
+        candidate.kinks = parsed.kinks || candidate.kinks;
+        } else {
+        // minimal fallback
+        candidate.bio = "Quick learner; keeps launches smooth. Friendly and playful in the office.";
+        }
+
+        // optional image
+        if (typeof generateImage === 'function') {
+        const imgPrompt = `
+    Portrait, ${candidate.name}, adult, office context. ${candidate.physical?.heightBuild || 'fit'} build.
+    Hair: ${candidate.physical?.hair?.color || 'brown'}, ${candidate.physical?.hair?.style || 'wavy'}, ${candidate.physical?.hair?.length || 'shoulder-length'}.
+    Eyes: ${candidate.physical?.eyes?.color || 'green'} ${candidate.physical?.eyes?.shape || ''}. Skin: ${candidate.physical?.skinTone || 'light'}.
+    Body: ${candidate.physical?.bodyShape || 'curvy'}, bust ${candidate.physical?.breastSize || 'medium'}, hips ${candidate.physical?.buttSize || 'full'}.
+    Outfit: ${candidate.physical?.fashion || 'smart casual'}. Photoreal, soft light.
+    `;
+        try {
+            const imgUrl = await generateImage({ prompt: imgPrompt });
+            if (imgUrl) candidate.profileImage = imgUrl;
+        } catch (e) { /* ignore */ }
+        }
+
+        // move from onboarding → employees
+        candidate.onboarding = false;
+        candidate.bioComplete = true;
+        gameState.onboarding = gameState.onboarding.filter(e => e.id !== candidate.id);
+        gameState.employees.push(candidate);
+
+        // mark manager on product + pay cost
+        product.managerHired = true;
+        product.managerLevel = 1;
+        gameState.cash -= product.managerHireCost;
+
+        // UI
+        updatePeopleTab();
+        updateProductsList();
+        showNotification(`${candidate.name} hired to manage ${product.name}!`);
+
+    } catch (error) {
+        console.error('Onboarding error:', error);
+        showNotification('Onboarding hit a snag—try again.');
+        // clean up onboarding badge
+        gameState.onboarding = gameState.onboarding.filter(e => e.id !== candidate.id);
+    }
+    }
+
+  // Setup event listeners
+  function setupEventListeners() {
+    // Tab navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        switchTab(tab);
+      });
+    });
+    
+    // Settings panel
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => {
+        if (settingsPanel) settingsPanel.hidden = false;
+      });
+    }
+    
+    if (closeSettingsBtn) {
+      closeSettingsBtn.addEventListener('click', () => {
+        if (settingsPanel) settingsPanel.hidden = true;
+      });
+    }
+    
+    // Settings controls
+    if (strictnessSlider && strictnessValue) {
+      strictnessSlider.addEventListener('input', (e) => {
+        gameState.settings.strictness = parseInt(e.target.value);
+        strictnessValue.textContent = `${e.target.value}%`;
+      });
+    }
+    
+    if (densitySlider && densityValue) {
+      densitySlider.addEventListener('input', (e) => {
+        gameState.settings.uiDensity = parseInt(e.target.value);
+        const densityLabels = ['Compact', 'Normal', 'Spacious'];
+        const label = densityLabels[Math.floor(e.target.value / 34)];
+        densityValue.textContent = label;
+      });
+    }
+    
+    if (autosaveToggle) {
+      autosaveToggle.addEventListener('change', (e) => {
+        gameState.settings.autosave = e.target.checked;
+      });
+    }
+    
+    if (atmosphereSlider && atmosphereValue) {
+      atmosphereSlider.addEventListener('input', (e) => {
+        gameState.settings.atmosphere = parseInt(e.target.value);
+        const atmosphereLabels = ['Strict', 'Balanced', 'Relaxed'];
+        const label = atmosphereLabels[Math.floor(e.target.value / 34)];
+        atmosphereValue.textContent = label;
+      });
+    }
+    
+    if (guidelinesSlider && guidelinesValue) {
+      guidelinesSlider.addEventListener('input', (e) => {
+        gameState.settings.guidelines = parseInt(e.target.value);
+        const guidelinesLabels = ['Formal', 'Standard', 'Casual'];
+        const label = guidelinesLabels[Math.floor(e.target.value / 34)];
+        guidelinesValue.textContent = label;
+      });
+    }
+    
+    // Policy buttons
+    document.querySelectorAll('.policy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        gameState.settings.policy = btn.dataset.policy;
+        document.querySelectorAll('.policy-btn').forEach(b => {
+          b.style.background = '#0f3460';
+        });
+        btn.style.background = '#e94560';
+      });
+    });
+    
+    // Data management
+    if (saveBtn) saveBtn.addEventListener('click', saveGame);
+    if (loadBtn) loadBtn.addEventListener('click', loadGame);
+    if (exportBtn) exportBtn.addEventListener('click', exportSave);
+    if (resetBtn) resetBtn.addEventListener('click', resetGame);
+    
+    // Chat modal
+    if (closeChatBtn) {
+      closeChatBtn.addEventListener('click', () => {
+        if (chatModal) {
+          chatModal.hidden = true;
+          gameState.activeChat = null;
+        }
+      });
+    }
+    
+    if (chatSendBtn) {
+      chatSendBtn.addEventListener('click', sendChatMessage);
+    }
+    
+    if (chatInput) {
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendChatMessage();
+      });
+    }
+  }
+  
+  // Switch active tab
+  function switchTab(tabName) {
+    gameState.activeTab = tabName;
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      if (btn.dataset.tab === tabName) {
+        btn.classList.add('active');
+        btn.style.color = '#e94560';
+      } else {
+        btn.classList.remove('active');
+        btn.style.color = 'white';
+      }
+    });
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.hidden = true;
+    });
+    
+    const activeTab = $(`${tabName}Tab`);
+    if (activeTab) {
+      activeTab.hidden = false;
+      updateTabContent(tabName);
+    }
+  }
+  
+  // Update content for specific tab
+  function updateTabContent(tabName) {
+    switch (tabName) {
+      case 'dashboard':
+        updateDashboard();
+        break;
+      case 'business':
+        updateBusinessTab();
+        break;
+      case 'people':
+        updatePeopleTab();
+        break;
+      case 'gifts':
+        updateGiftsTab();
+        break;
+      case 'hr':
+        updateHRTab();
+        break;
+    }
+  }
+    // Update Dashboard Tab
+    function updateDashboard() {
+    // cache elements locally (safe for type="module")
+    const revenueEl = $('revenueEl');
+    const employeeCountDashboardEl = $('employeeCountDashboardEl');
+    const productCountDashboardEl  = $('productCountDashboardEl');
+    const efficiencyEl             = $('efficiencyEl');
+
+    // totals
+    if (revenueEl) revenueEl.textContent = Math.floor(gameState.totalEarnings);
+    if (employeeCountDashboardEl) employeeCountDashboardEl.textContent = gameState.employees.length;
+
+    // "active products" = currently running OR has a manager (automated)
+    const activeProducts = gameState.products.filter(p => p.running || p.managerHired).length;
+    if (productCountDashboardEl) productCountDashboardEl.textContent = activeProducts;
+
+    // efficiency (avg efficiency % across employees)
+    const totalEff = gameState.employees.reduce((sum, emp) => sum + (emp.stats?.efficiency ?? 0), 0);
+    const maxEff   = gameState.employees.length * 100;
+    const effPct   = maxEff > 0 ? Math.max(0, Math.min(100, Math.floor((totalEff / maxEff) * 100))) : 100;
+    if (efficiencyEl) efficiencyEl.textContent = effPct;
+
+    // news list on dashboard
+    updateNewsFeed();
+    }
+
+  
+  // Update Business Tab
+  function updateBusinessTab() {
+    // Update locations
+    if (locationsList) {
+      locationsList.innerHTML = '';
+      gameState.locations.forEach(location => {
+        const locationCard = document.createElement('div');
+        locationCard.className = 'location-card';
+        locationCard.style.cssText = 'background:#16213e; border-radius:10px; padding:15px; min-width:200px; box-shadow:0 4px 10px rgba(0,0,0,0.2);';
+        
+        locationCard.innerHTML = `
+          <h3 style="margin-top:0;">${location.name}</h3>
+          <p style="color:#aaa; margin:5px 0;">${location.owned ? 'Owned' : `Cost: ${location.cost}`}</p>
+          ${!location.owned ? `<button class="buy-location-btn" data-location="${location.id}" style="margin-top:10px; padding:8px 15px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer;">Purchase</button>` : ''}
+        `;
+        
+        locationsList.appendChild(locationCard);
+      });
+      
+      // Add event listeners for location purchase
+      document.querySelectorAll('.buy-location-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const locationId = btn.dataset.location;
+          purchaseLocation(locationId);
+        });
+      });
+    }
+    
+    // Update products
+    updateProductsList();
+  }
+  
+  // Update products list (renders cards only; click handling is delegated elsewhere)
+  function updateProductsList() {
+    if (!productsList) return;
+    
+    productsList.innerHTML = '';
+    gameState.products.forEach(p => {
+      const pct = p.running ? Math.min(100, (1 - (p.timeRemainingMs / currentCycleTimeMs(p))) * 100) : 0;
+      const managerCta = p.managerHired
+        ? `Upgrade Manager (${p.managerUpgradeCost})`
+        : `Hire Manager (${p.managerHireCost})`;
+
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.style.cssText = 'background:#16213e; border-radius:10px; padding:15px; box-shadow:0 4px 10px rgba(0,0,0,0.2);';
+
+      card.innerHTML = `
+        <h3 style="margin:0 0 6px 0;">${p.name}</h3>
+        <p style="margin:0; color:#aaa;">$<span id="val-${p.id}">${currentValue(p)}</span> / unit</p>
+        <p style="margin:6px 0 8px 0; font-size:.9rem;">
+          Cycle: <span id="cyc-${p.id}">${(currentCycleTimeMs(p)/1000).toFixed(1)}</span>s • Level ${p.level}
+        </p>
+
+        <div style="width:100%; background:#0f3460; height:8px; border-radius:4px; margin:8px 0 12px 0;">
+          <div id="prog-${p.id}" style="width:${pct}%; background:#e94560; height:100%; border-radius:4px;"></div>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="sell-btn" data-id="${p.id}" style="flex:1; padding:10px; background:#e94560; border:none; border-radius:6px; color:#fff; cursor:pointer;">
+            <span id="selltxt-${p.id}">${p.running ? 'Click: -1s' : 'Sell'}</span>
+          </button>
+          <button class="upgrade-product-btn" data-id="${p.id}" style="padding:10px; background:#0f3460; border:none; border-radius:6px; color:#fff; cursor:pointer;">
+            Upgrade (${p.upgradeCost})
+          </button>
+          <button class="manager-btn" data-id="${p.id}" style="padding:10px; background:#533483; border:none; border-radius:6px; color:#fff; cursor:pointer;">
+            ${managerCta}
+          </button>
+        </div>
+
+        ${p.managerHired ? `<p style="margin:10px 0 0 0; color:#4caf50;">✓ Manager Lv.${p.managerLevel} (auto)</p>` : ''}
+      `;
+
+      productsList.appendChild(card);
+    });
+  }
+
+  function updateProductProgressBars() {
+    for (const p of gameState.products) {
+      const bar = $(`prog-${p.id}`);
+      const sellTx = $(`selltxt-${p.id}`);
+      const valEl = $(`val-${p.id}`);
+      const cycEl = $(`cyc-${p.id}`);
+      if (!bar) continue;
+
+      const pct = p.running ? Math.min(100, (1 - (p.timeRemainingMs / currentCycleTimeMs(p))) * 100) : 0;
+      bar.style.width = `${pct}%`;
+      if (sellTx) sellTx.textContent = p.running ? 'Click: -1s' : 'Sell';
+      if (valEl) valEl.textContent = currentValue(p);
+      if (cycEl) cycEl.textContent = (currentCycleTimeMs(p)/1000).toFixed(1);
+    }
+  }
+  
+  // Update People Tab
+    function updatePeopleTab() {
+    if (!employeesList) return;
+    employeesList.innerHTML = '';
+
+    // Onboarding badges
+    for (const e of gameState.onboarding) {
+        const card = document.createElement('div');
+        card.className = 'employee-card';
+        card.style.cssText = 'background:#16213e; border-radius:10px; padding:15px; box-shadow:0 4px 10px rgba(0,0,0,0.2); position:relative;';
+        card.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:44px; height:44px; border-radius:50%; background:#0f3460; display:flex; align-items:center; justify-content:center;">⏳</div>
+            <div>
+            <h3 style="margin:0 0 2px 0;">${e.name}</h3>
+            <p style="margin:0; color:#aaa; font-size:.9rem;">${e.position}</p>
+            <span style="display:inline-block; margin-top:6px; padding:3px 8px; font-size:.75rem; border-radius:999px; background:#0f3460; color:#fff;">Onboarding…</span>
+            </div>
+        </div>
+        `;
+        employeesList.appendChild(card);
+    }
+
+    // Hired employees
+    for (const e of gameState.employees) {
+        const card = document.createElement('div');
+        card.className = 'employee-card';
+        card.style.cssText = 'background:#16213e; border-radius:10px; padding:15px; box-shadow:0 4px 10px rgba(0,0,0,0.2);';
+
+        const img = e.profileImage || 'https://placehold.co/80x80';
+
+        card.innerHTML = `
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:12px;">
+            <img src="${img}" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
+            <div>
+            <h3 style="margin:0;">${e.name}${e.age ? `, ${e.age}` : ''}</h3>
+            <p style="margin:4px 0; color:#aaa;">${e.position}${e.productManaged ? ` • ${e.productManaged}` : ''}</p>
+            </div>
+        </div>
+
+        ${e.bio ? `<p style="margin:8px 0 12px 0; color:#ddd; font-size:.95rem;">${e.bio}</p>` : ''}
+
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px;">
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Efficiency</div>
+            <div>${e.stats.efficiency ?? 0}%</div>
+            </div>
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Comfort</div>
+            <div>${e.stats.comfort ?? 0}%</div>
+            </div>
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Love</div>
+            <div>${e.stats.love ?? 0}%</div>
+            </div>
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Anger</div>
+            <div>${e.stats.anger ?? 0}%</div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="employee-action-btn" data-employee="${e.id}" data-action="gift" style="padding:6px 10px; background:#0f3460; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Gift</button>
+            <button class="employee-action-btn" data-employee="${e.id}" data-action="chat" style="padding:6px 10px; background:#e94560; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Chat</button>
+            <button class="employee-action-btn" data-employee="${e.id}" data-action="promote" style="padding:6px 10px; background:#533483; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Promote</button>
+            <button class="employee-action-btn" data-employee="${e.id}" data-action="fire" style="padding:6px 10px; background:#9e2a2b; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Fire</button>
+        </div>
+        `;
+
+        employeesList.appendChild(card);
+    }
+
+    // action handlers
+    document.querySelectorAll('.employee-action-btn').forEach(btn => {
+        btn.onclick = () => handleEmployeeAction(btn.dataset.employee, btn.dataset.action);
+    });
+    }
+
+  
+  function startOrClickProduct(id) {
+    const p = gameState.products.find(x => x.id === id);
+    if (!p) return;
+
+    if (!p.running) {
+      p.running = true;
+      p.timeRemainingMs = currentCycleTimeMs(p);
+    } else {
+      p.timeRemainingMs = Math.max(0, p.timeRemainingMs - clickReductionMs(p));
+    }
+
+    // instant feedback without a full re-render
+    const sellTxt = $(`selltxt-${p.id}`);
+    if (sellTxt) sellTxt.textContent = p.running ? 'Click: -1s' : 'Sell';
+  }
+
+  function upgradeProduct(id) {
+    const p = gameState.products.find(x => x.id === id);
+    if (!p) return;
+    if (gameState.cash < p.upgradeCost) return showNotification('Not enough cash!');
+    gameState.cash -= p.upgradeCost;
+    p.level += 1;
+    // scale next cost
+    p.upgradeCost = Math.floor(p.upgradeCost * 1.15);
+    showNotification(`${p.name} upgraded to Lv.${p.level}`);
+    updateProductsList();
+  }
+
+    function hireOrUpgradeManager(id) {
+    const p = gameState.products.find(x => x.id === id);
+    if (!p) return;
+
+    if (!p.managerHired) {
+        // Always show the modal; we’ll charge on selection.
+        showManagerHiringModal(id);
+    } else {
+        if (gameState.cash < p.managerUpgradeCost) return showNotification('Not enough cash!');
+        gameState.cash -= p.managerUpgradeCost;
+        p.managerLevel += 1;
+        p.managerUpgradeCost = Math.floor(p.managerUpgradeCost * 1.25);
+        showNotification(`${p.name} manager upgraded to Lv.${p.managerLevel}`);
+        updatePeopleTab();
+        updateProductsList();
+    }
+    }
+
+
+  function createOrLinkManagerNPC(product) {
+    const id = `mgr_${product.id}`;
+    if (gameState.employees.some(e => e.id === id)) return; // already exists
+    const names = ['Jade','Morgan','Riley','Avery','Sam','Harper','Quinn','Rowan'];
+    const last = ['Park','Davis','Johnson','Garcia','Smith','Lee','Kim','Patel'];
+    const emp = {
+      id,
+      name: `${names[Math.floor(Math.random()*names.length)]} ${last[Math.floor(Math.random()*last.length)]}`,
+      position: `Manager – ${product.name}`,
+      trait: 'Workhorse',
+      personality: 'Friendly',
+      stats: { comfort:60, affection:40, desire:25, productivity:70 },
+      hired: true,
+      level: 1,
+      bio: `Keeps ${product.name} on track.`
+    };
+    gameState.employees.push(emp);
+  }
+
+  // Update Gifts Tab
+  function updateGiftsTab() {
+    if (!giftsList) return;
+    
+    giftsList.innerHTML = '';
+    gameState.gifts.forEach(gift => {
+      const giftCard = document.createElement('div');
+      giftCard.className = 'gift-card';
+      giftCard.style.cssText = 'background:#16213e; border-radius:10px; padding:15px; box-shadow:0 4px 10px rgba(0,0,0,0.2); display:flex; flex-direction:column;';
+      
+      giftCard.innerHTML = `
+        <h3 style="margin-top:0;">${gift.name}</h3>
+        <p style="color:#aaa; margin:5px 0;">${gift.description}</p>
+        <p style="margin:10px 0; font-weight:bold;">${gift.cost}</p>
+        <button class="buy-gift-btn" data-gift="${gift.id}" style="margin-top:auto; padding:8px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer;">Purchase</button>
+      `;
+      
+      giftsList.appendChild(giftCard);
+    });
+    
+    // Add event listeners
+    document.querySelectorAll('.buy-gift-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const giftId = btn.dataset.gift;
+        // Gift purchase logic would go here
+        showNotification(`Gift purchased! Select an employee to give it to.`);
+      });
+    });
+  }
+  
+  // Update HR Tab
+  function updateHRTab() {
+    // Update policy buttons
+    document.querySelectorAll('.policy-btn').forEach(btn => {
+      if (btn.dataset.policy === gameState.settings.policy) {
+        btn.style.background = '#e94560';
+      } else {
+        btn.style.background = '#0f3460';
+      }
+    });
+  }
+  
+  // Update news feed
+  function updateNewsFeed() {
+    if (!newsFeed) return;
+    
+    newsFeed.innerHTML = '';
+    gameState.news.forEach((newsItem, index) => {
+      const newsItemEl = document.createElement('div');
+      newsItemEl.className = 'news-item';
+      newsItemEl.style.cssText = 'background:#16213e; border-radius:8px; padding:12px; margin-bottom:10px;';
+      
+      newsItemEl.innerHTML = `
+        <p style="margin:0;">${newsItem}</p>
+        <p style="margin:5px 0 0 0; font-size:0.8rem; color:#aaa;">${new Date().toLocaleDateString()}</p>
+      `;
+      
+      newsFeed.appendChild(newsItemEl);
+    });
+  }
+  
+  // Game tick - main update loop
+  function gameTick() {
+    const dt = GAME_TICK_INTERVAL;
+
+    gameState.products.forEach(p => {
+      if (p.running) {
+        p.timeRemainingMs -= dt;
+
+        if (p.timeRemainingMs <= 0) {
+          // payout
+          const payout = currentValue(p);
+          gameState.cash += payout;
+          gameState.totalEarnings += payout;
+
+          if (p.managerHired) {
+            // keep cycling under manager
+            p.running = true;
+            p.timeRemainingMs = currentCycleTimeMs(p);
+          } else {
+            // stop and instantly sync Sell label for responsiveness
+            p.running = false;
+            p.timeRemainingMs = 0;
+            const sellTxt = $(`selltxt-${p.id}`);
+            if (sellTxt) sellTxt.textContent = 'Sell';
+          }
+        }
+      } else if (p.managerHired) {
+        // manager auto-starts if idle
+        p.running = true;
+        p.timeRemainingMs = currentCycleTimeMs(p);
+      }
+    });
+
+    // UI refresh (lightweight progress updates recommended)
+    updateUI();
+  }
+  
+  // Update UI elements
+  function updateUI() {
+    // top bar
+    if (cashEl) cashEl.textContent = Math.floor(gameState.cash);
+    if (cashPerSecEl) cashPerSecEl.textContent = calculateCashPerSecond();
+    if (employeeCountEl) employeeCountEl.textContent = gameState.employees.length;
+
+    const activeProducts = gameState.products.filter(p => p.running || p.managerHired).length;
+    if (productCountEl) productCountEl.textContent = activeProducts;
+
+    // only refresh progress bars/text in Business tab for smoothness
+    if (gameState.activeTab === 'business') {
+      updateProductProgressBars();
+    }
+  }
+  
+  // Calculate cash per second
+  function calculateCashPerSecond() {
+    let total = 0;
+    gameState.products.forEach(p => {
+      const cycleTime = currentCycleTimeMs(p);
+      // if running or managed, include it; otherwise 0
+      if (p.running || p.managerHired) {
+        total += currentValue(p) / (cycleTime / 1000);
+      }
+    });
+    return total.toFixed(1);
+  }
+
+  function buyClickPower() {
+    const cost = 100 * Math.pow(2, gameState.playerUpgrades.clickPower);
+    if (gameState.cash < cost) return showNotification('Not enough cash!');
+    gameState.cash -= cost;
+    gameState.playerUpgrades.clickPower += 1;
+    showNotification(`Click power increased! (-${gameState.playerUpgrades.clickPower + 1}s per click)`);
+  }
+  
+  // Employee actions
+  function handleEmployeeAction(employeeId, action) {
+    const employee = gameState.employees.find(e => e.id === employeeId);
+    if (!employee) return;
+    
+    switch (action) {
+      case 'gift':
+        showNotification(`Gift given to ${employee.name}!`);
+        // In a full implementation, this would open a gift selection
+        break;
+      case 'chat':
+        openChat(employee);
+        break;
+      case 'promote':
+        employee.level++;
+        employee.stats.productivity = Math.min(100, employee.stats.productivity + 10);
+        showNotification(`${employee.name} promoted to level ${employee.level}!`);
+        updatePeopleTab();
+        break;
+      case 'fire':
+        if (confirm(`Are you sure you want to fire ${employee.name}?`)) {
+          gameState.employees = gameState.employees.filter(e => e.id !== employeeId);
+          showNotification(`${employee.name} has been fired.`);
+          updatePeopleTab();
+        }
+        break;
+    }
+  }
+  
+  // Open chat with employee
+  function openChat(employee) {
+    gameState.activeChat = employee;
+    if (chatModal) chatModal.hidden = false;
+    if (chatName) chatName.textContent = employee.name;
+    if (chatAvatar) chatAvatar.src = `https://placehold.co/80x80`;
+    
+    // Initialize chat history if not exists
+    if (!gameState.chatHistory[employee.id]) {
+      gameState.chatHistory[employee.id] = [];
+    }
+    
+    // Load chat history
+    loadChatHistory(employee.id);
+  }
+  
+  // Load chat history
+  function loadChatHistory(employeeId) {
+    if (!chatMessages) return;
+    
+    chatMessages.innerHTML = '';
+    const history = gameState.chatHistory[employeeId] || [];
+    
+    history.forEach(msg => {
+      addChatMessage(msg.sender, msg.content, msg.isPlayer);
+    });
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  // Add chat message to UI
+  function addChatMessage(sender, content, isPlayer) {
+    if (!chatMessages) return;
+    
+    const messageEl = document.createElement('div');
+    messageEl.style.cssText = `max-width:80%; padding:10px 15px; border-radius:18px; margin-bottom:10px; word-wrap:break-word; ${isPlayer ? 'background:#e94560; align-self:flex-end;' : 'background:#0f3460; align-self:flex-start;'}`;
+    
+    messageEl.innerHTML = `<p style="margin:0;">${content}</p>`;
+    chatMessages.appendChild(messageEl);
+  }
+  
+  // Send chat message
+  async function sendChatMessage() {
+    if (!chatInput || !chatMessages) return;
+    
+    const message = chatInput.value.trim();
+    if (!message || !gameState.activeChat) return;
+    
+    // Add player message
+    addChatMessage('You', message, true);
+    
+    // Add to history
+    if (!gameState.chatHistory[gameState.activeChat.id]) {
+      gameState.chatHistory[gameState.activeChat.id] = [];
+    }
+    gameState.chatHistory[gameState.activeChat.id].push({
+      sender: 'You',
+      content: message,
+      isPlayer: true
+    });
+    
+    // Clear input
+    chatInput.value = '';
+    
+    // Show typing indicator
+    if (chatTypingIndicator && chatTypingName) {
+      chatTypingIndicator.style.display = 'block';
+      chatTypingName.textContent = gameState.activeChat.name;
+    }
+    
+    // Generate AI response
+    try {
+      const conversationHistory = gameState.chatHistory[gameState.activeChat.id]
+        .map(msg => `${msg.sender}: ${msg.content}`)
+        .join('\n');
+      
+      const prompt = `
+        You are ${gameState.activeChat.name}, a ${gameState.activeChat.position} with the following traits:
+        - Personality: ${gameState.activeChat.personality}
+        - Key trait: ${gameState.activeChat.trait}
+        - Bio: ${gameState.activeChat.bio}
+        
+        Your current stats:
+        - Comfort: ${gameState.activeChat.stats.comfort}%
+        - Affection: ${gameState.activeChat.stats.affection}%
+        - Desire: ${gameState.activeChat.stats.desire}%
+        - Productivity: ${gameState.activeChat.stats.productivity}%
+        
+        The current workplace atmosphere is ${gameState.settings.atmosphere > 66 ? 'relaxed' : gameState.settings.atmosphere > 33 ? 'balanced' : 'strict'}.
+        Interaction guidelines are ${gameState.settings.guidelines > 66 ? 'casual' : gameState.settings.guidelines > 33 ? 'standard' : 'formal'}.
+        
+        Conversation history:
+        ${conversationHistory}
+        
+        Respond to the last message as ${gameState.activeChat.name}. Keep your response short, natural, and in-character.
+        Your mood should reflect your current stats. Be flirtatious if appropriate based on the context and your desire level.
+      `;
+      
+      const response = await generateText(prompt);
+      
+      // Hide typing indicator
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+      
+      // Add AI response
+      addChatMessage(gameState.activeChat.name, response, false);
+      
+      // Add to history
+      gameState.chatHistory[gameState.activeChat.id].push({
+        sender: gameState.activeChat.name,
+        content: response,
+        isPlayer: false
+      });
+      
+      // Update employee stats based on conversation
+      updateEmployeeStatsFromChat(gameState.activeChat, response);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (error) {
+      console.error('Error generating chat response:', error);
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+      addChatMessage(gameState.activeChat.name, "Sorry, I'm having trouble responding right now.", false);
+    }
+  }
+  
+  // Update employee stats based on chat
+    function updateEmployeeStatsFromChat(e, text) {
+    const t = text.toLowerCase();
+    if (t.includes('thank') || t.includes('appreciate')) e.stats.love = Math.min(100, (e.stats.love ?? 0) + 2);
+    if (t.includes('like') || t.includes('love'))           e.stats.love = Math.min(100, (e.stats.love ?? 0) + 3);
+    if (t.includes('annoy') || t.includes('mad'))           e.stats.anger = Math.min(100, (e.stats.anger ?? 0) + 2);
+    if (t.includes('sorry') || t.includes('apolog'))        e.stats.anger = Math.max(0,   (e.stats.anger ?? 0) - 2);
+    if (t.includes('work')  || t.includes('ship') )         e.stats.efficiency = Math.min(100, (e.stats.efficiency ?? 0) + 1);
+    e.stats.comfort = Math.min(100, (e.stats.comfort ?? 0) + (t.includes('happy') || t.includes('good') ? 1 : 0));
+    }
+
+  
+  // Update news
+  function updateNews() {
+    // Add new news item
+    const newsItems = [
+      `${gameState.employees.length > 0 ? gameState.employees[0].name : 'Your company'} makes headlines with innovative approach`,
+      `Industry experts praise ${gameState.employees.length > 0 ? gameState.employees[0].name : 'your team'}'s performance`,
+      `New workplace policies at your company set industry standards`,
+      `Your business growth outpaces competitors this quarter`,
+      `Employee satisfaction at your company reaches all-time high`,
+      `Tech community buzzing about your latest product launch`
+    ];
+    
+    const randomNews = newsItems[Math.floor(Math.random() * newsItems.length)];
+    gameState.news.unshift(randomNews);
+    
+    // Keep only latest 5 news items
+    if (gameState.news.length > 5) {
+      gameState.news = gameState.news.slice(0, 5);
+    }
+    
+    // Update news ticker
+    if (newsContent) newsContent.textContent = randomNews;
+    
+    // Update news feed if dashboard is active
+    if (gameState.activeTab === 'dashboard') {
+      updateNewsFeed();
+    }
+  }
+  
+  // Show notification
+  function showNotification(message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#e94560; color:white; padding:15px 20px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:3000; max-width:300px;';
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+  
+  // Save game
+  function saveGame(showToast = true) {
+    try {
+      localStorage.gameState = JSON.stringify(gameState);
+      if (showToast) showNotification('Game saved!');
+    } catch (error) {
+      console.error('Error saving game:', error);
+      showNotification('Failed to save game!');
+    }
+  }
+
+  // Load game
+  function loadGame() {
+    try {
+      const savedState = localStorage.gameState;
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        // Merge saved state with default state to ensure all properties exist
+        gameState = {
+          ...gameState,
+          ...parsed,
+          // Ensure critical objects are properly initialized
+          products: parsed.products || gameState.products,
+          employees: parsed.employees || gameState.employees,
+          settings: {...gameState.settings, ...(parsed.settings || {})},
+          chatHistory: parsed.chatHistory || {}
+        };
+        showNotification('Game loaded!');
+      }
+    } catch (error) {
+      console.error('Error loading game:', error);
+      showNotification('Failed to load saved game. Starting fresh!');
+    }
+  }
+
+  // Autosave setup
+  function setupAutosave() {
+    if (gameState.settings.autosave) {
+      setInterval(() => saveGame(false), 5000); // every 5s, no toast
+    }
+  }
+  
+  // Export save
+  function exportSave() {
+    const saveData = JSON.stringify(gameState);
+    const blob = new Blob([saveData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'office-empire-save.json';
+    a.click();
+    
+    URL.revokeObjectURL(url);
+    showNotification('Save data exported!');
+  }
+  
+  // Reset game
+  function resetGame() {
+    if (confirm('Are you sure you want to reset the game? All progress will be lost!')) {
+      localStorage.removeItem('gameState');
+      location.reload();
+    }
+  }
+  
+  // Purchase location
+  function purchaseLocation(locationId) {
+    const location = gameState.locations.find(l => l.id === locationId);
+    if (location && !location.owned && gameState.cash >= location.cost) {
+      gameState.cash -= location.cost;
+      location.owned = true;
+      updateBusinessTab();
+      showNotification(`${location.name} purchased!`);
+    } else {
+      showNotification('Not enough cash or location already owned!');
+    }
+  }
+  
+  // Generate initial employees
+  function generateInitialEmployees() {
+    const firstNames = ['Alex', 'Sam', 'Jordan', 'Taylor', 'Casey', 'Morgan', 'Riley', 'Avery'];
+    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
+    const traits = ['Hardworking', 'Creative', 'Analytical', 'Charismatic', 'Detail-oriented', 'Adaptable'];
+    const personalities = ['Friendly', 'Reserved', 'Outgoing', 'Thoughtful', 'Energetic', 'Calm'];
+    const hobbies = ['Reading', 'Photography', 'Hiking', 'Gaming', 'Cooking', 'Traveling', 'Music', 'Art', 'Yoga', 'Dancing'];
+    const kinks = ['Exhibitionism', 'Bondage', 'Roleplay', 'Dominance', 'Submission', 'Voyeurism', 'Teasing', 'Spanking'];
+    const genders = ['Male', 'Female', 'Non-binary'];
+    
+    // Generate 2 initial employees
+    for (let i = 0; i < 2; i++) {
+      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const gender = genders[Math.floor(Math.random() * genders.length)];
+      
+      // Generate random traits and personality
+      const trait = traits[Math.floor(Math.random() * traits.length)];
+      const personality = personalities[Math.floor(Math.random() * personalities.length)];
+      
+      // Generate 1-3 random hobbies
+      const numHobbies = Math.floor(Math.random() * 3) + 1;
+      const employeeHobbies = [];
+      while (employeeHobbies.length < numHobbies) {
+        const hobby = hobbies[Math.floor(Math.random() * hobbies.length)];
+        if (!employeeHobbies.includes(hobby)) {
+          employeeHobbies.push(hobby);
+        }
+      }
+      
+      // Generate 2-4 random kinks
+      const numKinks = Math.floor(Math.random() * 3) + 2;
+      const employeeKinks = [];
+      while (employeeKinks.length < numKinks) {
+        const kink = kinks[Math.floor(Math.random() * kinks.length)];
+        if (!employeeKinks.includes(kink)) {
+          employeeKinks.push(kink);
+        }
+      }
+      
+      // Generate initial stats
+      const stats = {
+        comfort: 40 + Math.floor(Math.random() * 30),
+        affection: 20 + Math.floor(Math.random() * 30),
+        desire: 10 + Math.floor(Math.random() * 30),
+        productivity: 50 + Math.floor(Math.random() * 30)
+      };
+      
+      gameState.employees.push({
+        id: `emp_${Date.now()}_${i}`,
+        name: `${firstName} ${lastName}`,
+        position: 'Employee',
+        gender: gender,
+        trait: trait,
+        personality: personality,
+        hobbies: employeeHobbies,
+        kinks: employeeKinks,
+        stats: stats,
+        level: 1,
+        hired: true,
+        bio: null,
+        physicalDescription: null,
+        profileImage: null
+      });
+    }
+  }
+
+  // Expose functions to global scope for external access
+  window.selectManagerCandidate = selectManagerCandidate;
+  window.closeHiringModal = closeHiringModal;
+  window.showNotification = showNotification;
+  window.updateUI = updateUI;
+  window.updateDashboard = updateDashboard;
+  window.updateBusinessTab = updateBusinessTab;
+  window.updatePeopleTab = updatePeopleTab;
+  window.updateGiftsTab = updateGiftsTab;
+  window.updateHRTab = updateHRTab;
+  window.updateNewsFeed = updateNewsFeed;
+  window.gameTick = gameTick;
+  window.updateNews = updateNews;
+  window.saveGame = saveGame;
+  window.loadGame = loadGame;
+  window.exportSave = exportSave;
+  window.resetGame = resetGame;
+  window.purchaseLocation = purchaseLocation;
+  window.handleEmployeeAction = handleEmployeeAction;
+  window.openChat = openChat;
+  window.loadChatHistory = loadChatHistory;
+  window.addChatMessage = addChatMessage;
+  window.sendChatMessage = sendChatMessage;
+  window.updateEmployeeStatsFromChat = updateEmployeeStatsFromChat;
+  window.setupEventListeners = setupEventListeners;
+  window.switchTab = switchTab;
+  window.updateTabContent = updateTabContent;
+  window.updateProductsList = updateProductsList;
+  window.updateProductProgressBars = updateProductProgressBars;
+  window.startOrClickProduct = startOrClickProduct;
+  window.upgradeProduct = upgradeProduct;
+  window.hireOrUpgradeManager = hireOrUpgradeManager;
+  window.createOrLinkManagerNPC = createOrLinkManagerNPC;
+  window.buyClickPower = buyClickPower;
+  window.generateInitialEmployees = generateInitialEmployees;
+  window.setupAutosave = setupAutosave;
+  window.calculateCashPerSecond = calculateCashPerSecond;
+  window.getManagerSpeedMultiplier = getManagerSpeedMultiplier;
+  window.currentCycleTimeMs = currentCycleTimeMs;
+  window.currentValue = currentValue;
+  window.clickReductionMs = clickReductionMs;
+  
+  // Initialize game when DOM is loaded
+  document.addEventListener('DOMContentLoaded', initGame);
+</script>
+
+<style>
+  /* General styles */
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0f1419;
+    color: white;
+    overflow-x: hidden;
+  }
+  
+  /* Card styling */
+  .card {
+    transition: transform 0.2s;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+  }
+  
+  /* Button styling */
+  button {
+    transition: background-color 0.2s;
+  }
+  
+  button:hover {
+    opacity: 0.9;
+  }
+  
+  /* Tab active styling */
+  .tab-btn.active {
+    border-bottom: 3px solid #e94560;
+  }
+  
+  /* Modal styling */
+  .modal {
+    animation: fadeIn 0.3s;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Chat message styling */
+  #chatMessages {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><rect width="20" height="20" fill="%2316213e"/><circle cx="10" cy="10" r="1" fill="%230f3460"/></svg>');
+    background-size: 20px 20px;
+  }
+  
+  /* Notification animation */
+  @keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  
+  /* News ticker animation */
+  @keyframes ticker {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+  
+  #newsContent {
+    display: inline-block;
+    animation: ticker 20s linear infinite;
+  }
+</style>
