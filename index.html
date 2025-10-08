@@ -184,7 +184,7 @@
 </div>
 
 <!-- Chat Modal -->
-<div id="chatModal" class="modal" hidden style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; display:flex; justify-content:center; align-items:center;">
+<div id="chatModal" class="modal" hidden style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; display:none; justify-content:center; align-items:center; pointer-events:none;">
   <div style="background:#16213e; width:90%; max-width:500px; height:80%; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column;">
     <div style="padding:15px; border-bottom:1px solid #0f3460; display:flex; justify-content:space-between; align-items:center;">
       <div style="display:flex; align-items:center; gap:10px;">
@@ -812,6 +812,8 @@
       closeChatBtn.addEventListener('click', () => {
         if (chatModal) {
           chatModal.hidden = true;
+          chatModal.style.display = 'none';
+          chatModal.style.pointerEvents = 'none';
           gameState.activeChat = null;
         }
       });
@@ -1307,7 +1309,11 @@
   // Open chat with employee
   function openChat(employee) {
     gameState.activeChat = employee;
-    if (chatModal) chatModal.hidden = false;
+    if (chatModal) {
+      chatModal.hidden = false;
+      chatModal.style.display = 'flex';
+      chatModal.style.pointerEvents = 'auto';
+    }
     if (chatName) chatName.textContent = employee.name;
     if (chatAvatar) chatAvatar.src = `https://placehold.co/80x80`;
     
