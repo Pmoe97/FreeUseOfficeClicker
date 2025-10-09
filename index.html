@@ -221,8 +221,8 @@
   
   // ----- PRODUCT HELPERS -----
   function getManagerSpeedMultiplier(p) {
-    // 12% per level, curved, capped at managerSpeedCapPct
-    const raw = 1 - Math.pow(1 / (1 + 0.12 * p.managerLevel), 0.85); // fraction faster
+  // ~10% per level, curved, capped at managerSpeedCapPct
+  const raw = 1 - Math.pow(1 / (1 + 0.10 * p.managerLevel), 0.90); // fraction faster
     const capped = Math.min(raw, p.managerSpeedCapPct);
     return 1 - capped; // multiplier applied to baseTimeMs
   }
@@ -232,8 +232,12 @@
   }
 
   function currentValue(p) {
-    // valuePerUnit grows by (1 + valuePerUpgrade) ^ level
-    return +(p.valuePerUnit * Math.pow(1 + p.valuePerUpgrade, p.level)).toFixed(2);
+  // Balanced value growth with diminishing returns
+  // growth = (1 + valuePerUpgrade * level) ^ valueExponent
+  const level = p.level || 0;
+  const growthLinear = 1 + (p.valuePerUpgrade || 0) * level;
+  const exp = (p.valueExponent ?? 0.85); // default diminishing exponent
+  return +(p.valuePerUnit * Math.pow(growthLinear, exp)).toFixed(2);
   }
 
   function clickReductionMs(p) {
@@ -263,10 +267,13 @@
         name: 'Website Development',
         locationId: 'garage',
         // economy
-        valuePerUnit: 3,          // $ earned per completed cycle
-        level: 0,                 // product upgrade level
-        upgradeCost: 50,          // cost to raise valuePerUnit
-        valuePerUpgrade: 0.20,    // +20% per upgrade
+  valuePerUnit: 3,          // $ earned per completed cycle
+  level: 0,                 // product upgrade level
+  upgradeCost: 50,          // current upgrade cost (will scale by costGrowth)
+  baseUpgradeCost: 50,      // base cost at level 0
+  costGrowth: 1.35,         // cost multiplier per level
+  valuePerUpgrade: 0.10,    // toned down growth per upgrade
+  valueExponent: 0.85,      // diminishing returns exponent
         // timing
         baseTimeMs: 6000,         // 6s cycle base
         running: false,
@@ -279,37 +286,37 @@
         managerHireCost: 500,
         managerUpgradeCost: 250,
         // caps
-        managerSpeedCapPct: 0.50  // at most 50% faster (i.e., half the time)
+  managerSpeedCapPct: 0.40  // at most 40% faster
       },
       {
         id: 'app',
         name: 'Mobile App',
         locationId: 'garage',
-        valuePerUnit: 9, level: 0, upgradeCost: 150, valuePerUpgrade: 0.20,
+  valuePerUnit: 9, level: 0, upgradeCost: 150, baseUpgradeCost: 150, costGrowth: 1.35, valuePerUpgrade: 0.12, valueExponent: 0.85,
         baseTimeMs: 10000, running:false, timeRemainingMs:0,
         clickSecondsBase: 1,
         managerHired:false, managerLevel:0, managerHireCost:1500, managerUpgradeCost:750,
-        managerSpeedCapPct:0.50
+  managerSpeedCapPct:0.40
       },
       {
         id: 'consulting',
         name: 'IT Consulting',
         locationId: 'garage',
-        valuePerUnit: 18, level: 0, upgradeCost: 300, valuePerUpgrade: 0.20,
+  valuePerUnit: 18, level: 0, upgradeCost: 300, baseUpgradeCost: 300, costGrowth: 1.35, valuePerUpgrade: 0.12, valueExponent: 0.85,
         baseTimeMs: 14000, running:false, timeRemainingMs:0,
         clickSecondsBase:1,
         managerHired:false, managerLevel:0, managerHireCost:3000, managerUpgradeCost:1500,
-        managerSpeedCapPct:0.50
+  managerSpeedCapPct:0.40
       },
       {
         id: 'cloud',
         name: 'Cloud Services',
         locationId: 'garage',
-        valuePerUnit: 32, level: 0, upgradeCost: 500, valuePerUpgrade: 0.20,
+  valuePerUnit: 32, level: 0, upgradeCost: 500, baseUpgradeCost: 500, costGrowth: 1.35, valuePerUpgrade: 0.10, valueExponent: 0.85,
         baseTimeMs: 20000, running:false, timeRemainingMs:0,
         clickSecondsBase:1,
         managerHired:false, managerLevel:0, managerHireCost:5000, managerUpgradeCost:2500,
-        managerSpeedCapPct:0.50
+  managerSpeedCapPct:0.40
       }
     ],
     employees: [],
@@ -533,9 +540,9 @@
     const candidates = generatePotentialHires(productId);
     const product = gameState.products.find(p => p.id === productId);
 
-    const modal = document.createElement('div');
-    modal.id = 'hiringModal';
-    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:3000; display:flex; justify-content:center; align-items:center;';
+  const modal = document.createElement('div');
+  modal.id = 'hiringModal';
+  modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:3000; display:flex; justify-content:center; align-items:center; pointer-events:auto;';
     modal.hidden = false; // ensure it's visible
 
     const cards = candidates.map((c, i) => `
@@ -570,34 +577,55 @@
         </div>
     `).join('');
 
-    modal.innerHTML = `
-        <div style="background:#0f1419; width:92%; max-width:1000px; padding:18px; border-radius:14px; box-shadow:0 5px 25px rgba(0,0,0,0.5);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h2 style="margin:0;">Select a Manager for ${product.name}</h2>
-            <button class="close-modal-btn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
-        </div>
-        <div style="display:flex; justify-content:center; flex-wrap:wrap;">
-            ${cards}
-        </div>
-        <p style="margin-top:12px; color:#aaa; font-size:.9rem;">You’ll be charged <strong>${product.managerHireCost}</strong> when you choose a candidate.</p>
-        </div>
-    `;
+  modal.innerHTML = `
+    <div class="hiring-modal-panel" role="dialog" aria-modal="true" aria-label="Select a Manager" style="background:#0f1419; width:92%; max-width:1000px; padding:18px; border-radius:14px; box-shadow:0 5px 25px rgba(0,0,0,0.5); pointer-events:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h2 style="margin:0;">Select a Manager for ${product.name}</h2>
+      <button class="close-modal-btn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    <div style="display:flex; justify-content:center; flex-wrap:wrap;">
+      ${cards}
+    </div>
+    <p style="margin-top:12px; color:#aaa; font-size:.9rem;">You’ll be charged <strong>${product.managerHireCost}</strong> when you choose a candidate.</p>
+    </div>
+  `;
 
-    modal.addEventListener('click', (e) => {
-        if (e.target.classList.contains('close-modal-btn') || e.target === modal) closeHiringModal();
-        if (e.target.classList.contains('select-candidate-btn')) {
-        const index = parseInt(e.target.dataset.index, 10);
-        selectManagerCandidate(index);
-        }
-    });
     document.body.appendChild(modal);
     gameState.currentCandidates = candidates;
 
+    // Set up event listeners for background click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeHiringModal();
+      }
+    });
+
+    // Set up close button listener
+    const closeBtn = modal.querySelector('.close-modal-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeHiringModal);
+    }
+
+    // Set up select candidate buttons
+    const selectButtons = modal.querySelectorAll('.select-candidate-btn');
+    selectButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const index = parseInt(btn.dataset.index, 10);
+        if (!Number.isNaN(index)) {
+          selectManagerCandidate(index);
+        }
+      });
+    });
+
     // Allow Esc to close
-    const esc = (ev) => { if (ev.key === 'Escape') { closeHiringModal(); window.removeEventListener('keydown', esc); } };
+    const esc = (ev) => { 
+      if (ev.key === 'Escape') { 
+        closeHiringModal(); 
+        window.removeEventListener('keydown', esc); 
+      } 
+    };
     window.addEventListener('keydown', esc);
   }  
-
 
   // Close hiring modal
   function closeHiringModal() {
@@ -624,10 +652,23 @@
     candidate.onboarding = true;
     candidate.bioComplete = false;
 
+      // Product-level onboarding flag and immediate effects
+      // a) Replace CTA with onboarding status via updateProductsList
+      // b) Immediately subtract cash
+      // c) Begin automation right away
+      product.managerOnboarding = true;
+      gameState.cash -= product.managerHireCost;
+      // start automated cycle if not already running
+      if (!product.running) {
+        product.running = true;
+        product.timeRemainingMs = currentCycleTimeMs(product);
+      }
+
     // show in People tab as a badge
     gameState.onboarding.push(candidate);
     closeHiringModal();
-    updatePeopleTab();
+      updatePeopleTab();
+      updateProductsList();
 
     // --- AI generation (guarded) ---
     try {
@@ -702,16 +743,16 @@
         } catch (e) { /* ignore */ }
         }
 
-        // move from onboarding → employees
+  // move from onboarding → employees
         candidate.onboarding = false;
         candidate.bioComplete = true;
         gameState.onboarding = gameState.onboarding.filter(e => e.id !== candidate.id);
         gameState.employees.push(candidate);
 
-        // mark manager on product + pay cost
-        product.managerHired = true;
-        product.managerLevel = 1;
-        gameState.cash -= product.managerHireCost;
+  // mark manager on product (already charged and started); finish onboarding
+  product.managerHired = true;
+  product.managerLevel = 1;
+  product.managerOnboarding = false;
 
         // UI
         updatePeopleTab();
@@ -943,9 +984,14 @@
     productsList.innerHTML = '';
     gameState.products.forEach(p => {
       const pct = p.running ? Math.min(100, (1 - (p.timeRemainingMs / currentCycleTimeMs(p))) * 100) : 0;
-      const managerCta = p.managerHired
-        ? `Upgrade Manager (${p.managerUpgradeCost})`
-        : `Hire Manager (${p.managerHireCost})`;
+      // CTA & disabled state with onboarding safeguard
+      const onboarding = !!p.managerOnboarding;
+      const managerCta = onboarding
+        ? 'Onboarding in Progress'
+        : (p.managerHired ? `Upgrade Manager (${p.managerUpgradeCost})` : `Hire Manager (${p.managerHireCost})`);
+      const managerDisabledAttr = onboarding ? 'disabled' : '';
+      const managerCursor = onboarding ? 'not-allowed' : 'pointer';
+      const managerOpacity = onboarding ? '0.7' : '1';
 
       const card = document.createElement('div');
       card.className = 'product-card';
@@ -969,12 +1015,14 @@
           <button class="upgrade-product-btn" data-id="${p.id}" style="padding:10px; background:#0f3460; border:none; border-radius:6px; color:#fff; cursor:pointer;">
             Upgrade (${p.upgradeCost})
           </button>
-          <button class="manager-btn" data-id="${p.id}" style="padding:10px; background:#533483; border:none; border-radius:6px; color:#fff; cursor:pointer;">
+          <button class="manager-btn" data-id="${p.id}" ${managerDisabledAttr} style="padding:10px; background:#533483; border:none; border-radius:6px; color:#fff; cursor:${managerCursor}; opacity:${managerOpacity};">
             ${managerCta}
           </button>
         </div>
 
-        ${p.managerHired ? `<p style="margin:10px 0 0 0; color:#4caf50;">✓ Manager Lv.${p.managerLevel} (auto)</p>` : ''}
+        ${p.managerHired
+          ? `<p style="margin:10px 0 0 0; color:${onboarding ? '#ffa726' : '#4caf50'};">${onboarding ? '⏳ Manager onboarding… (auto running)' : `✓ Manager Lv.${p.managerLevel} (auto)`}</p>`
+          : ''}
       `;
 
       productsList.appendChild(card);
@@ -1098,8 +1146,15 @@
     if (gameState.cash < p.upgradeCost) return showNotification('Not enough cash!');
     gameState.cash -= p.upgradeCost;
     p.level += 1;
-    // scale next cost
-    p.upgradeCost = Math.floor(p.upgradeCost * 1.15);
+    // scale next cost using base cost and growth factor (stronger than value growth)
+    if (!p.baseUpgradeCost) {
+      // Estimate base if missing (e.g., from older saves)
+      const prevGrowth = 1.15;
+      const baseEst = p.upgradeCost / Math.pow(prevGrowth, Math.max(0, (p.level - 1)));
+      p.baseUpgradeCost = Math.max(1, Math.floor(baseEst));
+    }
+    const growth = p.costGrowth || 1.35;
+    p.upgradeCost = Math.floor(p.baseUpgradeCost * Math.pow(growth, p.level));
     showNotification(`${p.name} upgraded to Lv.${p.level}`);
     updateProductsList();
   }
@@ -1112,6 +1167,10 @@
         // Always show the modal; we’ll charge on selection.
         showManagerHiringModal(id);
     } else {
+          // d) Block upgrading while onboarding
+          if (p.managerOnboarding) {
+            return showNotification('Manager onboarding in progress. Upgrade available after onboarding completes.');
+          }
         if (gameState.cash < p.managerUpgradeCost) return showNotification('Not enough cash!');
         gameState.cash -= p.managerUpgradeCost;
         p.managerLevel += 1;
@@ -1514,7 +1573,14 @@
           ...gameState,
           ...parsed,
           // Ensure critical objects are properly initialized
-          products: parsed.products || gameState.products,
+          products: (parsed.products || gameState.products).map(p => ({
+            // backfill new balance fields for old saves
+            baseUpgradeCost: p.baseUpgradeCost ?? p.upgradeCost ?? 50,
+            costGrowth: p.costGrowth ?? 1.35,
+            valueExponent: p.valueExponent ?? 0.85,
+            managerSpeedCapPct: p.managerSpeedCapPct ?? 0.40,
+            ...p
+          })),
           employees: parsed.employees || gameState.employees,
           settings: {...gameState.settings, ...(parsed.settings || {})},
           chatHistory: parsed.chatHistory || {}
