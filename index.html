@@ -214,6 +214,28 @@
 </div>
 
 <script>
+  // Minimal modal registry (for clean close/cleanup)
+  window.modalRegistry = window.modalRegistry || new Map();
+
+  function debugModal() {
+    const m = document.getElementById('hiringModal');
+    if (!m) { console.warn('No #hiringModal in DOM'); return; }
+    const cs = getComputedStyle(m);
+    console.table({
+      display: cs.display, visibility: cs.visibility, opacity: cs.opacity,
+      position: cs.position, zIndex: cs.zIndex, pointerEvents: cs.pointerEvents
+    });
+    console.log('Modal rect:', m.getBoundingClientRect());
+  }
+
+  function closeHiringModal() {
+    const overlay = document.getElementById('hiringModal');
+    if (overlay) overlay.remove();
+    const esc = window.__hiringEscHandler__;
+    if (esc) { window.removeEventListener('keydown', esc); window.__hiringEscHandler__ = null; }
+    modalRegistry.delete('hiring');
+  }
+
   // Game Constants
   const GAME_TICK_INTERVAL = 100; // ms
   const INITIAL_CASH = 100;
@@ -431,8 +453,9 @@
       showNotification('Failed to initialize game. Please refresh the page.');
     }
 
-    // Add event delegation for product buttons once
+    // Event delegation for product card buttons (bind once)
     if (!window.__productsDelegationBound__) {
+      const productsList = document.getElementById('productsList');
       if (productsList) {
         productsList.addEventListener('click', (e) => {
           const btn = e.target.closest('button');
@@ -442,9 +465,8 @@
 
           if (btn.classList.contains('sell-btn')) {
             startOrClickProduct(id);
-            // instant label feedback
             const p = gameState.products.find(x => x.id === id);
-            const sellTxt = $(`selltxt-${id}`);
+            const sellTxt = document.getElementById(`selltxt-${id}`);
             if (sellTxt) sellTxt.textContent = p?.running ? 'Click: -1s' : 'Sell';
             return;
           }
@@ -524,19 +546,37 @@
 
   // Handle manager hiring UI
   function showManagerHiringModal(productId) {
-    // Remove any existing hiring modal
-    const existingModal = document.getElementById('hiringModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    const candidates = generatePotentialHires(productId);
     const product = gameState.products.find(p => p.id === productId);
+    if (!product) return;
 
+    // Get 3 candidates (uses your existing generator)
+    const candidates = generatePotentialHires(productId);
+    gameState.currentCandidates = candidates;
+
+    // Create and configure modal overlay
     const modal = document.createElement('div');
     modal.id = 'hiringModal';
-    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:3000; display:flex; justify-content:center; align-items:center;';
-    modal.hidden = false; // ensure it's visible
+    
+    // Create modal content container
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: #0f1419;
+        width: 92%;
+        max-width: 1000px;
+        padding: 18px;
+        border-radius: 14px;
+        box-shadow: 0 20px 40px rgba(0,0,0,.5);
+        color: #fff;
+    `;
+    
+    // Stop click propagation on content
+    modalContent.addEventListener('click', (e) => e.stopPropagation());
+    
+    // Add overlay click handler
+    modal.addEventListener('click', (e) => { 
+        if (e.target === modal) closeHiringModal(); 
+    });
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
 
     const cards = candidates.map((c, i) => `
         <div class="candidate-card" style="background:#16213e; border-radius:10px; padding:16px; margin:10px; width:300px;">
@@ -583,15 +623,27 @@
         </div>
     `;
 
-    modal.addEventListener('click', (e) => {
-        if (e.target.classList.contains('close-modal-btn') || e.target === modal) closeHiringModal();
+    // Event handlers
+    modalContent.addEventListener('click', (e) => {
+        if (e.target.classList.contains('close-modal-btn')) {
+            closeHiringModal();
+            return;
+        }
         if (e.target.classList.contains('select-candidate-btn')) {
-        const index = parseInt(e.target.dataset.index, 10);
-        selectManagerCandidate(index);
+            const index = parseInt(e.target.dataset.index, 10);
+            selectManagerCandidate(index);
+            return;
         }
     });
+    // Add to DOM
     document.body.appendChild(modal);
-    gameState.currentCandidates = candidates;
+    document.body.style.overflow = 'hidden';
+    
+    // Track modal and handle ESC
+    modalRegistry.set('hiring', { el: modal });
+    const onEsc = (ev) => { if (ev.key === 'Escape') closeHiringModal(); };
+    window.__hiringEscHandler__ = onEsc;
+    window.addEventListener('keydown', onEsc);
 
     // Allow Esc to close
     const esc = (ev) => { if (ev.key === 'Escape') { closeHiringModal(); window.removeEventListener('keydown', esc); } };
@@ -603,8 +655,16 @@
   function closeHiringModal() {
     const modal = $('hiringModal');
     if (modal) {
-      modal.remove();
-      gameState.currentCandidates = null;
+      // Fade out animation
+      modal.style.opacity = '0';
+      modal.style.transition = 'opacity 0.2s ease-out';
+      
+      // Remove after animation
+      setTimeout(() => {
+        modal.remove();
+        gameState.currentCandidates = null;
+        document.body.style.overflow = ''; // Restore scrolling
+      }, 200);
     }
   }
 
@@ -1748,4 +1808,18 @@
     display: inline-block;
     animation: ticker 20s linear infinite;
   }
+
+  /* Bulletproof hiring modal overlay */
+  #hiringModal {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: rgba(0,0,0,0.7) !important;
+    z-index: 999999 !important; /* above chat/toasts/etc */
+    pointer-events: auto !important;
+  }
+  #hiringModal * { pointer-events: auto !important; }
+  #hiringModal[hidden] { display: none !important; }
 </style>
