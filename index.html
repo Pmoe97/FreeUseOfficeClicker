@@ -1,5 +1,5 @@
 <!-- Top Bar -->
-<div id="topBar" style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#1a1a2e; color:white;">
+<div id="topBar" style="position:sticky; top:0; z-index:1000; display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#1a1a2e; color:white; box-shadow:0 2px 10px rgba(0,0,0,0.5);">
   <div style="display:flex; gap:20px;">
     <div>Cash: $<span id="cashEl">0</span></div>
     <div>$/sec: $<span id="cashPerSecEl">0</span></div>
@@ -10,12 +10,12 @@
 </div>
 
 <!-- News Ticker -->
-<div id="newsTicker" style="background:#0f3460; color:#e94560; padding:8px 20px; white-space:nowrap; overflow:hidden; font-size:0.9rem;">
+<div id="newsTicker" style="position:sticky; top:49px; z-index:999; background:#0f3460; color:#e94560; padding:8px 20px; white-space:nowrap; overflow:hidden; font-size:0.9rem;">
   <span id="newsContent">Welcome to your new business venture! Start clicking products to earn cash.</span>
 </div>
 
 <!-- Tab Navigation -->
-<div id="tabNav" style="display:flex; background:#16213e; padding:0; overflow-x:auto;">
+<div id="tabNav" style="position:sticky; top:82px; z-index:998; display:flex; background:#16213e; padding:0; overflow-x:auto;">
   <button class="tab-btn active" data-tab="dashboard" style="padding:15px 20px; background:transparent; border:none; color:#e94560; cursor:pointer; font-weight:bold;">Dashboard</button>
   <button class="tab-btn" data-tab="business" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Business</button>
   <button class="tab-btn" data-tab="people" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">People</button>
@@ -172,6 +172,15 @@
     </div>
     
     <div style="margin-bottom:20px;">
+      <h3>Player Bio</h3>
+      <div style="background:#0f3460; border-radius:10px; padding:15px; margin-top:10px;">
+        <p style="color:#aaa; font-size:0.9rem; margin:0 0 10px 0;">Describe yourself so NPCs can reference you properly and use [PLAYER] in image descriptions.</p>
+        <textarea id="playerBioInput" placeholder="E.g., '28 year old male, athletic build, brown hair, blue eyes, casual style'" style="width:100%; height:120px; padding:10px; background:#0f1419; border:1px solid #16213e; border-radius:5px; color:white; resize:vertical; font-family:inherit;"></textarea>
+        <button id="savePlayerBio" style="width:100%; padding:8px; background:#00d4ff; border:none; border-radius:5px; color:#0f1419; cursor:pointer; margin-top:10px; font-weight:600;">Save Player Bio</button>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:20px;">
       <h3>Data Management</h3>
       <div style="display:flex; gap:10px; margin-top:10px;">
         <button id="saveBtn" style="flex:1; padding:10px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer;">Save Game</button>
@@ -184,7 +193,7 @@
 </div>
 
 <!-- Chat Modal -->
-<div id="chatModal" class="modal" hidden style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; display:none; justify-content:center; align-items:center; pointer-events:none;">
+<div id="chatModal" class="modal" style="position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:100% !important; background:rgba(0,0,0,0.7) !important; z-index:999999 !important; display:none !important; justify-content:center !important; align-items:center !important; pointer-events:none !important;">
   <div style="background:#16213e; width:90%; max-width:500px; height:80%; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column;">
     <div style="padding:15px; border-bottom:1px solid #0f3460; display:flex; justify-content:space-between; align-items:center;">
       <div style="display:flex; align-items:center; gap:10px;">
@@ -201,14 +210,87 @@
       <!-- Chat messages will appear here -->
     </div>
     
-    <div style="padding:15px; border-top:1px solid #0f3460; display:flex; gap:10px;">
-      <button id="chatAttachBtn" style="padding:8px 12px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer;">+</button>
+    <div style="padding:15px; border-top:1px solid #0f3460; display:flex; gap:10px; position:relative;">
+      <button id="chatAttachBtn" style="padding:8px 12px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; font-size:1.2rem;">+</button>
       <input id="chatInput" type="text" placeholder="Type a message..." style="flex:1; padding:10px; background:#0f1419; border:none; border-radius:5px; color:white;">
       <button id="chatSendBtn" style="padding:8px 15px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer;">Send</button>
+      
+      <!-- Attachment Menu (hidden by default) -->
+      <div id="attachmentMenu" style="display:none; position:absolute; bottom:60px; left:0; background:#0f3460; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.4); min-width:200px; z-index:10;">
+        <button class="attach-menu-item" data-action="request" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.2rem;">📷</span> Request Image
+        </button>
+        <button class="attach-menu-item" data-action="send" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.2rem;">📤</span> Send Image
+        </button>
+        <button class="attach-menu-item" data-action="visualize" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.2rem;">🎬</span> Visual Current Scene
+        </button>
+      </div>
     </div>
     
     <div id="chatTypingIndicator" style="padding:10px 15px; color:#aaa; font-style:italic; display:none;">
       <span id="chatTypingName"></span> is typing...
+    </div>
+  </div>
+</div>
+
+<!-- Send Image Modal -->
+<div id="sendImageModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999999; justify-content:center; align-items:center;">
+  <div style="background:#16213e; width:90%; max-width:500px; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); padding:25px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0; color:#00d4ff;">📤 Send an Image</h3>
+      <button id="closeSendImageModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    <p style="color:#aaa; margin-bottom:15px;">Describe what image you want to send. The AI will respond based on your description and conversation context.</p>
+    <textarea id="sendImagePrompt" placeholder="E.g., 'A selfie of me at the beach' or 'My new car'" style="width:100%; height:100px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical; margin-bottom:15px;"></textarea>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="cancelSendImage" style="padding:10px 20px; background:#0f3460; border:none; border-radius:6px; color:white; cursor:pointer;">Cancel</button>
+      <button id="confirmSendImage" style="padding:10px 20px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Send Image</button>
+    </div>
+  </div>
+</div>
+
+<!-- Request Image Modal -->
+<div id="requestImageModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999999; justify-content:center; align-items:center;">
+  <div style="background:#16213e; width:90%; max-width:550px; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); padding:25px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0; color:#00d4ff;">📷 Request an Image</h3>
+      <button id="closeRequestImageModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <div id="requestImageMode" style="margin-bottom:20px;">
+      <p style="color:#aaa; margin-bottom:15px;">Choose a preset or create a custom request:</p>
+      
+      <!-- Auto Presets -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+        <button class="request-preset" data-preset="casual" style="padding:12px; background:#0f3460; border:1px solid #00d4ff; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+          😊 Casual Selfie
+        </button>
+        <button class="request-preset" data-preset="work" style="padding:12px; background:#0f3460; border:1px solid #00d4ff; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+          👔 Work Selfie
+        </button>
+        <button class="request-preset" data-preset="lewd" style="padding:12px; background:#0f3460; border:1px solid #00d4ff; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+          😏 Lewd Selfie
+        </button>
+        <button class="request-preset" data-preset="nude" style="padding:12px; background:#0f3460; border:1px solid #00d4ff; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+          🔞 Nude Selfie
+        </button>
+      </div>
+      
+      <!-- Manual Option -->
+      <button id="requestManualBtn" style="width:100%; padding:12px; background:#e94560; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; margin-bottom:15px;">
+        ✏️ Custom Request
+      </button>
+      
+      <!-- Manual Input (hidden by default) -->
+      <div id="requestManualInput" style="display:none;">
+        <textarea id="requestImagePrompt" placeholder="Describe what you'd like them to send (e.g., 'a photo of you in your favorite outfit')" style="width:100%; height:100px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical; margin-bottom:15px;"></textarea>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button id="cancelRequestManual" style="padding:10px 20px; background:#0f3460; border:none; border-radius:6px; color:white; cursor:pointer;">Back</button>
+          <button id="confirmRequestManual" style="padding:10px 20px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Request</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -243,8 +325,8 @@
   
   // ----- PRODUCT HELPERS -----
   function getManagerSpeedMultiplier(p) {
-    // 12% per level, curved, capped at managerSpeedCapPct
-    const raw = 1 - Math.pow(1 / (1 + 0.12 * p.managerLevel), 0.85); // fraction faster
+  // ~10% per level, curved, capped at managerSpeedCapPct
+  const raw = 1 - Math.pow(1 / (1 + 0.10 * p.managerLevel), 0.90); // fraction faster
     const capped = Math.min(raw, p.managerSpeedCapPct);
     return 1 - capped; // multiplier applied to baseTimeMs
   }
@@ -254,8 +336,12 @@
   }
 
   function currentValue(p) {
-    // valuePerUnit grows by (1 + valuePerUpgrade) ^ level
-    return +(p.valuePerUnit * Math.pow(1 + p.valuePerUpgrade, p.level)).toFixed(2);
+  // Balanced value growth with diminishing returns
+  // growth = (1 + valuePerUpgrade * level) ^ valueExponent
+  const level = p.level || 0;
+  const growthLinear = 1 + (p.valuePerUpgrade || 0) * level;
+  const exp = (p.valueExponent ?? 0.85); // default diminishing exponent
+  return +(p.valuePerUnit * Math.pow(growthLinear, exp)).toFixed(2);
   }
 
   function clickReductionMs(p) {
@@ -276,7 +362,17 @@
         name: 'Garage',
         cost: 0,
         owned: true,
+        unlocked: true,
         products: []
+      },
+      {
+        id: 'home_office',
+        name: 'Home Office',
+        cost: 5000,
+        owned: false,
+        unlocked: false,
+        products: [],
+        description: 'A dedicated workspace with professional equipment'
       }
     ],
     products: [
@@ -284,11 +380,17 @@
         id: 'website',
         name: 'Website Development',
         locationId: 'garage',
+        // unlock
+        unlocked: true,           // first product is always unlocked
+        unlockCost: 0,            // no cost for first product
         // economy
-        valuePerUnit: 3,          // $ earned per completed cycle
-        level: 0,                 // product upgrade level
-        upgradeCost: 50,          // cost to raise valuePerUnit
-        valuePerUpgrade: 0.20,    // +20% per upgrade
+  valuePerUnit: 3,          // $ earned per completed cycle
+  level: 0,                 // product upgrade level
+  upgradeCost: 50,          // current upgrade cost (will scale by costGrowth)
+  baseUpgradeCost: 50,      // base cost at level 0
+  costGrowth: 1.35,         // cost multiplier per level
+  valuePerUpgrade: 0.10,    // toned down growth per upgrade
+  valueExponent: 0.85,      // diminishing returns exponent
         // timing
         baseTimeMs: 6000,         // 6s cycle base
         running: false,
@@ -301,37 +403,155 @@
         managerHireCost: 500,
         managerUpgradeCost: 250,
         // caps
-        managerSpeedCapPct: 0.50  // at most 50% faster (i.e., half the time)
+  managerSpeedCapPct: 0.40  // at most 40% faster
       },
       {
         id: 'app',
         name: 'Mobile App',
         locationId: 'garage',
-        valuePerUnit: 9, level: 0, upgradeCost: 150, valuePerUpgrade: 0.20,
+        // unlock
+        unlocked: false,
+        unlockCost: 100,          // scaled appropriately to progression
+  valuePerUnit: 9, level: 0, upgradeCost: 150, baseUpgradeCost: 150, costGrowth: 1.35, valuePerUpgrade: 0.12, valueExponent: 0.85,
         baseTimeMs: 10000, running:false, timeRemainingMs:0,
         clickSecondsBase: 1,
         managerHired:false, managerLevel:0, managerHireCost:1500, managerUpgradeCost:750,
-        managerSpeedCapPct:0.50
+  managerSpeedCapPct:0.40
       },
       {
         id: 'consulting',
         name: 'IT Consulting',
         locationId: 'garage',
-        valuePerUnit: 18, level: 0, upgradeCost: 300, valuePerUpgrade: 0.20,
+        // unlock
+        unlocked: false,
+        unlockCost: 400,          // higher cost for third product
+  valuePerUnit: 18, level: 0, upgradeCost: 300, baseUpgradeCost: 300, costGrowth: 1.35, valuePerUpgrade: 0.12, valueExponent: 0.85,
         baseTimeMs: 14000, running:false, timeRemainingMs:0,
         clickSecondsBase:1,
         managerHired:false, managerLevel:0, managerHireCost:3000, managerUpgradeCost:1500,
-        managerSpeedCapPct:0.50
+  managerSpeedCapPct:0.40
       },
       {
         id: 'cloud',
         name: 'Cloud Services',
         locationId: 'garage',
-        valuePerUnit: 32, level: 0, upgradeCost: 500, valuePerUpgrade: 0.20,
+        // unlock
+        unlocked: false,
+        unlockCost: 1800,         // significant cost for fourth product
+  valuePerUnit: 32, level: 0, upgradeCost: 500, baseUpgradeCost: 500, costGrowth: 1.35, valuePerUpgrade: 0.10, valueExponent: 0.85,
         baseTimeMs: 20000, running:false, timeRemainingMs:0,
         clickSecondsBase:1,
         managerHired:false, managerLevel:0, managerHireCost:5000, managerUpgradeCost:2500,
-        managerSpeedCapPct:0.50
+  managerSpeedCapPct:0.40
+      },
+      {
+        id: 'seo',
+        name: 'SEO Services',
+        locationId: 'garage',
+        unlocked: false,
+        unlockCost: 3000,
+        valuePerUnit: 55, level: 0, upgradeCost: 800, baseUpgradeCost: 800, costGrowth: 1.35, valuePerUpgrade: 0.11, valueExponent: 0.85,
+        baseTimeMs: 25000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:8000, managerUpgradeCost:4000,
+        managerSpeedCapPct:0.40
+      },
+      {
+        id: 'branding',
+        name: 'Brand Design',
+        locationId: 'garage',
+        unlocked: false,
+        unlockCost: 5000,
+        valuePerUnit: 85, level: 0, upgradeCost: 1200, baseUpgradeCost: 1200, costGrowth: 1.35, valuePerUpgrade: 0.11, valueExponent: 0.85,
+        baseTimeMs: 30000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:12000, managerUpgradeCost:6000,
+        managerSpeedCapPct:0.40
+      },
+      {
+        id: 'ecommerce',
+        name: 'E-Commerce Store',
+        locationId: 'garage',
+        unlocked: false,
+        unlockCost: 8000,
+        valuePerUnit: 130, level: 0, upgradeCost: 1800, baseUpgradeCost: 1800, costGrowth: 1.35, valuePerUpgrade: 0.10, valueExponent: 0.85,
+        baseTimeMs: 35000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:18000, managerUpgradeCost:9000,
+        managerSpeedCapPct:0.40
+      },
+      {
+        id: 'automation',
+        name: 'Business Automation',
+        locationId: 'garage',
+        unlocked: false,
+        unlockCost: 12000,
+        valuePerUnit: 200, level: 0, upgradeCost: 2500, baseUpgradeCost: 2500, costGrowth: 1.35, valuePerUpgrade: 0.10, valueExponent: 0.85,
+        baseTimeMs: 40000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:25000, managerUpgradeCost:12500,
+        managerSpeedCapPct:0.40
+      },
+      // HOME OFFICE LOCATION PRODUCTS
+      {
+        id: 'copywriting',
+        name: 'Copywriting Services',
+        locationId: 'home_office',
+        unlocked: false,
+        unlockCost: 0, // First product in location unlocks with location
+        valuePerUnit: 300, level: 0, upgradeCost: 3500, baseUpgradeCost: 3500, costGrowth: 1.35, valuePerUpgrade: 0.10, valueExponent: 0.85,
+        baseTimeMs: 35000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:35000, managerUpgradeCost:17500,
+        managerSpeedCapPct:0.40
+      },
+      {
+        id: 'video_editing',
+        name: 'Video Production',
+        locationId: 'home_office',
+        unlocked: false,
+        unlockCost: 20000,
+        valuePerUnit: 450, level: 0, upgradeCost: 5000, baseUpgradeCost: 5000, costGrowth: 1.35, valuePerUpgrade: 0.10, valueExponent: 0.85,
+        baseTimeMs: 45000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:50000, managerUpgradeCost:25000,
+        managerSpeedCapPct:0.40
+      },
+      {
+        id: 'marketing',
+        name: 'Marketing Campaigns',
+        locationId: 'home_office',
+        unlocked: false,
+        unlockCost: 35000,
+        valuePerUnit: 700, level: 0, upgradeCost: 7500, baseUpgradeCost: 7500, costGrowth: 1.35, valuePerUpgrade: 0.11, valueExponent: 0.85,
+        baseTimeMs: 50000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:70000, managerUpgradeCost:35000,
+        managerSpeedCapPct:0.40
+      },
+      {
+        id: 'consulting_premium',
+        name: 'Premium Consulting',
+        locationId: 'home_office',
+        unlocked: false,
+        unlockCost: 55000,
+        valuePerUnit: 1100, level: 0, upgradeCost: 11000, baseUpgradeCost: 11000, costGrowth: 1.35, valuePerUpgrade: 0.11, valueExponent: 0.85,
+        baseTimeMs: 60000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:100000, managerUpgradeCost:50000,
+        managerSpeedCapPct:0.40
+      },
+      {
+        id: 'saas',
+        name: 'SaaS Platform',
+        locationId: 'home_office',
+        unlocked: false,
+        unlockCost: 85000,
+        valuePerUnit: 1700, level: 0, upgradeCost: 16000, baseUpgradeCost: 16000, costGrowth: 1.35, valuePerUpgrade: 0.10, valueExponent: 0.85,
+        baseTimeMs: 70000, running:false, timeRemainingMs:0,
+        clickSecondsBase:1,
+        managerHired:false, managerLevel:0, managerHireCost:150000, managerUpgradeCost:75000,
+        managerSpeedCapPct:0.40
       }
     ],
     employees: [],
@@ -353,7 +573,8 @@
       uiDensity: 50,
       atmosphere: 50,
       guidelines: 50,
-      policy: 'professional'
+      policy: 'professional',
+      playerBio: '' // Player's self-description for NPCs and image generation
     },
     activeTab: 'dashboard',
     activeChat: null,
@@ -363,6 +584,375 @@
   // Helper function to get DOM elements safely
   function $(id) {
     return document.getElementById(id);
+  }
+
+  // -------- NPC MEMORY & DIALOGUE HELPERS (professional-grade) --------
+  // Lightweight tokenization
+  function tokenize(text) {
+    return (text || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+  }
+
+  // Extract main topics from a message for anti-repetition tracking
+  function extractTopics(message, emp) {
+    const topics = [];
+    const m = message.toLowerCase();
+    
+    // Check for job/work mentions
+    if (emp.productManaged && m.includes(emp.productManaged.toLowerCase())) {
+      topics.push('job_specific');
+    }
+    if (emp.position && m.includes(emp.position.toLowerCase())) {
+      topics.push('job_title');
+    }
+    if (/\b(work|job|task|project|deadline)\b/.test(m)) {
+      topics.push('work_general');
+    }
+    
+    // Check for hobby mentions
+    (emp.hobbies || []).forEach(h => {
+      if (m.includes(h.toLowerCase())) topics.push(`hobby_${h}`);
+    });
+    
+    // Check for relationship topics
+    if (/\b(date|dinner|coffee|drinks|hang out)\b/.test(m)) topics.push('social_invite');
+    if (/\b(flirt|cute|hot|sexy|attractive)\b/.test(m)) topics.push('flirting');
+    if (/\b(kiss|touch|intimate|physical)\b/.test(m)) topics.push('physical');
+    if (/\b(love|feel|emotion|heart)\b/.test(m)) topics.push('emotional');
+    
+    return topics;
+  }
+
+  // Ensure structured memory on employee (back-compat from array of strings)
+  function ensureEmployeeMemory(emp) {
+    if (!emp) return;
+    if (!emp.memory || Array.isArray(emp.memory)) {
+      const prev = Array.isArray(emp.memory) ? emp.memory : [];
+      emp.memory = { 
+        items: [], 
+        cap: 300, // Increased to 300 for extensive long-term memory
+        styleCounters: { 
+          total: 0, 
+          sincePersonal: 99,
+          recentTopics: [], // track last 10 topics mentioned
+          jobMentions: 0,
+          hobbyMentions: 0,
+          lastJobMention: 0,
+          lastHobbyMention: 0
+        },
+        conversationPhase: 'early', // early, familiar, intimate
+        intimacyLevel: 0 // 0-100 scale
+      };
+      // ingest old strings as low-importance notes
+      for (const s of prev) remember(emp, s, 'note', 0.5);
+    } else if (!emp.memory.styleCounters) {
+      emp.memory.styleCounters = { 
+        total: 0, 
+        sincePersonal: 99,
+        recentTopics: [],
+        jobMentions: 0,
+        hobbyMentions: 0,
+        lastJobMention: 0,
+        lastHobbyMention: 0
+      };
+    }
+    // Upgrade existing memory caps
+    if (emp.memory.cap && emp.memory.cap < 300) {
+      emp.memory.cap = 300;
+    }
+    if (!emp.memory.conversationPhase) emp.memory.conversationPhase = 'early';
+    if (emp.memory.intimacyLevel === undefined) emp.memory.intimacyLevel = 0;
+    
+    // Ensure stats are properly initialized
+    ensureEmployeeStats(emp);
+  }
+
+  // Ensure employee has new stat system (migration from old stats)
+  function ensureEmployeeStats(emp) {
+    if (!emp || !emp.stats) {
+      if (emp) emp.stats = {};
+      else return;
+    }
+    
+    const stats = emp.stats;
+    
+    // Migrate old stats to new system
+    if (stats.love !== undefined && stats.affection === undefined) {
+      stats.affection = stats.love;
+      delete stats.love;
+    }
+    if (stats.efficiency !== undefined && stats.productivity === undefined) {
+      stats.productivity = stats.efficiency;
+      delete stats.efficiency;
+    }
+    if (stats.anger !== undefined) {
+      // Convert anger to obedience (inverse relationship)
+      if (stats.obedience === undefined) {
+        stats.obedience = Math.max(0, 100 - stats.anger);
+      }
+      delete stats.anger;
+    }
+    
+    // Initialize missing stats with defaults
+    if (stats.affection === undefined) stats.affection = 30;
+    if (stats.comfort === undefined) stats.comfort = 50;
+    if (stats.trust === undefined) stats.trust = 40;
+    if (stats.desire === undefined) stats.desire = 10;
+    if (stats.obedience === undefined) stats.obedience = 50;
+    if (stats.productivity === undefined) stats.productivity = 60;
+    
+    // Clamp all stats to 0-100
+    for (const key of ['affection', 'comfort', 'trust', 'desire', 'obedience', 'productivity']) {
+      if (stats[key] !== undefined) {
+        stats[key] = Math.max(0, Math.min(100, stats[key]));
+      }
+    }
+  }
+
+  // Add an item to long-term memory with de-dup and cap
+  function remember(emp, text, type = 'note', importance = 1) {
+    ensureEmployeeMemory(emp);
+    if (!text) return;
+    const now = Date.now();
+    const key = text.trim().toLowerCase();
+    // merge if similar
+    const existing = emp.memory.items.find(i => i.text.trim().toLowerCase() === key);
+    if (existing) {
+      existing.ts = now;
+      existing.importance = Math.max(existing.importance, importance);
+      existing.count = (existing.count || 1) + 1;
+      return;
+    }
+    emp.memory.items.push({ text, type, importance, ts: now, count: 1 });
+    if (emp.memory.items.length > emp.memory.cap) {
+      // drop lowest score item
+      emp.memory.items.sort((a,b)=> (a.importance + (a.count||1)*0.1) - (b.importance + (b.count||1)*0.1));
+      emp.memory.items.shift();
+    }
+  }
+
+  // Extract salient facts from a message for memory
+  function extractSalientFacts(message, emp) {
+    const facts = [];
+    if (!message) return facts;
+    const m = message.toLowerCase();
+    const add = (text, type, imp=1.0) => facts.push({ text, type, importance: imp });
+    
+    // High-importance work events
+    if (/\b(promot|raise|level up)\b/.test(m)) add('Discussed promotion/raise', 'event', 1.8);
+    if (/\b(fire|fir(e|ing)|terminat(e|ion))\b/.test(m)) add('Termination discussed', 'event', 2.0);
+    if (/\b(deadline|ship|launch|deliver(y|able)?)\b/.test(m)) add('Work deadline mentioned', 'work', 1.3);
+    
+    // Medium-importance interactions
+    if (/\b(gift|present|bonus)\b/.test(m)) add('Gift or bonus mentioned', 'event', 1.4);
+    if (/\b(meet(ing)?|1:1|one on one)\b/.test(m)) add('Meeting planned', 'event', 1.1);
+    if (/\b(date|coffee|lunch|dinner)\b/.test(m) && !/deadline/.test(m)) add('Social invitation', 'relation', 1.5);
+    
+    // Emotional/relationship markers
+    if (/\b(thank|appreciate|grateful)\b/.test(m)) add('Expressed gratitude', 'relation', 1.0);
+    if (/\b(sorry|apolog|my bad)\b/.test(m)) add('Apologized', 'relation', 1.0);
+    if (/\b(love|adore|crush)\b/.test(m)) add('Romantic sentiment', 'relation', 1.6);
+    if (/\b(frustrat|annoy|angry|upset)\b/.test(m)) add('Negative emotion', 'relation', 1.2);
+    
+    // Intimacy progression (context-aware)
+    if (/\b(flirt|tease|cute|hot|sexy|attractive)\b/.test(m)) add('Flirtatious exchange', 'relation', 1.4);
+    if (/\b(kiss|touch|hold|hug|embrace)\b/.test(m)) add('Physical affection discussed', 'intimacy', 1.7);
+    if (/\b(want|desire|need) (you|me|us)\b/.test(m)) add('Expressed desire', 'intimacy', 1.5);
+    
+    // Avoid over-logging job mentions - only log if it's a significant event
+    // NOT: routine job mentions
+    
+    return facts;
+  }
+
+  // Score memory relevance versus last message tokens
+  function scoreMemory(item, tokens, emp) {
+    const overlap = tokens ? tokens.filter(t => item.text.toLowerCase().includes(t)).length : 0;
+    const recency = 1 / Math.max(1, (Date.now() - (item.ts || 0)) / (1000*60*60)); // hours decay
+    
+    // Penalize job/hobby mentions if they were mentioned recently
+    let repetitionPenalty = 0;
+    if (emp && emp.memory && emp.memory.styleCounters) {
+      const counters = emp.memory.styleCounters;
+      const text = item.text.toLowerCase();
+      
+      // Check if this memory is about job/hobbies
+      const isJobRelated = /\b(manage|job|work|position|role)\b/.test(text) || 
+                          (emp.productManaged && text.includes(emp.productManaged.toLowerCase()));
+      const isHobbyRelated = (emp.hobbies || []).some(h => text.toLowerCase().includes(h.toLowerCase()));
+      
+      if (isJobRelated && (counters.total - counters.lastJobMention) < 5) {
+        repetitionPenalty = 2.0; // Heavy penalty if job mentioned in last 5 messages
+      }
+      if (isHobbyRelated && (counters.total - counters.lastHobbyMention) < 6) {
+        repetitionPenalty = 2.5; // Even heavier penalty for hobbies
+      }
+    }
+    
+    // Boost relationship/emotional memories
+    const typeBoost = (item.type === 'relation' || item.type === 'intimacy') ? 0.8 : 0;
+    
+    return overlap * 0.6 + (item.importance || 1) * 0.9 + recency * 0.5 + (item.count || 1) * 0.1 + typeBoost - repetitionPenalty;
+  }
+
+  function retrieveMemories(emp, lastMessage, limit = 25) {
+    ensureEmployeeMemory(emp);
+    const tokens = tokenize(lastMessage).slice(0, 20);
+    return emp.memory.items
+      .slice()
+      .sort((a, b) => scoreMemory(b, tokens, emp) - scoreMemory(a, tokens, emp))
+      .slice(0, limit);
+  }
+
+  // Sanitize and tighten model outputs
+  function sanitizeNpcResponse(text, maxSentences = 2) {
+    if (!text) return '';
+    let t = String(text);
+    
+    // Strip simple *actions* but keep contextual ones that add flavor
+    // Remove pure action descriptions like *laughs* *smiles* *nods*
+    t = t.replace(/\*\s*(laughs?|smiles?|grins?|nods?|shrugs?|sighs?|waves?)\s*\*/gi, '');
+    
+    // Keep more complex actions that add context, but strip asterisks
+    t = t.replace(/\*/g, '');
+    
+    // Remove bracketed actions
+    t = t.replace(/\[(.*?)\]/g, '');
+    
+    // Collapse whitespace
+    t = t.replace(/\s+/g, ' ').trim();
+    
+    // Split into sentences - handle multiple punctuation marks
+    const sentenceEndings = /([.!?]+)\s+/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+    
+    while ((match = sentenceEndings.exec(t)) !== null) {
+      parts.push(t.slice(lastIndex, match.index + match[1].length));
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining text if it forms a complete sentence
+    const remaining = t.slice(lastIndex).trim();
+    if (remaining) {
+      // Check if it ends with punctuation (complete sentence)
+      if (/[.!?]$/.test(remaining)) {
+        parts.push(remaining);
+      } else if (parts.length === 0) {
+        // If we have no complete sentences but have text, include it
+        // This handles cases where AI didn't add ending punctuation
+        parts.push(remaining + '.');
+      }
+      // Otherwise, it's a trailing fragment - check if it looks intentional
+      else if (/\.\.\.$/.test(remaining)) {
+        // Trailing ellipsis is intentional (suspense/drama)
+        parts.push(remaining);
+      }
+      // Else drop the incomplete fragment
+    }
+    
+    // Take up to maxSentences complete sentences
+    const sentences = parts.slice(0, maxSentences).join(' ');
+    
+    // Increase character limit to allow fuller responses (was 320)
+    // Only cap if truly excessive (prevent abuse)
+    return sentences.slice(0, 600);
+  }
+
+  // Build a professional, non-repetitive prompt
+  function buildChatPrompt(emp, conversationHistory, lastMessage) {
+    ensureEmployeeMemory(emp);
+    const policy = gameState.settings?.policy || 'professional';
+    const guidelines = gameState.settings?.guidelines ?? 50;
+    const atmosphere = gameState.settings?.atmosphere ?? 50;
+    const personalAllowed = emp.memory.styleCounters.sincePersonal >= 4; // at most 1 in 4
+    const relevant = retrieveMemories(emp, lastMessage, 40); // Retrieve up to 40 relevant memories
+
+    // Calculate relationship/intimacy levels from stats
+    const affection = emp.stats.affection ?? emp.stats.love ?? 0;
+    const comfort = emp.stats.comfort ?? 0;
+    const desire = emp.stats.desire ?? 0;
+    const relationshipScore = (affection + comfort + desire) / 3;
+    
+    // Update conversation phase based on relationship
+    if (relationshipScore > 70) emp.memory.conversationPhase = 'intimate';
+    else if (relationshipScore > 40) emp.memory.conversationPhase = 'familiar';
+    else emp.memory.conversationPhase = 'early';
+    
+    emp.memory.intimacyLevel = Math.min(100, Math.max(0, relationshipScore + desire * 0.3));
+
+    // Adult-topic handling guidance - more nuanced based on relationship
+    const adultGuidance = (() => {
+      const phase = emp.memory.conversationPhase;
+      const intimacy = emp.memory.intimacyLevel;
+      
+      if (policy === 'open') {
+        if (intimacy > 60) {
+          return 'The relationship is established and intimate. Respond naturally to adult topics with warmth and openness - no need to mention consent repeatedly. Be playful, receptive, and authentic.';
+        } else if (intimacy > 30) {
+          return 'There\'s growing chemistry. If adult topics arise, respond with interest and gradual openness, matching the energy naturally without over-explaining boundaries.';
+        } else {
+          return 'Early relationship stage. If adult topics come up, respond professionally but with warmth - you can show interest without diving deep yet.';
+        }
+      }
+      
+      if (policy === 'professional') {
+        return 'Maintain professional boundaries. If topics become suggestive, politely redirect to work matters without making it awkward.';
+      }
+      
+      // Default/casual policy
+      if (intimacy > 50) {
+        return 'Comfortable rapport established. Adult topics can be acknowledged naturally without dwelling on boundaries - respond authentically.';
+      } else {
+        return 'Building rapport. Keep things light and professional, but you can be playfully receptive if the tone shifts.';
+      }
+    })();
+
+    // Dynamic style directives based on conversation flow
+    const jobMentionedRecently = (emp.memory.styleCounters.total - emp.memory.styleCounters.lastJobMention) < 4;
+    const hobbyMentionedRecently = (emp.memory.styleCounters.total - emp.memory.styleCounters.lastHobbyMention) < 5;
+    
+    const styleDirectives = [
+      'Keep responses natural and conversational: 2-3 sentences, completing your thoughts.',
+      'NEVER use puns or wordplay.',
+      'Do not narrate actions - just speak naturally.',
+      jobMentionedRecently ? 'DO NOT mention your job role or work responsibilities.' : null,
+      hobbyMentionedRecently ? 'DO NOT mention your hobbies or personal interests.' : null,
+      'Only mention job/hobbies if DIRECTLY asked about them.',
+      'Speak like a real person in a workplace - keep it grounded and authentic.',
+      'Vary your responses - avoid patterns and formulaic replies.',
+      'ALWAYS complete your sentences - do not trail off with ellipsis (...) unless being intentionally mysterious or hesitant.',
+      adultGuidance
+    ].filter(Boolean);
+
+    const mood = `Affection: ${affection}%, Comfort: ${comfort}%, Desire: ${desire}%`;
+    const workplace = `Atmosphere: ${atmosphere>66?'relaxed':atmosphere>33?'balanced':'strict'} | Phase: ${emp.memory.conversationPhase}`;
+
+    // Build context - prioritize relevant memories over static facts
+    const contextFacts = [
+      `You are ${emp.name}, ${emp.position} at the company.`,
+      `Current mood: ${mood}`,
+      `Workplace vibe: ${workplace}`,
+      ...relevant.slice(0, 20).map(i => `Remember: ${i.text}`), // Show up to 20 relevant memories
+    ].join('\n');
+
+  const prompt = `${contextFacts}
+
+Recent conversation:
+${conversationHistory.split('\n').slice(-60).join('\n')}
+
+${emp.name}, the player just said: "${lastMessage}"
+
+Response guidelines:
+${styleDirectives.map((d, i) => `${i+1}. ${d}`).join('\n')}
+
+Reply naturally as ${emp.name} (just dialogue, no actions):`;
+    
+    return { prompt, personalAllowed };
   }
 
   // Get all DOM element references
@@ -402,6 +992,20 @@
   const settingsPanel = $('settingsPanel');
 
   const chatModal = $('chatModal');
+
+  // Add debug button to settings panel
+  if (settingsPanel && !document.getElementById('debugAddMoneyBtn')) {
+    const debugBtn = document.createElement('button');
+    debugBtn.id = 'debugAddMoneyBtn';
+    debugBtn.textContent = 'Add $10,000 (Debug)';
+    debugBtn.style.cssText = 'margin:10px 0; padding:10px; background:#e94560; color:#fff; border:none; border-radius:6px; font-size:1rem; cursor:pointer; width:100%';
+    debugBtn.onclick = function() {
+      gameState.cash += 10000;
+      showNotification('Added $10,000 (Debug)');
+      if (cashEl) cashEl.textContent = Math.floor(gameState.cash);
+    };
+    settingsPanel.appendChild(debugBtn);
+  }
   const chatName = $('chatName');
   const chatAvatar = $('chatAvatar');
   const chatMessages = $('chatMessages');
@@ -472,6 +1076,7 @@
           }
           if (btn.classList.contains('upgrade-product-btn')) return upgradeProduct(id);
           if (btn.classList.contains('manager-btn')) return hireOrUpgradeManager(id);
+          if (btn.classList.contains('unlock-product-btn')) return unlockProduct(id);
         });
         window.__productsDelegationBound__ = true;
       }
@@ -486,13 +1091,14 @@
 
   // Generate a pool of potential hires
     function generatePotentialHires(productId) {
-    const firstNames = ['Alex','Sam','Jordan','Taylor','Casey','Morgan','Riley','Avery','Eva','Maya','Lena','Zoe','Mia','Chloe','Aria'];
-    const lastNames  = ['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Lopez','Martinez','Lee','Clark','Young','Hall'];
-    const personalities = ['Playful','Reserved','Confident','Witty','Thoughtful','Cheeky','Dry-humored','Warm','Ambitious','Chill'];
-    const traits = ['Charismatic','Analytical','Creative','Detail-oriented','Adaptable','Empathetic','Organized','Bold'];
-    const hobbies = ['Reading','Photography','Hiking','Gaming','Cooking','Traveling','Music','Art','Yoga','Dancing','Climbing','Baking','Thrifting'];
-    const kinks = ['Roleplay','Bondage','Exhibitionism','Voyeurism','Dom/sub','Praise','Teasing','Spanking','Light impact','Dirty talk'];
-    const ages = [22,23,24,25,26,27,28,29,30,31,32];
+  // Only female first names
+  const firstNames = ['Eva','Maya','Lena','Zoe','Mia','Chloe','Aria','Lucy','Ella','Grace','Sophie','Lily','Nina','Kate','Jade','Ruby','Ivy','Cora','Daisy','Hazel','Violet','Willow','Iris','Piper','Quinn','Reese','Sage','Skye','Tessa','Wren','Zara','Cleo','Luna','Nova','Ember','Faye','Juno','Kira','Lyra','Mira','Nola','Rhea','Sia','Vera','Zia'];
+    const lastNames  = ['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Lopez','Martinez','Lee','Clark','Young','Hall', 'Allen','King','Wright','Scott','Green','Baker','Adams','Nelson','Carter','Mitchell','Perez','Roberts','Turner','Phillips','Campbell','Parker','Evans','Edwards','Collins','Stewart','Sanchez','Morris','Rogers','Reed','Cook','Morgan','Bell','Murphy','Bailey','Rivera','Cooper','Richardson', 'Howard','Ward','Cox','Diaz','Peterson','Gray','Ramirez','James', 'Watson','Brooks','Kelly','Sanders','Price','Bennett','Wood','Barnes','Ross','Henderson','Coleman','Jenkins','Perry','Powell','Long','Patterson','Hughes','Flores','Washington','Butler','Simmons','Foster','Gonzales','Bryant','Alexander','Russell','Griffin','Diaz','Hayes'];
+    const personalities = ['Playful','Reserved','Confident','Witty','Thoughtful','Cheeky','Dry-humored','Warm','Ambitious','Chill','Inquisitive','Loyal','Optimistic','Pessimistic','Sarcastic','Sincere','Spontaneous','Stoic','Supportive','Adventurous','Cautious','Curious','Diligent','Easygoing','Energetic','Focused','Generous','Humble','Imaginative','Meticulous','Pragmatic','Resourceful','Sociable','Tactful','Versatile'];
+    const traits = ['Charismatic','Analytical','Creative','Detail-oriented','Adaptable','Empathetic','Organized','Bold', 'Reliable','Innovative','Strategic','Patient','Decisive','Collaborative','Resilient','Visionary','Persuasive','Curious','Ambitious','Supportive', 'Meticulous','Proactive','Diligent','Resourceful','Versatile', 'Submissive','Dominant','Flirty','Shy','Confident','Caring','Playful','Serious','Adventurous','Loyal','Spontaneous','Thoughtful','Cheeky','Witty','Warm','Inquisitive'];
+    const hobbies = ['Reading','Photography','Hiking','Gaming','Cooking','Traveling','Music','Art','Yoga','Dancing','Climbing','Baking','Thrifting','Gardening','Writing','Cycling','Swimming','Crafting','Meditation','Volunteering','Fishing','Running','Collecting','Knitting','Birdwatching','Puzzles','Board games','Movies','Theater','Fitness','Martial arts','Skiing','Snowboarding','Surfing','Skateboarding','Camping','Astronomy','DIY projects','Blogging','Podcasting','Learning languages','Genealogy','Magic tricks','Robotics','Woodworking','Calligraphy','Chess','Travel blogging','Vlogging','Stand-up comedy','Improv'];
+    const kinks = ['Roleplay','Bondage','Exhibitionism','Voyeurism','Dom/sub','Praise','Teasing','Spanking','Light impact','Dirty talk','Public play','Costumes','Sensory play','Tickling','Restraints','Blindfolds','Temperature play','Massage','Oral fixation','Foot fetish','Group play','Cuddling','Hair pulling','Choking','Anal play','Threesomes','Fantasies','Power exchange','Erotic humiliation','Sensation play','Mutual masturbation',];
+    const ages = [22,23,24,25,26,27,28,29,30,31,32,33,34];
 
     const pickSome = (arr, min, max) => {
         const n = Math.max(min, Math.min(max, Math.floor(Math.random()*(max-min+1))+min));
@@ -503,42 +1109,45 @@
 
     const candidates = [];
     for (let i = 0; i < 3; i++) {
-        const cand = {
-        id: `emp_${Date.now()}_${i}`,
-        name: `${firstNames[Math.floor(Math.random()*firstNames.length)]} ${lastNames[Math.floor(Math.random()*lastNames.length)]}`,
-        age: ages[Math.floor(Math.random()*ages.length)],
-        position: 'Manager Candidate',
-        productId,
-        // personality & interests
-        personalityTraits: pickSome(personalities, 3, 5),
-        keyTrait: traits[Math.floor(Math.random()*traits.length)],
-        hobbies: pickSome(hobbies, 1, 2),
-        kinks: pickSome(kinks, 2, 4),
-        // stats (new names)
-        stats: {
-            efficiency: 50 + Math.floor(Math.random()*30), // job performance
-            comfort:    40 + Math.floor(Math.random()*30), // how friendly talking to you
-            love:       20 + Math.floor(Math.random()*25), // romantic inclination
-            anger:      10 + Math.floor(Math.random()*20), // higher = touchier/irritable
-        },
-        // onboarding + bio fields
-        hired: false,
-        onboarding: true,
-        bioComplete: false,
-        productManaged: null,
-        physical: {
-            heightBuild: null,
-            hair: { color: null, style: null, length: null },
-            eyes: { color: null, shape: null },
-            skinTone: null,
-            bodyShape: null,
-            breastSize: null,
-            buttSize: null,
-            fashion: null
-        },
-        profileImage: null,
-        bio: null
-        };
+    const cand = {
+    id: `emp_${Date.now()}_${i}`,
+    name: `${firstNames[Math.floor(Math.random()*firstNames.length)]} ${lastNames[Math.floor(Math.random()*lastNames.length)]}`,
+    age: ages[Math.floor(Math.random()*ages.length)],
+    gender: 'female',
+    position: 'Manager Candidate',
+    productId,
+    // personality & interests
+    personalityTraits: pickSome(personalities, 3, 5),
+    keyTrait: traits[Math.floor(Math.random()*traits.length)],
+    hobbies: pickSome(hobbies, 1, 2),
+    kinks: pickSome(kinks, 2, 4),
+    // stats (0-100 scale)
+    stats: {
+      affection:    20 + Math.floor(Math.random()*20),  // How much they like you personally
+      comfort:      40 + Math.floor(Math.random()*30),  // How comfortable they feel around you
+      trust:        30 + Math.floor(Math.random()*30),  // How much they trust you
+      desire:       5 + Math.floor(Math.random()*15),   // Romantic/sexual attraction
+      obedience:    40 + Math.floor(Math.random()*30),  // Willingness to follow instructions
+      productivity: 50 + Math.floor(Math.random()*30)   // Work performance (affects game mechanics)
+    },
+    // onboarding + bio fields
+    hired: false,
+    onboarding: true,
+    bioComplete: false,
+    productManaged: null,
+    physical: {
+      heightBuild: null,
+      hair: { color: null, style: null, length: null },
+      eyes: { color: null, shape: null },
+      skinTone: null,
+      bodyShape: null,
+      breastSize: null,
+      buttSize: null,
+      fashion: null
+    },
+    profileImage: null,
+    bio: null
+    };
         candidates.push(cand);
     }
     return candidates;
@@ -553,30 +1162,10 @@
     const candidates = generatePotentialHires(productId);
     gameState.currentCandidates = candidates;
 
-    // Create and configure modal overlay
-    const modal = document.createElement('div');
-    modal.id = 'hiringModal';
-    
-    // Create modal content container
-    const modalContent = document.createElement('div');
-    modalContent.style.cssText = `
-        background: #0f1419;
-        width: 92%;
-        max-width: 1000px;
-        padding: 18px;
-        border-radius: 14px;
-        box-shadow: 0 20px 40px rgba(0,0,0,.5);
-        color: #fff;
-    `;
-    
-    // Stop click propagation on content
-    modalContent.addEventListener('click', (e) => e.stopPropagation());
-    
-    // Add overlay click handler
-    modal.addEventListener('click', (e) => { 
-        if (e.target === modal) closeHiringModal(); 
-    });
-    document.body.style.overflow = 'hidden'; // Prevent background scroll
+  const modal = document.createElement('div');
+  modal.id = 'hiringModal';
+  modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:3000; display:flex; justify-content:center; align-items:center; pointer-events:auto;';
+    modal.hidden = false; // ensure it's visible
 
     const cards = candidates.map((c, i) => `
         <div class="candidate-card" style="background:#16213e; border-radius:10px; padding:16px; margin:10px; width:300px;">
@@ -587,20 +1176,28 @@
 
         <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-bottom:12px;">
             <div style="background:#0f3460; padding:6px; border-radius:6px;">
-            <div style="font-size:.75rem; color:#aaa;">Efficiency</div>
-            <div>${c.stats.efficiency}%</div>
+            <div style="font-size:.75rem; color:#aaa;">Affection</div>
+            <div style="color:#e94560; font-weight:600;">${Math.round(c.stats.affection ?? 0)}%</div>
             </div>
             <div style="background:#0f3460; padding:6px; border-radius:6px;">
             <div style="font-size:.75rem; color:#aaa;">Comfort</div>
-            <div>${c.stats.comfort}%</div>
+            <div style="color:#4ecca3; font-weight:600;">${Math.round(c.stats.comfort ?? 0)}%</div>
             </div>
             <div style="background:#0f3460; padding:6px; border-radius:6px;">
-            <div style="font-size:.75rem; color:#aaa;">Love</div>
-            <div>${c.stats.love}%</div>
+            <div style="font-size:.75rem; color:#aaa;">Trust</div>
+            <div style="color:#00d4ff; font-weight:600;">${Math.round(c.stats.trust ?? 0)}%</div>
             </div>
             <div style="background:#0f3460; padding:6px; border-radius:6px;">
-            <div style="font-size:.75rem; color:#aaa;">Anger</div>
-            <div>${c.stats.anger}%</div>
+            <div style="font-size:.75rem; color:#aaa;">Desire</div>
+            <div style="color:#ff6b9d; font-weight:600;">${Math.round(c.stats.desire ?? 0)}%</div>
+            </div>
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Obedience</div>
+            <div style="color:#c77dff; font-weight:600;">${Math.round(c.stats.obedience ?? 0)}%</div>
+            </div>
+            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Productivity</div>
+            <div style="color:#ffd700; font-weight:600;">${Math.round(c.stats.productivity ?? 0)}%</div>
             </div>
         </div>
 
@@ -610,46 +1207,55 @@
         </div>
     `).join('');
 
-    modal.innerHTML = `
-        <div style="background:#0f1419; width:92%; max-width:1000px; padding:18px; border-radius:14px; box-shadow:0 5px 25px rgba(0,0,0,0.5);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h2 style="margin:0;">Select a Manager for ${product.name}</h2>
-            <button class="close-modal-btn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
-        </div>
-        <div style="display:flex; justify-content:center; flex-wrap:wrap;">
-            ${cards}
-        </div>
-        <p style="margin-top:12px; color:#aaa; font-size:.9rem;">You’ll be charged <strong>${product.managerHireCost}</strong> when you choose a candidate.</p>
-        </div>
-    `;
+  modal.innerHTML = `
+    <div class="hiring-modal-panel" role="dialog" aria-modal="true" aria-label="Select a Manager" style="background:#0f1419; width:92%; max-width:1000px; padding:18px; border-radius:14px; box-shadow:0 5px 25px rgba(0,0,0,0.5); pointer-events:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h2 style="margin:0;">Select a Manager for ${product.name}</h2>
+      <button class="close-modal-btn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    <div style="display:flex; justify-content:center; flex-wrap:wrap;">
+      ${cards}
+    </div>
+    <p style="margin-top:12px; color:#aaa; font-size:.9rem;">You’ll be charged <strong>${product.managerHireCost}</strong> when you choose a candidate.</p>
+    </div>
+  `;
 
-    // Event handlers
-    modalContent.addEventListener('click', (e) => {
-        if (e.target.classList.contains('close-modal-btn')) {
-            closeHiringModal();
-            return;
-        }
-        if (e.target.classList.contains('select-candidate-btn')) {
-            const index = parseInt(e.target.dataset.index, 10);
-            selectManagerCandidate(index);
-            return;
-        }
-    });
-    // Add to DOM
     document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
-    
-    // Track modal and handle ESC
-    modalRegistry.set('hiring', { el: modal });
-    const onEsc = (ev) => { if (ev.key === 'Escape') closeHiringModal(); };
-    window.__hiringEscHandler__ = onEsc;
-    window.addEventListener('keydown', onEsc);
+    gameState.currentCandidates = candidates;
+
+    // Set up event listeners for background click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeHiringModal();
+      }
+    });
+
+    // Set up close button listener
+    const closeBtn = modal.querySelector('.close-modal-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeHiringModal);
+    }
+
+    // Set up select candidate buttons
+    const selectButtons = modal.querySelectorAll('.select-candidate-btn');
+    selectButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const index = parseInt(btn.dataset.index, 10);
+        if (!Number.isNaN(index)) {
+          selectManagerCandidate(index);
+        }
+      });
+    });
 
     // Allow Esc to close
-    const esc = (ev) => { if (ev.key === 'Escape') { closeHiringModal(); window.removeEventListener('keydown', esc); } };
+    const esc = (ev) => { 
+      if (ev.key === 'Escape') { 
+        closeHiringModal(); 
+        window.removeEventListener('keydown', esc); 
+      } 
+    };
     window.addEventListener('keydown', esc);
   }  
-
 
   // Close hiring modal
   function closeHiringModal() {
@@ -684,39 +1290,54 @@
     candidate.onboarding = true;
     candidate.bioComplete = false;
 
+      // Product-level onboarding flag and immediate effects
+      // a) Replace CTA with onboarding status via updateProductsList
+      // b) Immediately subtract cash
+      // c) Begin automation right away
+      product.managerOnboarding = true;
+      gameState.cash -= product.managerHireCost;
+      // start automated cycle if not already running
+      if (!product.running) {
+        product.running = true;
+        product.timeRemainingMs = currentCycleTimeMs(product);
+      }
+
     // show in People tab as a badge
     gameState.onboarding.push(candidate);
     closeHiringModal();
-    updatePeopleTab();
+      updatePeopleTab();
+      updateProductsList();
 
     // --- AI generation (guarded) ---
     try {
         const profilePrompt = `
-    Create an in-world, adult NPC profile (no meta-talk) for: ${candidate.name}, age ${candidate.age}.
-    Role: ${candidate.position}. Product managed: ${product.name}.
-    Personality traits: ${candidate.personalityTraits.join(', ')}. Key trait: ${candidate.keyTrait}.
-    Hobbies: ${candidate.hobbies.join(', ')}. Kink preferences: ${candidate.kinks.join(', ')}.
+  Create an in-world, adult female NPC profile (no meta-talk) for: ${candidate.name}, age ${candidate.age}.
+  Gender: female.
+  Role: ${candidate.position}. Product managed: ${product.name}.
+  Personality traits: ${candidate.personalityTraits.join(', ')}. Key trait: ${candidate.keyTrait}.
+  Hobbies: ${candidate.hobbies.join(', ')}. Kink preferences: ${candidate.kinks.join(', ')}.
 
-    Respond as a compact JSON object with these keys ONLY:
-    {
-    "name": {"first":"", "last":""},
-    "age": <number>,
-    "productManaged": "${product.name}",
-    "bio": "<2-3 sentence personality/background, world-grounded>",
-    "appearance": {
-    "heightBuild": "",
-    "hair": {"color":"","style":"","length":""},
-    "eyes": {"color":"","shape":""},
-    "skinTone": "",
-    "bodyShape": "",
-    "breastSize": "",
-    "buttSize": "",
-    "fashion": ""
-    },
-    "personalityTraits": [${candidate.personalityTraits.map(s=>`"${s}"`).join(', ')}],
-    "kinks": [${candidate.kinks.map(s=>`"${s}"`).join(', ')}]
-    }
-    `;
+  Respond as a compact JSON object with these keys ONLY:
+  {
+  "name": {"first":"", "last":""},
+  "age": <number>,
+  "gender": "female",
+  "productManaged": "${product.name}",
+  "bio": "<2-3 sentence personality/background, world-grounded>",
+  "appearance": {
+  "heightBuild": "",
+  "hair": {"color":"","style":"","length":""},
+  "eyes": {"color":"","shape":""},
+  "skinTone": "",
+  "bodyShape": "",
+  "breastSize": "",
+  "buttSize": "",
+  "fashion": ""
+  },
+  "personalityTraits": [${candidate.personalityTraits.map(s=>`"${s}"`).join(', ')}],
+  "kinks": [${candidate.kinks.map(s=>`"${s}"`).join(', ')}]
+  }
+  `;
 
         // fallbacks if plugin missing
         const aiRaw = typeof generateText === 'function'
@@ -749,29 +1370,29 @@
 
         // optional image
         if (typeof generateImage === 'function') {
-        const imgPrompt = `
-    Portrait, ${candidate.name}, adult, office context. ${candidate.physical?.heightBuild || 'fit'} build.
-    Hair: ${candidate.physical?.hair?.color || 'brown'}, ${candidate.physical?.hair?.style || 'wavy'}, ${candidate.physical?.hair?.length || 'shoulder-length'}.
-    Eyes: ${candidate.physical?.eyes?.color || 'green'} ${candidate.physical?.eyes?.shape || ''}. Skin: ${candidate.physical?.skinTone || 'light'}.
-    Body: ${candidate.physical?.bodyShape || 'curvy'}, bust ${candidate.physical?.breastSize || 'medium'}, hips ${candidate.physical?.buttSize || 'full'}.
-    Outfit: ${candidate.physical?.fashion || 'smart casual'}. Photoreal, soft light.
-    `;
+    const imgPrompt = `
+  Portrait of a female office worker, ${candidate.name}, adult, office context. ${candidate.physical?.heightBuild || 'fit'} build.
+  Hair: ${candidate.physical?.hair?.color || 'brown'}, ${candidate.physical?.hair?.style || 'wavy'}, ${candidate.physical?.hair?.length || 'shoulder-length'}.
+  Eyes: ${candidate.physical?.eyes?.color || 'green'} ${candidate.physical?.eyes?.shape || ''}. Skin: ${candidate.physical?.skinTone || 'light'}.
+  Body: ${candidate.physical?.bodyShape || 'curvy'}, bust ${candidate.physical?.breastSize || 'medium'}, hips ${candidate.physical?.buttSize || 'full'}.
+  Outfit: ${candidate.physical?.fashion || 'smart casual'}. Photoreal, soft light.
+  `;
         try {
             const imgUrl = await generateImage({ prompt: imgPrompt });
             if (imgUrl) candidate.profileImage = imgUrl;
         } catch (e) { /* ignore */ }
         }
 
-        // move from onboarding → employees
+  // move from onboarding → employees
         candidate.onboarding = false;
         candidate.bioComplete = true;
         gameState.onboarding = gameState.onboarding.filter(e => e.id !== candidate.id);
         gameState.employees.push(candidate);
 
-        // mark manager on product + pay cost
-        product.managerHired = true;
-        product.managerLevel = 1;
-        gameState.cash -= product.managerHireCost;
+  // mark manager on product (already charged and started); finish onboarding
+  product.managerHired = true;
+  product.managerLevel = 1;
+  product.managerOnboarding = false;
 
         // UI
         updatePeopleTab();
@@ -832,6 +1453,28 @@
       });
     }
     
+    // Player Bio
+    const playerBioInput = $('playerBioInput');
+    const savePlayerBio = $('savePlayerBio');
+    
+    if (playerBioInput) {
+      // Load existing bio
+      playerBioInput.value = gameState.settings.playerBio || '';
+    }
+    
+    if (savePlayerBio && playerBioInput) {
+      savePlayerBio.addEventListener('click', () => {
+        gameState.settings.playerBio = playerBioInput.value.trim();
+        // Visual feedback
+        savePlayerBio.textContent = '✓ Saved!';
+        savePlayerBio.style.background = '#00d4ff';
+        setTimeout(() => {
+          savePlayerBio.textContent = 'Save Player Bio';
+          savePlayerBio.style.background = '#00d4ff';
+        }, 2000);
+      });
+    }
+    
     if (atmosphereSlider && atmosphereValue) {
       atmosphereSlider.addEventListener('input', (e) => {
         gameState.settings.atmosphere = parseInt(e.target.value);
@@ -886,6 +1529,143 @@
     if (chatInput) {
       chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendChatMessage();
+      });
+    }
+    
+    // Attachment menu
+    const chatAttachBtn = $('chatAttachBtn');
+    const attachmentMenu = $('attachmentMenu');
+    if (chatAttachBtn && attachmentMenu) {
+      chatAttachBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isVisible = attachmentMenu.style.display === 'block';
+        attachmentMenu.style.display = isVisible ? 'none' : 'block';
+      });
+      
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!chatAttachBtn.contains(e.target) && !attachmentMenu.contains(e.target)) {
+          attachmentMenu.style.display = 'none';
+        }
+      });
+      
+      // Attachment menu items
+      document.querySelectorAll('.attach-menu-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const action = item.dataset.action;
+          attachmentMenu.style.display = 'none';
+          
+          if (action === 'request') {
+            $('requestImageModal').style.display = 'flex';
+          } else if (action === 'send') {
+            $('sendImageModal').style.display = 'flex';
+          } else if (action === 'visualize') {
+            visualizeCurrentScene();
+          }
+        });
+      });
+    }
+    
+    // Send Image Modal
+    const sendImageModal = $('sendImageModal');
+    const closeSendImageModal = $('closeSendImageModal');
+    const cancelSendImage = $('cancelSendImage');
+    const confirmSendImage = $('confirmSendImage');
+    const sendImagePrompt = $('sendImagePrompt');
+    
+    if (closeSendImageModal) {
+      closeSendImageModal.addEventListener('click', () => {
+        sendImageModal.style.display = 'none';
+        sendImagePrompt.value = '';
+      });
+    }
+    
+    if (cancelSendImage) {
+      cancelSendImage.addEventListener('click', () => {
+        sendImageModal.style.display = 'none';
+        sendImagePrompt.value = '';
+      });
+    }
+    
+    if (confirmSendImage) {
+      confirmSendImage.addEventListener('click', async () => {
+        const prompt = sendImagePrompt.value.trim();
+        if (prompt) {
+          sendImageModal.style.display = 'none';
+          sendImagePrompt.value = '';
+          await sendImageToNPC(prompt);
+        }
+      });
+    }
+    
+    // Request Image Modal
+    const requestImageModal = $('requestImageModal');
+    const closeRequestImageModal = $('closeRequestImageModal');
+    const requestManualBtn = $('requestManualBtn');
+    const requestManualInput = $('requestManualInput');
+    const requestImageMode = $('requestImageMode');
+    const cancelRequestManual = $('cancelRequestManual');
+    const confirmRequestManual = $('confirmRequestManual');
+    const requestImagePrompt = $('requestImagePrompt');
+    
+    if (closeRequestImageModal) {
+      closeRequestImageModal.addEventListener('click', () => {
+        requestImageModal.style.display = 'none';
+        requestManualInput.style.display = 'none';
+        requestImageMode.querySelector('div').style.display = 'grid';
+        requestManualBtn.style.display = 'block';
+        requestImagePrompt.value = '';
+      });
+    }
+    
+    // Preset buttons
+    document.querySelectorAll('.request-preset').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const preset = btn.dataset.preset;
+        requestImageModal.style.display = 'none';
+        await requestImageFromNPC(preset);
+      });
+      
+      // Hover effects
+      btn.addEventListener('mouseenter', () => {
+        btn.style.background = '#00d4ff';
+        btn.style.color = '#0f1419';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.background = '#0f3460';
+        btn.style.color = 'white';
+      });
+    });
+    
+    // Manual request button
+    if (requestManualBtn) {
+      requestManualBtn.addEventListener('click', () => {
+        requestImageMode.querySelector('div').style.display = 'none';
+        requestManualBtn.style.display = 'none';
+        requestManualInput.style.display = 'block';
+      });
+    }
+    
+    if (cancelRequestManual) {
+      cancelRequestManual.addEventListener('click', () => {
+        requestManualInput.style.display = 'none';
+        requestImageMode.querySelector('div').style.display = 'grid';
+        requestManualBtn.style.display = 'block';
+        requestImagePrompt.value = '';
+      });
+    }
+    
+    if (confirmRequestManual) {
+      confirmRequestManual.addEventListener('click', async () => {
+        const prompt = requestImagePrompt.value.trim();
+        if (prompt) {
+          requestImageModal.style.display = 'none';
+          requestManualInput.style.display = 'none';
+          requestImageMode.querySelector('div').style.display = 'grid';
+          requestManualBtn.style.display = 'block';
+          requestImagePrompt.value = '';
+          await requestImageFromNPC(null, prompt);
+        }
       });
     }
   }
@@ -949,9 +1729,9 @@
     if (revenueEl) revenueEl.textContent = Math.floor(gameState.totalEarnings);
     if (employeeCountDashboardEl) employeeCountDashboardEl.textContent = gameState.employees.length;
 
-    // "active products" = currently running OR has a manager (automated)
-    const activeProducts = gameState.products.filter(p => p.running || p.managerHired).length;
-    if (productCountDashboardEl) productCountDashboardEl.textContent = activeProducts;
+    // Count unlocked products
+    const unlockedProducts = gameState.products.filter(p => p.unlocked).length;
+    if (productCountDashboardEl) productCountDashboardEl.textContent = unlockedProducts;
 
     // efficiency (avg efficiency % across employees)
     const totalEff = gameState.employees.reduce((sum, emp) => sum + (emp.stats?.efficiency ?? 0), 0);
@@ -972,28 +1752,71 @@
       gameState.locations.forEach(location => {
         const locationCard = document.createElement('div');
         locationCard.className = 'location-card';
-        locationCard.style.cssText = 'background:#16213e; border-radius:10px; padding:15px; min-width:200px; box-shadow:0 4px 10px rgba(0,0,0,0.2);';
         
-        locationCard.innerHTML = `
-          <h3 style="margin-top:0;">${location.name}</h3>
-          <p style="color:#aaa; margin:5px 0;">${location.owned ? 'Owned' : `Cost: ${location.cost}`}</p>
-          ${!location.owned ? `<button class="buy-location-btn" data-location="${location.id}" style="margin-top:10px; padding:8px 15px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer;">Purchase</button>` : ''}
-        `;
+        // Check if location can be unlocked (all previous location products must be unlocked)
+        const canUnlock = checkLocationUnlockable(location.id);
+        const isLocked = !location.unlocked;
+        
+        if (isLocked && !canUnlock) {
+          // Location is locked and prerequisites not met
+          locationCard.style.cssText = 'background:#0a0a15; border:2px solid #1a1a2e; border-radius:10px; padding:15px; min-width:200px; box-shadow:0 4px 10px rgba(0,0,0,0.2); opacity:0.6;';
+          locationCard.innerHTML = `
+            <h3 style="margin-top:0;">${location.name}</h3>
+            <p style="color:#666; margin:5px 0;">🔒 Prerequisites not met</p>
+            <p style="color:#666; font-size:0.85rem; margin:5px 0;">${location.description || ''}</p>
+          `;
+        } else if (isLocked && canUnlock) {
+          // Location can be unlocked
+          locationCard.style.cssText = 'background:#16213e; border:2px solid #0f3460; border-radius:10px; padding:15px; min-width:200px; box-shadow:0 4px 10px rgba(0,0,0,0.2);';
+          locationCard.innerHTML = `
+            <h3 style="margin-top:0;">${location.name}</h3>
+            <p style="color:#aaa; margin:5px 0;">${location.description || ''}</p>
+            <p style="color:#e94560; font-weight:bold; margin:5px 0;">Cost: $${location.cost}</p>
+            <button class="unlock-location-btn" data-location="${location.id}" style="margin-top:10px; width:100%; padding:10px 15px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">
+              🔓 Unlock Location
+            </button>
+          `;
+        } else {
+          // Location is unlocked
+          locationCard.style.cssText = 'background:#16213e; border:2px solid #4caf50; border-radius:10px; padding:15px; min-width:200px; box-shadow:0 4px 10px rgba(0,0,0,0.2);';
+          locationCard.innerHTML = `
+            <h3 style="margin-top:0;">${location.name}</h3>
+            <p style="color:#4caf50; margin:5px 0;">✓ Active</p>
+            <p style="color:#aaa; font-size:0.85rem; margin:5px 0;">${location.description || ''}</p>
+          `;
+        }
         
         locationsList.appendChild(locationCard);
       });
       
-      // Add event listeners for location purchase
-      document.querySelectorAll('.buy-location-btn').forEach(btn => {
+      // Add event listeners for location unlock
+      document.querySelectorAll('.unlock-location-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const locationId = btn.dataset.location;
-          purchaseLocation(locationId);
+          unlockLocation(locationId);
         });
       });
     }
     
-    // Update products
+    // Update products (only show products from unlocked locations)
     updateProductsList();
+  }
+  
+  // Check if a location can be unlocked
+  function checkLocationUnlockable(locationId) {
+    const locationIndex = gameState.locations.findIndex(loc => loc.id === locationId);
+    if (locationIndex === 0) return true; // First location is always available
+    
+    // Check if previous location exists and all its products are unlocked
+    if (locationIndex > 0) {
+      const prevLocation = gameState.locations[locationIndex - 1];
+      if (!prevLocation.unlocked) return false;
+      
+      const prevLocationProducts = gameState.products.filter(p => p.locationId === prevLocation.id);
+      return prevLocationProducts.every(p => p.unlocked);
+    }
+    
+    return false;
   }
   
   // Update products list (renders cards only; click handling is delegated elsewhere)
@@ -1001,15 +1824,47 @@
     if (!productsList) return;
     
     productsList.innerHTML = '';
-    gameState.products.forEach(p => {
-      const pct = p.running ? Math.min(100, (1 - (p.timeRemainingMs / currentCycleTimeMs(p))) * 100) : 0;
-      const managerCta = p.managerHired
-        ? `Upgrade Manager (${p.managerUpgradeCost})`
-        : `Hire Manager (${p.managerHireCost})`;
-
+    
+    // Only show products from unlocked locations
+    const visibleProducts = gameState.products.filter(p => {
+      const location = gameState.locations.find(loc => loc.id === p.locationId);
+      return location && location.unlocked;
+    });
+    
+    visibleProducts.forEach(p => {
       const card = document.createElement('div');
       card.className = 'product-card';
       card.style.cssText = 'background:#16213e; border-radius:10px; padding:15px; box-shadow:0 4px 10px rgba(0,0,0,0.2);';
+
+      // Check if product is unlocked
+      if (!p.unlocked) {
+        // Render locked product card
+        card.innerHTML = `
+          <h3 style="margin:0 0 6px 0;">${p.name}</h3>
+          <p style="margin:0; color:#aaa;">🔒 Locked</p>
+          <p style="margin:6px 0 8px 0; font-size:.9rem; color:#888;">
+            Unlock this product to start earning $${p.valuePerUnit} per unit.
+          </p>
+          <div style="margin-top:12px;">
+            <button class="unlock-product-btn" data-id="${p.id}" style="width:100%; padding:12px; background:#0f3460; border:none; border-radius:6px; color:#fff; cursor:pointer; font-weight:bold;">
+              🔓 Unlock ($${p.unlockCost})
+            </button>
+          </div>
+        `;
+        productsList.appendChild(card);
+        return;
+      }
+
+      // Render unlocked product card (existing logic)
+      const pct = p.running ? Math.min(100, (1 - (p.timeRemainingMs / currentCycleTimeMs(p))) * 100) : 0;
+      // CTA & disabled state with onboarding safeguard
+      const onboarding = !!p.managerOnboarding;
+      const managerCta = onboarding
+        ? 'Onboarding in Progress'
+        : (p.managerHired ? `Upgrade Manager (${p.managerUpgradeCost})` : `Hire Manager (${p.managerHireCost})`);
+      const managerDisabledAttr = onboarding ? 'disabled' : '';
+      const managerCursor = onboarding ? 'not-allowed' : 'pointer';
+      const managerOpacity = onboarding ? '0.7' : '1';
 
       card.innerHTML = `
         <h3 style="margin:0 0 6px 0;">${p.name}</h3>
@@ -1029,12 +1884,14 @@
           <button class="upgrade-product-btn" data-id="${p.id}" style="padding:10px; background:#0f3460; border:none; border-radius:6px; color:#fff; cursor:pointer;">
             Upgrade (${p.upgradeCost})
           </button>
-          <button class="manager-btn" data-id="${p.id}" style="padding:10px; background:#533483; border:none; border-radius:6px; color:#fff; cursor:pointer;">
+          <button class="manager-btn" data-id="${p.id}" ${managerDisabledAttr} style="padding:10px; background:#533483; border:none; border-radius:6px; color:#fff; cursor:${managerCursor}; opacity:${managerOpacity};">
             ${managerCta}
           </button>
         </div>
 
-        ${p.managerHired ? `<p style="margin:10px 0 0 0; color:#4caf50;">✓ Manager Lv.${p.managerLevel} (auto)</p>` : ''}
+        ${p.managerHired
+          ? `<p style="margin:10px 0 0 0; color:${onboarding ? '#ffa726' : '#4caf50'};">${onboarding ? '⏳ Manager onboarding… (auto running)' : `✓ Manager Lv.${p.managerLevel} (auto)`}</p>`
+          : ''}
       `;
 
       productsList.appendChild(card);
@@ -1043,6 +1900,9 @@
 
   function updateProductProgressBars() {
     for (const p of gameState.products) {
+      // Skip locked products as they don't have progress bars
+      if (!p.unlocked) continue;
+      
       const bar = $(`prog-${p.id}`);
       const sellTx = $(`selltxt-${p.id}`);
       const valEl = $(`val-${p.id}`);
@@ -1099,26 +1959,35 @@
 
         ${e.bio ? `<p style="margin:8px 0 12px 0; color:#ddd; font-size:.95rem;">${e.bio}</p>` : ''}
 
-        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px;">
-            <div style="background:#0f3460; padding:6px; border-radius:6px;">
-            <div style="font-size:.75rem; color:#aaa;">Efficiency</div>
-            <div>${e.stats.efficiency ?? 0}%</div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px;">
+            <div style="background:#0f3460; padding:8px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Affection</div>
+            <div style="color:#e94560; font-weight:600;">${Math.round(e.stats.affection ?? 0)}%</div>
             </div>
-            <div style="background:#0f3460; padding:6px; border-radius:6px;">
+            <div style="background:#0f3460; padding:8px; border-radius:6px;">
             <div style="font-size:.75rem; color:#aaa;">Comfort</div>
-            <div>${e.stats.comfort ?? 0}%</div>
+            <div style="color:#4ecca3; font-weight:600;">${Math.round(e.stats.comfort ?? 0)}%</div>
             </div>
-            <div style="background:#0f3460; padding:6px; border-radius:6px;">
-            <div style="font-size:.75rem; color:#aaa;">Love</div>
-            <div>${e.stats.love ?? 0}%</div>
+            <div style="background:#0f3460; padding:8px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Trust</div>
+            <div style="color:#00d4ff; font-weight:600;">${Math.round(e.stats.trust ?? 0)}%</div>
             </div>
-            <div style="background:#0f3460; padding:6px; border-radius:6px;">
-            <div style="font-size:.75rem; color:#aaa;">Anger</div>
-            <div>${e.stats.anger ?? 0}%</div>
+            <div style="background:#0f3460; padding:8px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Desire</div>
+            <div style="color:#ff6b9d; font-weight:600;">${Math.round(e.stats.desire ?? 0)}%</div>
+            </div>
+            <div style="background:#0f3460; padding:8px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Obedience</div>
+            <div style="color:#c77dff; font-weight:600;">${Math.round(e.stats.obedience ?? 0)}%</div>
+            </div>
+            <div style="background:#0f3460; padding:8px; border-radius:6px;">
+            <div style="font-size:.75rem; color:#aaa;">Productivity</div>
+            <div style="color:#ffd700; font-weight:600;">${Math.round(e.stats.productivity ?? 0)}%</div>
             </div>
         </div>
 
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="employee-action-btn" data-employee="${e.id}" data-action="bio" style="padding:6px 10px; background:#00d4ff; border:none; border-radius:6px; color:#0f1419; cursor:pointer; font-size:.85rem; font-weight:600;">Bio</button>
             <button class="employee-action-btn" data-employee="${e.id}" data-action="gift" style="padding:6px 10px; background:#0f3460; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Gift</button>
             <button class="employee-action-btn" data-employee="${e.id}" data-action="chat" style="padding:6px 10px; background:#e94560; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Chat</button>
             <button class="employee-action-btn" data-employee="${e.id}" data-action="promote" style="padding:6px 10px; background:#533483; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Promote</button>
@@ -1136,6 +2005,20 @@
     }
 
   
+  function unlockProduct(id) {
+    const p = gameState.products.find(x => x.id === id);
+    if (!p) return;
+    if (p.unlocked) return showNotification('Product already unlocked!');
+    if (gameState.cash < p.unlockCost) return showNotification('Not enough cash to unlock this product!');
+    
+    gameState.cash -= p.unlockCost;
+    p.unlocked = true;
+    
+    showNotification(`${p.name} unlocked! You can now start selling.`);
+    updateProductsList();
+    updateUI();
+  }
+
   function startOrClickProduct(id) {
     const p = gameState.products.find(x => x.id === id);
     if (!p) return;
@@ -1158,8 +2041,15 @@
     if (gameState.cash < p.upgradeCost) return showNotification('Not enough cash!');
     gameState.cash -= p.upgradeCost;
     p.level += 1;
-    // scale next cost
-    p.upgradeCost = Math.floor(p.upgradeCost * 1.15);
+    // scale next cost using base cost and growth factor (stronger than value growth)
+    if (!p.baseUpgradeCost) {
+      // Estimate base if missing (e.g., from older saves)
+      const prevGrowth = 1.15;
+      const baseEst = p.upgradeCost / Math.pow(prevGrowth, Math.max(0, (p.level - 1)));
+      p.baseUpgradeCost = Math.max(1, Math.floor(baseEst));
+    }
+    const growth = p.costGrowth || 1.35;
+    p.upgradeCost = Math.floor(p.baseUpgradeCost * Math.pow(growth, p.level));
     showNotification(`${p.name} upgraded to Lv.${p.level}`);
     updateProductsList();
   }
@@ -1172,6 +2062,10 @@
         // Always show the modal; we’ll charge on selection.
         showManagerHiringModal(id);
     } else {
+          // d) Block upgrading while onboarding
+          if (p.managerOnboarding) {
+            return showNotification('Manager onboarding in progress. Upgrade available after onboarding completes.');
+          }
         if (gameState.cash < p.managerUpgradeCost) return showNotification('Not enough cash!');
         gameState.cash -= p.managerUpgradeCost;
         p.managerLevel += 1;
@@ -1268,6 +2162,9 @@
     const dt = GAME_TICK_INTERVAL;
 
     gameState.products.forEach(p => {
+      // Only process unlocked products
+      if (!p.unlocked) return;
+      
       if (p.running) {
         p.timeRemainingMs -= dt;
 
@@ -1307,8 +2204,8 @@
     if (cashPerSecEl) cashPerSecEl.textContent = calculateCashPerSecond();
     if (employeeCountEl) employeeCountEl.textContent = gameState.employees.length;
 
-    const activeProducts = gameState.products.filter(p => p.running || p.managerHired).length;
-    if (productCountEl) productCountEl.textContent = activeProducts;
+    const unlockedProducts = gameState.products.filter(p => p.unlocked).length;
+    if (productCountEl) productCountEl.textContent = unlockedProducts;
 
     // only refresh progress bars/text in Business tab for smoothness
     if (gameState.activeTab === 'business') {
@@ -1320,6 +2217,9 @@
   function calculateCashPerSecond() {
     let total = 0;
     gameState.products.forEach(p => {
+      // Only count unlocked products
+      if (!p.unlocked) return;
+      
       const cycleTime = currentCycleTimeMs(p);
       // if running or managed, include it; otherwise 0
       if (p.running || p.managerHired) {
@@ -1343,6 +2243,9 @@
     if (!employee) return;
     
     switch (action) {
+      case 'bio':
+        openBioModal(employee);
+        break;
       case 'gift':
         showNotification(`Gift given to ${employee.name}!`);
         // In a full implementation, this would open a gift selection
@@ -1358,9 +2261,21 @@
         break;
       case 'fire':
         if (confirm(`Are you sure you want to fire ${employee.name}?`)) {
+          // Remove manager from product and disable automation
+          if (employee.position && employee.position.startsWith('Manager') && employee.productManaged) {
+            const product = gameState.products.find(p => p.name === employee.productManaged);
+            if (product) {
+              product.managerHired = false;
+              product.managerLevel = 0;
+              product.managerOnboarding = false;
+              product.running = false;
+              product.timeRemainingMs = 0;
+            }
+          }
           gameState.employees = gameState.employees.filter(e => e.id !== employeeId);
           showNotification(`${employee.name} has been fired.`);
           updatePeopleTab();
+          updateProductsList();
         }
         break;
     }
@@ -1369,13 +2284,14 @@
   // Open chat with employee
   function openChat(employee) {
     gameState.activeChat = employee;
+  ensureEmployeeMemory(employee);
     if (chatModal) {
       chatModal.hidden = false;
       chatModal.style.display = 'flex';
       chatModal.style.pointerEvents = 'auto';
     }
     if (chatName) chatName.textContent = employee.name;
-    if (chatAvatar) chatAvatar.src = `https://placehold.co/80x80`;
+    if (chatAvatar) chatAvatar.src = employee.profileImage || 'https://placehold.co/80x80';
     
     // Initialize chat history if not exists
     if (!gameState.chatHistory[employee.id]) {
@@ -1386,6 +2302,278 @@
     loadChatHistory(employee.id);
   }
   
+  // -------- BIO MODAL --------
+  // Open detailed bio modal with edit capabilities
+  function openBioModal(employee) {
+    // Initialize photos array if not exists
+    if (!employee.photos) employee.photos = [];
+    
+    const modal = document.createElement('div');
+    modal.id = 'bioModal';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; pointer-events:auto;';
+    
+    const isEditing = false; // Toggle state
+    
+    modal.innerHTML = `
+      <div class="bio-modal-content" style="background:#16213e; width:92%; max-width:900px; max-height:90vh; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; overflow:hidden;">
+        <!-- Header -->
+        <div style="padding:20px; border-bottom:1px solid #0f3460; display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0; color:#fff;">Employee Profile</h2>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button id="bioEditToggle" style="background:#00d4ff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; color:#0f1419; font-weight:600; display:flex; align-items:center; gap:6px;">
+              <span style="font-size:1.1rem;">✏️</span> Edit
+            </button>
+            <button id="closeBioModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+          </div>
+        </div>
+        
+        <!-- Content -->
+        <div style="flex:1; overflow-y:auto; padding:20px;">
+          <!-- Profile Header -->
+          <div style="display:flex; gap:20px; margin-bottom:25px; align-items:start;">
+            <img src="${employee.profileImage || 'https://placehold.co/150x150'}" style="width:120px; height:120px; border-radius:10px; object-fit:cover; box-shadow:0 2px 10px rgba(0,0,0,0.3);">
+            <div style="flex:1;">
+              <h3 id="bioName" contenteditable="false" style="margin:0 0 8px 0; font-size:1.8rem; outline:none; padding:4px; border-radius:4px;" data-field="name">${employee.name}</h3>
+              <p style="margin:0 0 6px 0; color:#aaa;">
+                <span id="bioAge" contenteditable="false" style="outline:none; padding:2px 4px; border-radius:4px;" data-field="age">${employee.age || 'N/A'}</span> years old • 
+                <span id="bioGender" contenteditable="false" style="outline:none; padding:2px 4px; border-radius:4px;" data-field="gender">${employee.gender || 'Female'}</span>
+              </p>
+              <p style="margin:0; color:#00d4ff; font-weight:600;">
+                <span id="bioPosition" contenteditable="false" style="outline:none; padding:2px 4px; border-radius:4px;" data-field="position">${employee.position || 'Employee'}</span>
+              </p>
+              ${employee.productManaged ? `<p style="margin:4px 0 0 0; color:#aaa;">Managing: <span id="bioProduct" contenteditable="false" style="outline:none; padding:2px 4px; border-radius:4px;" data-field="productManaged">${employee.productManaged}</span></p>` : ''}
+            </div>
+          </div>
+          
+          <!-- Bio Section -->
+          <div style="margin-bottom:25px;">
+            <h4 style="margin:0 0 10px 0; color:#00d4ff;">Biography</h4>
+            <p id="bioBio" contenteditable="false" style="margin:0; color:#ddd; line-height:1.6; padding:12px; background:#0f3460; border-radius:6px; outline:none; min-height:60px;" data-field="bio">${employee.bio || 'No biography available.'}</p>
+          </div>
+          
+          <!-- Stats Section -->
+          <div style="margin-bottom:25px;">
+            <h4 style="margin:0 0 10px 0; color:#00d4ff;">Statistics</h4>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+              <div style="background:#0f3460; padding:12px; border-radius:6px;">
+                <div style="font-size:.75rem; color:#aaa; margin-bottom:4px;">Affection</div>
+                <div style="color:#e94560; font-weight:600; font-size:1.2rem;">
+                  <span id="bioAffection" contenteditable="false" style="outline:none;" data-field="stats.affection">${Math.round(employee.stats.affection ?? 0)}</span>%
+                </div>
+              </div>
+              <div style="background:#0f3460; padding:12px; border-radius:6px;">
+                <div style="font-size:.75rem; color:#aaa; margin-bottom:4px;">Comfort</div>
+                <div style="color:#4ecca3; font-weight:600; font-size:1.2rem;">
+                  <span id="bioComfort" contenteditable="false" style="outline:none;" data-field="stats.comfort">${Math.round(employee.stats.comfort ?? 0)}</span>%
+                </div>
+              </div>
+              <div style="background:#0f3460; padding:12px; border-radius:6px;">
+                <div style="font-size:.75rem; color:#aaa; margin-bottom:4px;">Trust</div>
+                <div style="color:#00d4ff; font-weight:600; font-size:1.2rem;">
+                  <span id="bioTrust" contenteditable="false" style="outline:none;" data-field="stats.trust">${Math.round(employee.stats.trust ?? 0)}</span>%
+                </div>
+              </div>
+              <div style="background:#0f3460; padding:12px; border-radius:6px;">
+                <div style="font-size:.75rem; color:#aaa; margin-bottom:4px;">Desire</div>
+                <div style="color:#ff6b9d; font-weight:600; font-size:1.2rem;">
+                  <span id="bioDesire" contenteditable="false" style="outline:none;" data-field="stats.desire">${Math.round(employee.stats.desire ?? 0)}</span>%
+                </div>
+              </div>
+              <div style="background:#0f3460; padding:12px; border-radius:6px;">
+                <div style="font-size:.75rem; color:#aaa; margin-bottom:4px;">Obedience</div>
+                <div style="color:#c77dff; font-weight:600; font-size:1.2rem;">
+                  <span id="bioObedience" contenteditable="false" style="outline:none;" data-field="stats.obedience">${Math.round(employee.stats.obedience ?? 0)}</span>%
+                </div>
+              </div>
+              <div style="background:#0f3460; padding:12px; border-radius:6px;">
+                <div style="font-size:.75rem; color:#aaa; margin-bottom:4px;">Productivity</div>
+                <div style="color:#ffd700; font-weight:600; font-size:1.2rem;">
+                  <span id="bioProductivity" contenteditable="false" style="outline:none;" data-field="stats.productivity">${Math.round(employee.stats.productivity ?? 0)}</span>%
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Personality & Traits -->
+          <div style="margin-bottom:25px;">
+            <h4 style="margin:0 0 10px 0; color:#00d4ff;">Personality & Interests</h4>
+            <div style="background:#0f3460; padding:15px; border-radius:6px;">
+              <div style="margin-bottom:12px;">
+                <div style="font-size:.85rem; color:#aaa; margin-bottom:6px;">Personality Traits</div>
+                <div id="bioPersonality" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="personalityTraits">${(employee.personalityTraits || employee.personality || []).toString()}</div>
+              </div>
+              <div style="margin-bottom:12px;">
+                <div style="font-size:.85rem; color:#aaa; margin-bottom:6px;">Hobbies</div>
+                <div id="bioHobbies" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="hobbies">${(employee.hobbies || []).join(', ') || 'None listed'}</div>
+              </div>
+              <div>
+                <div style="font-size:.85rem; color:#aaa; margin-bottom:6px;">Preferences</div>
+                <div id="bioKinks" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="kinks">${(employee.kinks || []).join(', ') || 'None listed'}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Physical Appearance -->
+          ${employee.physical ? `
+          <div style="margin-bottom:25px;">
+            <h4 style="margin:0 0 10px 0; color:#00d4ff;">Physical Appearance</h4>
+            <div style="background:#0f3460; padding:15px; border-radius:6px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px;">
+              <div>
+                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Height/Build</div>
+                <div id="bioHeightBuild" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.heightBuild">${employee.physical.heightBuild || 'Average'}</div>
+              </div>
+              <div>
+                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Body Shape</div>
+                <div id="bioBodyShape" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.bodyShape">${employee.physical.bodyShape || 'Average'}</div>
+              </div>
+              <div>
+                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Hair</div>
+                <div id="bioHair" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.hair">${employee.physical.hair ? `${employee.physical.hair.length} ${employee.physical.hair.color} ${employee.physical.hair.style}` : 'Not specified'}</div>
+              </div>
+              <div>
+                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Eyes</div>
+                <div id="bioEyes" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.eyes">${employee.physical.eyes ? `${employee.physical.eyes.shape} ${employee.physical.eyes.color}` : 'Not specified'}</div>
+              </div>
+              <div>
+                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Skin Tone</div>
+                <div id="bioSkinTone" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.skinTone">${employee.physical.skinTone || 'Not specified'}</div>
+              </div>
+              <div>
+                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Fashion Style</div>
+                <div id="bioFashion" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.fashion">${employee.physical.fashion || 'Casual'}</div>
+              </div>
+            </div>
+          </div>
+          ` : ''}
+          
+          <!-- Photo Gallery -->
+          <div style="margin-bottom:20px;">
+            <h4 style="margin:0 0 10px 0; color:#00d4ff;">Photo Gallery</h4>
+            <div id="bioPhotoGallery" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; background:#0f3460; padding:15px; border-radius:6px; min-height:100px;">
+              ${employee.photos && employee.photos.length > 0 
+                ? employee.photos.map(photo => `<img src="${photo}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:6px; cursor:pointer;" onclick="window.open('${photo}', '_blank')">`).join('')
+                : '<p style="color:#aaa; margin:0;">No photos yet. Photos will appear here as they are generated.</p>'}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="padding:15px; border-top:1px solid #0f3460; display:flex; justify-content:flex-end; gap:10px;">
+          <button id="bioSaveBtn" style="display:none; padding:10px 20px; background:#4ecca3; border:none; border-radius:6px; color:#0f1419; font-weight:600; cursor:pointer;">Save Changes</button>
+          <button id="bioCancelBtn" style="display:none; padding:10px 20px; background:#e94560; border:none; border-radius:6px; color:#fff; font-weight:600; cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Edit toggle functionality
+    let editMode = false;
+    const editToggle = modal.querySelector('#bioEditToggle');
+    const saveBtn = modal.querySelector('#bioSaveBtn');
+    const cancelBtn = modal.querySelector('#bioCancelBtn');
+    const editableElements = modal.querySelectorAll('[contenteditable]');
+    
+    editToggle.onclick = () => {
+      editMode = !editMode;
+      
+      if (editMode) {
+        // Enter edit mode
+        editToggle.innerHTML = '<span style="font-size:1.1rem;">👁️</span> View';
+        editToggle.style.background = '#aaa';
+        saveBtn.style.display = 'block';
+        cancelBtn.style.display = 'block';
+        
+        editableElements.forEach(el => {
+          el.contentEditable = 'true';
+          el.style.background = 'rgba(0, 212, 255, 0.1)';
+          el.style.border = '1px dashed #00d4ff';
+        });
+      } else {
+        // Exit edit mode without saving
+        editToggle.innerHTML = '<span style="font-size:1.1rem;">✏️</span> Edit';
+        editToggle.style.background = '#00d4ff';
+        saveBtn.style.display = 'none';
+        cancelBtn.style.display = 'none';
+        
+        editableElements.forEach(el => {
+          el.contentEditable = 'false';
+          el.style.background = '';
+          el.style.border = '';
+        });
+      }
+    };
+    
+    // Save changes
+    saveBtn.onclick = () => {
+      editableElements.forEach(el => {
+        const field = el.dataset.field;
+        const value = el.textContent.trim();
+        
+        if (field) {
+          // Handle nested fields (e.g., "stats.affection")
+          const parts = field.split('.');
+          let target = employee;
+          
+          for (let i = 0; i < parts.length - 1; i++) {
+            if (!target[parts[i]]) target[parts[i]] = {};
+            target = target[parts[i]];
+          }
+          
+          const lastPart = parts[parts.length - 1];
+          
+          // Special handling for arrays
+          if (field === 'personalityTraits' || field === 'hobbies' || field === 'kinks') {
+            target[lastPart] = value.split(',').map(s => s.trim()).filter(Boolean);
+          } 
+          // Special handling for numbers (stats)
+          else if (field.startsWith('stats.')) {
+            target[lastPart] = parseFloat(value) || 0;
+          }
+          // String fields
+          else {
+            target[lastPart] = value;
+          }
+        }
+      });
+      
+      showNotification('Bio updated successfully!');
+      updatePeopleTab(); // Refresh the people list
+      modal.remove();
+    };
+    
+    // Cancel changes
+    cancelBtn.onclick = () => {
+      if (confirm('Discard changes?')) {
+        modal.remove();
+      }
+    };
+    
+    // Close modal
+    modal.querySelector('#closeBioModal').onclick = () => {
+      if (editMode) {
+        if (confirm('You have unsaved changes. Close anyway?')) {
+          modal.remove();
+        }
+      } else {
+        modal.remove();
+      }
+    };
+    
+    // Click outside to close
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        if (editMode) {
+          if (confirm('You have unsaved changes. Close anyway?')) {
+            modal.remove();
+          }
+        } else {
+          modal.remove();
+        }
+      }
+    };
+  }
+  
   // Load chat history
   function loadChatHistory(employeeId) {
     if (!chatMessages) return;
@@ -1393,8 +2581,61 @@
     chatMessages.innerHTML = '';
     const history = gameState.chatHistory[employeeId] || [];
     
-    history.forEach(msg => {
-      addChatMessage(msg.sender, msg.content, msg.isPlayer);
+    history.forEach((msg, index) => {
+      // Handle scene visualizations specially
+      if (msg.imageType === 'scene') {
+        const messageEl = document.createElement('div');
+        messageEl.style.cssText = 'max-width:80%; padding:10px; margin:10px auto; text-align:center; position:relative;';
+        
+        const imageContainer = document.createElement('div');
+        imageContainer.style.cssText = 'position:relative; display:inline-block; max-width:400px; width:100%;';
+        
+        const img = document.createElement('img');
+        img.src = msg.imageUrl;
+        img.style.cssText = 'width:100%; border-radius:10px; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,0.3); display:block;';
+        img.onclick = () => {
+          const viewer = document.createElement('div');
+          viewer.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; display:flex; justify-content:center; align-items:center; cursor:pointer;';
+          viewer.innerHTML = `<img src="${msg.imageUrl}" style="max-width:90%; max-height:90%; border-radius:10px;">`;
+          viewer.onclick = () => viewer.remove();
+          document.body.appendChild(viewer);
+        };
+        imageContainer.appendChild(img);
+        
+        // Add regenerate button for scene images if we have the prompt
+        if (msg.imagePrompt) {
+          const imgRegenBtn = document.createElement('button');
+          imgRegenBtn.innerHTML = '🔄';
+          imgRegenBtn.style.cssText = 'position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:28px; height:28px; color:white; cursor:pointer; font-size:1rem; opacity:0; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center;';
+          imgRegenBtn.title = 'Regenerate image';
+          
+          imageContainer.appendChild(imgRegenBtn);
+          
+          // Show/hide on hover
+          imageContainer.addEventListener('mouseenter', () => {
+            imgRegenBtn.style.opacity = '1';
+          });
+          imageContainer.addEventListener('mouseleave', () => {
+            imgRegenBtn.style.opacity = '0';
+          });
+          
+          // Handle image regeneration
+          imgRegenBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await regenerateImage(index, msg.imagePrompt);
+          });
+        }
+        
+        const caption = document.createElement('p');
+        caption.style.cssText = 'margin:8px 0 0 0; color:#aaa; font-size:0.85rem; font-style:italic;';
+        caption.textContent = msg.content;
+        
+        messageEl.appendChild(imageContainer);
+        messageEl.appendChild(caption);
+        chatMessages.appendChild(messageEl);
+      } else {
+        addChatMessage(msg.sender, msg.content, msg.isPlayer, msg.imageUrl, msg.isPlayer ? null : index, msg.imagePrompt);
+      }
     });
     
     // Scroll to bottom
@@ -1402,13 +2643,88 @@
   }
   
   // Add chat message to UI
-  function addChatMessage(sender, content, isPlayer) {
+  function addChatMessage(sender, content, isPlayer, imageUrl = null, messageIndex = null, imagePrompt = null) {
     if (!chatMessages) return;
     
     const messageEl = document.createElement('div');
-    messageEl.style.cssText = `max-width:80%; padding:10px 15px; border-radius:18px; margin-bottom:10px; word-wrap:break-word; ${isPlayer ? 'background:#e94560; align-self:flex-end;' : 'background:#0f3460; align-self:flex-start;'}`;
+    messageEl.style.cssText = `max-width:80%; padding:10px 15px; border-radius:18px; margin-bottom:10px; word-wrap:break-word; position:relative; ${isPlayer ? 'background:#e94560; align-self:flex-end;' : 'background:#0f3460; align-self:flex-start;'}`;
     
-    messageEl.innerHTML = `<p style="margin:0;">${content}</p>`;
+    // Add regenerate button for NPC messages
+    if (!isPlayer && messageIndex !== null) {
+      const regenBtn = document.createElement('button');
+      regenBtn.innerHTML = '🔄';
+      regenBtn.className = 'regenerate-btn';
+      regenBtn.style.cssText = 'position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.3); border:none; border-radius:50%; width:24px; height:24px; color:white; cursor:pointer; font-size:0.9rem; opacity:0; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center;';
+      regenBtn.setAttribute('data-message-index', messageIndex);
+      regenBtn.title = 'Regenerate response';
+      
+      messageEl.appendChild(regenBtn);
+      
+      // Show/hide on hover
+      messageEl.addEventListener('mouseenter', () => {
+        regenBtn.style.opacity = '1';
+      });
+      messageEl.addEventListener('mouseleave', () => {
+        regenBtn.style.opacity = '0';
+      });
+      
+      // Handle regeneration
+      regenBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await regenerateMessage(messageIndex);
+      });
+    }
+    
+    // Add image if present
+    if (imageUrl) {
+      const imageContainer = document.createElement('div');
+      imageContainer.style.cssText = 'position:relative; display:inline-block; width:100%; max-width:300px;';
+      
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.style.cssText = 'width:100%; border-radius:10px; margin-bottom:8px; cursor:pointer; display:block;';
+      img.onclick = () => {
+        // Open image in larger view
+        const viewer = document.createElement('div');
+        viewer.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; display:flex; justify-content:center; align-items:center; cursor:pointer;';
+        viewer.innerHTML = `<img src="${imageUrl}" style="max-width:90%; max-height:90%; border-radius:10px;">`;
+        viewer.onclick = () => viewer.remove();
+        document.body.appendChild(viewer);
+      };
+      imageContainer.appendChild(img);
+      
+      // Add regenerate button for images if we have the prompt and messageIndex
+      if (imagePrompt && messageIndex !== null) {
+        const imgRegenBtn = document.createElement('button');
+        imgRegenBtn.innerHTML = '🔄';
+        imgRegenBtn.style.cssText = 'position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:28px; height:28px; color:white; cursor:pointer; font-size:1rem; opacity:0; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center;';
+        imgRegenBtn.title = 'Regenerate image';
+        
+        imageContainer.appendChild(imgRegenBtn);
+        
+        // Show/hide on hover
+        imageContainer.addEventListener('mouseenter', () => {
+          imgRegenBtn.style.opacity = '1';
+        });
+        imageContainer.addEventListener('mouseleave', () => {
+          imgRegenBtn.style.opacity = '0';
+        });
+        
+        // Handle image regeneration
+        imgRegenBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await regenerateImage(messageIndex, imagePrompt);
+        });
+      }
+      
+      messageEl.appendChild(imageContainer);
+    }
+    
+    const textEl = document.createElement('p');
+    textEl.style.margin = '0';
+    textEl.textContent = content;
+    messageEl.appendChild(textEl);
+    
     chatMessages.appendChild(messageEl);
   }
   
@@ -1431,6 +2747,9 @@
       content: message,
       isPlayer: true
     });
+    // Extract salient facts from user's message
+    const facts = extractSalientFacts(message, gameState.activeChat);
+    for (const f of facts) remember(gameState.activeChat, `Player ${f.text}`, f.type, f.importance);
     
     // Clear input
     chatInput.value = '';
@@ -1446,46 +2765,50 @@
       const conversationHistory = gameState.chatHistory[gameState.activeChat.id]
         .map(msg => `${msg.sender}: ${msg.content}`)
         .join('\n');
-      
-      const prompt = `
-        You are ${gameState.activeChat.name}, a ${gameState.activeChat.position} with the following traits:
-        - Personality: ${gameState.activeChat.personality}
-        - Key trait: ${gameState.activeChat.trait}
-        - Bio: ${gameState.activeChat.bio}
-        
-        Your current stats:
-        - Comfort: ${gameState.activeChat.stats.comfort}%
-        - Affection: ${gameState.activeChat.stats.affection}%
-        - Desire: ${gameState.activeChat.stats.desire}%
-        - Productivity: ${gameState.activeChat.stats.productivity}%
-        
-        The current workplace atmosphere is ${gameState.settings.atmosphere > 66 ? 'relaxed' : gameState.settings.atmosphere > 33 ? 'balanced' : 'strict'}.
-        Interaction guidelines are ${gameState.settings.guidelines > 66 ? 'casual' : gameState.settings.guidelines > 33 ? 'standard' : 'formal'}.
-        
-        Conversation history:
-        ${conversationHistory}
-        
-        Respond to the last message as ${gameState.activeChat.name}. Keep your response short, natural, and in-character.
-        Your mood should reflect your current stats. Be flirtatious if appropriate based on the context and your desire level.
-      `;
-      
-      const response = await generateText(prompt);
+
+      const emp = gameState.activeChat;
+      ensureEmployeeMemory(emp);
+      const { prompt, personalAllowed } = buildChatPrompt(emp, conversationHistory, message);
+      const raw = await generateText(prompt);
+      const response = sanitizeNpcResponse(raw, 3);
       
       // Hide typing indicator
       if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
       
-      // Add AI response
-      addChatMessage(gameState.activeChat.name, response, false);
-      
-      // Add to history
+      // Add to history first to get the correct index
       gameState.chatHistory[gameState.activeChat.id].push({
         sender: gameState.activeChat.name,
         content: response,
         isPlayer: false
       });
       
+      // Add AI response with message index for regenerate button
+      const messageIndex = gameState.chatHistory[gameState.activeChat.id].length - 1;
+      addChatMessage(gameState.activeChat.name, response, false, null, messageIndex);
+      // Memory: capture key NPC claims minimally
+      const respFacts = extractSalientFacts(response, emp);
+      for (const f of respFacts) remember(emp, `${emp.name} ${f.text}`, f.type, f.importance);
+      
+      // Style counters: detect personal detail usage
+      const mentionedHobby = (emp.hobbies || []).some(h => new RegExp(`\\b${h}\\b`, 'i').test(response));
+      const mentionedJob = emp.productManaged && new RegExp(`\\b${emp.productManaged}\\b`, 'i').test(response);
+      const mentionedPosition = emp.position && new RegExp(`\\b${emp.position}\\b`, 'i').test(response);
+      
+      emp.memory.styleCounters.total += 1;
+      emp.memory.styleCounters.sincePersonal = (mentionedHobby || mentionedJob || mentionedPosition) ? 0 : Math.min(10, (emp.memory.styleCounters.sincePersonal || 0) + 1);
+      
+      // Track specific mention types
+      if (mentionedJob || mentionedPosition) {
+        emp.memory.styleCounters.jobMentions += 1;
+        emp.memory.styleCounters.lastJobMention = emp.memory.styleCounters.total;
+      }
+      if (mentionedHobby) {
+        emp.memory.styleCounters.hobbyMentions += 1;
+        emp.memory.styleCounters.lastHobbyMention = emp.memory.styleCounters.total;
+      }
+      
       // Update employee stats based on conversation
-      updateEmployeeStatsFromChat(gameState.activeChat, response);
+      await updateEmployeeStatsFromChat(gameState.activeChat, message, response);
       
       // Scroll to bottom
       chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1496,16 +2819,625 @@
     }
   }
   
-  // Update employee stats based on chat
-    function updateEmployeeStatsFromChat(e, text) {
-    const t = text.toLowerCase();
-    if (t.includes('thank') || t.includes('appreciate')) e.stats.love = Math.min(100, (e.stats.love ?? 0) + 2);
-    if (t.includes('like') || t.includes('love'))           e.stats.love = Math.min(100, (e.stats.love ?? 0) + 3);
-    if (t.includes('annoy') || t.includes('mad'))           e.stats.anger = Math.min(100, (e.stats.anger ?? 0) + 2);
-    if (t.includes('sorry') || t.includes('apolog'))        e.stats.anger = Math.max(0,   (e.stats.anger ?? 0) - 2);
-    if (t.includes('work')  || t.includes('ship') )         e.stats.efficiency = Math.min(100, (e.stats.efficiency ?? 0) + 1);
-    e.stats.comfort = Math.min(100, (e.stats.comfort ?? 0) + (t.includes('happy') || t.includes('good') ? 1 : 0));
+  // -------- MESSAGE REGENERATION --------
+  async function regenerateMessage(messageIndex) {
+    if (!gameState.activeChat) return;
+    
+    const emp = gameState.activeChat;
+    const history = gameState.chatHistory[emp.id];
+    
+    if (!history || messageIndex < 1 || messageIndex >= history.length) return;
+    
+    // Get the message before the one we're regenerating (the player's prompt)
+    const playerMessage = history[messageIndex - 1]?.content;
+    if (!playerMessage) return;
+    
+    // Show typing indicator
+    if (chatTypingIndicator && chatTypingName) {
+      chatTypingIndicator.style.display = 'block';
+      chatTypingName.textContent = emp.name;
     }
+    
+    try {
+      // Build conversation history up to this point
+      const conversationHistory = history.slice(0, messageIndex)
+        .map(msg => `${msg.sender}: ${msg.content}`)
+        .join('\n');
+      
+      const { prompt } = buildChatPrompt(emp, conversationHistory, playerMessage);
+      const raw = await generateText(prompt);
+      const response = sanitizeNpcResponse(raw, 3);
+      
+      // Hide typing indicator
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+      
+      // Update the message in history
+      history[messageIndex].content = response;
+      
+      // Delete all messages after this one (truncate the conversation)
+      gameState.chatHistory[emp.id] = history.slice(0, messageIndex + 1);
+      
+      // Reload chat to show updated message
+      loadChatHistory(emp.id);
+      
+      // Update stats based on new response
+      await updateEmployeeStatsFromChat(emp, playerMessage, response);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (error) {
+      console.error('Error regenerating message:', error);
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+    }
+  }
+  
+  // Regenerate an image in the chat history
+  async function regenerateImage(messageIndex, imagePrompt) {
+    if (!gameState.activeChat) return;
+    
+    const emp = gameState.activeChat;
+    const history = gameState.chatHistory[emp.id];
+    
+    if (!history || messageIndex < 0 || messageIndex >= history.length) return;
+    
+    const message = history[messageIndex];
+    if (!message.imageUrl) return; // Not an image message
+    
+    try {
+      // Show loading indicator on the image
+      const loadingMsg = document.createElement('div');
+      loadingMsg.textContent = '🎨 Regenerating image...';
+      loadingMsg.style.cssText = 'text-align:center; padding:10px; opacity:0.7; font-style:italic;';
+      if (chatMessages) {
+        chatMessages.appendChild(loadingMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      
+      // Generate new image using the same prompt
+      const newImageUrl = await generateImage(imagePrompt);
+      
+      // Remove loading message
+      if (loadingMsg && loadingMsg.parentElement) {
+        loadingMsg.remove();
+      }
+      
+      // Update the image URL in history
+      message.imageUrl = newImageUrl;
+      
+      // Reload chat to show updated image
+      loadChatHistory(emp.id);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (error) {
+      console.error('Error regenerating image:', error);
+      showNotification('Failed to regenerate image');
+    }
+  }
+  
+  // -------- IMAGE SYSTEM --------
+  // Build comprehensive image prompt using NPC bio and context
+  async function buildImagePrompt(emp, requestType, customPrompt = null) {
+    // Extract physical description from bio
+    const physicalDesc = emp.physicalDescription || emp.bio || '';
+    
+    // Get player bio for [PLAYER] token
+    const playerBio = gameState.settings?.playerBio || 'the player';
+    
+    // Build character description from bio fields
+    const age = emp.age || 25;
+    const gender = emp.gender || 'female';
+    const ethnicity = emp.ethnicity || '';
+    const hairColor = emp.hairColor || '';
+    const eyeColor = emp.eyeColor || '';
+    const bodyType = emp.bodyType || '';
+    const height = emp.height || '';
+    
+    // Base character description
+    let charDesc = `${age} year old ${gender}`;
+    if (ethnicity) charDesc += `, ${ethnicity}`;
+    if (hairColor) charDesc += `, ${hairColor} hair`;
+    if (eyeColor) charDesc += `, ${eyeColor} eyes`;
+    if (bodyType) charDesc += `, ${bodyType} build`;
+    if (height) charDesc += `, ${height}`;
+    
+    // Add full physical description if available
+    if (physicalDesc) {
+      charDesc += `. Physical details: ${physicalDesc}`;
+    }
+    
+    // Get recent conversation context
+    const recentContext = gameState.chatHistory[emp.id]
+      ?.slice(-10)
+      .map(msg => `${msg.sender}: ${msg.content}`)
+      .join('\n') || '';
+    
+    // Determine intimacy level for appropriate image type
+    const affection = emp.stats?.affection || 0;
+    const desire = emp.stats?.desire || 0;
+    const intimacyLevel = (affection + desire) / 2;
+    
+    let imagePrompt = '';
+    
+    // Handle preset request types
+    if (requestType === 'casual') {
+      imagePrompt = `casual selfie, ${charDesc}, friendly smile, relaxed setting, natural lighting, smartphone photo quality`;
+    } else if (requestType === 'work') {
+      imagePrompt = `professional workplace selfie, ${charDesc}, ${emp.position || 'office worker'}, office environment, professional attire, confident expression`;
+    } else if (requestType === 'lewd') {
+      if (intimacyLevel < 40) {
+        imagePrompt = `suggestive selfie, ${charDesc}, flirty expression, casual clothing, teasing pose, playful atmosphere`;
+      } else {
+        imagePrompt = `seductive selfie, ${charDesc}, alluring expression, revealing clothing, intimate pose, bedroom or private setting`;
+      }
+    } else if (requestType === 'nude') {
+      if (intimacyLevel < 60) {
+        imagePrompt = `artistic nude selfie, ${charDesc}, tasteful pose, soft lighting, partial nudity, intimate setting`;
+      } else {
+        imagePrompt = `explicit nude selfie, ${charDesc}, seductive pose, full nudity, intimate bedroom setting, aroused expression`;
+      }
+    } else if (customPrompt) {
+      // Replace [PLAYER] token with player bio
+      let processedPrompt = customPrompt.replace(/\[PLAYER\]/gi, playerBio);
+      
+      // For custom prompts, AI analyzes and builds comprehensive prompt
+      const analysisPrompt = `You are helping generate an image prompt for ${emp.name}, a character with this description: ${charDesc}
+
+Recent conversation context:
+${recentContext}
+
+${playerBio !== 'the player' ? `Player description: ${playerBio}\n` : ''}
+The user has requested: "${processedPrompt}"
+
+Build a comprehensive, detailed image generation prompt that:
+1. Describes ${emp.name}'s physical appearance (using the character description)
+2. Incorporates the user's request
+3. Adds relevant details based on conversation context
+4. Uses technical prompt language (tags, descriptors, quality indicators)
+
+Be specific about pose, expression, clothing, setting, lighting, and mood. Return ONLY the image prompt, no explanation.`;
+
+      try {
+        imagePrompt = await generateText(analysisPrompt);
+        // Clean up any quotes or extra text
+        imagePrompt = imagePrompt.replace(/^["']|["']$/g, '').trim();
+      } catch (error) {
+        console.error('Error building custom image prompt:', error);
+        imagePrompt = `${processedPrompt}, ${charDesc}`;
+      }
+    }
+    
+    return imagePrompt;
+  }
+  
+  // Handle sending an image (player to NPC)
+  async function sendImageToNPC(imagePrompt) {
+    if (!gameState.activeChat || !imagePrompt.trim()) return;
+    
+    const emp = gameState.activeChat;
+    
+    // Show typing indicator
+    if (chatTypingIndicator && chatTypingName) {
+      chatTypingIndicator.style.display = 'block';
+      chatTypingName.textContent = emp.name;
+    }
+    
+    try {
+      // Show loading message
+      const loadingMsg = addChatMessage('You', '🎨 Generating image...', true);
+      
+      // Generate image using Perchance generateImage plugin
+      const imageUrl = await generateImage(imagePrompt);
+      
+      // Remove loading message and add actual image message
+      if (loadingMsg && loadingMsg.parentElement) {
+        loadingMsg.remove();
+      }
+      
+      // Add to history first to get the message index
+      if (!gameState.chatHistory[emp.id]) {
+        gameState.chatHistory[emp.id] = [];
+      }
+      gameState.chatHistory[emp.id].push({
+        sender: 'You',
+        content: imagePrompt,
+        isPlayer: true,
+        imageUrl: imageUrl,
+        imagePrompt: imagePrompt,
+        imageType: 'sent'
+      });
+      
+      // Add image message with index for regenerate button
+      const sentImageIndex = gameState.chatHistory[emp.id].length - 1;
+      addChatMessage('You', imagePrompt, true, imageUrl, sentImageIndex, imagePrompt);
+      
+      // Build AI response prompt - NPC "sees" and responds to image
+      const conversationHistory = gameState.chatHistory[emp.id]
+        .map(msg => `${msg.sender}: ${msg.content}`)
+        .join('\n');
+      
+      const playerBio = gameState.settings?.playerBio || '';
+      const playerContext = playerBio ? `\nPlayer description: ${playerBio}` : '';
+      
+      const responsePrompt = `${buildChatPrompt(emp, conversationHistory, '').prompt}${playerContext}
+
+The player just sent you an image. Based on this description: "${imagePrompt}", respond naturally to what they sent. Consider:
+- What the image shows (understand the CONTEXT and meaning, not just literal technical tags)
+- Your relationship with the player
+- The context of your conversation
+- Your personality and current mood
+
+Respond as if you actually saw the image. Keep it conversational (2-3 sentences, completing your thought).
+
+${emp.name}'s response:`;
+
+      const raw = await generateText(responsePrompt);
+      const response = sanitizeNpcResponse(raw, 3);
+      
+      // Hide typing indicator
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+      
+      // Add to history first to get the correct index
+      gameState.chatHistory[emp.id].push({
+        sender: emp.name,
+        content: response,
+        isPlayer: false
+      });
+      
+      // Add AI response with message index for regenerate button
+      const messageIndex = gameState.chatHistory[emp.id].length - 1;
+      addChatMessage(emp.name, response, false, null, messageIndex);
+      
+      // Memory: remember the image
+      remember(emp, `Player sent image: ${imagePrompt}`, 'event', 1.5);
+      
+      // Update stats
+      await updateEmployeeStatsFromChat(emp, `[Sent image: ${imagePrompt}]`, response);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (error) {
+      console.error('Error handling sent image:', error);
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+      addChatMessage(emp.name, "Sorry, I couldn't process that image.", false);
+    }
+  }
+  
+  // Handle requesting an image from NPC
+  async function requestImageFromNPC(requestType, customPrompt = null) {
+    if (!gameState.activeChat) return;
+    
+    const emp = gameState.activeChat;
+    
+    // Show typing indicator
+    if (chatTypingIndicator && chatTypingName) {
+      chatTypingIndicator.style.display = 'block';
+      chatTypingName.textContent = emp.name;
+    }
+    
+    try {
+      // Build comprehensive image prompt
+      const imagePrompt = await buildImagePrompt(emp, requestType, customPrompt);
+      
+      // Show loading message in chat
+      const loadingMsg = document.createElement('div');
+      loadingMsg.textContent = '🎨 Generating image...';
+      loadingMsg.style.cssText = 'text-align:center; padding:10px; opacity:0.7; font-style:italic;';
+      if (chatMessages) {
+        chatMessages.appendChild(loadingMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      
+      // Generate image using Perchance generateImage plugin
+      const imageUrl = await generateImage(imagePrompt);
+      
+      // Remove loading message
+      if (loadingMsg && loadingMsg.parentElement) {
+        loadingMsg.remove();
+      }
+      
+      // Get AI to generate a message accompanying the image
+      const conversationHistory = gameState.chatHistory[emp.id]
+        ?.map(msg => `${msg.sender}: ${msg.content}`)
+        .join('\n') || '';
+      
+      const messagePrompt = `${buildChatPrompt(emp, conversationHistory, '').prompt}
+
+The player has requested a ${requestType || 'custom'} photo from you. You're sending them an image that shows: ${imagePrompt}
+
+Write a brief, natural message (1 sentence) to accompany the photo you're sending. Be playful, flirty, or professional depending on your relationship and the image type.
+
+${emp.name}'s message:`;
+
+      const raw = await generateText(messagePrompt);
+      const message = sanitizeNpcResponse(raw, 1);
+      
+      // Hide typing indicator
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+      
+      // Add to history first to get the correct index
+      if (!gameState.chatHistory[emp.id]) {
+        gameState.chatHistory[emp.id] = [];
+      }
+      gameState.chatHistory[emp.id].push({
+        sender: emp.name,
+        content: message,
+        isPlayer: false,
+        imageUrl: imageUrl,
+        imagePrompt: imagePrompt,
+        imageType: 'received'
+      });
+      
+      // Add image message from NPC with message index for regenerate button
+      const receivedImageIndex = gameState.chatHistory[emp.id].length - 1;
+      addChatMessage(emp.name, message, false, imageUrl, receivedImageIndex, imagePrompt);
+      
+      // Memory: remember sending this image
+      remember(emp, `Sent ${requestType || 'custom'} photo to player`, 'event', 1.5);
+      
+      // Add to employee photos gallery
+      if (!emp.photos) emp.photos = [];
+      emp.photos.push({
+        url: imageUrl,
+        prompt: imagePrompt,
+        type: requestType || 'custom',
+        timestamp: Date.now()
+      });
+      
+      // Update stats based on image type
+      if (requestType === 'lewd' || requestType === 'nude') {
+        emp.stats.desire = Math.min(100, (emp.stats.desire || 0) + 3);
+        emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 2);
+      } else {
+        emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 1);
+      }
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (error) {
+      console.error('Error handling image request:', error);
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+      addChatMessage(emp.name, "Sorry, I can't send that right now.", false);
+    }
+  }
+  
+  // Visualize current scene without NPC response
+  async function visualizeCurrentScene() {
+    if (!gameState.activeChat) return;
+    
+    const emp = gameState.activeChat;
+    
+    try {
+      // Build comprehensive scene description from context
+      const recentMessages = gameState.chatHistory[emp.id]
+        ?.slice(-15)
+        .map(msg => `${msg.sender}: ${msg.content}`)
+        .join('\n') || '';
+      
+      // Get character descriptions
+      const empAge = emp.age || 25;
+      const empGender = emp.gender || 'female';
+      const empHair = emp.hairColor || 'brown';
+      const empEyes = emp.eyeColor || 'brown';
+      const empBody = emp.bodyType || 'average';
+      const empPhysical = emp.physicalDescription || '';
+      
+      let empDesc = `${empAge}yo ${empGender}, ${empHair} hair, ${empEyes} eyes, ${empBody} build`;
+      if (empPhysical) empDesc += `, ${empPhysical}`;
+      
+      const playerBio = gameState.settings?.playerBio || 'the player';
+      
+      // AI analyzes scene and builds visual prompt
+      const scenePrompt = `Based on this conversation between the player and ${emp.name}:
+
+${recentMessages}
+
+Character descriptions:
+- ${emp.name}: ${empDesc}
+- Player: ${playerBio}
+
+Generate a detailed image prompt that visualizes the CURRENT SCENE from the conversation. Consider:
+1. Where they are (office, home, restaurant, etc.)
+2. What they're doing (working, talking, eating, etc.)
+3. Their positions/poses
+4. Their expressions and body language
+5. The atmosphere and mood
+6. Lighting and setting details
+
+Create a comprehensive image generation prompt that captures this moment. Use technical prompt language. Return ONLY the image prompt, no explanation.`;
+
+      const imagePrompt = await generateText(scenePrompt);
+      
+      // Show loading message in chat
+      const loadingMsg = document.createElement('div');
+      loadingMsg.textContent = '🎨 Visualizing current scene...';
+      loadingMsg.style.cssText = 'text-align:center; padding:10px; opacity:0.7; font-style:italic;';
+      if (chatMessages) {
+        chatMessages.appendChild(loadingMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      
+      // Generate image using Perchance generateImage plugin
+      const imageUrl = await generateImage(imagePrompt);
+      
+      // Remove loading message
+      if (loadingMsg && loadingMsg.parentElement) {
+        loadingMsg.remove();
+      }
+      
+      // Add image to chat without NPC message - just the visualization
+      const messageEl = document.createElement('div');
+      messageEl.style.cssText = 'max-width:80%; padding:10px; margin:0 auto; text-align:center;';
+      
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.style.cssText = 'width:100%; max-width:400px; border-radius:10px; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,0.3);';
+      img.onclick = () => {
+        const viewer = document.createElement('div');
+        viewer.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; display:flex; justify-content:center; align-items:center; cursor:pointer;';
+        viewer.innerHTML = `<img src="${imageUrl}" style="max-width:90%; max-height:90%; border-radius:10px;">`;
+        viewer.onclick = () => viewer.remove();
+        document.body.appendChild(viewer);
+      };
+      
+      const caption = document.createElement('p');
+      caption.style.cssText = 'margin:8px 0 0 0; color:#aaa; font-size:0.85rem; font-style:italic;';
+      caption.textContent = '🎬 Scene visualization';
+      
+      messageEl.appendChild(img);
+      messageEl.appendChild(caption);
+      chatMessages.appendChild(messageEl);
+      
+      // Add to history with special type
+      if (!gameState.chatHistory[emp.id]) {
+        gameState.chatHistory[emp.id] = [];
+      }
+      gameState.chatHistory[emp.id].push({
+        sender: 'System',
+        content: '🎬 Scene visualization',
+        isPlayer: false,
+        imageUrl: imageUrl,
+        imagePrompt: imagePrompt,
+        imageType: 'scene'
+      });
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (error) {
+      console.error('Error visualizing scene:', error);
+      addChatMessage('System', 'Could not generate scene visualization.', false);
+    }
+  }
+  
+  // -------- AI-POWERED STAT EVALUATION --------
+  // Analyzes conversation and updates employee stats naturally
+  async function updateEmployeeStatsFromChat(emp, playerMessage, npcResponse) {
+    if (!emp || !emp.stats) return;
+    
+    // Build evaluation prompt with extended context
+    const conversationContext = gameState.chatHistory[emp.id]
+      ?.slice(-60) // Last 30 exchanges for comprehensive stat evaluation
+      .map(msg => `${msg.sender}: ${msg.content}`)
+      .join('\n') || '';
+    
+    const currentStats = `Affection: ${emp.stats.affection ?? 0}, Comfort: ${emp.stats.comfort ?? 0}, Trust: ${emp.stats.trust ?? 0}, Desire: ${emp.stats.desire ?? 0}, Obedience: ${emp.stats.obedience ?? 0}`;
+    
+    const evaluationPrompt = `You are evaluating how an NPC employee's feelings changed based on a conversation.
+
+NPC: ${emp.name} (${emp.personality || 'balanced'} personality)
+Current stats: ${currentStats}
+
+Recent context:
+${conversationContext}
+
+Rate the impact of the player's most recent message on these stats using a -10 to +10 scale:
+- Affection: How much they like you personally (compliments, kindness, shared interests increase; rudeness decreases)
+- Comfort: How comfortable they feel around you (casual chat, humor, understanding increase; pressure, discomfort decrease)
+- Trust: How much they trust you (honesty, consistency, support increase; lies, breaking promises decrease)
+- Desire: Romantic/sexual attraction (flirting, compliments, chemistry increase; rejection, boundaries decrease)
+- Obedience: Willingness to follow your lead (respect, authority, rewards increase; defiance, pushback decrease)
+
+Player's message: "${playerMessage}"
+NPC's response: "${npcResponse}"
+
+Reply with ONLY 5 numbers separated by spaces (Affection Comfort Trust Desire Obedience), each from -10 to +10. Don't be overly harsh in your evaluations. The game is of an NSFW nature and conversations are meant to be light-hearted.
+Example: "5 3 2 4 1" or "-2 0 1 -1 3"
+
+Numbers only:`;
+
+    try {
+      const raw = await generateText(evaluationPrompt);
+      const numbers = raw.trim().split(/\s+/).map(n => parseFloat(n)).filter(n => !isNaN(n));
+      
+      if (numbers.length >= 5) {
+        // Apply stat changes with diminishing returns at high values
+        const applyChange = (current, change, max = 100, min = 0) => {
+          let newVal = current + change;
+          
+          // Diminishing returns near caps
+          if (change > 0 && current > 80) {
+            newVal = current + (change * 0.5); // Half effect above 80
+          } else if (change > 0 && current > 90) {
+            newVal = current + (change * 0.25); // Quarter effect above 90
+          }
+          
+          return Math.max(min, Math.min(max, newVal));
+        };
+        
+        emp.stats.affection = applyChange(emp.stats.affection ?? 50, numbers[0]);
+        emp.stats.comfort = applyChange(emp.stats.comfort ?? 50, numbers[1]);
+        emp.stats.trust = applyChange(emp.stats.trust ?? 50, numbers[2]);
+        emp.stats.desire = applyChange(emp.stats.desire ?? 20, numbers[3]);
+        emp.stats.obedience = applyChange(emp.stats.obedience ?? 50, numbers[4]);
+        
+        // Log stat changes for debugging (remove in production)
+        console.log(`[Stat Update] ${emp.name}: Aff${numbers[0]>0?'+':''}${numbers[0]} Com${numbers[1]>0?'+':''}${numbers[1]} Tru${numbers[2]>0?'+':''}${numbers[2]} Des${numbers[3]>0?'+':''}${numbers[3]} Obe${numbers[4]>0?'+':''}${numbers[4]}`);
+        
+        // Update UI if on people tab
+        if (gameState.activeTab === 'people') {
+          updatePeopleTab();
+        }
+      } else {
+        // Fallback: Basic keyword analysis if AI fails
+        console.warn('[Stat Update] AI evaluation failed, using fallback');
+        fallbackStatUpdate(emp, playerMessage, npcResponse);
+      }
+    } catch (error) {
+      console.error('[Stat Update] Error:', error);
+      fallbackStatUpdate(emp, playerMessage, npcResponse);
+    }
+  }
+  
+  // Fallback stat update using keyword analysis
+  function fallbackStatUpdate(emp, playerMsg, npcMsg) {
+    const p = (playerMsg || '').toLowerCase();
+    const n = (npcMsg || '').toLowerCase();
+    
+    // Affection changes
+    if (/\b(thank|appreciate|grateful|wonderful|amazing|great job)\b/.test(p)) {
+      emp.stats.affection = Math.min(100, (emp.stats.affection ?? 50) + 3);
+    }
+    if (/\b(stupid|idiot|useless|hate)\b/.test(p)) {
+      emp.stats.affection = Math.max(0, (emp.stats.affection ?? 50) - 5);
+    }
+    
+    // Comfort changes
+    if (/\b(comfortable|relaxed|casual|easy|chill)\b/.test(p)) {
+      emp.stats.comfort = Math.min(100, (emp.stats.comfort ?? 50) + 2);
+    }
+    if (/\b(nervous|anxious|worried|uncomfortable)\b/.test(n)) {
+      emp.stats.comfort = Math.max(0, (emp.stats.comfort ?? 50) - 3);
+    }
+    
+    // Trust changes
+    if (/\b(honest|truth|trust|believe|promise)\b/.test(p)) {
+      emp.stats.trust = Math.min(100, (emp.stats.trust ?? 50) + 2);
+    }
+    if (/\b(lie|lied|dishonest|deceive)\b/.test(p)) {
+      emp.stats.trust = Math.max(0, (emp.stats.trust ?? 50) - 4);
+    }
+    
+    // Desire changes
+    if (/\b(beautiful|gorgeous|sexy|hot|attractive|cute)\b/.test(p)) {
+      emp.stats.desire = Math.min(100, (emp.stats.desire ?? 20) + 4);
+    }
+    if (/\b(date|dinner|kiss|touch|want you)\b/.test(p)) {
+      emp.stats.desire = Math.min(100, (emp.stats.desire ?? 20) + 3);
+    }
+    
+    // Obedience changes
+    if (/\b(good job|well done|excellent|perfect)\b/.test(p)) {
+      emp.stats.obedience = Math.min(100, (emp.stats.obedience ?? 50) + 2);
+    }
+    if (/\b(no|won't|refuse|can't make me)\b/.test(n)) {
+      emp.stats.obedience = Math.max(0, (emp.stats.obedience ?? 50) - 2);
+    }
+    
+    // Productivity is more stable, changes slowly
+    if (/\b(work|project|task|deadline)\b/.test(p)) {
+      emp.stats.productivity = Math.min(100, (emp.stats.productivity ?? 50) + 1);
+    }
+  }
 
   
   // Update news
@@ -1573,8 +3505,43 @@
         gameState = {
           ...gameState,
           ...parsed,
+          // Ensure locations have proper unlock states
+          locations: (parsed.locations || gameState.locations).map(loc => ({
+            unlocked: loc.unlocked ?? (loc.owned ?? (loc.id === 'garage')), // First location or previously owned
+            owned: loc.owned ?? loc.unlocked ?? (loc.id === 'garage'),
+            ...loc
+          })),
           // Ensure critical objects are properly initialized
-          products: parsed.products || gameState.products,
+          products: (parsed.products || gameState.products).map(p => {
+            // Define unlock costs based on product id (for backwards compatibility)
+            const defaultUnlockCosts = {
+              'website': 0,      // first product is free
+              'app': 100,
+              'consulting': 400,
+              'cloud': 1800,
+              'seo': 3000,
+              'branding': 5000,
+              'ecommerce': 8000,
+              'automation': 12000,
+              'copywriting': 0, // first in home_office
+              'video_editing': 20000,
+              'marketing': 35000,
+              'consulting_premium': 55000,
+              'saas': 85000
+            };
+            
+            return {
+              // backfill new balance fields for old saves
+              baseUpgradeCost: p.baseUpgradeCost ?? p.upgradeCost ?? 50,
+              costGrowth: p.costGrowth ?? 1.35,
+              valueExponent: p.valueExponent ?? 0.85,
+              managerSpeedCapPct: p.managerSpeedCapPct ?? 0.40,
+              // backfill unlock properties
+              unlocked: p.unlocked ?? (p.id === 'website' ? true : false), // first product unlocked by default
+              unlockCost: p.unlockCost ?? (defaultUnlockCosts[p.id] || 0),
+              ...p
+            };
+          }),
           employees: parsed.employees || gameState.employees,
           settings: {...gameState.settings, ...(parsed.settings || {})},
           chatHistory: parsed.chatHistory || {}
@@ -1617,17 +3584,42 @@
     }
   }
   
-  // Purchase location
-  function purchaseLocation(locationId) {
+  // Unlock location
+  function unlockLocation(locationId) {
     const location = gameState.locations.find(l => l.id === locationId);
-    if (location && !location.owned && gameState.cash >= location.cost) {
-      gameState.cash -= location.cost;
-      location.owned = true;
-      updateBusinessTab();
-      showNotification(`${location.name} purchased!`);
-    } else {
-      showNotification('Not enough cash or location already owned!');
+    if (!location) return showNotification('Location not found!');
+    
+    if (location.unlocked) return showNotification('Location already unlocked!');
+    
+    // Check prerequisites
+    if (!checkLocationUnlockable(locationId)) {
+      return showNotification('Complete all products in previous locations first!');
     }
+    
+    // Check cost
+    if (gameState.cash < location.cost) {
+      return showNotification(`Need $${location.cost} to unlock ${location.name}!`);
+    }
+    
+    // Unlock location
+    gameState.cash -= location.cost;
+    location.unlocked = true;
+    location.owned = true; // backward compatibility
+    
+    // Unlock the first product in this location
+    const firstProduct = gameState.products.find(p => p.locationId === locationId);
+    if (firstProduct && firstProduct.unlockCost === 0) {
+      firstProduct.unlocked = true;
+    }
+    
+    showNotification(`${location.name} unlocked!`);
+    updateBusinessTab();
+    updateUI();
+  }
+  
+  // Purchase location (backward compatibility alias)
+  function purchaseLocation(locationId) {
+    unlockLocation(locationId);
   }
   
   // Generate initial employees
@@ -1670,12 +3662,14 @@
         }
       }
       
-      // Generate initial stats
+      // Generate initial stats (0-100 scale)
       const stats = {
-        comfort: 40 + Math.floor(Math.random() * 30),
-        affection: 20 + Math.floor(Math.random() * 30),
-        desire: 10 + Math.floor(Math.random() * 30),
-        productivity: 50 + Math.floor(Math.random() * 30)
+        affection: 20 + Math.floor(Math.random() * 20),   // How much they like you personally
+        comfort: 40 + Math.floor(Math.random() * 30),      // How comfortable they feel around you
+        trust: 30 + Math.floor(Math.random() * 30),        // How much they trust you
+        desire: 5 + Math.floor(Math.random() * 15),        // Romantic/sexual attraction
+        obedience: 40 + Math.floor(Math.random() * 30),    // Willingness to follow instructions
+        productivity: 50 + Math.floor(Math.random() * 30)  // Work performance (affects game mechanics)
       };
       
       gameState.employees.push({
@@ -1690,9 +3684,19 @@
         stats: stats,
         level: 1,
         hired: true,
-        bio: null,
-        physicalDescription: null,
-        profileImage: null
+        bio: `A ${personality.toLowerCase()} and ${trait.toLowerCase()} team member who enjoys ${employeeHobbies.join(', ')}.`,
+        physical: {
+          heightBuild: 'average',
+          hair: { color: 'brown', style: 'straight', length: 'medium' },
+          eyes: { color: 'blue', shape: 'round' },
+          skinTone: 'light',
+          bodyShape: 'average',
+          breastSize: gender === 'Female' ? 'medium' : null,
+          buttSize: 'average',
+          fashion: 'business casual'
+        },
+  profileImage: null,
+  memory: [] // long-term memory: facts, events, relationship history
       });
     }
   }
@@ -1714,7 +3718,9 @@
   window.loadGame = loadGame;
   window.exportSave = exportSave;
   window.resetGame = resetGame;
+  window.unlockLocation = unlockLocation;
   window.purchaseLocation = purchaseLocation;
+  window.checkLocationUnlockable = checkLocationUnlockable;
   window.handleEmployeeAction = handleEmployeeAction;
   window.openChat = openChat;
   window.loadChatHistory = loadChatHistory;
@@ -1780,30 +3786,30 @@
   .modal {
     animation: fadeIn 0.3s;
   }
-  
+
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
-  
+
   /* Chat message styling */
   #chatMessages {
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><rect width="20" height="20" fill="%2316213e"/><circle cx="10" cy="10" r="1" fill="%230f3460"/></svg>');
     background-size: 20px 20px;
   }
-  
+
   /* Notification animation */
   @keyframes slideIn {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
   }
-  
+
   /* News ticker animation */
   @keyframes ticker {
     0% { transform: translateX(100%); }
     100% { transform: translateX(-100%); }
   }
-  
+
   #newsContent {
     display: inline-block;
     animation: ticker 20s linear infinite;
@@ -1822,4 +3828,18 @@
   }
   #hiringModal * { pointer-events: auto !important; }
   #hiringModal[hidden] { display: none !important; }
+
+  /* Bulletproof chat modal overlay */
+  #chatModal {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: rgba(0,0,0,0.7) !important;
+    z-index: 999999 !important;
+    pointer-events: auto !important;
+  }
+  #chatModal * { pointer-events: auto !important; }
+  #chatModal[hidden], #chatModal[style*="display:none"] { display: none !important; pointer-events: none !important; }
 </style>
