@@ -117,7 +117,7 @@
     
     <!-- Income Boost Section -->
     <div style="background:#16213e; border-radius:10px; padding:20px; margin-bottom:20px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
-      <h3 style="margin:0 0 15px 0;">💰 Income Boost (Diminishing Returns)</h3>
+      <h3 style="margin:0 0 15px 0;">💰 Income Boost</h3>
       <p style="color:#aaa; margin:0 0 15px 0; font-size:0.9rem;">Permanently increase income for all products in a location. Each level provides less benefit.</p>
       <div id="incomeBoostList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
         <!-- Income boost buttons will be populated here -->
@@ -126,7 +126,7 @@
     
     <!-- Cost Reduction Section -->
     <div style="background:#16213e; border-radius:10px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
-      <h3 style="margin:0 0 15px 0;">💸 Cost Reduction (Diminishing Returns, Max 90%)</h3>
+      <h3 style="margin:0 0 15px 0;">💸 Cost Reduction</h3>
       <p style="color:#aaa; margin:0 0 15px 0; font-size:0.9rem;">Reduces ALL costs in a location: product unlocks, upgrades, manager hires & upgrades. Capped at 90%.</p>
       <div id="costReductionList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
         <!-- Cost reduction buttons will be populated here -->
@@ -413,6 +413,9 @@
         <button class="attach-menu-item" data-action="send" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px;">
           <span style="font-size:1.2rem;">📤</span> Send Image
         </button>
+        <button class="attach-menu-item" data-action="request-post" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.2rem;">📱</span> Request Social Post
+        </button>
         <button class="attach-menu-item" data-action="visualize" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px;">
           <span style="font-size:1.2rem;">🎬</span> Visual Current Scene
         </button>
@@ -479,6 +482,50 @@
         <div style="display:flex; gap:10px; justify-content:flex-end;">
           <button id="cancelRequestManual" style="padding:10px 20px; background:#0f3460; border:none; border-radius:6px; color:white; cursor:pointer;">Back</button>
           <button id="confirmRequestManual" style="padding:10px 20px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Request Social Post Modal -->
+<div id="requestPostModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999999; justify-content:center; align-items:center;">
+  <div style="background:#16213e; width:90%; max-width:550px; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); padding:25px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0; color:#00d4ff;">📱 Request a Social Post</h3>
+      <button id="closeRequestPostModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <div id="requestPostMode" style="margin-bottom:20px;">
+      <p style="color:#aaa; margin-bottom:15px;">Choose what kind of post you want them to make:</p>
+      
+      <!-- Post Type Presets -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+        <button class="request-post-preset" data-preset="text" style="padding:12px; background:#0f3460; border:1px solid #00d4ff; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+          📝 Status Update
+        </button>
+        <button class="request-post-preset" data-preset="selfie" style="padding:12px; background:#0f3460; border:1px solid #00d4ff; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+          🤳 Selfie
+        </button>
+        <button class="request-post-preset" data-preset="thirst_trap" style="padding:12px; background:#0f3460; border:1px solid #00d4ff; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+          🔥 Thirst Trap
+        </button>
+        <button class="request-post-preset" data-preset="explicit" style="padding:12px; background:#0f3460; border:1px solid #00d4ff; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+          🔞 Explicit/Nude
+        </button>
+      </div>
+      
+      <!-- Custom Request Option -->
+      <button id="requestPostCustomBtn" style="width:100%; padding:12px; background:#e94560; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; margin-bottom:15px;">
+        ✏️ Custom Request
+      </button>
+      
+      <!-- Custom Input (hidden by default) -->
+      <div id="requestPostCustomInput" style="display:none;">
+        <textarea id="requestPostPrompt" placeholder="Describe what you want them to post (e.g., 'Post a picture of you masturbating' or 'Write about how you're feeling right now')" style="width:100%; height:100px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical; margin-bottom:15px;"></textarea>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button id="cancelRequestPostCustom" style="padding:10px 20px; background:#0f3460; border:none; border-radius:6px; color:white; cursor:pointer;">Back</button>
+          <button id="confirmRequestPostCustom" style="padding:10px 20px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Request</button>
         </div>
       </div>
     </div>
@@ -561,6 +608,55 @@
       <button id="submitPlayerPost" style="padding:12px 24px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">
         📤 Post
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- AFK Income Modal -->
+<div id="afkIncomeModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999999; justify-content:center; align-items:center;">
+  <div style="background:linear-gradient(135deg, #0f1419 0%, #16213e 100%); width:90%; max-width:500px; border-radius:20px; padding:30px; box-shadow:0 10px 50px rgba(76,204,163,0.3); border:2px solid #4ecca3; position:relative;">
+    
+    <!-- Close button -->
+    <button id="closeAfkIncome" style="position:absolute; top:15px; right:15px; background:transparent; border:none; color:#aaa; font-size:1.5rem; cursor:pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:all 0.2s;">
+      ✕
+    </button>
+    
+    <!-- Icon -->
+    <div style="text-align:center; margin-bottom:20px;">
+      <div style="font-size:4rem; margin-bottom:10px;">💰</div>
+      <h2 style="margin:0 0 10px 0; color:#4ecca3; font-size:1.8rem;">Welcome Back!</h2>
+      <p style="color:#aaa; margin:0; font-size:0.95rem;">You've been away for a while...</p>
+    </div>
+    
+    <!-- Time Away -->
+    <div style="background:#0f1419; padding:15px; border-radius:12px; margin-bottom:20px; text-align:center;">
+      <div style="color:#666; font-size:0.85rem; margin-bottom:5px;">TIME AWAY</div>
+      <div id="afkTimeAway" style="color:#00d4ff; font-size:1.4rem; font-weight:bold;">0h 0m</div>
+    </div>
+    
+    <!-- Earnings Breakdown -->
+    <div style="background:#0f1419; padding:15px; border-radius:12px; margin-bottom:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="color:#aaa; font-size:0.9rem;">Your Income Rate:</span>
+        <span id="afkIncomeRate" style="color:white; font-weight:600;">$0/sec</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="color:#aaa; font-size:0.9rem;">Full Earnings:</span>
+        <span id="afkFullEarnings" style="color:#666; text-decoration:line-through;">$0</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid #2a3f5f;">
+        <span style="color:#4ecca3; font-size:1.1rem; font-weight:600;">AFK Earnings (80%):</span>
+        <span id="afkEarnings" style="color:#4ecca3; font-size:1.4rem; font-weight:bold;">$0</span>
+      </div>
+    </div>
+    
+    <!-- Claim Button -->
+    <button id="claimAfkIncome" style="width:100%; padding:15px; background:linear-gradient(135deg, #4ecca3 0%, #00d4ff 100%); border:none; border-radius:12px; color:white; font-size:1.2rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 20px rgba(76,204,163,0.4); transition:all 0.3s;">
+      💰 Claim Earnings
+    </button>
+    
+    <div style="text-align:center; margin-top:15px; color:#666; font-size:0.8rem;">
+      * AFK earnings are capped at 80% of your income rate
     </div>
   </div>
 </div>
@@ -732,9 +828,9 @@
     globalCostReduction: 0.7,        // Reduce costs to 70% (was too aggressive at 60%)
     
     // Product scaling
-    productCostMultiplier: 1.20,     // Each level costs 1.20x more (reduced from 1.35 for smoother progression to 999)
-    productIncomeMultiplier: 1.15,   // Each level gives 1.15x more income
-    productIncomeExponent: 0.85,     // Diminishing returns on income growth
+    productCostMultiplier: 1.22,     // Each level costs 1.20x more (reduced from 1.35 for smoother progression to 999)
+    productIncomeMultiplier: 1.20,   // Each level gives 1.15x more income
+    productIncomeExponent: 0.95,     // Diminishing returns on income growth
     
     // Starting values
     startingCash: 150,               // Start with more cash (was 100)
@@ -766,6 +862,7 @@
     playerUpgrades: { clickPower: 0 }, // each +1 = +0.1s per click
     totalEarnings: 0,
     onboarding: [], // tracks employees being onboarded
+    lastPlayTime: Date.now(), // Track when player last played for AFK income
     
     // PRESTIGE SYSTEM
     prestigeLevel: 0,              // Number of times player has prestiged
@@ -3255,6 +3352,45 @@
     // Build known locations array
     const knownLocations = [emp.locationId || 'headquarters'];
     
+    // Get recent chat history with boss (last 5 messages within 2 hours)
+    const chatHistory = gameState.chatHistory[emp.id] || [];
+    const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
+    const recentChats = chatHistory
+      .filter(msg => (msg.timestamp || 0) > twoHoursAgo)
+      .slice(-5); // Last 5 messages within 2 hours
+    
+    // Summarize chat topics/themes for context
+    let chatContext = null;
+    if (recentChats.length >= 2) { // Only include if there's meaningful conversation
+      const chatText = recentChats.map(msg => msg.content).join(' ');
+      
+      // Detect conversation themes
+      const themes = [];
+      if (/\b(flirt|sexy|hot|beautiful|cute|attractive|date|kiss|touch)\b/i.test(chatText)) {
+        themes.push('flirty/romantic');
+      }
+      if (/\b(project|deadline|work|meeting|report|task|client)\b/i.test(chatText)) {
+        themes.push('work-related');
+      }
+      if (/\b(tired|busy|stressed|excited|happy|sad|frustrated)\b/i.test(chatText)) {
+        themes.push('emotional/personal');
+      }
+      if (/\b(lunch|dinner|coffee|drink|food|eat)\b/i.test(chatText)) {
+        themes.push('food/social');
+      }
+      
+      chatContext = {
+        hasRecentChat: true,
+        messageCount: recentChats.length,
+        themes: themes,
+        lastMessages: recentChats.slice(-3).map(msg => ({
+          sender: msg.sender,
+          preview: msg.content.slice(0, 100) // First 100 chars
+        })),
+        timeAgo: Math.round((Date.now() - (recentChats[recentChats.length - 1]?.timestamp || 0)) / (60 * 1000)) // minutes
+      };
+    }
+    
     return {
       employee: {
         id: emp.id,
@@ -3276,6 +3412,7 @@
       coworkers: coworkers, // ← Added for generateOrganicPost
       knownLocations: knownLocations, // ← Added for generateOrganicPost
       recentEvents,
+      chatContext, // ← NEW: Recent conversation context with boss
       socialProfile: emp.social
     };
   }
@@ -3721,6 +3858,8 @@
       'Only mention job/hobbies if DIRECTLY asked about them.',
       'Speak like a real person in a workplace - keep it grounded and authentic.',
       'Vary your responses - avoid patterns and formulaic replies.',
+      'AVOID overusing transition words like "honestly", "actually", "basically", "literally". Use them sparingly (once every 10+ messages at most).',
+      'AVOID ending multiple messages in a row with questions like "But honestly?" or "Though honestly?" - vary your sentence structures.',
       'ALWAYS complete your sentences - do not trail off with ellipsis (...) unless being intentionally mysterious or hesitant.',
       atmosphereGuidance,
       styleGuidance,
@@ -4082,6 +4221,9 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
 
     // Start news updates
     setInterval(updateNews, NEWS_UPDATE_INTERVAL);
+    
+    // Start proactive NPC messaging (check every 2 minutes)
+    setInterval(checkForProactiveMessages, 120000);
   }
 
   // Generate a pool of potential hires
@@ -4603,6 +4745,8 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
             $('requestImageModal').style.display = 'flex';
           } else if (action === 'send') {
             $('sendImageModal').style.display = 'flex';
+          } else if (action === 'request-post') {
+            $('requestPostModal').style.display = 'flex';
           } else if (action === 'visualize') {
             visualizeCurrentScene();
           }
@@ -4713,6 +4857,76 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
       });
     }
     
+    // ========== REQUEST POST MODAL HANDLERS ==========
+    
+    const requestPostModal = $('requestPostModal');
+    const closeRequestPostModal = $('closeRequestPostModal');
+    const requestPostCustomBtn = $('requestPostCustomBtn');
+    const requestPostCustomInput = $('requestPostCustomInput');
+    const requestPostMode = $('requestPostMode');
+    const cancelRequestPostCustom = $('cancelRequestPostCustom');
+    const confirmRequestPostCustom = $('confirmRequestPostCustom');
+    const requestPostPrompt = $('requestPostPrompt');
+    
+    if (closeRequestPostModal) {
+      closeRequestPostModal.addEventListener('click', () => {
+        requestPostModal.style.display = 'none';
+        requestPostCustomInput.style.display = 'none';
+        requestPostMode.querySelector('div').style.display = 'grid';
+        requestPostCustomBtn.style.display = 'block';
+        requestPostPrompt.value = '';
+      });
+    }
+    
+    // Post type preset buttons
+    document.querySelectorAll('.request-post-preset').forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.background = '#00d4ff';
+        btn.style.color = '#0f1419';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.background = '#0f3460';
+        btn.style.color = 'white';
+      });
+      btn.addEventListener('click', async () => {
+        const preset = btn.dataset.preset;
+        requestPostModal.style.display = 'none';
+        await requestPostFromNPC(preset);
+      });
+    });
+    
+    // Custom post request button
+    if (requestPostCustomBtn) {
+      requestPostCustomBtn.addEventListener('click', () => {
+        requestPostMode.querySelector('div').style.display = 'none';
+        requestPostCustomBtn.style.display = 'none';
+        requestPostCustomInput.style.display = 'block';
+      });
+    }
+    
+    if (cancelRequestPostCustom) {
+      cancelRequestPostCustom.addEventListener('click', () => {
+        requestPostCustomInput.style.display = 'none';
+        requestPostMode.querySelector('div').style.display = 'grid';
+        requestPostCustomBtn.style.display = 'block';
+        requestPostPrompt.value = '';
+      });
+    }
+    
+    if (confirmRequestPostCustom) {
+      confirmRequestPostCustom.addEventListener('click', async () => {
+        const prompt = requestPostPrompt.value.trim();
+        if (prompt) {
+          requestPostModal.style.display = 'none';
+          requestPostCustomInput.style.display = 'none';
+          requestPostMode.querySelector('div').style.display = 'grid';
+          requestPostCustomBtn.style.display = 'block';
+          requestPostPrompt.value = '';
+          await requestPostFromNPC(null, prompt);
+        }
+      });
+    }
+    
     // ========== SOCIAL FEED EVENT HANDLERS ==========
     
     // Player post button
@@ -4739,7 +4953,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
         
         // Update filter
         gameState.socialNetwork.feedFilter = btn.dataset.filter;
-        renderSocialFeed();
+        renderSocialFeed(true); // Force full render on filter change
       });
     });
     
@@ -4748,7 +4962,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     if (feedSortSelect) {
       feedSortSelect.addEventListener('change', (e) => {
         gameState.socialNetwork.feedSort = e.target.value;
-        renderSocialFeed();
+        renderSocialFeed(true); // Force full render on sort change
       });
     }
     
@@ -5597,7 +5811,10 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <button class="employee-action-btn" data-employee="${e.id}" data-action="bio" style="padding:6px 10px; background:#00d4ff; border:none; border-radius:6px; color:#0f1419; cursor:pointer; font-size:.85rem; font-weight:600;">Bio</button>
             <button class="employee-action-btn" data-employee="${e.id}" data-action="gift" style="padding:6px 10px; background:#0f3460; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Gift</button>
-            <button class="employee-action-btn" data-employee="${e.id}" data-action="chat" style="padding:6px 10px; background:#e94560; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Chat</button>
+            <button class="employee-action-btn" data-employee="${e.id}" data-action="chat" style="padding:6px 10px; background:#e94560; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem; position:relative; display:flex; align-items:center; gap:6px;">
+              Chat
+              ${e.unreadMessages > 0 ? `<span style="position:absolute; top:-6px; right:-6px; background:#ff3366; color:white; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:700; box-shadow:0 2px 6px rgba(255,51,102,0.5);">${e.unreadMessages > 9 ? '9+' : e.unreadMessages}</span>` : ''}
+            </button>
             <button class="employee-action-btn" data-employee="${e.id}" data-action="promote" style="padding:6px 10px; background:#533483; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Promote</button>
             <button class="employee-action-btn" data-employee="${e.id}" data-action="fire" style="padding:6px 10px; background:#9e2a2b; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:.85rem;">Fire</button>
         </div>
@@ -6097,7 +6314,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
   /**
    * Render the social feed with virtual scrolling
    */
-  function renderSocialFeed() {
+  function renderSocialFeed(forceFullRender = false) {
     const feedContent = $('socialFeedContent');
     const emptyState = $('feedEmptyState');
     
@@ -6112,6 +6329,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     
     // Get filtered and sorted posts
     let posts = filterAndSortPosts();
+    const previousPostCount = virtualScrollState.allPosts.length;
     virtualScrollState.allPosts = posts;
     
     // Show empty state if no posts
@@ -6127,8 +6345,57 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     // Hide empty state
     if (emptyState) emptyState.style.display = 'none';
     
-    // Initial render of first page
+    // Check if user is scrolled down (more than 100px from top)
+    const isScrolledDown = feedContent.scrollTop > 100;
+    const hasNewPosts = posts.length > previousPostCount;
+    
+    // If user is scrolled down and new posts appeared, only prepend new posts
+    // This prevents disrupting their reading/commenting experience
+    if (!forceFullRender && isScrolledDown && hasNewPosts) {
+      prependNewPosts(previousPostCount);
+      return;
+    }
+    
+    // Otherwise do full render (user is at top or forced refresh)
     renderVisiblePosts();
+  }
+  
+  /**
+   * Prepend only new posts without disrupting scroll position or active inputs
+   */
+  function prependNewPosts(previousCount) {
+    const feedContent = $('socialFeedContent');
+    if (!feedContent) return;
+    
+    const posts = virtualScrollState.allPosts;
+    const newPostCount = posts.length - previousCount;
+    
+    if (newPostCount <= 0) return;
+    
+    // Get the current first post element (to insert before it)
+    const children = Array.from(feedContent.children);
+    const firstPostEl = children.find(child => 
+      child.className === 'social-post' && child.id !== 'feedEmptyState'
+    );
+    
+    // Create new post elements (in reverse order since we're prepending)
+    for (let i = newPostCount - 1; i >= 0; i--) {
+      const postEl = createPostElement(posts[i]);
+      
+      if (firstPostEl) {
+        feedContent.insertBefore(postEl, firstPostEl);
+      } else {
+        // No existing posts, just append
+        feedContent.appendChild(postEl);
+      }
+    }
+    
+    // Update the top spacer height if it exists
+    const topSpacer = $('feedTopSpacer');
+    if (topSpacer) {
+      const currentHeight = parseInt(topSpacer.style.height) || 0;
+      topSpacer.style.height = `${currentHeight + (newPostCount * 400)}px`;
+    }
   }
   
   /**
@@ -6274,6 +6541,11 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     
     // Replace @username with clickable spans
     return escaped.replace(/@(\w+)/g, (match, username) => {
+      // Check if it's @TheBoss (the player)
+      if (username.toLowerCase() === 'theboss') {
+        return `<span style="color:#e94560; cursor:default; font-weight:700; text-shadow:0 0 8px rgba(233,69,96,0.4);">@TheBoss</span>`;
+      }
+      
       // Find employee with this username
       const employee = gameState.employees.find(e => e.social?.username === username);
       if (employee) {
@@ -6314,12 +6586,12 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     postEl.innerHTML = `
       <!-- Post Header -->
       <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
-        <img src="${avatarUrl}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : '#00d4ff'}; flex-shrink:0; cursor:pointer;" onclick="showEmployeeProfile('${post.authorId}')">
+        <img src="${avatarUrl}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : post.isPlayerPost ? '#e94560' : '#00d4ff'}; flex-shrink:0; cursor:${post.isPlayerPost ? 'default' : 'pointer'};" ${post.isPlayerPost ? '' : `onclick="showEmployeeProfile('${post.authorId}')"`}>
         <div style="flex:1; min-width:0;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:4px;">
-              <strong style="color:#fff; font-size:0.95rem; font-weight:600; cursor:pointer; transition:color 0.2s;" onclick="showEmployeeProfile('${post.authorId}')" onmouseenter="this.style.color='#00d4ff'" onmouseleave="this.style.color='#fff'">${post.authorName}</strong>
-              ${!post.isPlayerPost && author.social?.username ? `<span style="color:#8899a6; font-size:0.85rem; cursor:pointer;" onclick="showEmployeeProfile('${post.authorId}')" onmouseenter="this.style.color='#00d4ff'" onmouseleave="this.style.color='#8899a6'">@${author.social.username}</span>` : ''}
+              <strong style="color:#fff; font-size:0.95rem; font-weight:600; cursor:${post.isPlayerPost ? 'default' : 'pointer'}; transition:color 0.2s;" ${post.isPlayerPost ? '' : `onclick="showEmployeeProfile('${post.authorId}')" onmouseenter="this.style.color='#00d4ff'" onmouseleave="this.style.color='#fff'"`}>${post.authorName}</strong>
+              ${post.isPlayerPost ? `<span style="color:#e94560; font-size:0.85rem; font-weight:600; text-shadow:0 0 8px rgba(233,69,96,0.4);">@TheBoss</span>` : author.social?.username ? `<span style="color:#8899a6; font-size:0.85rem; cursor:pointer;" onclick="showEmployeeProfile('${post.authorId}')" onmouseenter="this.style.color='#00d4ff'" onmouseleave="this.style.color='#8899a6'">@${author.social.username}</span>` : ''}
             </div>
             ${isAlumni ? '<span style="background:#555; padding:3px 10px; border-radius:12px; font-size:0.7rem; color:#ccc; font-weight:500;">Alumni</span>' : ''}
             ${post.explicitLevel >= 1 ? '<span style="background:linear-gradient(135deg, #e94560, #d63850); padding:3px 10px; border-radius:12px; font-size:0.7rem; color:white; font-weight:600; box-shadow:0 2px 8px rgba(233,69,96,0.3);">🔞</span>' : ''}
@@ -6423,11 +6695,11 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:8px;">
             <div style="display:flex; align-items:center; gap:6px;">
               <strong style="color:#00d4ff; font-size:0.88rem; font-weight:600; cursor:${isPlayer ? 'default' : 'pointer'}; transition:color 0.2s;" ${isPlayer ? '' : `onclick="showEmployeeProfile('${comment.authorId}')" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='#00d4ff'"`}>${comment.authorName}</strong>
-              ${!isPlayer && author.social?.username ? `<span style="color:#8899a6; font-size:0.75rem;">@${author.social.username}</span>` : ''}
+              ${isPlayer ? `<span style="color:#8899a6; font-size:0.75rem;">@TheBoss</span>` : author.social?.username ? `<span style="color:#8899a6; font-size:0.75rem;">@${author.social.username}</span>` : ''}
             </div>
             <span style="color:#71767b; font-size:0.78rem; white-space:nowrap;">${timeAgo}</span>
           </div>
-          <p style="color:#e7e9ea; margin:0; font-size:0.9rem; line-height:1.5; word-wrap:break-word;">${escapeHtml(comment.content)}</p>
+          <p style="color:#e7e9ea; margin:0; font-size:0.9rem; line-height:1.5; word-wrap:break-word;">${linkifyMentions(comment.content)}</p>
         </div>
       </div>
     `;
@@ -6890,7 +7162,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
   /**
    * Add comment to post
    */
-  function addCommentToPost(postId, commentText) {
+  async function addCommentToPost(postId, commentText) {
     if (!commentText.trim()) return;
     
     const post = gameState.socialNetwork.posts.find(p => p.id === postId);
@@ -6914,6 +7186,450 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     // Keep comments open
     const commentsSection = document.querySelector(`.post-comments[data-post-id="${postId}"]`);
     if (commentsSection) commentsSection.style.display = 'block';
+    
+    // NEW: Trigger NPC reply if player commented on NPC post
+    if (!post.isPlayerPost && post.authorId) {
+      // Delay reply slightly for realism
+      setTimeout(async () => {
+        await generateNPCCommentReply(post, comment);
+      }, 2000 + Math.random() * 3000); // 2-5 second delay
+    }
+  }
+  
+  /**
+   * Generate NPC reply to player's comment
+   */
+  async function generateNPCCommentReply(post, playerComment) {
+    const npc = gameState.employees.find(e => e.id === post.authorId);
+    if (!npc) return;
+    
+    // Don't reply if NPC is alumni or certain chance
+    if (npc.employmentStatus === 'alumni') return;
+    if (Math.random() > 0.7) return; // 70% chance to reply
+    
+    try {
+      // Build context for the reply
+      const relationship = npc.relationships?.player || { level: 0, type: 'professional' };
+      const intimacy = npc.intimacy || 0;
+      
+      // Get personality context
+      const personality = npc.personality || {};
+      const flirty = personality.flirty || 50;
+      const confidence = personality.confidence || 50;
+      const humor = personality.humor || 50;
+      
+      // Determine tone based on relationship and comment
+      let tone = 'friendly';
+      const commentLower = playerComment.content.toLowerCase();
+      
+      if (intimacy > 60 || relationship.level > 60) {
+        tone = 'warm';
+      }
+      if (intimacy > 80) {
+        tone = 'flirty';
+      }
+      if (commentLower.includes('love') || commentLower.includes('beautiful') || commentLower.includes('gorgeous')) {
+        tone = flirty > 60 ? 'flirty' : 'appreciative';
+      }
+      if (commentLower.includes('lol') || commentLower.includes('haha') || commentLower.includes('😂')) {
+        tone = 'playful';
+      }
+      
+      // Build prompt for AI
+      const prompt = `You are ${npc.name}, an employee at the company. The boss (@TheBoss) just commented on your social media post.
+
+YOUR POST:
+Type: ${post.type}
+Content: "${post.content || ''}"
+${post.imageAlt ? `Image: ${post.imageAlt}` : ''}
+
+BOSS'S COMMENT:
+"${playerComment.content}"
+
+YOUR PERSONALITY:
+- Confidence: ${confidence}/100
+- Flirtiness: ${flirty}/100  
+- Humor: ${humor}/100
+${npc.hobbies ? `- Hobbies: ${npc.hobbies.join(', ')}` : ''}
+
+YOUR RELATIONSHIP WITH BOSS:
+- Intimacy level: ${intimacy}/100
+- Relationship type: ${relationship.type || 'professional'}
+- Relationship strength: ${relationship.level || 0}/100
+
+INSTRUCTIONS:
+Reply to the boss's comment in a natural, brief way (max 100 characters). Your tone should be ${tone}.
+
+${tone === 'flirty' ? '- Be subtly flirty and playful' : ''}
+${tone === 'warm' ? '- Be warm and friendly, show closeness' : ''}
+${tone === 'appreciative' ? '- Show appreciation for the compliment' : ''}
+${tone === 'playful' ? '- Match their playful energy' : ''}
+${intimacy > 50 ? '- You can use emojis and be more casual' : '- Keep it professional but friendly'}
+${confidence > 70 ? '- Show confidence in your response' : ''}
+${humor > 70 ? '- Feel free to add humor' : ''}
+
+DO NOT:
+- Use quotation marks around your reply
+- Write "I would reply" or similar meta-commentary
+- Be overly formal unless that matches your personality
+- Exceed 100 characters
+
+Just write the reply comment directly:`;
+
+      // Generate reply
+      const rawReply = await generateText(prompt);
+      const reply = sanitizeNpcResponse(rawReply, 2); // Keep it short
+      
+      if (!reply || reply.length > 150) return; // Safety check
+      
+      // Create the NPC's reply comment
+      const npcComment = createComment({
+        postId: post.id,
+        authorId: npc.id,
+        authorName: npc.name,
+        content: reply.trim()
+      });
+      
+      post.comments.push(npcComment);
+      
+      // Store in memory
+      remember(npc, `Boss commented "${playerComment.content}" on my post, I replied "${reply}"`, 'interaction', 2);
+      
+      // Refresh feed to show new comment
+      renderSocialFeed();
+      
+      // Keep comments section open for this post
+      const commentsSection = document.querySelector(`.post-comments[data-post-id="${post.id}"]`);
+      if (commentsSection) commentsSection.style.display = 'block';
+      
+    } catch (error) {
+      console.error('Error generating NPC comment reply:', error);
+    }
+  }
+  
+  /**
+   * Trigger automatic NPC reactions to player posts
+   */
+  async function triggerAutomaticNPCReactions(post) {
+    if (!post || !post.isPlayerPost) return;
+    
+    // Get all active employees
+    const activeEmployees = gameState.employees.filter(e => e.employmentStatus === 'active');
+    if (activeEmployees.length === 0) return;
+    
+    // Determine how many NPCs will react (1-4, based on post type and employees)
+    let reactorCount = 1;
+    if (post.explicitLevel >= 3) {
+      reactorCount = Math.min(2, activeEmployees.length); // Fewer for explicit
+    } else if (post.type === 'meme') {
+      reactorCount = Math.min(4, Math.floor(activeEmployees.length * 0.4)); // More for memes
+    } else {
+      reactorCount = Math.min(3, Math.floor(activeEmployees.length * 0.25)); // 25% of employees
+    }
+    
+    // Select random employees weighted by affection/relationship
+    const potentialReactors = activeEmployees.map(emp => {
+      const affection = emp.stats?.affection || 0;
+      const relationship = emp.relationships?.player?.level || 0;
+      const weight = 1 + (affection / 100) + (relationship / 100); // 1-3 weight
+      return { emp, weight };
+    });
+    
+    // Weighted random selection
+    const reactors = [];
+    for (let i = 0; i < reactorCount; i++) {
+      if (potentialReactors.length === 0) break;
+      
+      const totalWeight = potentialReactors.reduce((sum, r) => sum + r.weight, 0);
+      let random = Math.random() * totalWeight;
+      
+      for (let j = 0; j < potentialReactors.length; j++) {
+        random -= potentialReactors[j].weight;
+        if (random <= 0) {
+          reactors.push(potentialReactors[j].emp);
+          potentialReactors.splice(j, 1);
+          break;
+        }
+      }
+    }
+    
+    // Each reactor likes the post with a delay
+    for (let i = 0; i < reactors.length; i++) {
+      const npc = reactors[i];
+      const delay = i * (2000 + Math.random() * 3000); // Stagger reactions by 2-5 seconds each
+      
+      setTimeout(() => {
+        // Add like
+        if (!post.likes.includes(npc.id)) {
+          post.likes.push(npc.id);
+          
+          // Store in memory
+          remember(npc, `I liked the boss's post: "${post.content || 'image post'}"`, 'interaction', 0.5);
+          
+          // Refresh feed if on social tab
+          if (gameState.activeTab === 'social') {
+            renderSocialFeed();
+          }
+        }
+      }, delay);
+    }
+  }
+  
+  /**
+   * Check for proactive NPC messages
+   * NPCs will reach out to the player based on various triggers
+   */
+  async function checkForProactiveMessages() {
+    // Don't send messages too frequently
+    if (!gameState.lastProactiveMessageCheck) {
+      gameState.lastProactiveMessageCheck = Date.now();
+      return;
+    }
+    
+    const timeSinceLastCheck = Date.now() - gameState.lastProactiveMessageCheck;
+    if (timeSinceLastCheck < 60000) return; // Min 1 minute between checks
+    
+    gameState.lastProactiveMessageCheck = Date.now();
+    
+    // Get eligible NPCs (active employees only)
+    const eligibleNPCs = gameState.employees.filter(e => e.employmentStatus === 'active');
+    if (eligibleNPCs.length === 0) return;
+    
+    // Check each NPC for messaging triggers (but limit to 1-2 per check)
+    let messagesThisCheck = 0;
+    const maxMessagesPerCheck = Math.random() > 0.7 ? 2 : 1;
+    
+    for (const npc of eligibleNPCs) {
+      if (messagesThisCheck >= maxMessagesPerCheck) break;
+      
+      // Check if this NPC should message the player
+      const shouldMessage = await evaluateProactiveMessageTriggers(npc);
+      if (shouldMessage) {
+        await sendProactiveNPCMessage(npc, shouldMessage.reason, shouldMessage.context);
+        messagesThisCheck++;
+      }
+    }
+  }
+  
+  /**
+   * Evaluate if an NPC should send a proactive message
+   */
+  async function evaluateProactiveMessageTriggers(npc) {
+    const now = Date.now();
+    
+    // Get chat history
+    const chatHistory = gameState.chatHistory[npc.id] || [];
+    const lastMessage = chatHistory[chatHistory.length - 1];
+    const lastMessageTime = lastMessage?.timestamp || 0;
+    const hoursSinceLastMessage = (now - lastMessageTime) / (1000 * 60 * 60);
+    const minutesSinceLastMessage = (now - lastMessageTime) / (1000 * 60);
+    
+    // Don't message if recently messaged (within 1 hour)
+    if (hoursSinceLastMessage < 1) return false;
+    
+    // Don't send unrelated messages if player recently chatted (within 10 minutes)
+    // This prevents jarring topic changes during active conversations
+    const hasRecentPlayerMessage = chatHistory.slice(-5).some(msg => 
+      msg.isPlayer && (now - msg.timestamp) < (10 * 60 * 1000)
+    );
+    if (hasRecentPlayerMessage && minutesSinceLastMessage < 10) return false;
+    
+    // Get relationship stats
+    const relationship = npc.relationships?.player || { level: 0, type: 'professional' };
+    const intimacy = npc.intimacy || 0;
+    const affection = npc.stats?.affection || 0;
+    const trust = npc.stats?.trust || 0;
+    
+    // Higher intimacy/affection = more likely to message
+    const baseChance = 0.05; // 5% base chance
+    const relationshipBonus = (relationship.level / 100) * 0.15; // Up to +15%
+    const intimacyBonus = (intimacy / 100) * 0.20; // Up to +20%
+    const timeBonus = Math.min(hoursSinceLastMessage / 24, 0.10); // Up to +10% based on time
+    
+    const totalChance = baseChance + relationshipBonus + intimacyBonus + timeBonus;
+    
+    if (Math.random() > totalChance) return false;
+    
+    // Determine message reason and context
+    const reasons = [];
+    
+    // Work-related messages (always possible)
+    reasons.push({ reason: 'work_question', weight: 3, context: 'work' });
+    reasons.push({ reason: 'work_update', weight: 2, context: 'work' });
+    
+    // Personal messages (based on relationship)
+    if (affection > 30) {
+      reasons.push({ reason: 'casual_chat', weight: 2, context: 'casual' });
+    }
+    if (affection > 50) {
+      reasons.push({ reason: 'sharing_news', weight: 2, context: 'personal' });
+    }
+    if (trust > 60) {
+      reasons.push({ reason: 'asking_advice', weight: 1, context: 'personal' });
+    }
+    
+    // Social media related
+    const recentPosts = gameState.socialNetwork.posts
+      .filter(p => p.authorId === npc.id && (now - p.timestamp) < 86400000) // Last 24h
+      .slice(0, 3);
+    if (recentPosts.length > 0) {
+      reasons.push({ reason: 'post_followup', weight: 2, context: { type: 'social', post: recentPosts[0] } });
+    }
+    
+    // Flirty/intimate messages (based on intimacy)
+    if (intimacy > 40) {
+      reasons.push({ reason: 'flirty_message', weight: 1, context: 'flirty' });
+    }
+    if (intimacy > 70) {
+      reasons.push({ reason: 'booty_call', weight: 1, context: 'intimate' });
+    }
+    
+    // Recent events
+    const recentEvents = (gameState.companyEvents || [])
+      .filter(e => e.involvedEmployees?.includes(npc.id) && (now - e.timestamp) < 86400000)
+      .slice(0, 2);
+    if (recentEvents.length > 0) {
+      reasons.push({ reason: 'event_reaction', weight: 2, context: { type: 'event', event: recentEvents[0] } });
+    }
+    
+    // Weighted random selection
+    const totalWeight = reasons.reduce((sum, r) => sum + r.weight, 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const reasonObj of reasons) {
+      random -= reasonObj.weight;
+      if (random <= 0) {
+        return reasonObj;
+      }
+    }
+    
+    return reasons[0]; // Fallback
+  }
+  
+  /**
+   * Send a proactive message from NPC to player
+   */
+  async function sendProactiveNPCMessage(npc, reason, context) {
+    try {
+      // Get personality and relationship info
+      const personality = npc.personality || {};
+      const relationship = npc.relationships?.player || { level: 0, type: 'professional' };
+      const intimacy = npc.intimacy || 0;
+      const affection = npc.stats?.affection || 0;
+      
+      // Build message prompt
+      let messageContext = '';
+      if (typeof context === 'string') {
+        messageContext = context;
+      } else if (context.type === 'social' && context.post) {
+        messageContext = `Recent post: "${context.post.content || ''}"`;
+      } else if (context.type === 'event' && context.event) {
+        messageContext = `Recent event: ${context.event.description}`;
+      }
+      
+      // Get recent conversation for context
+      const chatHistory = (gameState.chatHistory[npc.id] || []).slice(-5)
+        .map(msg => `${msg.sender}: ${msg.content}`)
+        .join('\n');
+      
+      const prompt = `You are ${npc.name}, an employee at the company. You're initiating a conversation with your boss (@TheBoss).
+
+YOUR PERSONALITY:
+- Confidence: ${personality.confidence || 50}/100
+- Flirtiness: ${personality.flirty || 50}/100
+- Humor: ${personality.humor || 50}/100
+${npc.hobbies ? `- Hobbies: ${npc.hobbies.join(', ')}` : ''}
+${npc.position ? `- Job: ${npc.position}` : ''}
+
+YOUR RELATIONSHIP WITH BOSS:
+- Affection: ${affection}/100
+- Intimacy: ${intimacy}/100
+- Relationship type: ${relationship.type || 'professional'}
+
+REASON FOR MESSAGING: ${reason}
+${messageContext ? `CONTEXT: ${messageContext}` : ''}
+
+${chatHistory ? `RECENT CONVERSATION:\n${chatHistory}` : 'No recent conversation.'}
+
+INSTRUCTIONS:
+Send a short, natural message to initiate conversation with the boss. Keep it under 100 characters.
+
+Based on the reason:
+- work_question: Ask a quick work-related question
+- work_update: Share a work update or achievement
+- casual_chat: Just checking in, casual friendly message
+- sharing_news: Share something interesting that happened
+- asking_advice: Ask for advice on something
+- post_followup: Reference YOUR OWN recent social media post (not the boss's posts - only mention your own)
+- flirty_message: Send a subtle flirty/playful message
+- booty_call: Suggest meeting up (intimate context)
+- event_reaction: React to a recent event
+
+Match your tone to your personality and relationship with the boss:
+${intimacy > 60 ? '- Be comfortable being flirty and personal' : ''}
+${affection > 50 ? '- Be warm and friendly' : ''}
+${affection < 30 ? '- Keep it professional' : ''}
+${personality.humor > 70 ? '- Add some humor' : ''}
+
+Use emojis sparingly (0-2). Be natural and genuine.
+
+CRITICAL RULES:
+- DO NOT reference posts or actions by the boss that aren't shown in the CONTEXT above
+- DO NOT say "I saw you liked my post" or "I saw your post" unless explicitly provided in CONTEXT
+- DO NOT invent interactions that didn't happen
+- ONLY reference information explicitly provided in this prompt
+- If reason is "post_followup", talk about YOUR post, not the boss's activity
+
+DO NOT:
+- Use quotation marks
+- Write "I would say" or meta-commentary
+- Be overly formal unless personality dictates it
+- Exceed 100 characters
+- Invent or hallucinate player actions
+
+Just write the message:`;
+
+      // Generate message
+      const rawMessage = await generateText(prompt);
+      const message = sanitizeNpcResponse(rawMessage, 2).trim();
+      
+      if (!message || message.length > 150) return; // Safety check
+      
+      // Add to chat history
+      if (!gameState.chatHistory[npc.id]) {
+        gameState.chatHistory[npc.id] = [];
+      }
+      
+      gameState.chatHistory[npc.id].push({
+        sender: npc.name,
+        content: message,
+        isPlayer: false,
+        timestamp: Date.now()
+      });
+      
+      // Mark as unread
+      if (!npc.unreadMessages) npc.unreadMessages = 0;
+      npc.unreadMessages++;
+      
+      // Store in memory
+      remember(npc, `I messaged the boss: "${message}"`, 'interaction', 1);
+      
+      // Update People tab if visible
+      if (gameState.activeTab === 'people') {
+        updatePeopleTab();
+      }
+      
+      // If chat is currently open for this NPC, show the message
+      if (gameState.activeChat?.id === npc.id && chatMessages) {
+        const messageIndex = gameState.chatHistory[npc.id].length - 1;
+        addChatMessage(npc.name, message, false, null, messageIndex);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        npc.unreadMessages = 0; // Already reading it
+      }
+      
+    } catch (error) {
+      console.error('Error sending proactive NPC message:', error);
+    }
   }
   
   // Update news feed
@@ -7726,7 +8442,17 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
   // Open chat with employee
   function openChat(employee) {
     gameState.activeChat = employee;
-  ensureEmployeeMemory(employee);
+    ensureEmployeeMemory(employee);
+    
+    // Clear unread messages when opening chat
+    employee.unreadMessages = 0;
+    
+    // Hide any existing typing indicator from previous chat
+    const chatTypingIndicator = $('chatTypingIndicator');
+    if (chatTypingIndicator) {
+      chatTypingIndicator.style.display = 'none';
+    }
+    
     if (chatModal) {
       chatModal.hidden = false;
       chatModal.style.display = 'flex';
@@ -7742,6 +8468,11 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     
     // Load chat history
     loadChatHistory(employee.id);
+    
+    // Update People tab to remove unread badge
+    if (gameState.activeTab === 'people') {
+      updatePeopleTab();
+    }
   }
   
   // -------- BIO MODAL --------
@@ -7869,30 +8600,49 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
           ${employee.physical ? `
           <div style="margin-bottom:25px;">
             <h4 style="margin:0 0 10px 0; color:#00d4ff;">Physical Appearance</h4>
-            <div style="background:#0f3460; padding:15px; border-radius:6px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px;">
-              <div>
-                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Height/Build</div>
-                <div id="bioHeightBuild" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.heightBuild">${employee.physical.heightBuild || 'Average'}</div>
+            <div style="background:#0f3460; padding:15px; border-radius:6px;">
+              <!-- Comprehensive Description -->
+              ${employee.physical.fullDescription ? `
+              <div style="margin-bottom:15px; padding:12px; background:rgba(0,212,255,0.1); border-left:3px solid #00d4ff; border-radius:4px;">
+                <div style="font-size:.85rem; color:#00d4ff; margin-bottom:6px; font-weight:600;">✨ Full Description</div>
+                <div style="color:#ddd; line-height:1.6; font-size:.95rem;">${employee.physical.fullDescription}</div>
               </div>
-              <div>
-                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Body Shape</div>
-                <div id="bioBodyShape" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.bodyShape">${employee.physical.bodyShape || 'Average'}</div>
-              </div>
-              <div>
-                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Hair</div>
-                <div id="bioHair" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.hair">${employee.physical.hair && employee.physical.hair.length && employee.physical.hair.color && employee.physical.hair.style ? `${employee.physical.hair.length} ${employee.physical.hair.color} ${employee.physical.hair.style}` : 'Not specified'}</div>
-              </div>
-              <div>
-                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Eyes</div>
-                <div id="bioEyes" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.eyes">${employee.physical.eyes && employee.physical.eyes.shape && employee.physical.eyes.color ? `${employee.physical.eyes.shape} ${employee.physical.eyes.color}` : 'Not specified'}</div>
-              </div>
-              <div>
-                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Skin Tone</div>
-                <div id="bioSkinTone" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.skinTone">${employee.physical.skinTone || 'Not specified'}</div>
-              </div>
-              <div>
-                <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Fashion Style</div>
-                <div id="bioFashion" contenteditable="false" style="outline:none; padding:4px; border-radius:4px;" data-field="physical.fashion">${employee.physical.fashion || 'Casual'}</div>
+              ` : ''}
+              
+              <!-- Detailed Breakdown -->
+              <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px;">
+                <div>
+                  <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Height & Build</div>
+                  <div style="color:#ddd;">${employee.physical.heightBuild || employee.physical.height + ', ' + employee.physical.build || 'Average'}</div>
+                </div>
+                <div>
+                  <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Body Shape</div>
+                  <div style="color:#ddd;">${employee.physical.body?.shape || employee.physical.bodyShape || 'Average'}</div>
+                </div>
+                <div>
+                  <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Hair</div>
+                  <div style="color:#ddd;">${employee.physical.hair?.full || (employee.physical.hair?.length ? `${employee.physical.hair.length} ${employee.physical.hair.color} ${employee.physical.hair.style}` : 'Not specified')}</div>
+                </div>
+                <div>
+                  <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Eyes</div>
+                  <div style="color:#ddd;">${employee.physical.eyes?.full || (employee.physical.eyes?.shape && employee.physical.eyes?.color ? `${employee.physical.eyes.shape} ${employee.physical.eyes.color}` : 'Not specified')}</div>
+                </div>
+                <div>
+                  <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Face</div>
+                  <div style="color:#ddd;">${employee.physical.face?.full || employee.physical.face?.shape || 'Not specified'}</div>
+                </div>
+                <div>
+                  <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Skin</div>
+                  <div style="color:#ddd;">${employee.physical.skin?.full || employee.physical.skin?.tone || employee.physical.skinTone || 'Not specified'}</div>
+                </div>
+                <div>
+                  <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Fashion Style</div>
+                  <div style="color:#ddd;">${employee.physical.fashion || 'Casual'}</div>
+                </div>
+                <div>
+                  <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Distinguishing Feature</div>
+                  <div style="color:#ddd;">${employee.physical.distinguishingFeature || 'None noted'}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -8095,6 +8845,27 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
   
+  // Helper function to style action text (enclosed in asterisks)
+  function styleActionText(text) {
+    if (!text) return '';
+    
+    // Escape HTML first to prevent XSS
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+    
+    // Replace *action text* with styled span
+    // Match text between asterisks, but not standalone asterisks
+    const styled = escaped.replace(/\*([^*]+)\*/g, (match, content) => {
+      return `<span style="color:#888; font-style:italic; opacity:0.85;">${content}</span>`;
+    });
+    
+    return styled;
+  }
+  
   // Add chat message to UI
   function addChatMessage(sender, content, isPlayer, imageUrl = null, messageIndex = null, imagePrompt = null) {
     if (!chatMessages) return;
@@ -8175,7 +8946,11 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     
     const textEl = document.createElement('p');
     textEl.style.margin = '0';
-    textEl.textContent = content;
+    
+    // Process content to style asterisk-enclosed text (actions/thoughts)
+    const processedContent = styleActionText(content);
+    textEl.innerHTML = processedContent;
+    
     messageEl.appendChild(textEl);
     
     chatMessages.appendChild(messageEl);
@@ -8188,14 +8963,18 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     const message = chatInput.value.trim();
     if (!message || !gameState.activeChat) return;
     
+    // Store employee ID for async operations
+    const employeeId = gameState.activeChat.id;
+    const employeeName = gameState.activeChat.name;
+    
     // Add player message
     addChatMessage('You', message, true);
     
     // Add to history
-    if (!gameState.chatHistory[gameState.activeChat.id]) {
-      gameState.chatHistory[gameState.activeChat.id] = [];
+    if (!gameState.chatHistory[employeeId]) {
+      gameState.chatHistory[employeeId] = [];
     }
-    gameState.chatHistory[gameState.activeChat.id].push({
+    gameState.chatHistory[employeeId].push({
       sender: 'You',
       content: message,
       isPlayer: true
@@ -8210,34 +8989,49 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     // Show typing indicator
     if (chatTypingIndicator && chatTypingName) {
       chatTypingIndicator.style.display = 'block';
-      chatTypingName.textContent = gameState.activeChat.name;
+      chatTypingName.textContent = employeeName;
     }
     
-    // Generate AI response
+    // Generate AI response (async - continues even if chat closes)
     try {
-      const conversationHistory = gameState.chatHistory[gameState.activeChat.id]
+      const conversationHistory = gameState.chatHistory[employeeId]
         .map(msg => `${msg.sender}: ${msg.content}`)
         .join('\n');
 
-      const emp = gameState.activeChat;
+      const emp = gameState.employees.find(e => e.id === employeeId);
+      if (!emp) return;
+      
       ensureEmployeeMemory(emp);
       const { prompt, personalAllowed } = buildChatPrompt(emp, conversationHistory, message);
       const raw = await generateText(prompt);
       const response = sanitizeNpcResponse(raw, 5);
       
-      // Hide typing indicator
-      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
-      
-      // Add to history first to get the correct index
-      gameState.chatHistory[gameState.activeChat.id].push({
-        sender: gameState.activeChat.name,
+      // Add to history first (works even if chat is closed)
+      gameState.chatHistory[employeeId].push({
+        sender: employeeName,
         content: response,
         isPlayer: false
       });
       
-      // Add AI response with message index for regenerate button
-      const messageIndex = gameState.chatHistory[gameState.activeChat.id].length - 1;
-      addChatMessage(gameState.activeChat.name, response, false, null, messageIndex);
+      // Mark as unread if chat is now closed
+      if (!gameState.activeChat || gameState.activeChat.id !== employeeId) {
+        if (!emp.unreadMessages) emp.unreadMessages = 0;
+        emp.unreadMessages++;
+      }
+      
+      // Hide typing indicator (only if still showing this chat)
+      if (chatTypingIndicator && gameState.activeChat?.id === employeeId) {
+        chatTypingIndicator.style.display = 'none';
+      }
+      
+      // Add AI response to UI (only if chat is still open for this employee)
+      if (gameState.activeChat?.id === employeeId && chatMessages) {
+        const messageIndex = gameState.chatHistory[employeeId].length - 1;
+        addChatMessage(employeeName, response, false, null, messageIndex);
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      
       // Memory: capture key NPC claims minimally
       const respFacts = extractSalientFacts(response, emp);
       for (const f of respFacts) remember(emp, `${emp.name} ${f.text}`, f.type, f.importance);
@@ -8260,8 +9054,14 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
         emp.memory.styleCounters.lastHobbyMention = emp.memory.styleCounters.total;
       }
       
+      // Check if player is requesting a social post
+      await detectPostRequest(emp, message, response);
+      
+      // Check if player is requesting an image/photo
+      await detectImageRequest(emp, message, response);
+      
       // Update employee stats based on conversation
-      await updateEmployeeStatsFromChat(gameState.activeChat, message, response);
+      await updateEmployeeStatsFromChat(emp, message, response);
       
       // Log significant boss interactions as events (for potential social posts)
       const isSignificant = 
@@ -8271,20 +9071,297 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
       if (isSignificant) {
         logCompanyEvent({
           type: 'boss_interaction',
-          involvedEmployees: [emp.id],
+          involvedEmployees: [employeeId],
           location: emp.locationId,
-          description: `Boss chat with ${emp.name}: "${message.slice(0, 50)}${message.length > 50 ? '...' : ''}"`,
+          description: `Boss chat with ${employeeName}: "${message.slice(0, 50)}${message.length > 50 ? '...' : ''}"`,
           sentiment: 'neutral',
           importance: 5
         });
       }
       
-      // Scroll to bottom
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+      // Update People tab if visible (to show unread badge)
+      if (gameState.activeTab === 'people') {
+        updatePeopleTab();
+      }
+      
     } catch (error) {
       console.error('Error generating chat response:', error);
-      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
-      addChatMessage(gameState.activeChat.name, "Sorry, I'm having trouble responding right now.", false);
+      // Hide typing indicator if chat still open for this employee
+      if (chatTypingIndicator && gameState.activeChat?.id === employeeId) {
+        chatTypingIndicator.style.display = 'none';
+      }
+      // Only show error message if chat is still open for this employee
+      if (gameState.activeChat?.id === employeeId && chatMessages) {
+        addChatMessage(employeeName, "Sorry, I'm having trouble responding right now.", false);
+      }
+    }
+  }
+  
+  // -------- POST REQUEST DETECTION AND HANDLING --------
+  
+  /**
+   * Detect if player is requesting NPC to make a social post
+   */
+  async function detectPostRequest(employee, playerMessage, npcResponse) {
+    // Keywords that suggest a post request
+    const postKeywords = /\b(post|share|put.*on.*feed|upload|publish|make.*post|dare.*you.*to.*post)\b/i;
+    const socialKeywords = /\b(social|feed|instagram|twitter|snap)\b/i;
+    const contentKeywords = /\b(picture|photo|selfie|video|nude|naked|masturbat|explicit|sexy|hot)\b/i;
+    
+    // Check if player message looks like a post request
+    const looksLikeRequest = postKeywords.test(playerMessage) && 
+                             (socialKeywords.test(playerMessage) || contentKeywords.test(playerMessage));
+    
+    if (!looksLikeRequest) return;
+    
+    // Determine requested post type
+    let requestedType = 'text';
+    let requestContent = playerMessage;
+    
+    if (/\b(nude|naked|explicit)\b/i.test(playerMessage)) {
+      requestedType = 'explicit';
+    } else if (/\b(masturbat|touch.*yourself|play.*with.*yourself)\b/i.test(playerMessage)) {
+      requestedType = 'explicit';
+      requestContent = playerMessage;
+    } else if (/\b(thirst.*trap|sexy|hot.*pic|revealing)\b/i.test(playerMessage)) {
+      requestedType = 'thirst_trap';
+    } else if (/\b(selfie|picture.*of.*you|photo.*of.*you)\b/i.test(playerMessage)) {
+      requestedType = 'selfie';
+    }
+    
+    // NPC evaluates request based on comfort level
+    // If they already agreed in the response, actually make the post
+    const agreedInResponse = /\b(okay|sure|alright|fine|will.*do|post|share)\b/i.test(npcResponse) &&
+                             !/\b(don't|not|can't|won't|shouldn't|uncomfortable|not.*ready)\b/i.test(npcResponse);
+    
+    if (agreedInResponse) {
+      // NPC agreed! Generate and post it
+      setTimeout(async () => {
+        await generateRequestedPost(employee, requestedType, requestContent);
+      }, 2000 + Math.random() * 3000); // 2-5 seconds delay
+    }
+  }
+  
+  /**
+   * Detect if player is requesting NPC to send an image/photo
+   */
+  async function detectImageRequest(employee, playerMessage, npcResponse) {
+    // Keywords that suggest an image request (but NOT a post request)
+    const imageKeywords = /\b(send|show|picture|photo|selfie|pic|image|snap)\b/i;
+    const meKeywords = /\b(me|to.*me)\b/i;
+    const contentKeywords = /\b(nude|naked|lewd|sexy|revealing|underwear|lingerie|body|yourself)\b/i;
+    
+    // Must NOT look like a post request (those are handled separately)
+    const postKeywords = /\b(post|share|put.*on.*feed|upload|publish|make.*post)\b/i;
+    const socialKeywords = /\b(social|feed|instagram|twitter|snap.*chat)\b/i;
+    
+    // Check if this looks like a post request - if so, skip (handled by detectPostRequest)
+    const looksLikePostRequest = postKeywords.test(playerMessage) || socialKeywords.test(playerMessage);
+    if (looksLikePostRequest) return;
+    
+    // Check if player message looks like an image request
+    const looksLikeImageRequest = imageKeywords.test(playerMessage) && 
+                                  (meKeywords.test(playerMessage) || contentKeywords.test(playerMessage));
+    
+    if (!looksLikeImageRequest) return;
+    
+    // Determine requested image type
+    let requestedType = 'casual';
+    let requestContent = playerMessage;
+    
+    if (/\b(nude|naked|nothing.*on|completely.*nude)\b/i.test(playerMessage)) {
+      requestedType = 'nude';
+    } else if (/\b(lewd|sexy|revealing|underwear|lingerie|bra|panties|topless)\b/i.test(playerMessage)) {
+      requestedType = 'lewd';
+    } else if (/\b(work|office|professional)\b/i.test(playerMessage)) {
+      requestedType = 'work';
+    } else if (/\b(selfie|picture|photo)\b/i.test(playerMessage)) {
+      requestedType = 'casual';
+    }
+    
+    // Check if NPC agreed in their response
+    const agreedInResponse = /\b(okay|sure|alright|fine|here|sending|sent|check.*this)\b/i.test(npcResponse) &&
+                             !/\b(don't|not|can't|won't|shouldn't|uncomfortable|not.*ready|too.*much)\b/i.test(npcResponse);
+    
+    if (agreedInResponse) {
+      // NPC agreed! Generate and send the image
+      setTimeout(async () => {
+        await generateAndSendRequestedImage(employee, requestedType, requestContent);
+      }, 2000 + Math.random() * 4000); // 2-6 seconds delay
+    }
+  }
+  
+  /**
+   * Request a post from NPC via attachment menu
+   */
+  async function requestPostFromNPC(preset = null, customPrompt = null) {
+    if (!gameState.activeChat) return;
+    
+    const emp = gameState.activeChat;
+    let requestType = preset || 'text';
+    let requestDescription = '';
+    
+    // Build request description based on preset or custom
+    if (customPrompt) {
+      requestDescription = customPrompt;
+      // Try to detect type from custom prompt
+      if (/\b(nude|naked|explicit)\b/i.test(customPrompt)) {
+        requestType = 'explicit';
+      } else if (/\b(thirst.*trap|sexy|revealing)\b/i.test(customPrompt)) {
+        requestType = 'thirst_trap';
+      } else if (/\b(selfie|picture)\b/i.test(customPrompt)) {
+        requestType = 'selfie';
+      }
+    } else {
+      // Use preset descriptions
+      const presetDescriptions = {
+        text: 'post a status update',
+        selfie: 'post a selfie',
+        thirst_trap: 'post a thirst trap (sexy/revealing photo)',
+        explicit: 'post an explicit/nude photo'
+      };
+      requestDescription = presetDescriptions[requestType] || 'make a post';
+    }
+    
+    // Add request message to chat
+    const requestMessage = customPrompt || `Could you ${requestDescription}?`;
+    if (chatInput) chatInput.value = requestMessage;
+    
+    // Simulate clicking send
+    await sendChatMessage();
+    
+    // Wait a moment, then check if NPC will agree
+    setTimeout(async () => {
+      await evaluateAndExecutePostRequest(emp, requestType, requestDescription);
+    }, 3000);
+  }
+  
+  /**
+   * Evaluate if NPC agrees to post request and execute
+   */
+  async function evaluateAndExecutePostRequest(employee, requestType, requestDescription) {
+    const intimacy = employee.intimacy || 0;
+    const affection = employee.stats?.affection || 0;
+    const comfort = employee.stats?.comfort || 0;
+    const personality = employee.personality || {};
+    
+    // Determine comfort level with request
+    let comfortThreshold = 0;
+    
+    switch (requestType) {
+      case 'text':
+        comfortThreshold = 10; // Almost always okay
+        break;
+      case 'selfie':
+        comfortThreshold = 20; // Pretty easy
+        break;
+      case 'thirst_trap':
+        comfortThreshold = 50; // Need some comfort/attraction
+        break;
+      case 'explicit':
+        comfortThreshold = 75; // Need high intimacy
+        break;
+    }
+    
+    // Calculate willingness score
+    const willingnessScore = (intimacy * 0.4) + (affection * 0.3) + (comfort * 0.2) + (personality.flirty || 50) * 0.1;
+    
+    // Determine if they'll do it
+    const willDo = willingnessScore >= comfortThreshold || (willingnessScore >= comfortThreshold * 0.8 && Math.random() < 0.3);
+    
+    if (willDo) {
+      // Generate and post it after a delay
+      setTimeout(async () => {
+        await generateRequestedPost(employee, requestType, requestDescription);
+      }, 3000 + Math.random() * 5000); // 3-8 seconds
+    }
+  }
+  
+  /**
+   * Generate a requested post from NPC
+   */
+  async function generateRequestedPost(employee, postType, requestContext) {
+    try {
+      // Get context for post generation
+      const context = getEmployeeAwarenessForPost(employee.id);
+      if (!context) return;
+      
+      // Add request context to the generation
+      context.requestedByBoss = true;
+      context.requestContext = requestContext;
+      
+      // Generate the post
+      const generated = await generateOrganicPost(employee, postType, context);
+      
+      if (!generated || !generated.content) return;
+      
+      // Generate image if needed
+      let imageUrl = null;
+      if (generated.imagePrompt && ['selfie', 'thirst_trap', 'explicit'].includes(postType)) {
+        try {
+          imageUrl = await generateImage({ prompt: generated.imagePrompt });
+        } catch (error) {
+          console.error('Image generation failed for requested post:', error);
+        }
+      }
+      
+      // Create and add the post
+      const post = createPost({
+        authorId: employee.id,
+        content: generated.content,
+        type: postType,
+        imageUrl: imageUrl,
+        imagePrompt: generated.imagePrompt,
+        explicitLevel: generated.explicitLevel || 0,
+        tags: generated.tags || [],
+        location: employee.locationId || 'headquarters'
+      });
+      
+      gameState.socialNetwork.posts.unshift(post);
+      
+      // Track this post type
+      if (!gameState.socialNetwork.recentPostTypes) {
+        gameState.socialNetwork.recentPostTypes = [];
+      }
+      gameState.socialNetwork.recentPostTypes.unshift(postType);
+      if (gameState.socialNetwork.recentPostTypes.length > 20) {
+        gameState.socialNetwork.recentPostTypes = gameState.socialNetwork.recentPostTypes.slice(0, 20);
+      }
+      
+      // Store in employee's awareness
+      remember(employee, `I posted on social media: "${generated.content}"`, 'action', 2);
+      remember(employee, `The boss requested I make this post`, 'interaction', 2);
+      
+      // Send them a chat message about it
+      if (gameState.activeChat?.id === employee.id && chatMessages) {
+        const followUpMessages = [
+          "Done! Check the feed 😊",
+          "Posted! Hope you like it 😏",
+          "There you go... posted",
+          "Okay, it's up now",
+          "Posted as requested 😳"
+        ];
+        const followUp = followUpMessages[Math.floor(Math.random() * followUpMessages.length)];
+        
+        gameState.chatHistory[employee.id].push({
+          sender: employee.name,
+          content: followUp,
+          isPlayer: false,
+          timestamp: Date.now()
+        });
+        
+        const messageIndex = gameState.chatHistory[employee.id].length - 1;
+        addChatMessage(employee.name, followUp, false, null, messageIndex);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      
+      // Refresh feed if on social tab
+      if (gameState.activeTab === 'social') {
+        renderSocialFeed();
+      }
+      
+    } catch (error) {
+      console.error('Error generating requested post:', error);
     }
   }
   
@@ -8554,10 +9631,128 @@ ${emp.name}'s response:`;
   }
   
   // Handle requesting an image from NPC
-  async function requestImageFromNPC(requestType, customPrompt = null) {
+  /**
+   * Request an image from NPC via attachment menu
+   */
+  async function requestImageFromNPC(preset = null, customPrompt = null) {
     if (!gameState.activeChat) return;
     
     const emp = gameState.activeChat;
+    let requestType = preset || 'casual';
+    let requestDescription = '';
+    
+    // Build request description based on preset or custom
+    if (customPrompt) {
+      requestDescription = customPrompt;
+      // Try to detect type from custom prompt
+      if (/\b(nude|naked|explicit|full.*nude)\b/i.test(customPrompt)) {
+        requestType = 'nude';
+      } else if (/\b(lewd|sexy|revealing|underwear|lingerie|topless)\b/i.test(customPrompt)) {
+        requestType = 'lewd';
+      } else if (/\b(work|office|professional)\b/i.test(customPrompt)) {
+        requestType = 'work';
+      } else if (/\b(selfie|picture|photo)\b/i.test(customPrompt)) {
+        requestType = 'casual';
+      }
+    } else {
+      // Use preset descriptions
+      const presetDescriptions = {
+        casual: 'send a casual selfie',
+        work: 'send a work selfie',
+        lewd: 'send a lewd/sexy photo',
+        nude: 'send a nude photo'
+      };
+      requestDescription = presetDescriptions[requestType] || 'send a photo';
+    }
+    
+    // Add request message to chat
+    const requestMessage = customPrompt || `Could you ${requestDescription}?`;
+    if (chatInput) chatInput.value = requestMessage;
+    
+    // Simulate clicking send
+    await sendChatMessage();
+    
+    // Wait a moment, then check if NPC will agree
+    setTimeout(async () => {
+      await evaluateAndExecuteImageRequest(emp, requestType, requestDescription, customPrompt);
+    }, 3000);
+  }
+  
+  /**
+   * Evaluate if NPC agrees to image request and execute
+   */
+  async function evaluateAndExecuteImageRequest(employee, requestType, requestDescription, customPrompt = null) {
+    const intimacy = employee.intimacy || 0;
+    const affection = employee.stats?.affection || 0;
+    const comfort = employee.stats?.comfort || 0;
+    const desire = employee.stats?.desire || 0;
+    const personality = employee.personality || {};
+    
+    // Determine comfort level with request
+    let comfortThreshold = 0;
+    
+    switch (requestType) {
+      case 'casual':
+        comfortThreshold = 5; // Almost always okay
+        break;
+      case 'work':
+        comfortThreshold = 10; // Very easy
+        break;
+      case 'lewd':
+        comfortThreshold = 45; // Need some attraction
+        break;
+      case 'nude':
+        comfortThreshold = 70; // Need high intimacy
+        break;
+    }
+    
+    // Calculate willingness score
+    const willingnessScore = (intimacy * 0.35) + (affection * 0.25) + (desire * 0.25) + (comfort * 0.15);
+    
+    // Determine if they'll do it
+    const willDo = willingnessScore >= comfortThreshold || 
+                   (willingnessScore >= comfortThreshold * 0.8 && Math.random() < 0.25);
+    
+    if (willDo) {
+      // Generate and send it after a delay
+      setTimeout(async () => {
+        await generateAndSendRequestedImage(employee, requestType, customPrompt);
+      }, 2000 + Math.random() * 4000); // 2-6 seconds
+    } else {
+      // Send a rejection message
+      const rejectionMessages = [
+        "I'm not really comfortable with that",
+        "Maybe when we know each other better",
+        "That's a bit too much for me right now",
+        "I don't think I'm ready for that yet",
+        "Sorry, but that's crossing a line for me"
+      ];
+      const rejection = rejectionMessages[Math.floor(Math.random() * rejectionMessages.length)];
+      
+      setTimeout(() => {
+        if (gameState.activeChat?.id === employee.id && chatMessages) {
+          gameState.chatHistory[employee.id].push({
+            sender: employee.name,
+            content: rejection,
+            isPlayer: false,
+            timestamp: Date.now()
+          });
+          
+          const messageIndex = gameState.chatHistory[employee.id].length - 1;
+          addChatMessage(employee.name, rejection, false, null, messageIndex);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+      }, 2000 + Math.random() * 2000);
+    }
+  }
+  
+  /**
+   * Generate and send requested image from NPC
+   */
+  async function generateAndSendRequestedImage(employee, requestType, customPrompt = null) {
+    if (!gameState.activeChat || gameState.activeChat.id !== employee.id) return;
+    
+    const emp = employee;
     
     // Show typing indicator
     if (chatTypingIndicator && chatTypingName) {
@@ -8593,9 +9788,12 @@ ${emp.name}'s response:`;
       
       const messagePrompt = `${buildChatPrompt(emp, conversationHistory, '').prompt}
 
-The player has requested a ${requestType || 'custom'} photo from you. You're sending them an image that shows: ${imagePrompt}
+The player has requested a ${requestType || 'custom'} photo from you. You've agreed and are sending them an image that shows: ${imagePrompt}
 
-Write a brief, natural message (1 sentence) to accompany the photo you're sending. Be playful, flirty, or professional depending on your relationship and the image type.
+Write a brief, natural message (1 sentence) to accompany the photo you're sending. Match your tone to the image type and your relationship:
+- Casual/Work: Friendly, maybe playful
+- Lewd: Flirty, teasing, confident  
+- Nude: Bold, seductive, intimate
 
 ${emp.name}'s message:`;
 
@@ -8615,7 +9813,8 @@ ${emp.name}'s message:`;
         isPlayer: false,
         imageUrl: imageUrl,
         imagePrompt: imagePrompt,
-        imageType: 'received'
+        imageType: 'received',
+        timestamp: Date.now()
       });
       
       // Add image message from NPC with message index for regenerate button
@@ -8624,6 +9823,7 @@ ${emp.name}'s message:`;
       
       // Memory: remember sending this image
       remember(emp, `Sent ${requestType || 'custom'} photo to player`, 'event', 1.5);
+      remember(emp, `The boss requested this photo`, 'interaction', 1.5);
       
       // Add to employee photos gallery
       if (!emp.photos) emp.photos = [];
@@ -8635,9 +9835,14 @@ ${emp.name}'s message:`;
       });
       
       // Update stats based on image type
-      if (requestType === 'lewd' || requestType === 'nude') {
+      if (requestType === 'nude') {
+        emp.stats.desire = Math.min(100, (emp.stats.desire || 0) + 5);
+        emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 3);
+        emp.intimacy = Math.min(100, (emp.intimacy || 0) + 3);
+      } else if (requestType === 'lewd') {
         emp.stats.desire = Math.min(100, (emp.stats.desire || 0) + 3);
         emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 2);
+        emp.intimacy = Math.min(100, (emp.intimacy || 0) + 2);
       } else {
         emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 1);
       }
@@ -8655,11 +9860,14 @@ ${emp.name}'s message:`;
   async function visualizeCurrentScene() {
     if (!gameState.activeChat) return;
     
+    // IMPORTANT: Capture the employee at the START to prevent chat-switching bugs
     const emp = gameState.activeChat;
+    const empId = emp.id;
+    const empName = emp.name;
     
     try {
       // Build comprehensive scene description from context
-      const recentMessages = gameState.chatHistory[emp.id]
+      const recentMessages = gameState.chatHistory[empId]
         ?.slice(-15)
         .map(msg => `${msg.sender}: ${msg.content}`)
         .join('\n') || '';
@@ -8670,12 +9878,12 @@ ${emp.name}'s message:`;
       const playerBio = gameState.settings?.playerBio || 'the player';
       
       // AI analyzes scene and builds visual prompt
-      const scenePrompt = `Based on this conversation between the player and ${emp.name}:
+      const scenePrompt = `Based on this conversation between the player and ${empName}:
 
 ${recentMessages}
 
 Character descriptions:
-- ${emp.name}: ${empDesc}
+- ${empName}: ${empDesc}
 - Player: ${playerBio}
 
 Generate a detailed image prompt that visualizes the CURRENT SCENE from the conversation. Consider:
@@ -8690,51 +9898,32 @@ Create a comprehensive image generation prompt that captures this moment. Use te
 
       const imagePrompt = await generateText(scenePrompt);
       
-      // Show loading message in chat
+      // Show loading message in chat (but verify we're still in the right chat)
       const loadingMsg = document.createElement('div');
       loadingMsg.textContent = '🎨 Visualizing current scene...';
       loadingMsg.style.cssText = 'text-align:center; padding:10px; opacity:0.7; font-style:italic;';
-      if (chatMessages) {
-        chatMessages.appendChild(loadingMsg);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      // Only add loading message if we're still viewing this chat
+      if (gameState.activeChat?.id === empId) {
+        if (chatMessages) {
+          chatMessages.appendChild(loadingMsg);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
       }
       
       // Generate image using Perchance generateImage plugin
       const imageUrl = await generateImage({ prompt: imagePrompt });
       
-      // Remove loading message
+      // Remove loading message (if it exists)
       if (loadingMsg && loadingMsg.parentElement) {
         loadingMsg.remove();
       }
       
-      // Add image to chat without NPC message - just the visualization
-      const messageEl = document.createElement('div');
-      messageEl.style.cssText = 'max-width:80%; padding:10px; margin:0 auto; text-align:center;';
-      
-      const img = document.createElement('img');
-      img.src = imageUrl;
-      img.style.cssText = 'width:100%; max-width:400px; border-radius:10px; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,0.3);';
-      img.onclick = () => {
-        const viewer = document.createElement('div');
-        viewer.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; display:flex; justify-content:center; align-items:center; cursor:pointer;';
-        viewer.innerHTML = `<img src="${imageUrl}" style="max-width:90%; max-height:90%; border-radius:10px;">`;
-        viewer.onclick = () => viewer.remove();
-        document.body.appendChild(viewer);
-      };
-      
-      const caption = document.createElement('p');
-      caption.style.cssText = 'margin:8px 0 0 0; color:#aaa; font-size:0.85rem; font-style:italic;';
-      caption.textContent = '🎬 Scene visualization';
-      
-      messageEl.appendChild(img);
-      messageEl.appendChild(caption);
-      chatMessages.appendChild(messageEl);
-      
-      // Add to history with special type
-      if (!gameState.chatHistory[emp.id]) {
-        gameState.chatHistory[emp.id] = [];
+      // Add to history with special type FIRST (so it persists even if chat switches)
+      if (!gameState.chatHistory[empId]) {
+        gameState.chatHistory[empId] = [];
       }
-      gameState.chatHistory[emp.id].push({
+      gameState.chatHistory[empId].push({
         sender: 'System',
         content: '🎬 Scene visualization',
         isPlayer: false,
@@ -8743,11 +9932,41 @@ Create a comprehensive image generation prompt that captures this moment. Use te
         imageType: 'scene'
       });
       
-      // Scroll to bottom
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+      // Only add image to visible chat if we're still viewing this employee's chat
+      if (gameState.activeChat?.id === empId) {
+        const messageEl = document.createElement('div');
+        messageEl.style.cssText = 'max-width:80%; padding:10px; margin:0 auto; text-align:center;';
+        
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.style.cssText = 'width:100%; max-width:400px; border-radius:10px; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,0.3);';
+        img.onclick = () => {
+          const viewer = document.createElement('div');
+          viewer.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; display:flex; justify-content:center; align-items:center; cursor:pointer;';
+          viewer.innerHTML = `<img src="${imageUrl}" style="max-width:90%; max-height:90%; border-radius:10px;">`;
+          viewer.onclick = () => viewer.remove();
+          document.body.appendChild(viewer);
+        };
+        
+        const caption = document.createElement('p');
+        caption.style.cssText = 'margin:8px 0 0 0; color:#aaa; font-size:0.85rem; font-style:italic;';
+        caption.textContent = '🎬 Scene visualization';
+        
+        messageEl.appendChild(img);
+        messageEl.appendChild(caption);
+        chatMessages.appendChild(messageEl);
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      // If chat switched, the image is already in history and will show when they return to this chat
+      
     } catch (error) {
       console.error('Error visualizing scene:', error);
-      addChatMessage('System', 'Could not generate scene visualization.', false);
+      // Only show error in the original chat
+      if (gameState.activeChat?.id === empId) {
+        addChatMessage('System', 'Could not generate scene visualization.', false);
+      }
     }
   }
   
@@ -9166,6 +10385,11 @@ Numbers only:`;
       }
     }
     
+    // Trigger automatic NPC reactions (delayed slightly for realism)
+    setTimeout(() => {
+      triggerAutomaticNPCReactions(post);
+    }, 3000 + Math.random() * 5000); // 3-8 seconds
+    
     // Close modal
     closePlayerPostModal();
     
@@ -9533,6 +10757,39 @@ Numbers only:`;
       food: 10
     };
     
+    // Boost certain post types if there's recent chat context
+    if (context.chatContext?.hasRecentChat) {
+      const themes = context.chatContext.themes || [];
+      
+      // If conversation was flirty, boost suggestive post types
+      if (themes.includes('flirty/romantic')) {
+        weights.text += 15; // Suggestive status updates
+        weights.selfie += 20;
+        weights.thirst_trap += 25;
+        if (employee.intimacy > 60) {
+          weights.explicit += 15;
+        }
+      }
+      
+      // If conversation was work-related, slightly boost work posts
+      if (themes.includes('work-related')) {
+        weights.work += 10;
+        weights.text += 5;
+      }
+      
+      // If conversation was emotional/personal, boost personal content
+      if (themes.includes('emotional/personal')) {
+        weights.text += 15;
+        weights.life_update += 10;
+      }
+      
+      // If conversation was about food/social, boost related content
+      if (themes.includes('food/social')) {
+        weights.food += 15;
+        weights.life_update += 10;
+      }
+    }
+    
     // Reduce weights for recently used types (variety)
     Object.keys(weights).forEach(type => {
       const recentUseCount = recentTypes.filter(t => t === type).length;
@@ -9687,16 +10944,27 @@ Post:`;
     
     const locationContext = (context.knownLocations || []).join(', ') || 'office';
     
+    // Get boss relationship
+    const bossRelationship = employee.relationships?.player || { level: 0, type: 'professional' };
+    const intimacy = employee.intimacy || 0;
+    const affection = employee.stats?.affection || 0;
+    
     // Randomly decide if this post should mention someone (30% chance for relevant post types)
     const shouldMention = Math.random() < 0.3 && 
                           ['text', 'work', 'life_update', 'food'].includes(postType) &&
-                          coworkersWithUsernames.length > 0 &&
-                          coworkersWithUsernames.some(c => c.username);
+                          (coworkersWithUsernames.length > 0 && coworkersWithUsernames.some(c => c.username));
+    
+    // Boss mention (lower chance, but increases with relationship)
+    const shouldMentionBoss = Math.random() < (0.05 + (affection / 100) * 0.15) && // 5-20% chance based on affection
+                              ['text', 'work', 'food', 'life_update'].includes(postType);
     
     const mentionableCoworkers = coworkersWithUsernames.filter(c => c.username);
     let mentionInstruction = '';
     
-    if (shouldMention && mentionableCoworkers.length > 0) {
+    if (shouldMentionBoss) {
+      const bossTone = intimacy > 60 ? 'warmly and casually' : affection > 50 ? 'appreciatively' : 'professionally';
+      mentionInstruction = `\n💡 Consider naturally mentioning your boss @TheBoss if relevant. Be ${bossTone}. Examples: "Meeting with @TheBoss went great!", "Thanks @TheBoss for the feedback", "@TheBoss really came through today". Only mention if it feels natural!`;
+    } else if (shouldMention && mentionableCoworkers.length > 0) {
       const randomCoworker = mentionableCoworkers[Math.floor(Math.random() * mentionableCoworkers.length)];
       mentionInstruction = `\n💡 Consider naturally mentioning @${randomCoworker.username} (${randomCoworker.name}) if relevant to your post. Examples: "Coffee with @${randomCoworker.username} hit different today", "Thanks @${randomCoworker.username} for the help!", "Spotted @${randomCoworker.username} in the break room". Only mention if it feels natural - don't force it!`;
     }
@@ -9708,8 +10976,8 @@ Post:`;
       selfie: 'Write a SHORT caption for a selfie you just took. Describe your mood/vibe. Use 0-1 emoji. Max 15 words.',
       meme: 'Write a humorous caption referencing office life, memes, or relatable situations. Be funny. 1 sentence.',
       life_update: 'Share a personal life update (hobby, weekend plans, interest). Be conversational. 1-2 sentences.',
-      thirst_trap: `Write a SUBTLE, PLAYFUL caption for a confident/attractive photo. Be flirty but not explicit. ${personality.flirty > 60 ? 'You can be more forward' : 'Keep it classy'}. Max 10 words.`,
-      explicit: `Write a SUGGESTIVE caption with innuendo. Be cheeky and playful. Match personality (flirty: ${personality.flirty}/100). Max 12 words.`,
+      thirst_trap: `Write a CONFIDENT, FLIRTY caption for a revealing/attractive photo showing your body. Be bold and suggestive. ${personality.flirty > 60 ? 'Be explicitly flirtatious and sexual' : 'Be playfully seductive'}. Reference your appearance, outfit, or what you're showing off. Examples: "Feeling myself 😏", "You're welcome 💋", "Work hard, play harder", "Can't stop won't stop", "Thoughts? 👀". Max 10 words.`,
+      explicit: `Write a SEXUALLY EXPLICIT caption for a nude/revealing photo. Be provocative and unapologetically sexual. ${personality.flirty > 70 ? 'Be very direct and graphic' : 'Use sexual innuendo and suggestive language'}. Reference nudity, your body, desires, or sexual themes. Examples: "Nothing to hide 🔥", "After hours mood 💦", "No clothes, no problems", "Just me 😈", "Special delivery for your eyes only", "Feeling frisky". Max 12 words.`,
       travel: 'Share excitement about travel or a place. 1 sentence with 1 emoji.',
       food: 'Post about food/drinks. Be enthusiastic. 1 sentence.'
     };
@@ -9755,12 +11023,50 @@ Post:`;
       ? `\nYour recent posts: "${recentPosts}"\n⚠️ Write something DIFFERENT - new topic, different angle, fresh perspective!${themeAvoidanceNote}` 
       : themeAvoidanceNote;
     
+    // Build chat context instruction
+    let chatContextNote = '';
+    if (context.chatContext?.hasRecentChat) {
+      const chat = context.chatContext;
+      const timeAgoText = chat.timeAgo < 60 ? `${chat.timeAgo} minutes ago` : `${Math.round(chat.timeAgo / 60)} hours ago`;
+      const themesText = chat.themes.length > 0 ? chat.themes.join(', ') : 'casual conversation';
+      
+      // Get last few message previews
+      const messagePreview = chat.lastMessages
+        .map(msg => `${msg.sender}: "${msg.preview}${msg.preview.length >= 100 ? '...' : ''}"`)
+        .join('\n');
+      
+      chatContextNote = `\n\n💬 RECENT CHAT WITH BOSS (${timeAgoText}):
+Conversation themes: ${themesText}
+Last messages:
+${messagePreview}
+
+💡 OPTIONAL: You could make a post inspired by this conversation! Examples:
+- If it was flirty: "Still thinking about that conversation... 😏" or "Feeling some type of way today 🔥"
+- If it was work: "Excited about the new project!" or "Time to crush these deadlines 💪"
+- If it was personal: "Good talks hit different" or "Grateful for good listeners"
+- Or post about something COMPLETELY DIFFERENT - you don't have to reference the chat!
+
+${chat.themes.includes('flirty/romantic') && ['text', 'selfie', 'thirst_trap'].includes(postType) 
+  ? '🔥 Since you had a flirty chat recently, feel free to make a suggestive/spicy post if it feels natural!' 
+  : ''}`;
+    }
+    
+    // Build boss request context
+    let bossRequestNote = '';
+    if (context.requestedByBoss) {
+      bossRequestNote = `\n\n🎯 BOSS REQUESTED THIS POST:
+The boss specifically asked you to make this post${context.requestContext ? `: "${context.requestContext}"` : ''}.
+You've already agreed to do it, so make the post they requested!
+Be confident and match the tone they were asking for.
+${postType === 'explicit' || postType === 'thirst_trap' ? 'They want something bold and provocative - don\'t hold back!' : ''}`;
+    }
+    
     const prompt = `You are ${employee.name}, posting on an uncensored social media.
 
 Personality: ${personalityDesc}
 Post type: ${postType}
 Coworkers: ${relationshipContext}
-Style: ${contentStyleNote}${varietyNote}${mentionInstruction}
+Style: ${contentStyleNote}${varietyNote}${mentionInstruction}${chatContextNote}${bossRequestNote}
 
 ${typeInstructions[postType] || typeInstructions.text}
 
@@ -9811,9 +11117,11 @@ Write ONLY the social media post text:`;
       // Determine explicit level based on post type and personality
       let explicitLevel = 0;
       if (postType === 'thirst_trap') {
-        explicitLevel = personality.flirty > 70 ? 2 : 1;
+        // Thirst traps are always at least level 2 (lewd/revealing)
+        explicitLevel = personality.flirty > 70 ? 3 : 2;
       } else if (postType === 'explicit') {
-        explicitLevel = 3 + (personality.flirty > 80 ? 1 : 0);
+        // Explicit posts are always level 4 (very explicit/NSFW)
+        explicitLevel = 4;
       } else if (postType === 'selfie' && personality.flirty > 65) {
         explicitLevel = Math.random() < 0.3 ? 1 : 0;
       }
@@ -10174,6 +11482,28 @@ Write ONLY the social media post text:`;
       }
     }
     
+    // ===== EXTRACT SPECIFIC DETAILS (cities, landmarks, unique features) =====
+    // This captures custom details that aren't in our predefined categories
+    const specificDetails = [];
+    
+    // Famous cities/places
+    const cities = ['tokyo', 'kyoto', 'paris', 'london', 'rome', 'barcelona', 'amsterdam', 'berlin', 'prague', 'vienna', 'venice', 'florence', 'milan', 'athens', 'santorini', 'mykonos', 'bali', 'phuket', 'bangkok', 'singapore', 'hong kong', 'seoul', 'beijing', 'shanghai', 'dubai', 'istanbul', 'cairo', 'marrakech', 'cape town', 'sydney', 'melbourne', 'auckland', 'fiji', 'hawaii', 'maui', 'oahu', 'tahiti', 'bora bora', 'maldives', 'seychelles', 'mauritius', 'bali', 'cancun', 'cabo', 'tulum', 'playa del carmen', 'costa rica', 'jamaica', 'bahamas', 'aruba', 'new york', 'nyc', 'manhattan', 'brooklyn', 'los angeles', 'la', 'hollywood', 'malibu', 'san francisco', 'miami', 'vegas', 'las vegas', 'chicago', 'boston', 'seattle', 'portland', 'austin', 'nashville', 'new orleans', 'montreal', 'toronto', 'vancouver', 'whistler', 'mexico city', 'buenos aires', 'rio', 'sao paulo', 'lima', 'santiago', 'bogota', 'cartagena', 'havana', 'lisboa', 'lisbon', 'porto', 'madrid', 'seville', 'ibiza', 'mallorca', 'valencia', 'geneva', 'zurich', 'lucerne', 'copenhagen', 'stockholm', 'oslo', 'helsinki', 'reykjavik', 'iceland', 'dublin', 'edinburgh', 'glasgow', 'belfast', 'budapest', 'krakow', 'warsaw', 'dubrovnik', 'split', 'zagreb', 'bucharest', 'sofia', 'belgrade', 'tel aviv', 'jerusalem', 'petra', 'dubai', 'abu dhabi', 'doha', 'muscat', 'mumbai', 'delhi', 'jaipur', 'agra', 'goa', 'kathmandu', 'pokhara', 'colombo', 'manila', 'hanoi', 'ho chi minh', 'siem reap', 'angkor', 'luang prabang', 'yangon', 'bagan', 'kuala lumpur', 'penang', 'langkawi', 'jakarta', 'ubud', 'queenstown', 'rotorua', 'perth', 'brisbane', 'gold coast', 'cairns', 'great barrier reef'];
+    cities.forEach(city => {
+      if (lower.includes(city)) specificDetails.push(city);
+    });
+    
+    // Unique features (bamboo, cherry blossoms, etc.)
+    const features = ['bamboo', 'cherry blossom', 'cherry blossoms', 'sakura', 'palm tree', 'palm trees', 'coconut tree', 'pine tree', 'redwood', 'sequoia', 'cactus', 'desert', 'dunes', 'sand dunes', 'waterfall', 'volcano', 'geyser', 'hot springs', 'aurora', 'northern lights', 'southern lights', 'milky way', 'stars', 'starry sky', 'full moon', 'sunset', 'sunrise', 'rainbow', 'double rainbow', 'lighthouse', 'windmill', 'windmills', 'castle', 'temple', 'shrine', 'pagoda', 'mosque', 'cathedral', 'church', 'monastery', 'ruins', 'ancient', 'colosseum', 'eiffel tower', 'big ben', 'statue of liberty', 'golden gate', 'brooklyn bridge', 'times square', 'central park', 'taj mahal', 'great wall', 'pyramids', 'sphinx', 'acropolis', 'parthenon', 'stonehenge', 'machu picchu', 'christ the redeemer', 'sugarloaf mountain', 'mount fuji', 'mount everest', 'kilimanjaro', 'matterhorn', 'swiss alps', 'rocky mountains', 'andes', 'himalayas', 'grand canyon', 'yosemite', 'yellowstone', 'zion', 'bryce canyon', 'glacier', 'fjord', 'fjords', 'iceberg', 'ice cave', 'blue lagoon', 'cenote', 'cave', 'cavern', 'grotto', 'canyon', 'valley', 'meadow', 'prairie', 'savanna', 'jungle', 'rainforest', 'mangrove', 'coral reef', 'kelp forest', 'vineyard', 'winery', 'lavender field', 'tulip field', 'sunflower field', 'rice paddy', 'terraces', 'rice terraces', 'tea plantation', 'coffee farm', 'olive grove', 'orchard', 'botanical garden', 'japanese garden', 'zen garden', 'rooftop', 'skyline', 'skyscraper', 'penthouse', 'balcony', 'terrace', 'patio', 'deck', 'pier', 'dock', 'marina', 'harbor', 'port', 'boardwalk', 'promenade', 'cobblestone', 'alley', 'alleyway', 'street art', 'mural', 'graffiti', 'neon lights', 'neon signs', 'lanterns', 'fairy lights', 'string lights', 'christmas lights', 'fireworks', 'bonfire', 'campfire', 'fire pit'];
+    features.forEach(feature => {
+      if (lower.includes(feature)) specificDetails.push(feature);
+    });
+    
+    // Activities with specific details
+    const specificActivities = ['dance party', 'dancing party', 'coding session', 'coding marathon', 'coding', 'hackathon', 'photoshoot', 'photo shoot', 'wine tasting', 'beer tasting', 'brunch', 'dinner party', 'house party', 'rooftop party', 'pool party', 'beach party', 'bbq party', 'birthday party', 'karaoke', 'trivia night', 'game night', 'movie night', 'girls night', 'boys night', 'date night', 'spa day', 'beach day', 'snow day', 'road trip', 'camping trip', 'backpacking', 'glamping', 'safari', 'cruise', 'boat trip', 'yacht', 'sailing', 'snorkeling', 'scuba diving', 'surfing', 'paddleboarding', 'kayaking', 'rafting', 'zip lining', 'rock climbing', 'bouldering', 'skiing', 'snowboarding', 'ice skating', 'sledding', 'tubing', 'parasailing', 'skydiving', 'bungee jumping', 'hot air balloon', 'helicopter ride', 'scenic flight'];
+    specificActivities.forEach(activity => {
+      if (lower.includes(activity)) specificDetails.push(activity);
+    });
+    
     return {
       food: detectedFood,
       mood: detectedMood,
@@ -10186,7 +11516,9 @@ Write ONLY the social media post text:`;
       socialContext: detectedSocialContext,
       object: detectedObject,
       season: detectedSeason,
-      pose: detectedPose
+      pose: detectedPose,
+      specificDetails: specificDetails.length > 0 ? specificDetails : null,
+      rawCaption: caption // Pass full caption for AI context
     };
   }
 
@@ -10220,36 +11552,38 @@ Write ONLY the social media post text:`;
         `Weekend selfie of ${physicalDesc}, casual home setting, relaxed vibe, natural smile`
       ],
       thirst_trap: [
-        `Confident ${physicalDesc} in stylish outfit, attractive pose, flattering lighting, fashionable`,
-        `${physicalDesc} looking confident and attractive, professional setting, stylish appearance`,
-        `Aesthetic photo of ${physicalDesc}, fashionable outfit, confident pose, good composition`,
-        `${physicalDesc} in fitted business attire, powerful stance, office setting, professional sexy`,
-        `Mirror shot of ${physicalDesc}, form-fitting outfit, confident expression, modern aesthetic`,
-        `${physicalDesc} leaning against wall, casual cool pose, attractive lighting, effortless style`,
-        `Full body shot of ${physicalDesc}, fashionable outfit, confident stride, urban background`,
-        `${physicalDesc} sitting on desk edge, professional outfit, subtle allure, office vibe`,
-        `${physicalDesc} in gym clothes, athletic build, post-workout glow, mirror selfie aesthetic`,
-        `Golden hour photo of ${physicalDesc}, warm lighting, casual outfit, natural confidence`,
-        `${physicalDesc} in sleek black outfit, dramatic lighting, sophisticated pose, high fashion feel`,
-        `Casual sexy ${physicalDesc}, unbuttoned collar, relaxed pose, soft lighting, effortless charm`,
-        `${physicalDesc} looking over shoulder, knowing smile, confident body language, stylish setting`,
-        `${physicalDesc} in car, hand on steering wheel, sunglasses on, cool confident vibe`,
-        `${physicalDesc} at sunset, silhouette lighting, attractive profile, artistic composition`
+        `Provocative photo of ${physicalDesc} in form-fitting gym attire, sports bra and leggings, toned body visible, gym mirror selfie, showing off physique, confident sexy pose`,
+        `${physicalDesc} in tight dress, curves emphasized, low neckline, showing cleavage, mirror selfie, bedroom setting, seductive expression, body on display`,
+        `${physicalDesc} in lingerie, lace bra and panties, bedroom mirror selfie, sensual pose, showing off body, intimate setting, confident and sexy`,
+        `${physicalDesc} in bikini, beach or poolside, wet from water, body glistening, revealing swimwear, showing skin, attractive pose, summer vibes`,
+        `${physicalDesc} wearing unbuttoned shirt, cleavage visible, messy hair, bedroom eyes, seductive morning look, showing skin suggestively`,
+        `${physicalDesc} in tight yoga pants and crop top, cameltoe visible, toned stomach showing, gym setting, athletic but sexy, mirror selfie`,
+        `${physicalDesc} in short skirt and crop top, midriff exposed, legs on display, confident pose, urban setting, showing off body`,
+        `${physicalDesc} in silk robe barely covering body, cleavage visible, bare legs showing, bedroom setting, morning after vibe, sultry expression`,
+        `${physicalDesc} in wet white shirt, see-through fabric, outline visible, water droplets, provocative accidental reveal aesthetic`,
+        `${physicalDesc} from behind, tight pants emphasizing butt, looking over shoulder, flirty expression, showing off curves, confident pose`,
+        `${physicalDesc} in sports bra only, bare midriff, athletic shorts low on hips, post-workout selfie, toned body on display, sweaty and sexy`,
+        `${physicalDesc} in backless dress, bare back visible, side curves showing, elegant but provocative, looking over shoulder seductively`,
+        `${physicalDesc} in low-cut top, deep cleavage visible, leaning forward, close-up angle, showing assets, bedroom eyes, flirty vibe`,
+        `${physicalDesc} lying on bed in underwear, body stretched out, intimate angle, showing curves, messy bedroom hair, come-hither expression`,
+        `${physicalDesc} sitting with legs spread in short skirt, inner thighs visible, provocative pose, confident expression, daring photo`
       ],
       explicit: [
-        `Suggestive photo of ${physicalDesc}, intimate lighting, alluring expression, tasteful composition`,
-        `${physicalDesc} in revealing outfit, seductive pose, dim romantic lighting, artistic`,
-        `Sultry portrait of ${physicalDesc}, provocative pose, sensual atmosphere, high fashion`,
-        `${physicalDesc} in silk robe, bedroom setting, soft lighting, intimate moment, tasteful`,
-        `Artistic boudoir shot of ${physicalDesc}, dramatic shadows, alluring gaze, sensual mood`,
-        `${physicalDesc} in lace outfit, romantic lighting, seductive expression, classy provocation`,
-        `${physicalDesc} on bed, intimate pose, soft focus, romantic atmosphere, artistic sensuality`,
-        `Backlit silhouette of ${physicalDesc}, revealing curves, artistic composition, sensual lighting`,
-        `${physicalDesc} in shower steam, water droplets, intimate moment, artistic blur, sensual mood`,
-        `Close-up of ${physicalDesc}, bedroom eyes, lips parted, intimate expression, soft lighting`,
-        `${physicalDesc} in low-cut outfit, mirror reflection, seductive pose, dim ambient lighting`,
-        `${physicalDesc} lying down, intimate angle, soft fabric, romantic lighting, artistic sensuality`,
-        `${physicalDesc} in after-hours office, loosened clothing, suggestive pose, dramatic lighting`
+        `NSFW photo of ${physicalDesc} topless, breasts exposed, hands covering nipples, bedroom setting, nude from waist up, sensual lighting, explicit content`,
+        `${physicalDesc} completely nude, full frontal nudity, strategic hand placement, bedroom or bathroom, soft lighting, artistic nude photography, explicit NSFW`,
+        `${physicalDesc} in transparent lingerie, nipples visible through fabric, see-through panties, body fully on display, bedroom, explicit intimate wear`,
+        `${physicalDesc} topless from behind, bare back and butt visible, looking over shoulder, nude photography, sensual pose, NSFW explicit content`,
+        `${physicalDesc} nude in shower, water running over naked body, wet skin glistening, intimate bathroom setting, full nudity, explicit content`,
+        `${physicalDesc} on bed completely naked, lying seductively, intimate bedroom angle, full body nudity visible, explicit NSFW photography`,
+        `${physicalDesc} wearing only unbuttoned shirt open exposing breasts, bare pussy visible, sitting pose, bedroom, explicit nude content`,
+        `${physicalDesc} topless mirror selfie, breasts fully exposed, nipples visible, confident pose, bathroom or bedroom, explicit NSFW content`,
+        `${physicalDesc} in spread eagle pose wearing nothing, full frontal nudity, lying on bed, intimate explicit angle, NSFW adult content`,
+        `${physicalDesc} nude from side angle, breast and butt visible, artistic nude pose, bedroom setting, sensual lighting, explicit photography`,
+        `${physicalDesc} wearing collar and nothing else, submissive kneeling pose, bedroom floor, fetish content, explicit NSFW`,
+        `${physicalDesc} in bed sheets barely covering, breast peeking out, implied full nudity underneath, intimate morning scene, explicit suggestion`,
+        `${physicalDesc} bent over showing bare ass, topless, looking back at camera, bedroom, explicit provocative pose, NSFW adult content`,
+        `${physicalDesc} with legs spread wide in lingerie, crotch area visible, extremely revealing, bedroom, explicit sexual pose, NSFW`,
+        `${physicalDesc} masturbating, hand between legs, topless, bedroom, explicit sexual content, NSFW adult photography, orgasmic expression`
       ],
       meme: [
         `Funny relatable meme image, office humor, modern internet meme style, text overlay space`,
@@ -10679,15 +12013,55 @@ Write ONLY the social media post text:`;
       prompt = memePrompts[Math.floor(Math.random() * memePrompts.length)];
     }
     
-    // TRAVEL POSTS - Match activity/location/weather from caption
+    // TRAVEL POSTS - Match activity/location/weather from caption + SPECIFIC DETAILS!
     else if (postType === 'travel') {
-      // Activity-based travel
-      if (analysis.activity === 'workout' || analysis.activity === 'hiking') {
+      // PRIORITY 1: Use specific details from caption (cities, landmarks, features)
+      if (analysis.specificDetails && analysis.specificDetails.length > 0) {
+        const detail = analysis.specificDetails[0]; // Use first specific detail
+        
+        // Famous cities
+        if (['tokyo', 'kyoto', 'paris', 'london', 'rome', 'barcelona', 'amsterdam', 'berlin', 'dubai', 'bali', 'santorini', 'venice', 'new york', 'nyc', 'manhattan', 'los angeles', 'miami', 'vegas', 'hawaii', 'iceland', 'maldives'].includes(detail)) {
+          prompt = `Beautiful scenic view of ${detail}, iconic travel destination, stunning photography`;
+          // Add specific features if mentioned
+          if (analysis.specificDetails.includes('bamboo')) prompt = `Bamboo forest in ${detail}, tall bamboo trees, serene green path, asian travel aesthetic`;
+          else if (analysis.specificDetails.includes('cherry blossom')) prompt = `Cherry blossoms in ${detail}, pink sakura trees, springtime beauty, japanese aesthetic`;
+          else if (analysis.specificDetails.includes('temple')) prompt = `Ancient temple in ${detail}, cultural landmark, travel photography, architectural beauty`;
+          else if (analysis.specificDetails.includes('beach')) prompt = `Beach paradise in ${detail}, turquoise water, tropical vacation, stunning coastal view`;
+          else if (analysis.specificDetails.includes('mountains')) prompt = `Mountain view in ${detail}, scenic peaks, alpine landscape, adventure travel`;
+          else if (analysis.specificDetails.includes('skyline')) prompt = `City skyline of ${detail}, urban landscape, metropolitan beauty, travel photography`;
+          else if (analysis.timeOfDay === 'night') prompt += ', nighttime city lights, illuminated beauty';
+          else if (analysis.weather === 'sunny') prompt += ', bright sunny day, clear blue skies';
+        }
+        // Unique features (bamboo, cherry blossoms, waterfalls, etc.)
+        else if (['bamboo', 'cherry blossom', 'waterfall', 'volcano', 'aurora', 'northern lights', 'castle', 'temple', 'shrine', 'pagoda', 'lighthouse', 'windmill', 'ruins', 'pyramids', 'taj mahal', 'eiffel tower', 'colosseum', 'mount fuji', 'grand canyon'].includes(detail)) {
+          prompt = `Stunning ${detail} view, travel destination, breathtaking scenery, wanderlust photography`;
+          if (detail === 'bamboo') prompt = `Bamboo forest, tall green bamboo trees lining path, serene peaceful atmosphere, asian travel aesthetic, natural beauty`;
+          else if (detail === 'cherry blossom') prompt = `Cherry blossom trees in full bloom, pink sakura petals, springtime beauty, japanese aesthetic, magical scene`;
+          else if (detail === 'waterfall') prompt = `Majestic waterfall, cascading water, lush greenery, nature paradise, adventure travel`;
+          else if (detail === 'aurora' || detail === 'northern lights') prompt = `Aurora borealis dancing in night sky, northern lights, colorful sky phenomenon, arctic beauty`;
+          else if (detail === 'castle') prompt = `Ancient castle, medieval architecture, historical landmark, european travel, fairytale aesthetic`;
+          else if (detail === 'temple' || detail === 'shrine') prompt = `Sacred temple, ornate architecture, cultural heritage, spiritual destination, travel photography`;
+          else if (detail === 'lighthouse') prompt = `Coastal lighthouse, ocean view, maritime charm, seaside travel, scenic beauty`;
+          else if (detail === 'volcano') prompt = `Active volcano, dramatic landscape, adventure travel, powerful nature, unique destination`;
+          else if (detail === 'ruins') prompt = `Ancient ruins, historical site, archaeological wonder, travel exploration, timeless beauty`;
+        }
+        // Specific activities
+        else if (['safari', 'cruise', 'yacht', 'snorkeling', 'scuba diving', 'skiing', 'snowboarding', 'hot air balloon', 'helicopter ride'].includes(detail)) {
+          if (detail === 'safari') prompt = `Safari adventure, wildlife viewing, african landscape, jeep tour, nature exploration`;
+          else if (detail === 'cruise' || detail === 'yacht') prompt = `Luxury cruise/yacht, ocean view, deck relaxation, maritime travel, vacation vibes`;
+          else if (detail === 'snorkeling' || detail === 'scuba diving') prompt = `Underwater adventure, tropical reef, marine life, diving/snorkeling, aquatic beauty`;
+          else if (detail === 'skiing' || detail === 'snowboarding') prompt = `Ski resort, snowy slopes, winter sports, mountain adventure, alpine scenery`;
+          else if (detail === 'hot air balloon') prompt = `Hot air balloon ride, aerial view, floating above landscape, sunrise/sunset adventure`;
+          else if (detail === 'helicopter ride') prompt = `Helicopter tour, aerial photography, bird's eye view, scenic flight, adventure travel`;
+        }
+      }
+      // PRIORITY 2: Activity-based travel
+      else if (analysis.activity === 'workout' || analysis.activity === 'hiking') {
         prompt = `${physicalDesc} on hiking trail, athletic gear, nature adventure, scenic mountain vista`;
       } else if (analysis.activity === 'swimming') {
         prompt = `${physicalDesc} at pool or beach, swimming, tropical water, vacation mode`;
       }
-      // Location-based travel
+      // PRIORITY 3: Location-based travel
       else if (analysis.location === 'beach') {
         prompt = `Beautiful beach scene, turquoise water, white sand, palm trees, paradise destination, vacation vibes`;
         if (analysis.weather === 'sunny') prompt += ', bright sunny day, clear blue skies';
@@ -10702,7 +12076,12 @@ Write ONLY the social media post text:`;
         prompt = `Stunning city skyline, urban exploration, city lights, travel photography, metropolitan vibes`;
         if (analysis.timeOfDay === 'night') prompt += ', nighttime city lights, illuminated buildings';
       } else if (analysis.location === 'forest') {
-        prompt = `Forest trail scene, nature path, trees, outdoor adventure, peaceful wilderness`;
+        // Check for bamboo specifically in raw caption
+        if (analysis.rawCaption && analysis.rawCaption.toLowerCase().includes('bamboo')) {
+          prompt = `Bamboo forest, tall green bamboo trees lining path, serene peaceful atmosphere, asian travel aesthetic, natural beauty`;
+        } else {
+          prompt = `Forest trail scene, nature path, trees, outdoor adventure, peaceful wilderness`;
+        }
       } else if (analysis.location === 'countryside') {
         prompt = `Countryside landscape, rural scenery, fields, peaceful nature, escape from city`;
       }
@@ -10731,8 +12110,44 @@ Write ONLY the social media post text:`;
       }
     }
     
-    // LIFE UPDATE - Match activity, mood, objects from caption
+    // LIFE UPDATE - Match activity, mood, objects from caption + SPECIFIC DETAILS!
     else if (postType === 'life_update') {
+      // PRIORITY 1: Use specific activities from caption
+      if (analysis.specificDetails && analysis.specificDetails.length > 0) {
+        const detail = analysis.specificDetails[0];
+        
+        if (detail === 'dance party' || detail === 'dancing party') {
+          prompt = `${physicalDesc} at dance party, dancing with friends, party lights, music vibes, energetic celebration, fun social gathering`;
+          if (analysis.timeOfDay === 'night') prompt += ', nighttime party energy, colorful lights';
+        } else if (detail === 'coding session' || detail === 'coding marathon' || detail === 'coding') {
+          prompt = `${physicalDesc} at desk coding, laptop screen glow, programmer aesthetic, focused developer, code on screen visible, tech workspace`;
+          if (analysis.timeOfDay === 'night' || detail.includes('midnight')) prompt += ', late night coding, dark room with screen glow, night owl developer energy';
+        } else if (detail === 'hackathon') {
+          prompt = `${physicalDesc} at hackathon event, intense coding, tech competition, developer energy, multiple screens, programming marathon`;
+        } else if (detail === 'photoshoot' || detail === 'photo shoot') {
+          prompt = `${physicalDesc} during photoshoot, camera equipment visible, professional lighting, model pose, photography session`;
+        } else if (detail === 'wine tasting' || detail === 'beer tasting') {
+          prompt = `${physicalDesc} at tasting event, wine/beer glasses, elegant setting, sophisticated social gathering, sampling drinks`;
+        } else if (detail === 'brunch') {
+          prompt = `${physicalDesc} at brunch, restaurant table with food and mimosas, social dining, weekend vibes, friends gathering`;
+        } else if (detail === 'karaoke') {
+          prompt = `${physicalDesc} singing karaoke, microphone in hand, stage lights, music performance, fun social activity`;
+        } else if (detail === 'game night') {
+          prompt = `Game night setup, board games or video games visible, friends gathered, snacks and drinks, fun social evening`;
+        } else if (detail === 'movie night') {
+          prompt = `${physicalDesc} watching movie, cozy couch setting, popcorn and drinks, screen glow, relaxation entertainment`;
+        } else if (detail === 'spa day') {
+          prompt = `${physicalDesc} at spa, relaxation vibes, face mask or robe, pampering session, self-care luxury, wellness treatment`;
+        } else if (detail === 'road trip') {
+          prompt = `${physicalDesc} on road trip, car interior view, scenic highway, adventure travel, open road vibes`;
+        } else if (detail === 'camping trip' || detail === 'glamping') {
+          prompt = `Camping scene, tent or glamping setup, nature outdoor, campfire visible, wilderness adventure, outdoor lifestyle`;
+        } else if (detail === 'yacht' || detail === 'sailing') {
+          prompt = `${physicalDesc} on yacht/sailboat, ocean water, luxury boating, nautical lifestyle, maritime adventure`;
+        }
+      }
+      
+      // PRIORITY 2: Activity-based prompts
       const activityPrompts = {
         workout: `${physicalDesc} in athletic gear, fitness journey, exercise setting, healthy lifestyle`,
         yoga: `${physicalDesc} on yoga mat, meditation space, zen energy, wellness practice`,
@@ -11089,6 +12504,8 @@ Post:`;
     if (isResetting) return;
     
     try {
+      // Update last play time before saving
+      gameState.lastPlayTime = Date.now();
       await kv.gameSave.set("gameState", gameState);
       if (showToast) showNotification('Game saved!');
     } catch (error) {
@@ -11182,6 +12599,9 @@ Post:`;
         }
         
         showNotification('Game loaded!');
+        
+        // Check for AFK income
+        checkAfkIncome();
       } else {
         // Try to migrate from old localStorage if available
         await migrateFromLocalStorage();
@@ -11189,6 +12609,88 @@ Post:`;
     } catch (error) {
       console.error('Error loading game:', error);
       showNotification('Failed to load saved game. Starting fresh!');
+    }
+  }
+  
+  // Check for AFK income when player returns
+  function checkAfkIncome() {
+    const now = Date.now();
+    const lastPlayTime = gameState.lastPlayTime || now;
+    const timeAway = now - lastPlayTime; // milliseconds
+    
+    // Only show if away for more than 5 minutes
+    const MIN_TIME_AWAY = 5 * 60 * 1000; // 5 minutes
+    if (timeAway < MIN_TIME_AWAY) {
+      // Update last play time for next session
+      gameState.lastPlayTime = now;
+      return;
+    }
+    
+    // Calculate income per second
+    const incomePerSecond = parseFloat(calculateCashPerSecond());
+    
+    // If no income, skip
+    if (incomePerSecond <= 0) {
+      gameState.lastPlayTime = now;
+      return;
+    }
+    
+    // Calculate earnings (80% of full rate)
+    const secondsAway = Math.floor(timeAway / 1000);
+    const fullEarnings = incomePerSecond * secondsAway;
+    const afkEarnings = Math.floor(fullEarnings * 0.8);
+    
+    // Cap at 24 hours to prevent abuse
+    const MAX_AFK_TIME = 24 * 60 * 60; // 24 hours in seconds
+    const cappedSecondsAway = Math.min(secondsAway, MAX_AFK_TIME);
+    const cappedFullEarnings = incomePerSecond * cappedSecondsAway;
+    const cappedAfkEarnings = Math.floor(cappedFullEarnings * 0.8);
+    
+    // Format time away
+    const hours = Math.floor(cappedSecondsAway / 3600);
+    const minutes = Math.floor((cappedSecondsAway % 3600) / 60);
+    const timeAwayText = hours > 0 
+      ? `${hours}h ${minutes}m` 
+      : `${minutes}m`;
+    
+    // Update modal with earnings info
+    const afkModal = document.getElementById('afkIncomeModal');
+    const timeAwayEl = document.getElementById('afkTimeAway');
+    const incomeRateEl = document.getElementById('afkIncomeRate');
+    const fullEarningsEl = document.getElementById('afkFullEarnings');
+    const afkEarningsEl = document.getElementById('afkEarnings');
+    const claimBtn = document.getElementById('claimAfkIncome');
+    const closeBtn = document.getElementById('closeAfkIncome');
+    
+    if (timeAwayEl) timeAwayEl.textContent = timeAwayText;
+    if (incomeRateEl) incomeRateEl.textContent = `$${formatNumber(incomePerSecond)}/sec`;
+    if (fullEarningsEl) fullEarningsEl.textContent = `$${formatNumber(cappedFullEarnings)}`;
+    if (afkEarningsEl) afkEarningsEl.textContent = `$${formatNumber(cappedAfkEarnings)}`;
+    
+    // Show modal
+    if (afkModal) {
+      afkModal.style.display = 'flex';
+    }
+    
+    // Claim button handler
+    if (claimBtn) {
+      claimBtn.onclick = () => {
+        gameState.cash += cappedAfkEarnings;
+        gameState.lastPlayTime = now;
+        updateUI();
+        if (afkModal) afkModal.style.display = 'none';
+        showNotification(`Claimed $${formatNumber(cappedAfkEarnings)} AFK earnings!`);
+      };
+    }
+    
+    // Close button handler
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        gameState.cash += cappedAfkEarnings; // Still give them the money
+        gameState.lastPlayTime = now;
+        updateUI();
+        if (afkModal) afkModal.style.display = 'none';
+      };
     }
   }
   
