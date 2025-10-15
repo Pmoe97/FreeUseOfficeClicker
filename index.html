@@ -9999,6 +9999,21 @@ Just write the reply comment directly:`;
           tone = 'playful';
         }
         
+        // Detect existing comment patterns to avoid repetition
+        const existingPatterns = [];
+        post.comments.forEach(c => {
+          const lower = c.content.toLowerCase();
+          if (/\?\s*(girl|dude|bro|man)/i.test(c.content)) existingPatterns.push('question + nickname');
+          if (/still\s+(love|like|here|blooming)/i.test(c.content)) existingPatterns.push('"still" continuation');
+          if (/you\s+(forgot|watered|planted|remember)/i.test(c.content)) existingPatterns.push('direct "you" callback');
+          if (/😂|😅|💀/i.test(c.content)) existingPatterns.push('multiple laughing emojis');
+          if (/tho|though$/i.test(c.content)) existingPatterns.push('ending with "tho/though"');
+        });
+        
+        const diversityNote = existingPatterns.length > 0
+          ? `\n\n⚠️ OTHER COMMENTS USED THESE PATTERNS - BE DIFFERENT:\n${[...new Set(existingPatterns)].map(p => `- ${p}`).join('\n')}\nUse a completely DIFFERENT approach/structure!`
+          : '';
+        
         // Build prompt with FULL context
         const prompt = `You are ${npc.name}, an employee at the company. You're viewing a social media post and someone (@TheBoss, the boss) mentioned you in a comment.
 
@@ -10024,9 +10039,11 @@ YOUR RELATIONSHIP WITH BOSS:
 - Intimacy level: ${intimacy}/100
 - Relationship type: ${relationship.type || 'professional'}
 - Relationship strength: ${relationship.level || 0}/100
+${diversityNote}
 
 INSTRUCTIONS:
 Reply to being mentioned in a natural, brief way (max 120 characters). Your tone should be ${tone}.
+${diversityNote ? 'IMPORTANT: Be ORIGINAL - use a different joke structure/phrasing than existing comments!' : ''}
 
 ${tone === 'flirty' ? '- Be subtly flirty and playful' : ''}
 ${tone === 'warm' ? '- Be warm and friendly, show closeness' : ''}
@@ -10043,6 +10060,7 @@ DO NOT:
 - Write "I would reply" or similar
 - Be overly formal unless that matches your personality
 - Exceed 120 characters
+- Copy the structure of existing comments
 
 Just write the reply comment directly:`;
 
@@ -10265,6 +10283,21 @@ Just write the reply comment directly:`;
           }
         }
         
+        // Detect if other comments used similar patterns (avoid repetition)
+        const existingPatterns = [];
+        post.comments.forEach(c => {
+          const lower = c.content.toLowerCase();
+          // Detect common patterns
+          if (/\?\s*(girl|dude|bro|man)/i.test(c.content)) existingPatterns.push('question + nickname');
+          if (/still\s+(love|like|here|blooming)/i.test(c.content)) existingPatterns.push('"still" continuation');
+          if (/you\s+(forgot|watered|planted)/i.test(c.content)) existingPatterns.push('direct "you" callback');
+          if (/😂|😅|💀|lol|lmao/i.test(c.content)) existingPatterns.push('laughing response');
+        });
+        
+        const diversityNote = existingPatterns.length > 0 
+          ? `\n\n⚠️ AVOID THESE PATTERNS (other comments already used them):\n${[...new Set(existingPatterns)].map(p => `- ${p}`).join('\n')}\nBe creative and use a DIFFERENT angle or joke structure!`
+          : '';
+        
         const prompt = `You are ${npc.name}, an employee seeing a comment thread on a workplace social feed.
 
 ORIGINAL POST:
@@ -10287,10 +10320,11 @@ YOUR PERSONALITY:
 - Humor: ${personality.humor || 50}/100
 
 WHY YOU'RE RESPONDING: ${reason}
-${tagContext}
+${tagContext}${diversityNote}
 
 INSTRUCTIONS:
 Write a brief comment (max 100 characters) responding to ${triggerNPC.name}'s comment. Tone: ${tone}.
+${diversityNote ? 'Be ORIGINAL - don\'t copy the joke structure or phrasing of existing comments!' : ''}
 
 ${tone === 'friendly' ? '- Be warm and supportive' : ''}
 ${tone === 'snarky' ? '- Add a sarcastic or teasing edge' : ''}
@@ -10306,6 +10340,7 @@ DO NOT:
 - Quote your response
 - Exceed 100 characters
 - Say "I would comment" or similar meta-text
+- Copy the structure or phrasing of other comments
 
 Just write the comment:`;
 
@@ -10995,7 +11030,13 @@ Write ONLY the message:`;
 
       // Generate message
       const rawMessage = await generateText(prompt);
-      const message = sanitizeNpcResponse(rawMessage, 2).trim();
+      let message = sanitizeNpcResponse(rawMessage, 2).trim();
+      
+      // Additional meta-commentary stripping for DMs
+      message = message.split(/\(Character count:/)[0];
+      message = message.split(/\(Emojis used:/)[0];
+      message = message.split(/\(Approach:/)[0];
+      message = message.trim();
       
       if (!message || message.length > 150) return; // Safety check
       
@@ -16293,14 +16334,22 @@ Write ONLY the social media post text:`;
     try {
       let content = await generateText(prompt);
       
-      // Clean up any meta-commentary that slipped through
+      // AGGRESSIVE meta-commentary removal for posts
       // Remove everything after common meta-commentary markers
       content = content.split(/\n\s*\(/)[0]; // Remove "(Note: ...)" style comments
       content = content.split(/\n\s*\*/)[0];  // Remove "*(...)" style comments
       content = content.split(/\(Note:/)[0];  // Remove inline notes
-      content = content.split(/\*\(Balanced/)[0]; // Remove specific pattern seen
+      content = content.split(/\(Character count:/)[0]; // Remove character count analysis
+      content = content.split(/\(Emojis used:/)[0]; // Remove emoji analysis
+      content = content.split(/\(Approach:/)[0]; // Remove approach analysis
+      content = content.split(/\(Style note:/)[0]; // Remove style notes
+      content = content.split(/\*\(Balanced/)[0]; // Remove specific patterns
       content = content.split(/\*\(Casual/)[0];
       content = content.split(/\*\(Keeps/)[0];
+      content = content.split(/\*\(Style/)[0];
+      // Remove trailing analysis markers
+      content = content.replace(/\s*\(Tagged coworkers.*?\)$/i, ''); // Remove tagging thoughts
+      content = content.replace(/\s*\*\s*$/g, ''); // Remove trailing asterisks
       content = content.trim();
       
       // Track mentions for stats
