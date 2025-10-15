@@ -6999,6 +6999,7 @@ Generate ONLY the message, no quotes, no explanation:`;
         const commentId = btn.dataset.commentId;
         const authorName = btn.dataset.authorName;
         const authorId = btn.dataset.authorId;
+        const authorUsername = btn.dataset.authorUsername; // CRITICAL FIX: Get actual username
         
         const input = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
         const replyIndicator = document.querySelector(`.reply-indicator[data-post-id="${postId}"]`);
@@ -7009,9 +7010,12 @@ Generate ONLY the message, no quotes, no explanation:`;
           replyIndicator.style.display = 'block';
           replyIndicator.setAttribute('data-reply-to-id', commentId);
           
-          // Pre-fill mention if not already there
-          if (!input.value.includes(`@${authorName}`) && authorId !== 'player') {
-            input.value = `@${authorName} `;
+          // CRITICAL FIX: Use username, not display name for @mentions
+          if (authorId !== 'player' && authorUsername) {
+            // Pre-fill with proper @username
+            if (!input.value.includes(`@${authorUsername}`)) {
+              input.value = `@${authorUsername} `;
+            }
           }
           
           // Focus input
@@ -8600,6 +8604,7 @@ Generate ONLY the message, no quotes, no explanation:`;
   
   /**
    * Request a smart feed update (debounced and context-aware)
+   * FOR COMMENTS: Use immediate updates instead via updateCommentsSection directly
    */
   function requestSmartFeedUpdate(postId = null) {
     // If specific post needs update, track it
@@ -8612,10 +8617,11 @@ Generate ONLY the message, no quotes, no explanation:`;
       clearTimeout(virtualScrollState.updateThrottle);
     }
     
-    // Debounce updates to avoid jankiness
+    // SIMPLIFIED: Just do immediate updates for posts
+    // The debounce was causing comment visibility issues
     virtualScrollState.updateThrottle = setTimeout(() => {
       performSmartFeedUpdate();
-    }, 100); // 100ms debounce
+    }, 50); // Reduced from 100ms to 50ms
   }
   
   /**
@@ -8625,17 +8631,12 @@ Generate ONLY the message, no quotes, no explanation:`;
     const feedContent = $('socialFeedContent');
     if (!feedContent) return;
     
-    const isScrolledDown = feedContent.scrollTop > 100;
-    const isFocused = document.activeElement && 
-                     (document.activeElement.tagName === 'INPUT' || 
-                      document.activeElement.tagName === 'TEXTAREA');
-    
-    // If user is typing or reading, use gentle update
-    if (isFocused || isScrolledDown) {
-      performGentleUpdate();
-    } else {
-      // User is at top and not focused on input - safe to do full render
-      renderSocialFeed(false);
+    // SIMPLIFIED: Always update posts in place, skip gentle/full render logic
+    // The comment immediate updates handle the UI, this is just backup
+    if (virtualScrollState.pendingUpdates.size > 0) {
+      virtualScrollState.pendingUpdates.forEach(postId => {
+        updatePostInPlace(postId);
+      });
     }
     
     // Clear pending updates
@@ -8644,6 +8645,7 @@ Generate ONLY the message, no quotes, no explanation:`;
   
   /**
    * Gentle update: only update specific elements without full re-render
+   * DEPRECATED: Keeping for compatibility but not used for comments anymore
    */
   function performGentleUpdate() {
     const feedContent = $('socialFeedContent');
@@ -8737,10 +8739,18 @@ Generate ONLY the message, no quotes, no explanation:`;
    */
   function updatePostInPlace(postId) {
     const postEl = document.querySelector(`[data-post-id="${postId}"]`);
-    if (!postEl) return;
+    if (!postEl) {
+      console.warn(`[Feed Update] Could not find post element for ID: ${postId}`);
+      return;
+    }
     
     const post = gameState.socialNetwork.posts.find(p => p.id === postId);
-    if (!post) return;
+    if (!post) {
+      console.warn(`[Feed Update] Could not find post data for ID: ${postId}`);
+      return;
+    }
+    
+    console.log(`[Feed Update] Updating post ${postId} (${post.comments.length} comments)`);
     
     // Update like count
     const likeBtn = postEl.querySelector('.like-count');
@@ -8756,10 +8766,15 @@ Generate ONLY the message, no quotes, no explanation:`;
       commentCount.innerHTML = `💬 ${post.comments.length}`;
     }
     
-    // Update comments section if expanded
+    // AGGRESSIVE FIX: ALWAYS update comments section if it exists
+    // No more checking visibility - just update it
     const commentsSection = postEl.querySelector('.post-comments-section');
-    if (commentsSection && commentsSection.style.display !== 'none') {
+    if (commentsSection) {
+      console.log(`[Feed Update] FORCE updating comments for post ${postId} (${post.comments.length} comments)`);
       updateCommentsSection(postEl, post);
+      
+      // Clear any refresh flags
+      delete commentsSection.dataset.needsRefresh;
     }
   }
   
@@ -9277,7 +9292,7 @@ Generate ONLY the message, no quotes, no explanation:`;
           </div>
           ${replyIndicator}
           <p style="color:#e7e9ea; margin:0 0 8px 0; font-size:0.9rem; line-height:1.5; word-wrap:break-word;">${linkifyMentions(comment.content)}</p>
-          <button class="reply-to-comment-btn" data-post-id="${postId}" data-comment-id="${comment.id}" data-author-name="${comment.authorName}" data-author-id="${comment.authorId}" style="background:transparent; border:none; color:#8899a6; font-size:0.82rem; cursor:pointer; padding:2px 8px; transition:color 0.2s;" onmouseenter="this.style.color='#00d4ff'" onmouseleave="this.style.color='#8899a6'">
+          <button class="reply-to-comment-btn" data-post-id="${postId}" data-comment-id="${comment.id}" data-author-name="${comment.authorName}" data-author-id="${comment.authorId}" data-author-username="${isPlayer ? 'TheBoss' : (author.social?.username || '')}" style="background:transparent; border:none; color:#8899a6; font-size:0.82rem; cursor:pointer; padding:2px 8px; transition:color 0.2s;" onmouseenter="this.style.color='#00d4ff'" onmouseleave="this.style.color='#8899a6'">
             ↪ Reply
           </button>
         </div>
@@ -9732,8 +9747,20 @@ Generate ONLY the message, no quotes, no explanation:`;
     const commentsSection = document.querySelector(`.post-comments[data-post-id="${postId}"]`);
     if (!commentsSection) return;
     
-    if (commentsSection.style.display === 'none') {
+    const isCurrentlyHidden = commentsSection.style.display === 'none';
+    
+    if (isCurrentlyHidden) {
       commentsSection.style.display = 'block';
+      
+      // Force immediate update when expanding to ensure fresh content
+      const post = gameState.socialNetwork.posts.find(p => p.id === postId);
+      if (post) {
+        const postEl = document.querySelector(`[data-post-id="${postId}"]`);
+        if (postEl) {
+          console.log(`[Comments] Force updating on expand for post ${postId}`);
+          updateCommentsSection(postEl, post);
+        }
+      }
     } else {
       commentsSection.style.display = 'none';
     }
@@ -9765,12 +9792,14 @@ Generate ONLY the message, no quotes, no explanation:`;
     
     post.comments.push(comment);
     
+    console.log(`[Comments] Player added comment to post ${postId}. Total comments: ${post.comments.length}`);
+    
     // Track mentions
     mentionedEmployeeIds.forEach(employeeId => {
       trackPlayerMention(employeeId);
     });
     
-    // Clear input, hide reply indicator, and refresh
+    // Clear input, hide reply indicator
     const input = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
     if (input) input.value = '';
     
@@ -9780,14 +9809,27 @@ Generate ONLY the message, no quotes, no explanation:`;
       replyIndicator.removeAttribute('data-reply-to-id');
     }
     
-    // Smart update: only update this specific post's comments
-    requestSmartFeedUpdate(postId);
+    // CRITICAL FIX: Immediate update of comments section
+    const postEl = document.querySelector(`[data-post-id="${postId}"]`);
+    const commentsSection = document.querySelector(`.post-comments[data-post-id="${postId}"]`);
     
-    // Keep comments open
-    setTimeout(() => {
-      const commentsSection = document.querySelector(`.post-comments[data-post-id="${postId}"]`);
-      if (commentsSection) commentsSection.style.display = 'block';
-    }, 150);
+    if (postEl && commentsSection) {
+      console.log(`[Comments] Immediately updating comments section for post ${postId}`);
+      
+      // Ensure comments section is visible
+      commentsSection.style.display = 'block';
+      
+      // Update comments content immediately
+      updateCommentsSection(postEl, post);
+      
+      // Clear any pending refresh flags
+      delete commentsSection.dataset.needsRefresh;
+    } else {
+      console.warn(`[Comments] Could not find post element or comments section for immediate update`);
+    }
+    
+    // Also request smart feed update as backup
+    requestSmartFeedUpdate(postId);
     
     // Trigger responses from mentioned NPCs (high likelihood)
     if (mentionedEmployeeIds.length > 0) {
@@ -9913,18 +9955,33 @@ Just write the reply comment directly:`;
       
       post.comments.push(npcComment);
       
+      console.log(`[Comments] ${npc.name} replied to player comment on post ${post.id}. Total comments: ${post.comments.length}`);
+      
       // 🌐 Evaluate NPC's reaction to player's comment on their post
       evaluateNPCReactionToPost(npc, gameState.player, post, reply);
       
       // Store in memory
       remember(npc, `Boss commented "${playerComment.content}" on my post, I replied "${reply}"`, 'interaction', 2);
       
-      // Smart update: only update this post
-      requestSmartFeedUpdate(post.id);
-      
-      // Keep comments section open for this post
+      // CRITICAL FIX: Immediate update of comments section
+      const postEl = document.querySelector(`[data-post-id="${post.id}"]`);
       const commentsSection = document.querySelector(`.post-comments[data-post-id="${post.id}"]`);
-      if (commentsSection) commentsSection.style.display = 'block';
+      
+      if (postEl && commentsSection) {
+        console.log(`[Comments] Immediately updating comments section after NPC reply`);
+        
+        // Ensure comments section is visible
+        commentsSection.style.display = 'block';
+        
+        // Update comments content immediately
+        updateCommentsSection(postEl, post);
+        
+        // Clear any pending refresh flags
+        delete commentsSection.dataset.needsRefresh;
+      }
+      
+      // Also request smart feed update as backup
+      requestSmartFeedUpdate(post.id);
       
     } catch (error) {
       console.error('Error generating NPC comment reply:', error);
@@ -10111,29 +10168,29 @@ Just write the reply comment directly:`;
           
           post.comments.push(npcComment);
           
+          console.log(`[Social] ✓ ${npc.name} responded to mention: "${response}"`);
+          console.log(`[Social] New comment count: ${post.comments.length}`);
+          
           // 🌐 Evaluate relationship between mentioned NPC and the commenter who mentioned them
           const originalCommenter = gameState.employees.find(e => e.id === comment.authorId);
           if (originalCommenter && originalCommenter.id !== npc.id) {
             evaluateNPCReactionToPost(npc, originalCommenter, post, response);
           }
           
-          console.log(`[Social] ✓ ${npc.name} responded to mention: "${response}"`);
-          console.log(`[Social] New comment count: ${post.comments.length}`);
+          // CRITICAL FIX: Immediate update of comments section
+          const postEl = document.querySelector(`[data-post-id="${post.id}"]`);
+          const commentsSection = document.querySelector(`.post-comments[data-post-id="${post.id}"]`);
           
-          // Smart update: only update this post
+          if (postEl && commentsSection) {
+            console.log(`[Social] Immediately updating comments section after mention response`);
+            commentsSection.style.display = 'block';
+            updateCommentsSection(postEl, post);
+            delete commentsSection.dataset.needsRefresh;
+          }
+          
+          // Also request smart feed update as backup
           console.log(`[Social] Requesting smart update for post ${post.id}...`);
           requestSmartFeedUpdate(post.id);
-          
-          // Keep comments open
-          setTimeout(() => {
-            const commentsSection = document.querySelector(`.post-comments[data-post-id="${post.id}"]`);
-            if (commentsSection) {
-              console.log(`[Social] Keeping comments section open for post ${post.id}`);
-              commentsSection.style.display = 'block';
-            } else {
-              console.log(`[Social] ⚠ Could not find comments section for post ${post.id}`);
-            }
-          }, 150);
           
           // CHAIN REACTION: Trigger potential follow-up responses from other NPCs
           setTimeout(async () => {
@@ -10392,14 +10449,19 @@ Just write the comment:`;
             evaluateNPCReactionToPost(npc, postAuthor, post, response);
           }
           
-          // Smart update: only update this post
-          requestSmartFeedUpdate(post.id);
+          // CRITICAL FIX: Immediate update of comments section
+          const postEl = document.querySelector(`[data-post-id="${post.id}"]`);
+          const commentsSection = document.querySelector(`.post-comments[data-post-id="${post.id}"]`);
           
-          // Keep comments open
-          setTimeout(() => {
-            const commentsSection = document.querySelector(`.post-comments[data-post-id="${post.id}"]`);
-            if (commentsSection) commentsSection.style.display = 'block';
-          }, 150);
+          if (postEl && commentsSection) {
+            console.log(`[Chain] Immediately updating comments section after chain reaction`);
+            commentsSection.style.display = 'block';
+            updateCommentsSection(postEl, post);
+            delete commentsSection.dataset.needsRefresh;
+          }
+          
+          // Also request smart feed update as backup
+          requestSmartFeedUpdate(post.id);
           
           // RECURSIVE CHAIN: 30% chance this comment triggers another response
           if (Math.random() < 0.3 && post.comments.length < 10) { // Cap at 10 comments to prevent infinite loops
@@ -16608,6 +16670,12 @@ Write ONLY the social media post text:`;
       let content = await generateText(prompt);
       
       // AGGRESSIVE meta-commentary removal for posts
+      // Remove bold name headers (e.g., "**Beverly Elliott**" or "**Sophia Harrell**")
+      content = content.replace(/^\*\*[^*]+\*\*\s*/g, '');
+      
+      // Remove "Posted:" prefixes (e.g., "Posted: 3 hours ago")
+      content = content.replace(/^Posted:\s*[^\n]+\n\s*/i, '');
+      
       // Remove everything after common meta-commentary markers
       content = content.split(/\n\s*\(/)[0]; // Remove "(Note: ...)" style comments
       content = content.split(/\n\s*\*/)[0];  // Remove "*(...)" style comments
@@ -17799,9 +17867,24 @@ Write ONLY the social media post text:`;
       
       // 🌐 Evaluate relationship between commenter and post author
       const postAuthor = gameState.employees.find(e => e.id === post.authorId);
+      
+      console.log(`[Autonomous] ${employee.name} commented on ${post.isPlayerPost ? 'player' : postAuthor?.name}'s post`);
+      
       if (postAuthor && postAuthor.id !== employee.id) {
         await evaluateNPCReactionToPost(employee, postAuthor, post, commentText);
       }
+      
+      // AGGRESSIVE FIX: Always update immediately, no visibility checks
+      const postEl = document.querySelector(`[data-post-id="${post.id}"]`);
+      const commentsSection = document.querySelector(`.post-comments[data-post-id="${post.id}"]`);
+      
+      if (postEl && commentsSection) {
+        console.log(`[Autonomous] FORCE updating comments for post ${post.id}`);
+        updateCommentsSection(postEl, post);
+      }
+      
+      // Request smart feed update as backup
+      requestSmartFeedUpdate(post.id);
     }
   }
   
@@ -18236,12 +18319,24 @@ Write ONLY the comment, no quotation marks:`;
     
     // AGGRESSIVE meta-commentary removal
     comment = comment.replace(/^["']|["']$/g, ''); // Remove quotes
+    
+    // Remove "Name:" prefix (e.g., "Laura Rodriguez: Your plant's living...")
+    comment = comment.replace(/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*:\s*/g, '');
+    
+    // Remove parenthetical meta-commentary patterns
     comment = comment.split(/\n\s*\(/)[0]; // Remove "(Note: ...)" style
     comment = comment.split(/\n\s*\*/)[0]; // Remove "*(Word count...)" style
     comment = comment.split(/\(Note:/)[0]; // Remove inline notes
     comment = comment.split(/\*\(Word count/i)[0]; // Remove word count
     comment = comment.split(/\*\*Relationship Impact/i)[0]; // Remove relationship analysis
     comment = comment.split(/\(Relationship/i)[0]; // Remove relationship notes
+    
+    // CRITICAL FIX: Remove standalone parenthetical commentary at end
+    comment = comment.replace(/\s*\([^)]*consequence[^)]*\)\s*$/i, ''); // "(Relationship consequence: ...)"
+    comment = comment.replace(/\s*\([^)]*sparking[^)]*\)\s*$/i, ''); // Other meta analysis
+    comment = comment.replace(/\s*\([^)]*tension[^)]*\)\s*$/i, ''); // Tension notes
+    comment = comment.replace(/\s*\([^)]*playful[^)]*\)\s*$/i, ''); // Playful notes
+    
     comment = comment.replace(/\s*\*\s*$/g, ''); // Remove trailing asterisks
     comment = comment.trim();
     
