@@ -9913,6 +9913,9 @@ Just write the reply comment directly:`;
       
       post.comments.push(npcComment);
       
+      // 🌐 Evaluate NPC's reaction to player's comment on their post
+      evaluateNPCReactionToPost(npc, gameState.player, post, reply);
+      
       // Store in memory
       remember(npc, `Boss commented "${playerComment.content}" on my post, I replied "${reply}"`, 'interaction', 2);
       
@@ -10107,6 +10110,12 @@ Just write the reply comment directly:`;
           console.log(`[Social] Adding comment to post (current comment count: ${post.comments.length})`);
           
           post.comments.push(npcComment);
+          
+          // 🌐 Evaluate relationship between mentioned NPC and the commenter who mentioned them
+          const originalCommenter = gameState.employees.find(e => e.id === comment.authorId);
+          if (originalCommenter && originalCommenter.id !== npc.id) {
+            evaluateNPCReactionToPost(npc, originalCommenter, post, response);
+          }
           
           console.log(`[Social] ✓ ${npc.name} responded to mention: "${response}"`);
           console.log(`[Social] New comment count: ${post.comments.length}`);
@@ -10371,6 +10380,17 @@ Just write the comment:`;
           
           post.comments.push(chainComment);
           console.log(`[Chain] ✓ ${npc.name} added to thread: "${response}"`);
+          
+          // 🌐 Evaluate relationship between chain commenter and original commenter
+          if (triggerNPC && triggerNPC.id !== npc.id) {
+            evaluateNPCCommentInteraction(npc, triggerNPC, post, triggerComment.content, response);
+          }
+          
+          // 🌐 Also evaluate chain commenter's reaction to the post author
+          const postAuthor = gameState.employees.find(e => e.id === post.authorId);
+          if (postAuthor && postAuthor.id !== npc.id) {
+            evaluateNPCReactionToPost(npc, postAuthor, post, response);
+          }
           
           // Smart update: only update this post
           requestSmartFeedUpdate(post.id);
@@ -14449,6 +14469,259 @@ Numbers only:`;
   }
   
   /**
+   * ═══════════════════════════════════════════════════════════════════
+   * 🌐 SOCIAL DYNAMICS SYSTEM: NPC-to-NPC Relationship Evolution
+   * ═══════════════════════════════════════════════════════════════════
+   * Evaluates how NPCs feel about each other based on social interactions
+   * Posts, comments, likes, and tags all influence relationships
+   */
+  
+  /**
+   * Evaluate NPC reaction to another NPC's post
+   * Called when NPC views/comments on another NPC's post
+   */
+  async function evaluateNPCReactionToPost(viewer, postAuthor, post, comment = null) {
+    if (!viewer || !postAuthor || viewer.id === postAuthor.id) return;
+    
+    // Get or initialize relationship
+    if (!viewer.relationships) viewer.relationships = {};
+    if (!viewer.relationships[postAuthor.id]) {
+      viewer.relationships[postAuthor.id] = {
+        strength: 50,
+        type: 'colleague',
+        history: []
+      };
+    }
+    
+    const relationship = viewer.relationships[postAuthor.id];
+    const currentStrength = relationship.strength || 50;
+    
+    // Build context
+    const postType = post.type || 'text';
+    const explicitLevel = post.explicitLevel || 0;
+    const hasComment = !!comment;
+    
+    // Get viewer's personality to determine reaction style
+    const viewerPersonality = viewer.personality || {};
+    const viewerFlirty = viewerPersonality.flirty || 50;
+    const viewerProfessional = viewerPersonality.professional || 50;
+    const viewerHumor = viewerPersonality.humor || 50;
+    
+    const evaluationPrompt = `You are evaluating how ${viewer.name} feels about ${postAuthor.name} after seeing their social media post.
+
+CURRENT RELATIONSHIP:
+- Strength: ${currentStrength}/100
+- Type: ${relationship.type}
+
+${viewer.name}'S PERSONALITY:
+- Flirty: ${viewerFlirty}/100
+- Professional: ${viewerProfessional}/100
+- Humor: ${viewerHumor}/100
+
+THE POST:
+Type: ${postType}
+${explicitLevel > 0 ? `Explicit Level: ${explicitLevel}/4` : ''}
+Content: "${post.content || ''}"
+${post.imageAlt ? `Image: ${post.imageAlt}` : ''}
+
+${hasComment ? `${viewer.name}'S COMMENT:\n"${comment}"` : `${viewer.name} viewed this post but didn't comment.`}
+
+EVALUATION GUIDELINES:
+**Positive Reactions** (+1 to +5):
+- Funny/relatable posts: +2 to +4 (especially if viewer has high humor)
+- Impressive achievements: +3 to +5
+- Shared interests/hobbies: +3 to +4
+- Supportive/kind posts: +2 to +3
+- Flirty posts (if viewer is flirty): +2 to +4
+- Made viewer laugh or feel good: +3 to +5
+
+**Negative Reactions** (-1 to -5):
+- Offensive/insensitive content: -3 to -5
+- Showing off/bragging (if viewer is insecure): -2 to -4
+- Inappropriate content (if viewer is very professional): -2 to -3
+- Passive-aggressive or shady: -3 to -4
+- Attacking someone viewer cares about: -4 to -5
+
+**Neutral** (0):
+- Boring/mundane content
+- Don't care about topic
+- Already knew this information
+
+**Amplifiers**:
+- If viewer COMMENTED enthusiastically: +50% to change
+- If viewer COMMENTED supportively: +30% to change
+- If viewer COMMENTED negatively: amplify negative change by 50%
+- If post MENTIONS viewer: +50% to change (showing they think of viewer)
+
+Consider: Would ${viewer.name} like this? Does it align with their values? Does it make them feel closer or more distant?
+
+Reply with ONE number from -5 to +5 representing relationship strength change.
+JUST the number:`;
+
+    try {
+      const raw = await generateText(evaluationPrompt, { temperature: 0.7, max_tokens: 10 });
+      const change = parseFloat(raw.trim());
+      
+      if (!isNaN(change) && change >= -5 && change <= 5) {
+        const oldStrength = relationship.strength;
+        relationship.strength = Math.max(0, Math.min(100, oldStrength + change));
+        
+        // Update relationship type based on strength
+        if (relationship.strength > 80) relationship.type = 'best_friend';
+        else if (relationship.strength > 65) relationship.type = 'friend';
+        else if (relationship.strength > 35) relationship.type = 'colleague';
+        else if (relationship.strength > 15) relationship.type = 'acquaintance';
+        else relationship.type = 'distant';
+        
+        if (change !== 0) {
+          console.log(`[Social Dynamics] ${viewer.name} → ${postAuthor.name}: ${change > 0 ? '+' : ''}${change} (${oldStrength} → ${relationship.strength}, ${relationship.type})`);
+          
+          // Add to history
+          relationship.history.push({
+            timestamp: Date.now(),
+            type: 'post_reaction',
+            description: hasComment ? `Commented on ${postAuthor.name}'s ${postType} post` : `Viewed ${postAuthor.name}'s ${postType} post`,
+            change: change
+          });
+          
+          // Keep history reasonable
+          if (relationship.history.length > 20) {
+            relationship.history = relationship.history.slice(-20);
+          }
+          
+          // Create gossip if relationship changed significantly
+          if (Math.abs(change) >= 3) {
+            createGossipFromSocialInteraction(viewer, postAuthor, post, comment, change);
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`[Social Dynamics] Error evaluating ${viewer.name}'s reaction:`, error);
+    }
+  }
+  
+  /**
+   * Evaluate NPC-to-NPC comment interaction
+   * Called when one NPC comments on another NPC's comment
+   */
+  async function evaluateNPCCommentInteraction(commenter, originalCommenter, post, comment, replyComment) {
+    if (!commenter || !originalCommenter || commenter.id === originalCommenter.id) return;
+    
+    // Initialize relationships
+    if (!commenter.relationships) commenter.relationships = {};
+    if (!commenter.relationships[originalCommenter.id]) {
+      commenter.relationships[originalCommenter.id] = {
+        strength: 50,
+        type: 'colleague',
+        history: []
+      };
+    }
+    
+    const relationship = commenter.relationships[originalCommenter.id];
+    const currentStrength = relationship.strength || 50;
+    
+    const evaluationPrompt = `Evaluate how ${commenter.name} and ${originalCommenter.name}'s relationship changed after this comment exchange.
+
+CURRENT RELATIONSHIP: ${currentStrength}/100 (${relationship.type})
+
+${originalCommenter.name}'S COMMENT:
+"${comment}"
+
+${commenter.name}'S REPLY:
+"${replyComment}"
+
+Rate the interaction from -5 to +5:
++5: Amazing connection, bonding moment, inside joke, supportive
++3: Positive, friendly, helpful, agreeable
++1: Slightly positive, polite acknowledgment
+0: Neutral, no real impact
+-1: Slightly annoying or dismissive
+-3: Disagreement, passive-aggressive, snarky
+-5: Hostile, attacking, relationship-damaging
+
+Consider tone, whether they're agreeing/disagreeing, if there's humor/warmth/conflict.
+
+JUST the number:`;
+
+    try {
+      const raw = await generateText(evaluationPrompt, { temperature: 0.7, max_tokens: 10 });
+      const change = parseFloat(raw.trim());
+      
+      if (!isNaN(change) && change >= -5 && change <= 5) {
+        const oldStrength = relationship.strength;
+        relationship.strength = Math.max(0, Math.min(100, oldStrength + change));
+        
+        // Update type
+        if (relationship.strength > 80) relationship.type = 'best_friend';
+        else if (relationship.strength > 65) relationship.type = 'friend';
+        else if (relationship.strength > 35) relationship.type = 'colleague';
+        else relationship.type = 'distant';
+        
+        if (change !== 0) {
+          console.log(`[Comment Dynamics] ${commenter.name} ↔ ${originalCommenter.name}: ${change > 0 ? '+' : ''}${change} (${oldStrength} → ${relationship.strength})`);
+          
+          relationship.history.push({
+            timestamp: Date.now(),
+            type: 'comment_exchange',
+            description: `Replied to ${originalCommenter.name}'s comment`,
+            change: change
+          });
+          
+          if (relationship.history.length > 20) {
+            relationship.history = relationship.history.slice(-20);
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`[Comment Dynamics] Error:`, error);
+    }
+  }
+  
+  /**
+   * Create gossip from notable social interactions
+   */
+  function createGossipFromSocialInteraction(viewer, postAuthor, post, comment, relationshipChange) {
+    // Only create gossip for significant changes or explicit content
+    if (Math.abs(relationshipChange) < 3 && post.explicitLevel < 2) return;
+    
+    let gossipContent = '';
+    
+    if (relationshipChange >= 4) {
+      // Positive bonding
+      gossipContent = `${viewer.name} and ${postAuthor.name} seem to be getting really close on social media`;
+    } else if (relationshipChange <= -4) {
+      // Drama/conflict
+      gossipContent = `${viewer.name} and ${postAuthor.name} had tension on social media`;
+    } else if (post.explicitLevel >= 3) {
+      // Explicit content reaction
+      gossipContent = `${postAuthor.name} posted something VERY explicit and ${viewer.name} ${comment ? 'commented on it' : 'saw it'}`;
+    }
+    
+    if (gossipContent) {
+      // Add to gossip engine for other NPCs to discover
+      if (!gameState.activeGossip) gameState.activeGossip = [];
+      
+      gameState.activeGossip.push({
+        id: `gossip_${Date.now()}_${Math.random()}`,
+        subjectId: postAuthor.id,
+        targetId: viewer.id,
+        content: gossipContent,
+        juiciness: Math.abs(relationshipChange) + post.explicitLevel,
+        timestamp: Date.now(),
+        accuracy: 100, // Direct observation
+        knownBy: [viewer.id] // Viewer knows it firsthand
+      });
+      
+      // Keep gossip list manageable
+      if (gameState.activeGossip.length > 50) {
+        gameState.activeGossip = gameState.activeGossip.slice(-50);
+      }
+      
+      console.log(`[Gossip Created] ${gossipContent} (juiciness: ${Math.abs(relationshipChange) + post.explicitLevel})`);
+    }
+  }
+  
+  /**
    * Check if a conversation interaction is juicy enough to create gossip
    */
   function checkForGossipWorthyInteraction(emp, playerMsg, npcMsg) {
@@ -15532,8 +15805,8 @@ Numbers only:`;
     const now = Date.now();
     const timeSinceLastPost = now - (gameState.socialNetwork.lastPostGeneration || 0);
     
-    // Base interval: 1.5-4.5 minutes between posts (randomized for realism)
-    const baseInterval = 90000 + Math.random() * 150000; // 1.5-4.5 min
+    // Base interval: 2-6 minutes between posts (reduced frequency to focus on comments)
+    const baseInterval = 120000 + Math.random() * 240000; // 2-6 min (was 1.5-4.5 min)
     
     if (timeSinceLastPost < baseInterval) return;
     
@@ -17524,9 +17797,10 @@ Write ONLY the social media post text:`;
       
       post.comments.push(comment);
       
-      // Update relationship (commenting increases affection slightly)
-      if (relationship) {
-        relationship.strength = Math.min(100, relationship.strength + 2);
+      // 🌐 Evaluate relationship between commenter and post author
+      const postAuthor = gameState.employees.find(e => e.id === post.authorId);
+      if (postAuthor && postAuthor.id !== employee.id) {
+        await evaluateNPCReactionToPost(employee, postAuthor, post, commentText);
       }
     }
   }
@@ -18376,9 +18650,11 @@ Post:`;
         if (Math.random() < likeProbability) {
           post.likes.push(employee.id);
           
-          // Update relationship (liking increases affection slightly)
-          if (relationship) {
-            relationship.strength = Math.min(100, relationship.strength + 1);
+          // 🌐 Evaluate relationship impact from liking (smaller than comments)
+          const postAuthor = gameState.employees.find(e => e.id === post.authorId);
+          if (postAuthor && postAuthor.id !== employee.id) {
+            // Viewing and liking without commenting = smaller relationship impact
+            await evaluateNPCReactionToPost(employee, postAuthor, post, null);
           }
         }
       }
