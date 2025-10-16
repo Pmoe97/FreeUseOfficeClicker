@@ -439,6 +439,29 @@
         </div>
       </div>
     </div>
+    
+    <!-- GENDER DIVERSITY SECTION -->
+    <div style="margin-top:30px;">
+      <h3>Gender Diversity Options</h3>
+      <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">
+        Control the gender distribution of new hires. All employees will still be female by default (100%), but you can adjust these sliders to introduce variety.
+        Sliders are automatically proportional - they will always add up to 100%.
+      </p>
+      
+      <div style="background:#16213e; border-radius:10px; padding:20px; margin-top:10px;">
+        <button id="genderOptionsBtn" style="width:100%; padding:15px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none; border-radius:8px; color:white; font-size:1.1rem; font-weight:700; cursor:pointer; box-shadow:0 4px 15px rgba(102,126,234,0.4); transition:transform 0.2s; margin-bottom:15px;">
+          ⚧️ Configure Gender Options
+        </button>
+        
+        <!-- Current Distribution Display -->
+        <div style="background:#0f3460; padding:15px; border-radius:6px;">
+          <div style="margin-bottom:8px; color:#aaa; font-size:0.9rem; font-weight:600;">Current Distribution:</div>
+          <div id="genderDistributionDisplay" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px;">
+            <!-- Will be populated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   
   <!-- Invest Tab -->
@@ -1135,6 +1158,122 @@
       </button>
       <button id="savePlayerProfile" style="padding:12px 24px; background:#e94560; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; font-size:1rem;">
         💾 Save Profile
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Gender Options Modal -->
+<div id="genderOptionsModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000000; justify-content:center; align-items:center; overflow-y:auto; padding:20px;">
+  <div style="background:#16213e; width:90%; max-width:800px; max-height:90vh; overflow-y:auto; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); padding:30px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+      <h2 style="margin:0; color:#00d4ff; display:flex; align-items:center; gap:10px;">
+        <span style="font-size:1.8rem;">⚧️</span> Gender Diversity Options
+      </h2>
+      <button id="closeGenderOptionsModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <p style="color:#aaa; margin-bottom:25px; line-height:1.6;">
+      Control the gender distribution of new hires. By default, all employees are female (100%). 
+      Adjust these sliders to introduce more diversity. <strong>The sliders are proportional and will always total 100%.</strong>
+    </p>
+    
+    <!-- Gender Sliders -->
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      <!-- Female Slider -->
+      <div style="background:#0f3460; padding:20px; border-radius:10px; border-left:4px solid #ff6b9d;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <h3 style="margin:0; color:#ff6b9d; font-size:1.2rem;">👩 Female</h3>
+            <p style="margin:5px 0 0 0; color:#aaa; font-size:0.85rem;">Standard female employees</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:2rem; font-weight:700; color:#ff6b9d;" id="femalePercentage">100</div>
+            <div style="color:#aaa; font-size:0.9rem;">%</div>
+          </div>
+        </div>
+        <input type="range" id="femaleSlider" min="0" max="100" value="100" style="width:100%;">
+      </div>
+      
+      <!-- Male Slider -->
+      <div style="background:#0f3460; padding:20px; border-radius:10px; border-left:4px solid #00d4ff;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <h3 style="margin:0; color:#00d4ff; font-size:1.2rem;">👨 Male</h3>
+            <p style="margin:5px 0 0 0; color:#aaa; font-size:0.85rem;">Standard male employees</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:2rem; font-weight:700; color:#00d4ff;" id="malePercentage">0</div>
+            <div style="color:#aaa; font-size:0.9rem;">%</div>
+          </div>
+        </div>
+        <input type="range" id="maleSlider" min="0" max="100" value="0" style="width:100%;">
+      </div>
+      
+      <!-- Female Futa Slider -->
+      <div style="background:#0f3460; padding:20px; border-radius:10px; border-left:4px solid #c77dff;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <h3 style="margin:0; color:#c77dff; font-size:1.2rem;">👩‍🦰 Female Futa</h3>
+            <p style="margin:5px 0 0 0; color:#aaa; font-size:0.85rem;">Female with male genitalia (no transition)</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:2rem; font-weight:700; color:#c77dff;" id="femaleFutaPercentage">0</div>
+            <div style="color:#aaa; font-size:0.9rem;">%</div>
+          </div>
+        </div>
+        <input type="range" id="femaleFutaSlider" min="0" max="100" value="0" style="width:100%;">
+      </div>
+      
+      <!-- Trans Man Slider -->
+      <div style="background:#0f3460; padding:20px; border-radius:10px; border-left:4px solid #4ecca3;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <h3 style="margin:0; color:#4ecca3; font-size:1.2rem;">⚧️ Trans Man</h3>
+            <p style="margin:5px 0 0 0; color:#aaa; font-size:0.85rem;">Female to male (masculine with vagina)</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:2rem; font-weight:700; color:#4ecca3;" id="transManPercentage">0</div>
+            <div style="color:#aaa; font-size:0.9rem;">%</div>
+          </div>
+        </div>
+        <input type="range" id="transManSlider" min="0" max="100" value="0" style="width:100%;">
+      </div>
+      
+      <!-- Trans Woman Slider -->
+      <div style="background:#0f3460; padding:20px; border-radius:10px; border-left:4px solid #ffd700;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <h3 style="margin:0; color:#ffd700; font-size:1.2rem;">⚧️ Trans Woman</h3>
+            <p style="margin:5px 0 0 0; color:#aaa; font-size:0.85rem;">Male to female (feminine with penis)</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:2rem; font-weight:700; color:#ffd700;" id="transWomanPercentage">0</div>
+            <div style="color:#aaa; font-size:0.9rem;">%</div>
+          </div>
+        </div>
+        <input type="range" id="transWomanSlider" min="0" max="100" value="0" style="width:100%;">
+      </div>
+    </div>
+    
+    <!-- Total Display -->
+    <div style="margin-top:25px; padding:15px; background:#0f3460; border-radius:10px; text-align:center;">
+      <div style="color:#aaa; font-size:0.9rem; margin-bottom:5px;">Total Distribution</div>
+      <div style="font-size:1.8rem; font-weight:700;" id="genderTotalDisplay">
+        <span id="genderTotalValue" style="color:#00d4ff;">100</span>%
+      </div>
+      <div id="genderWarning" style="display:none; color:#e94560; font-size:0.9rem; margin-top:5px;">
+        ⚠️ Total must equal 100%
+      </div>
+    </div>
+    
+    <!-- Save Button -->
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:25px;">
+      <button id="cancelGenderOptions" style="padding:12px 24px; background:#0f3460; border:none; border-radius:8px; color:#aaa; cursor:pointer; font-size:1rem;">
+        Cancel
+      </button>
+      <button id="saveGenderOptions" style="padding:12px 24px; background:#e94560; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; font-size:1rem;">
+        💾 Save Settings
       </button>
     </div>
   </div>
@@ -3010,6 +3149,15 @@
       personality: ''
     },
     
+    // GENDER DIVERSITY SETTINGS
+    genderSettings: {
+      female: 100,        // Default: 100% female
+      male: 0,
+      femaleFuta: 0,
+      transMan: 0,
+      transWoman: 0
+    },
+    
     activeTab: 'dashboard',
     activeLocationId: 'garage', // Currently selected location subtab
     upgradeMultiplier: 1, // Bulk upgrade multiplier (1, 5, 10, 100, or 'max')
@@ -3499,11 +3647,19 @@
   /**
    * Generate detailed, unique physical appearance for an employee
    * This creates a consistent description used across ALL image generation
+   * @param {string} gender - The gender of the employee ('female', 'male', 'femaleFuta', 'transMan', 'transWoman')
    */
-  function generateDetailedPhysicalAppearance() {
+  function generateDetailedPhysicalAppearance(gender = 'female') {
     // Height & Build
     const heights = ['petite', 'short', 'average height', 'tall', 'very tall'];
-    const builds = ['slender', 'slim', 'athletic', 'average', 'curvy', 'voluptuous', 'muscular', 'toned'];
+    
+    // Gender-specific builds
+    let builds;
+    if (gender === 'male' || gender === 'transMan') {
+      builds = ['lean', 'slim', 'athletic', 'average', 'stocky', 'broad-shouldered', 'muscular', 'toned', 'sturdy', 'wiry'];
+    } else {
+      builds = ['slender', 'slim', 'athletic', 'average', 'curvy', 'voluptuous', 'muscular', 'toned'];
+    }
     
     // Hair - detailed
     const hairColors = [
@@ -3567,13 +3723,35 @@
       'matte', 'dewy', 'sun-kissed', 'naturally luminous'
     ];
     
-    // Body Features
-    const bodyShapes = [
-      'hourglass', 'pear-shaped', 'athletic', 'rectangular', 'inverted triangle',
-      'petite hourglass', 'curvy', 'willowy', 'statuesque'
-    ];
-    const breastSizes = ['small', 'modest', 'medium', 'full', 'large', 'very full'];
-    const buttSizes = ['small', 'modest', 'round', 'full', 'curvy', 'prominent'];
+    // Body Features - Gender-specific
+    let bodyShapes, chestDescriptor, chestSizes, buttSizes;
+    
+    if (gender === 'male') {
+      // Male body descriptions
+      bodyShapes = ['athletic', 'lean', 'muscular', 'stocky', 'broad-shouldered', 'rectangular', 'V-shaped', 'swimmer\'s build'];
+      chestDescriptor = 'chest'; // Male chest descriptor
+      chestSizes = ['flat', 'toned', 'well-defined', 'muscular', 'broad', 'barrel-chested'];
+      buttSizes = ['flat', 'toned', 'athletic', 'round', 'muscular'];
+    } else if (gender === 'transMan') {
+      // Trans man body descriptions (may have mixed characteristics)
+      bodyShapes = ['athletic', 'lean', 'rectangular', 'androgynous', 'toned', 'muscular'];
+      chestDescriptor = 'chest';
+      chestSizes = ['flat', 'compact', 'athletic', 'toned', 'bound', 'masculine'];
+      buttSizes = ['compact', 'toned', 'athletic', 'round', 'firm'];
+    } else if (gender === 'femaleFuta') {
+      // Female futa body descriptions (feminine with additional attributes)
+      bodyShapes = ['hourglass', 'athletic', 'curvy', 'statuesque', 'amazonian', 'voluptuous', 'toned'];
+      chestDescriptor = 'bust';
+      chestSizes = ['medium', 'full', 'large', 'very full', 'impressive', 'ample'];
+      buttSizes = ['round', 'full', 'curvy', 'prominent', 'shapely'];
+    } else {
+      // Female and trans woman body descriptions
+      bodyShapes = ['hourglass', 'pear-shaped', 'athletic', 'rectangular', 'inverted triangle', 'petite hourglass', 'curvy', 'willowy', 'statuesque'];
+      chestDescriptor = 'bust';
+      chestSizes = ['small', 'modest', 'medium', 'full', 'large', 'very full'];
+      buttSizes = ['small', 'modest', 'round', 'full', 'curvy', 'prominent'];
+    }
+    
     const legTypes = [
       'long legs', 'proportionate legs', 'toned legs', 'athletic legs',
       'shapely legs', 'slender legs', 'muscular legs'
@@ -3600,6 +3778,32 @@
     // Random selection helper
     const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
     
+    // Genital Information - Gender-specific
+    let genitalType, genitalSize, genitalCharacteristics;
+    
+    if (gender === 'male') {
+      genitalType = 'penis';
+      genitalSize = pick(['small', 'average', 'above average', 'large', 'very large']);
+      genitalCharacteristics = pick(['circumcised', 'uncircumcised', 'well-groomed', 'natural', 'trimmed']);
+    } else if (gender === 'transMan') {
+      genitalType = pick(['enlarged clitoris', 'post-op penis', 'pre-op anatomy']);
+      genitalSize = genitalType === 'post-op penis' ? pick(['average', 'above average', 'large']) : pick(['small', 'moderate', 'prominent']);
+      genitalCharacteristics = pick(['well-groomed', 'natural', 'trimmed', 'maintained']);
+    } else if (gender === 'femaleFuta') {
+      genitalType = 'penis and vagina';
+      genitalSize = pick(['average', 'above average', 'large', 'very large', 'impressive']);
+      genitalCharacteristics = pick(['circumcised', 'uncircumcised', 'well-groomed', 'natural', 'dual anatomy']);
+    } else if (gender === 'transWoman') {
+      genitalType = pick(['vagina (post-op)', 'penis (pre-op)', 'tucked']);
+      genitalSize = genitalType.includes('penis') ? pick(['small', 'average', 'above average']) : pick(['tight', 'normal', 'accommodating']);
+      genitalCharacteristics = pick(['well-groomed', 'laser-treated', 'smooth', 'maintained', 'natural']);
+    } else {
+      // Female
+      genitalType = 'vagina';
+      genitalSize = pick(['tight', 'normal', 'accommodating', 'petite', 'average']);
+      genitalCharacteristics = pick(['well-groomed', 'waxed', 'trimmed', 'natural', 'shaved', 'landing strip']);
+    }
+    
     // Build the complete physical profile
     const height = pick(heights);
     const build = pick(builds);
@@ -3617,17 +3821,22 @@
     const skinTone = pick(skinTones);
     const skinTexture = pick(skinTextures);
     const bodyShape = pick(bodyShapes);
-    const breastSize = pick(breastSizes);
+    const chestSize = pick(chestSizes);
     const buttSize = pick(buttSizes);
     const legType = pick(legTypes);
     const fashionStyle = pick(fashionStyles);
     const accessory = pick(accessories);
     const feature = pick(features);
     
+    // Gender-appropriate pronouns and descriptors
+    const genderPronoun = (gender === 'male' || gender === 'transMan') ? 'man' : 'woman';
+    const bodyDescriptor = `${bodyShape} physique with ${chestDescriptor === 'chest' ? chestSize + ' chest' : chestSize + ' ' + chestDescriptor}, ${buttSize} bottom, ${legType}`;
+    
     return {
       // Basic
       height,
       build,
+      gender,
       heightBuild: `${height}, ${build} build`,
       
       // Hair (detailed)
@@ -3663,13 +3872,23 @@
         full: `${skinTexture} ${skinTone} skin`
       },
       
-      // Body (detailed)
+      // Body (detailed) - Gender-appropriate
       body: {
         shape: bodyShape,
-        breastSize: breastSize,
+        chestDescriptor: chestDescriptor,
+        chestSize: chestSize,
+        breastSize: chestSize, // Kept for backwards compatibility
         buttSize: buttSize,
         legs: legType,
-        full: `${bodyShape} figure with ${breastSize} bust, ${buttSize} bottom, ${legType}`
+        full: bodyDescriptor
+      },
+      
+      // Genital Information (detailed) - Gender-specific
+      genitals: {
+        type: genitalType,
+        size: genitalSize,
+        characteristics: genitalCharacteristics,
+        full: `${genitalSize} ${genitalType}, ${genitalCharacteristics}`
       },
       
       // Style & Features
@@ -3677,10 +3896,10 @@
       accessories: accessory,
       distinguishingFeature: feature,
       
-      // Complete description for AI prompts
-      shortDescription: `${height} ${build} woman with ${hairLength} ${hairColor} hair, ${eyeColor} eyes, ${skinTone} skin`,
+      // Complete description for AI prompts - Gender-appropriate
+      shortDescription: `${height} ${build} ${genderPronoun} with ${hairLength} ${hairColor} hair, ${eyeColor} eyes, ${skinTone} skin`,
       
-      fullDescription: `${height} ${build} woman with ${hairLength} ${hairTexture} ${hairColor} hair (${hairStyle}), ${eyeShape} ${eyeColor} eyes, ${skinTexture} ${skinTone} skin. ${faceShape} face with ${noseType}, ${lipShape}, ${cheekbone}, ${jawline}. ${bodyShape} figure with ${breastSize} bust, ${buttSize} bottom, ${legType}. ${feature}. Style: ${fashionStyle}, ${accessory}.`
+      fullDescription: `${height} ${build} ${genderPronoun} with ${hairLength} ${hairTexture} ${hairColor} hair (${hairStyle}), ${eyeShape} ${eyeColor} eyes, ${skinTexture} ${skinTone} skin. ${faceShape} face with ${noseType}, ${lipShape}, ${cheekbone}, ${jawline}. ${bodyDescriptor}. Genitals: ${genitalSize} ${genitalType}, ${genitalCharacteristics}. ${feature}. Style: ${fashionStyle}, ${accessory}.`
     };
   }
   
@@ -3690,12 +3909,12 @@
    */
   function getPhysicalDescriptionForPrompt(employee) {
     if (!employee.physical) {
-      employee.physical = generateDetailedPhysicalAppearance();
+      employee.physical = generateDetailedPhysicalAppearance(employee.gender || 'female');
     }
     
     // If old format, upgrade it
     if (!employee.physical.fullDescription) {
-      employee.physical = generateDetailedPhysicalAppearance();
+      employee.physical = generateDetailedPhysicalAppearance(employee.gender || 'female');
     }
     
     // Return full description for maximum body context in image generation
@@ -4097,6 +4316,9 @@
         name: emp.name,
         position: emp.position,
         location: emp.locationId,
+        gender: emp.gender || 'Female',
+        age: emp.age,
+        physicalDescription: getPhysicalDescriptionForPrompt(emp), // Full physical awareness including genitals
         personality: emp.personalityTraits || emp.personality,
         hobbies: emp.hobbies || [],
         stats: emp.stats
@@ -5218,9 +5440,18 @@
     const gossipContext = getGossipContext(emp.id, true);
     const gossipLines = gossipContext ? gossipContext.split('\n').filter(Boolean) : [];
     
+    // Gender-appropriate pronoun and description
+    const genderInfo = emp.gender ? `, a ${emp.age || 'young'}-year-old ${emp.gender === 'male' ? 'man' : emp.gender === 'transMan' ? 'trans man' : emp.gender === 'transWoman' ? 'trans woman' : emp.gender === 'femaleFuta' ? 'woman' : 'woman'}` : '';
+    
+    // Get full physical description including genital information for self-awareness
+    const physicalDesc = getPhysicalDescriptionForPrompt(emp);
+    
     const contextFacts = [
-      `You are ${emp.name}, ${emp.position} at the company.`,
+      `You are ${emp.name}${genderInfo}, ${emp.position} at the company.`,
       `Current relationship stats: ${mood}`,
+      '',
+      `YOUR PHYSICAL APPEARANCE: ${physicalDesc}`,
+      '(You are fully aware of your body, gender, and physical characteristics. Reference them naturally if relevant to the conversation, especially in intimate or personal contexts.)',
       '',
       playerDescription,
       '',
@@ -5470,7 +5701,20 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
 
       // Set up UI
       setupEventListeners();
+      
+      // Force initial UI update to populate all fields
+      console.log('Initial updateUI() - gameState.cash:', gameState.cash);
       updateUI();
+      
+      // Initialize the default tab content (dashboard)
+      updateTabContent(gameState.activeTab);
+      
+      // Force a second UI update after tab content is loaded to ensure everything is populated
+      setTimeout(() => {
+        console.log('Delayed updateUI() - gameState.cash:', gameState.cash);
+        updateUI();
+        updateTabContent(gameState.activeTab);
+      }, 100);
 
       // Set up autosave
       setupAutosave();
@@ -5642,6 +5886,11 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     'Ursula','Valerie','Vanessa','Velma','Vera','Veronica','Vicki','Vickie','Vicky','Victoria','Viola','Virginia','Vivian','Vivienne','Wanda','Wendy','Whitney','Willow','Winifred','Yasmine','Yolanda','Yvette','Yvonne','Zelda','Zoe','Zoey','Zara'
   ];
 
+  const MALE_FIRST_NAMES_POOL = [
+    // A-Z masculine names (500+ names)
+    'Aaron','Abel','Abraham','Adam','Adrian','Aiden','Alan','Albert','Alexander','Alfie','Alfred','Alonzo','Alvin','Amos','Andre','Andrew','Andy','Angelo','Angus','Anthony','Antonio','Apollo','Archer','Archie','Ari','Arlo','Arnold','Arthur','Ashton','Atlas','August','Austin','Axel','Bailey','Barnaby','Barrett','Barry','Bartholomew','Basil','Beau','Beck','Beckham','Benedict','Benjamin','Bennett','Benny','Bentley','Bernard','Bert','Blake','Blaze','Bobby','Boris','Boyd','Brad','Bradley','Brady','Brandon','Branden','Brayden','Brendan','Brent','Brett','Brian','Brice','Brock','Brody','Brooks','Bruce','Bruno','Bryan','Bryce','Bryson','Buck','Burt','Byron','Cade','Caden','Caleb','Calvin','Camden','Cameron','Carl','Carlos','Carlton','Carmelo','Carson','Carter','Casey','Caspian','Cecil','Cedric','Chad','Chance','Chandler','Charles','Charlie','Chase','Chester','Chris','Christian','Christopher','Clark','Claude','Clay','Clayton','Clement','Cliff','Clifford','Clifton','Clint','Clinton','Clive','Clyde','Cody','Cole','Coleman','Colin','Collin','Colton','Conner','Connor','Conrad','Cooper','Corbin','Corey','Cornelius','Cory','Craig','Curtis','Cyril','Cyrus','Dale','Dallas','Dalton','Damian','Damien','Damon','Dan','Dana','Dane','Daniel','Danny','Dante','Darian','Darius','Darrell','Darren','Darryl','Darwin','Dave','David','Davis','Dawson','Dean','Declan','Denis','Dennis','Denny','Denver','Derek','Derrick','Desmond','Devin','Devon','Dexter','Diego','Dillon','Dion','Dominic','Dominick','Don','Donald','Donovan','Douglas','Drake','Drew','Duane','Duncan','Dustin','Dwight','Dylan','Earl','Easton','Eddie','Edgar','Edison','Edmund','Edward','Edwin','Elbert','Eli','Elias','Elijah','Eliot','Elliott','Ellis','Ellison','Elmer','Elton','Elvis','Emanuel','Emerson','Emery','Emil','Emilio','Emmanuel','Emmett','Enrique','Eric','Erick','Erik','Ernest','Ernie','Ethan','Eugene','Evan','Everett','Ezekiel','Ezra','Fabian','Felix','Fernando','Fidel','Finley','Finn','Fletcher','Floyd','Flynn','Forest','Forrest','Foster','Francis','Francisco','Frank','Franklin','Frankie','Fred','Frederick','Gabriel','Gage','Garrett','Garrison','Garry','Gary','Gavin','Gene','Geoffrey','George','Gerald','Gerard','Gerardo','Gilbert','Gideon','Giovanni','Glenn','Gordon','Grady','Graham','Grant','Grayson','Greg','Gregory','Griffin','Grover','Guillermo','Gunnar','Gus','Gustavo','Guy','Hank','Hans','Harley','Harold','Harper','Harrison','Harry','Harvey','Hassan','Hector','Henry','Herbert','Herman','Holden','Homer','Horace','Howard','Hubert','Hudson','Hugh','Hugo','Humphrey','Hunter','Ian','Ibrahim','Ignacio','Igor','Ike','Ira','Irvin','Irving','Isaac','Isaiah','Ismael','Israel','Ivan','Iver','Jack','Jackson','Jacob','Jaden','Jaiden','Jake','Jalen','Jamal','James','Jamie','Jared','Jarrett','Jarvis','Jason','Jasper','Javier','Jay','Jayden','Jaylen','Jayson','Jean','Jed','Jefferson','Jeffrey','Jenson','Jerald','Jeremiah','Jeremy','Jermaine','Jerome','Jerry','Jesse','Jessie','Jesus','Jett','Jim','Jimmy','Joachim','Jody','Joe','Joel','Joey','Johan','John','Johnathan','Johnny','Jon','Jonah','Jonas','Jonathan','Jordan','Jorge','Jose','Joseph','Josh','Joshua','Josiah','Josue','Jovan','Juan','Judah','Jude','Julian','Julio','Julius','Junior','Justice','Justin','Kai','Kaleb','Kane','Karl','Karson','Keith','Kellan','Kellen','Kelly','Kelvin','Ken','Kendall','Kendrick','Kenneth','Kenny','Kent','Kenton','Kevin','Kieran','King','Kingston','Kirk','Knox','Kobe','Kody','Kolten','Konnor','Kristian','Kurt','Kurtis','Kyle','Kyler','Kyrie','Lance','Landon','Lane','Larry','Lars','Lawrence','Lawson','Layton','Lee','Leif','Leo','Leon','Leonard','Leonardo','Leroy','Les','Leslie','Lester','Levi','Lewis','Liam','Lincoln','Linden','Lionel','Lloyd','Logan','Lonnie','Lorenzo','Louis','Lowell','Lucas','Lucian','Luis','Lukas','Luke','Luther','Lyle','Lyndon','Mack','Maddox','Magnus','Major','Malachi','Malcolm','Malik','Manuel','Marc','Marcel','Marco','Marcos','Marcus','Mario','Marion','Mark','Marlon','Marshall','Martin','Marvin','Mason','Mateo','Mathew','Matthew','Maurice','Maverick','Max','Maxim','Maximilian','Maxwell','Melvin','Merle','Micah','Michael','Micheal','Miguel','Mike','Milo','Miles','Milton','Misael','Mitch','Mitchell','Moe','Monroe','Montana','Monte','Montgomery','Morgan','Morris','Mortimer','Morton','Moses','Murphy','Murray','Myles','Myron','Nash','Nasir','Nathan','Nathaniel','Neal','Ned','Neil','Nelson','Nestor','Neville','Nevin','Newton','Nicholas','Nick','Nico','Nicolas','Nigel','Niko','Nikolai','Niles','Noah','Noel','Nolan','Norman','Octavius','Odin','Oliver','Omar','Orlando','Orson','Oscar','Osvaldo','Otis','Otto','Owen','Pablo','Parker','Patrick','Paul','Paxton','Pedro','Perry','Peter','Peyton','Philip','Phillip','Phoenix','Pierce','Pierre','Porter','Preston','Prince','Quentin','Quincy','Quinn','Quinton','Rafael','Rafe','Ralph','Ramiro','Ramon','Randall','Randolph','Randy','Raphael','Raul','Ray','Raymond','Reagan','Reece','Reed','Reese','Reggie','Reginald','Reid','Remington','Remy','Rene','Reuben','Rex','Rey','Reynaldo','Rhett','Rhys','Ricardo','Richard','Rick','Ricky','Rico','Ridge','Riley','River','Robert','Roberto','Robin','Rocco','Rocky','Roderick','Rodney','Rodolfo','Rodrigo','Roger','Roland','Rolando','Roman','Romeo','Ron','Ronald','Ronan','Ronnie','Roosevelt','Rory','Roscoe','Ross','Rowan','Roy','Royce','Ruben','Rudy','Rufus','Rupert','Russell','Ryan','Ryder','Ryker','Rylan','Rylee','Sage','Salvador','Salvatore','Sam','Samir','Sammy','Sampson','Samuel','Santiago','Santos','Saul','Sawyer','Scott','Scotty','Sean','Sebastian','Sergio','Seth','Shane','Shannon','Shaun','Shawn','Shelby','Sheldon','Sherman','Sidney','Silas','Simeon','Simon','Sinclair','Solomon','Sonny','Spencer','Stacy','Stan','Stanford','Stanley','Stefan','Stephen','Sterling','Steve','Steven','Stevie','Stewart','Stuart','Sullivan','Sylvester','Tanner','Tate','Taylor','Ted','Teddy','Terrance','Terrell','Terrence','Terry','Thaddeus','Theodore','Thomas','Titus','Tobias','Toby','Todd','Tom','Tommy','Tony','Trace','Travis','Trent','Trenton','Trevor','Trey','Tristan','Troy','Truman','Tucker','Turner','Ty','Tyler','Tyrone','Tyson','Ulysses','Uri','Uriah','Uriel','Valentin','Van','Vance','Vaughn','Vernon','Vicente','Victor','Vince','Vincent','Virgil','Wade','Walker','Wallace','Walter','Ward','Warren','Washington','Watson','Waylon','Wayne','Webster','Wesley','Weston','Whitney','Wilbur','Wiley','Wilfred','Will','Willard','William','Willie','Willis','Willy','Wilson','Winston','Woodrow','Wyatt','Xavier','Xander','Yale','Yosef','Zachariah','Zachary','Zack','Zackary','Zackery','Zane','Zayden','Zechariah','Zeke','Zion'
+  ];
+
   const LAST_NAMES_POOL = [
     // Original names
     'Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Lopez','Martinez','Lee','Clark','Young','Hall','Allen','King','Wright','Scott','Green','Baker','Adams','Nelson','Carter','Mitchell','Perez','Roberts','Turner','Phillips','Campbell','Parker','Evans','Edwards','Collins','Stewart','Sanchez','Morris','Rogers','Reed','Cook','Morgan','Bell','Murphy','Bailey','Rivera','Cooper','Richardson','Howard','Ward','Cox','Diaz','Peterson','Gray','Ramirez','James','Watson','Brooks','Kelly','Sanders','Price','Bennett','Wood','Barnes','Ross','Henderson','Coleman','Jenkins','Perry','Powell','Long','Patterson','Hughes','Flores','Washington','Butler','Simmons','Foster','Gonzales','Bryant','Alexander','Russell','Griffin','Hayes','Armstrong','Bishop','Caldwell','Dawson','Elliott','Fischer','Goldman','Harper','Irving','Jacobson','Kane','Lancaster','Monroe','Novak','O\'Brien','Pierce','Quinn','Romano','Sterling','Thompson','Underwood','Valdez','Winters','York','Zhang','Ashford','Blackwell','Carlisle','Drake','Everett','Flynn','Gallagher','Hartley','Ingram','Jensen','Knight','Lawson','Mercer','Nash','Ortiz','Porter','Quincy','Rhodes','Shaw','Tucker','Vega','Walsh','Xu','Zimmerman','Archer','Barrett','Cross','Donovan','Ellis','Grant','Iverson','Justice','Kent','Lyon','Morrison','Norton','Owens','Preston','Reeves','Sullivan','Torres','Vaughn','Wells','Xavier','Zane','Aldridge','Benson','Crawford','Duncan','Emerson','Fitzgerald','Graham','Hudson','Irwin','Jackson','Keller','Leonard','Manning','Nichols','Osborne','Palmer','Ramsey','Sawyer','Tanner','Upton','Vincent','Wade',
@@ -5658,14 +5907,30 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
 
   /**
    * Generate a unique name that hasn't been used before
+   * @param {string} gender - The gender of the employee ('female', 'male', 'femaleFuta', 'transMan', 'transWoman')
    * @returns {string} Full name (First Last)
    */
-  function generateUniqueName() {
+  function generateUniqueName(gender = 'female') {
     const maxAttempts = 1000; // Prevent infinite loop
     let attempts = 0;
     
+    // Select appropriate first name pool based on gender
+    let firstNamePool;
+    switch(gender) {
+      case 'male':
+      case 'transMan':
+        firstNamePool = MALE_FIRST_NAMES_POOL;
+        break;
+      case 'female':
+      case 'femaleFuta':
+      case 'transWoman':
+      default:
+        firstNamePool = FIRST_NAMES_POOL;
+        break;
+    }
+    
     while (attempts < maxAttempts) {
-      const firstName = FIRST_NAMES_POOL[Math.floor(Math.random() * FIRST_NAMES_POOL.length)];
+      const firstName = firstNamePool[Math.floor(Math.random() * firstNamePool.length)];
       const lastName = LAST_NAMES_POOL[Math.floor(Math.random() * LAST_NAMES_POOL.length)];
       const fullName = `${firstName} ${lastName}`;
       
@@ -5673,7 +5938,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
       if (!gameState.usedEmployeeNames.has(fullName)) {
         // Mark as used
         gameState.usedEmployeeNames.add(fullName);
-        console.log(`[Names] Generated unique name: ${fullName} (${gameState.usedEmployeeNames.size} names used)`);
+        console.log(`[Names] Generated unique ${gender} name: ${fullName} (${gameState.usedEmployeeNames.size} names used)`);
         return fullName;
       }
       
@@ -5682,7 +5947,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     
     // Fallback: if somehow we've exhausted all combinations (extremely unlikely with 500*300 = 150,000 combinations)
     // Add a numeric suffix
-    const firstName = FIRST_NAMES_POOL[Math.floor(Math.random() * FIRST_NAMES_POOL.length)];
+    const firstName = firstNamePool[Math.floor(Math.random() * firstNamePool.length)];
     const lastName = LAST_NAMES_POOL[Math.floor(Math.random() * LAST_NAMES_POOL.length)];
     const suffix = Math.floor(Math.random() * 1000);
     const uniqueName = `${firstName} ${lastName} ${suffix}`;
@@ -5708,8 +5973,87 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     
     console.log(`[Names] Initialized ${gameState.usedEmployeeNames.size} used names from existing employees`);
   }
+
+  /**
+   * Get the color for a gender category
+   * @param {string} gender - The gender ('female', 'male', 'femaleFuta', 'transMan', 'transWoman')
+   * @returns {string} Hex color code
+   */
+  function getGenderColor(gender) {
+    const colors = {
+      female: '#ff6b9d',
+      male: '#00d4ff',
+      femaleFuta: '#c77dff',
+      transMan: '#4ecca3',
+      transWoman: '#ffd700'
+    };
+    return colors[gender] || '#ff6b9d'; // Default to female color
+  }
+
+  /**
+   * Get color-coded HTML for an employee's name
+   * @param {object} employee - Employee object with name and gender
+   * @returns {string} HTML string with colored name
+   */
+  function getColoredName(employee) {
+    if (!employee || !employee.name) return '';
+    const color = getGenderColor(employee.gender || 'female');
+    return `<span style="color:${color};">${employee.name}</span>`;
+  }
   
   // ============================================
+  // EMPLOYEE GENERATION WITH GENDER SELECTION
+  // ============================================
+
+  /**
+   * Select a gender for a new employee based on gameState.genderSettings
+   * Uses weighted random selection based on the percentage distributions
+   * @returns {string} Selected gender ('female', 'male', 'femaleFuta', 'transMan', 'transWoman')
+   */
+  function selectGenderForEmployee() {
+    const settings = gameState.genderSettings;
+    
+    // Create an array of gender options with their weights
+    const genderPool = [];
+    
+    // Add entries for each gender based on their percentage
+    if (settings.female > 0) {
+      for (let i = 0; i < settings.female; i++) {
+        genderPool.push('female');
+      }
+    }
+    if (settings.male > 0) {
+      for (let i = 0; i < settings.male; i++) {
+        genderPool.push('male');
+      }
+    }
+    if (settings.femaleFuta > 0) {
+      for (let i = 0; i < settings.femaleFuta; i++) {
+        genderPool.push('femaleFuta');
+      }
+    }
+    if (settings.transMan > 0) {
+      for (let i = 0; i < settings.transMan; i++) {
+        genderPool.push('transMan');
+      }
+    }
+    if (settings.transWoman > 0) {
+      for (let i = 0; i < settings.transWoman; i++) {
+        genderPool.push('transWoman');
+      }
+    }
+    
+    // If pool is empty (shouldn't happen but safety check), default to female
+    if (genderPool.length === 0) {
+      console.warn('[Gender] Gender pool is empty, defaulting to female');
+      return 'female';
+    }
+    
+    // Select random gender from weighted pool
+    const selectedGender = genderPool[Math.floor(Math.random() * genderPool.length)];
+    console.log(`[Gender] Selected gender: ${selectedGender} (from pool of ${genderPool.length} weighted options)`);
+    return selectedGender;
+  }
   
     function generatePotentialHires(productId) {
   // Use the massive name pools defined above
@@ -5730,11 +6074,14 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
 
     const candidates = [];
     for (let i = 0; i < 3; i++) {
+    // Select gender based on settings
+    const selectedGender = selectGenderForEmployee();
+    
     const cand = {
     id: `emp_${Date.now()}_${i}`,
-    name: generateUniqueName(), // Use unique name generator
+    name: generateUniqueName(selectedGender), // Use unique name generator with gender
     age: ages[Math.floor(Math.random()*ages.length)],
-    gender: 'female',
+    gender: selectedGender,
     position: 'Manager Candidate',
     productId,
     // personality & interests
@@ -5887,7 +6234,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
         <div class="candidate-card" style="background:${isFormer ? '#1a2a1a' : '#16213e'}; border:${isFormer ? '3px solid #ffd700' : 'none'}; border-radius:10px; padding:16px; margin:10px; width:300px; position:relative;">
         ${isFormer ? '<div style="position:absolute; top:8px; right:8px; font-size:1.5rem;">💛</div>' : ''}
         ${loyaltyText}
-        <h3 style="margin:0 0 4px 0;">${c.name} ${c.age ? `• ${c.age}` : ''}</h3>
+        <h3 style="margin:0 0 4px 0;">${getColoredName(c)} ${c.age ? `• ${c.age}` : ''}</h3>
         <p style="margin:0; color:#aaa;">Key trait: ${c.keyTrait || c.traits?.[0] || 'Dedicated'}</p>
         <p style="margin:6px 0 0 0; font-size:.9rem;">Personality: ${(c.personalityTraits || []).join(', ') || 'Professional'}</p>
         <p style="margin:6px 0 10px 0; color:#aaa; font-size:.9rem;">Hobbies: ${(c.hobbies || []).join(', ') || 'Various'}</p>
@@ -6213,8 +6560,8 @@ Generate ONLY the message, no quotes, no explanation:`;
         candidate.productManaged = parsed.productManaged || product.name;
         candidate.bio = parsed.bio || "Keeps things moving; loves clean launches.";
         
-        // Generate detailed physical appearance (NEW SYSTEM!)
-        candidate.physical = generateDetailedPhysicalAppearance();
+        // Generate detailed physical appearance (NEW SYSTEM!) - Gender-aware
+        candidate.physical = generateDetailedPhysicalAppearance(candidate.gender || 'female');
         
         // Override with AI-generated details if available
         const ap = parsed.appearance || {};
@@ -6223,16 +6570,19 @@ Generate ONLY the message, no quotes, no explanation:`;
         if (ap.eyes) candidate.physical.eyes = { ...candidate.physical.eyes, ...ap.eyes };
         if (ap.skinTone) candidate.physical.skin.tone = ap.skinTone;
         if (ap.bodyShape) candidate.physical.body.shape = ap.bodyShape;
-        if (ap.breastSize) candidate.physical.body.breastSize = ap.breastSize;
+        if (ap.breastSize || ap.chestSize) {
+          candidate.physical.body.chestSize = ap.chestSize || ap.breastSize;
+          candidate.physical.body.breastSize = ap.chestSize || ap.breastSize; // Backwards compatibility
+        }
         if (ap.buttSize) candidate.physical.body.buttSize = ap.buttSize;
         if (ap.fashion) candidate.physical.fashion = ap.fashion;
         
         candidate.personalityTraits = parsed.personalityTraits || candidate.personalityTraits;
         candidate.kinks = parsed.kinks || candidate.kinks;
         } else {
-        // minimal fallback - generate full detailed appearance
+        // minimal fallback - generate full detailed appearance (Gender-aware)
         candidate.bio = "Quick learner; keeps launches smooth. Friendly and playful in the office.";
-        candidate.physical = generateDetailedPhysicalAppearance();
+        candidate.physical = generateDetailedPhysicalAppearance(candidate.gender || 'female');
         }
 
         // optional image (now uses consistent physical description!)
@@ -6599,6 +6949,211 @@ Generate ONLY the message, no quotes, no explanation:`;
         });
       }
     }
+    
+    // Gender Options Modal
+    const genderOptionsBtn = $('genderOptionsBtn');
+    const genderOptionsModal = $('genderOptionsModal');
+    const closeGenderOptionsModal = $('closeGenderOptionsModal');
+    const cancelGenderOptions = $('cancelGenderOptions');
+    const saveGenderOptions = $('saveGenderOptions');
+    
+    // Get all slider elements
+    const femaleSlider = $('femaleSlider');
+    const maleSlider = $('maleSlider');
+    const femaleFutaSlider = $('femaleFutaSlider');
+    const transManSlider = $('transManSlider');
+    const transWomanSlider = $('transWomanSlider');
+    
+    // Get percentage display elements
+    const femalePercentage = $('femalePercentage');
+    const malePercentage = $('malePercentage');
+    const femaleFutaPercentage = $('femaleFutaPercentage');
+    const transManPercentage = $('transManPercentage');
+    const transWomanPercentage = $('transWomanPercentage');
+    const genderTotalValue = $('genderTotalValue');
+    const genderWarning = $('genderWarning');
+    
+    // Function to update gender distribution display
+    function updateGenderDistributionDisplay() {
+      const settings = gameState.genderSettings;
+      const displayEl = $('genderDistributionDisplay');
+      if (!displayEl) return;
+      
+      const genderColors = {
+        female: '#ff6b9d',
+        male: '#00d4ff',
+        femaleFuta: '#c77dff',
+        transMan: '#4ecca3',
+        transWoman: '#ffd700'
+      };
+      
+      const genderLabels = {
+        female: 'Female',
+        male: 'Male',
+        femaleFuta: 'Female Futa',
+        transMan: 'Trans Man',
+        transWoman: 'Trans Woman'
+      };
+      
+      displayEl.innerHTML = Object.entries(settings)
+        .filter(([key, value]) => value > 0)
+        .map(([key, value]) => `
+          <div style="text-align:center; padding:8px; background:#0f3460; border-radius:6px;">
+            <div style="color:${genderColors[key]}; font-weight:700; font-size:1.5rem;">${value}%</div>
+            <div style="color:#aaa; font-size:0.75rem;">${genderLabels[key]}</div>
+          </div>
+        `).join('');
+      
+      if (Object.values(settings).every(v => v === 0)) {
+        displayEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666; padding:20px;">No gender settings configured</div>';
+      }
+    }
+    
+    // Function to normalize sliders (make them proportional to 100%)
+    function normalizeGenderSliders(changedSlider) {
+      const sliders = [femaleSlider, maleSlider, femaleFutaSlider, transManSlider, transWomanSlider];
+      const values = sliders.map(s => parseInt(s.value));
+      const total = values.reduce((sum, v) => sum + v, 0);
+      
+      if (total === 0) {
+        // If everything is 0, reset to default (100% female)
+        femaleSlider.value = 100;
+        updateSliderDisplays();
+        return;
+      }
+      
+      if (total === 100) {
+        // Perfect total, just update displays
+        updateSliderDisplays();
+        return;
+      }
+      
+      // Normalize all sliders except the one that just changed
+      const changedIndex = sliders.indexOf(changedSlider);
+      const changedValue = parseInt(changedSlider.value);
+      const otherTotal = total - changedValue;
+      const remaining = 100 - changedValue;
+      
+      if (remaining < 0) {
+        // Changed slider exceeds 100%, cap it at 100 and zero others
+        changedSlider.value = 100;
+        sliders.forEach((s, i) => {
+          if (i !== changedIndex) s.value = 0;
+        });
+      } else if (otherTotal > 0) {
+        // Proportionally adjust other sliders
+        sliders.forEach((s, i) => {
+          if (i !== changedIndex) {
+            const currentVal = parseInt(s.value);
+            const proportion = currentVal / otherTotal;
+            s.value = Math.round(proportion * remaining);
+          }
+        });
+        
+        // Fix rounding errors - adjust largest other slider
+        const newTotal = sliders.reduce((sum, s) => sum + parseInt(s.value), 0);
+        if (newTotal !== 100) {
+          const diff = 100 - newTotal;
+          let largestOtherIndex = -1;
+          let largestOtherValue = -1;
+          sliders.forEach((s, i) => {
+            if (i !== changedIndex) {
+              const val = parseInt(s.value);
+              if (val > largestOtherValue) {
+                largestOtherValue = val;
+                largestOtherIndex = i;
+              }
+            }
+          });
+          if (largestOtherIndex >= 0) {
+            sliders[largestOtherIndex].value = parseInt(sliders[largestOtherIndex].value) + diff;
+          }
+        }
+      }
+      
+      updateSliderDisplays();
+    }
+    
+    // Function to update slider percentage displays
+    function updateSliderDisplays() {
+      femalePercentage.textContent = femaleSlider.value;
+      malePercentage.textContent = maleSlider.value;
+      femaleFutaPercentage.textContent = femaleFutaSlider.value;
+      transManPercentage.textContent = transManSlider.value;
+      transWomanPercentage.textContent = transWomanSlider.value;
+      
+      const total = parseInt(femaleSlider.value) + parseInt(maleSlider.value) + 
+                    parseInt(femaleFutaSlider.value) + parseInt(transManSlider.value) + 
+                    parseInt(transWomanSlider.value);
+      
+      genderTotalValue.textContent = total;
+      
+      if (total === 100) {
+        genderTotalValue.style.color = '#00d4ff';
+        genderWarning.style.display = 'none';
+      } else {
+        genderTotalValue.style.color = '#e94560';
+        genderWarning.style.display = 'block';
+      }
+    }
+    
+    // Open gender options modal
+    if (genderOptionsBtn && genderOptionsModal) {
+      genderOptionsBtn.addEventListener('click', () => {
+        // Load current settings
+        femaleSlider.value = gameState.genderSettings.female;
+        maleSlider.value = gameState.genderSettings.male;
+        femaleFutaSlider.value = gameState.genderSettings.femaleFuta;
+        transManSlider.value = gameState.genderSettings.transMan;
+        transWomanSlider.value = gameState.genderSettings.transWoman;
+        
+        updateSliderDisplays();
+        genderOptionsModal.style.display = 'flex';
+      });
+      
+      const closeModal = () => {
+        genderOptionsModal.style.display = 'none';
+      };
+      
+      if (closeGenderOptionsModal) closeGenderOptionsModal.addEventListener('click', closeModal);
+      if (cancelGenderOptions) cancelGenderOptions.addEventListener('click', closeModal);
+      
+      // Add slider listeners
+      [femaleSlider, maleSlider, femaleFutaSlider, transManSlider, transWomanSlider].forEach(slider => {
+        if (slider) {
+          slider.addEventListener('input', () => normalizeGenderSliders(slider));
+        }
+      });
+      
+      // Save gender settings
+      if (saveGenderOptions) {
+        saveGenderOptions.addEventListener('click', () => {
+          const total = parseInt(femaleSlider.value) + parseInt(maleSlider.value) + 
+                        parseInt(femaleFutaSlider.value) + parseInt(transManSlider.value) + 
+                        parseInt(transWomanSlider.value);
+          
+          if (total !== 100) {
+            showNotification('Total must equal 100%!');
+            return;
+          }
+          
+          // Save settings
+          gameState.genderSettings.female = parseInt(femaleSlider.value);
+          gameState.genderSettings.male = parseInt(maleSlider.value);
+          gameState.genderSettings.femaleFuta = parseInt(femaleFutaSlider.value);
+          gameState.genderSettings.transMan = parseInt(transManSlider.value);
+          gameState.genderSettings.transWoman = parseInt(transWomanSlider.value);
+          
+          showNotification('Gender settings saved! New hires will reflect these percentages.');
+          updateGenderDistributionDisplay();
+          genderOptionsModal.style.display = 'none';
+          saveGame(); // Auto-save after settings update
+        });
+      }
+    }
+    
+    // Initialize gender distribution display
+    updateGenderDistributionDisplay();
     
     // Attachment menu
     const chatAttachBtn = $('chatAttachBtn');
@@ -7411,7 +7966,7 @@ Generate ONLY the message, no quotes, no explanation:`;
               <div style="display:flex; align-items:center; gap:10px;">
                 <div style="font-size:1.5rem;">${medal}</div>
                 <div>
-                  <div style="font-weight:600; color:#4ecca3;">${emp.name}</div>
+                  <div style="font-weight:600;">${getColoredName(emp)}</div>
                   <div style="color:#666; font-size:0.8rem;">${emp.position || 'Employee'}</div>
                 </div>
               </div>
@@ -8009,7 +8564,7 @@ Generate ONLY the message, no quotes, no explanation:`;
         <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
             <div style="width:44px; height:44px; border-radius:50%; background:#0f3460; display:flex; align-items:center; justify-content:center;">⏳</div>
             <div style="flex:1;">
-            <h3 style="margin:0 0 2px 0;">${e.name}</h3>
+            <h3 style="margin:0 0 2px 0;">${getColoredName(e)}</h3>
             <p style="margin:0; color:#aaa; font-size:.9rem;">${e.position}</p>
             <span style="display:inline-block; margin-top:6px; padding:3px 8px; font-size:.75rem; border-radius:999px; background:#0f3460; color:#fff;">Onboarding…</span>
             </div>
@@ -8033,7 +8588,7 @@ Generate ONLY the message, no quotes, no explanation:`;
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:12px;">
             <img src="${img}" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
             <div>
-            <h3 style="margin:0;">${e.name}${e.age ? `, ${e.age}` : ''}</h3>
+            <h3 style="margin:0;">${getColoredName(e)}${e.age ? `, ${e.age}` : ''}</h3>
             <p style="margin:4px 0; color:#aaa;">${e.position}${e.productManaged ? ` • ${e.productManaged}` : ''}</p>
             </div>
         </div>
@@ -8168,11 +8723,17 @@ Generate ONLY the message, no quotes, no explanation:`;
 
   // Helper function to format numbers
   function formatNumber(num) {
-    if (num >= 1e12) return (num / 1e12).toFixed(3) + 'T'; // Trillions
-    if (num >= 1e9) return (num / 1e9).toFixed(3) + 'B';   // Billions
-    if (num >= 1e6) return (num / 1e6).toFixed(3) + 'M';   // Millions - now with 3 decimals (e.g., 8.500 M)
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';   // Thousands
-    return Math.floor(num).toString();
+    // Abbreviated notation for all numbers >= 1000
+    if (num >= 1e18) return (num / 1e18).toFixed(2) + 'Qi'; // Quintillions
+    if (num >= 1e15) return (num / 1e15).toFixed(2) + 'Q';  // Quadrillions
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';  // Trillions
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';    // Billions
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';    // Millions
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';    // Thousands
+    // For numbers under 1000, show up to 2 decimal places (no trailing zeros)
+    if (num >= 100) return num.toFixed(0);
+    if (num >= 10) return num.toFixed(1);
+    return num.toFixed(2).replace(/\.?0+$/, ''); // Remove trailing zeros
   }
 
   // Format and style cash for top bar display with progressive enhancement
@@ -8180,43 +8741,46 @@ Generate ONLY the message, no quotes, no explanation:`;
     let displayText, fontSize, color, textShadow, animation;
     
     if (cash >= 1e18) { // Quintillions (Qi)
-      displayText = (cash / 1e18).toFixed(3) + ' Qi';
+      displayText = (cash / 1e18).toFixed(2) + 'Qi';
       fontSize = '2.2rem';
       color = '#FFD700'; // Bright gold
       textShadow = '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.5)';
       animation = 'cash-glow-intense 2s ease-in-out infinite';
     } else if (cash >= 1e15) { // Quadrillions (Q)
-      displayText = (cash / 1e15).toFixed(3) + ' Q';
+      displayText = (cash / 1e15).toFixed(2) + 'Q';
       fontSize = '2rem';
       color = '#FFA500'; // Orange-gold
       textShadow = '0 0 15px rgba(255, 165, 0, 0.7), 0 0 30px rgba(255, 165, 0, 0.4)';
       animation = 'cash-glow 2.5s ease-in-out infinite';
     } else if (cash >= 1e12) { // Trillions (T)
-      displayText = (cash / 1e12).toFixed(3) + ' T';
+      displayText = (cash / 1e12).toFixed(2) + 'T';
       fontSize = '1.8rem';
       color = '#FF6347'; // Tomato red
       textShadow = '0 0 10px rgba(255, 99, 71, 0.6)';
       animation = 'none';
     } else if (cash >= 1e9) { // Billions (B)
-      displayText = (cash / 1e9).toFixed(3) + ' B';
+      displayText = (cash / 1e9).toFixed(2) + 'B';
       fontSize = '1.6rem';
       color = '#FF69B4'; // Hot pink
       textShadow = '0 0 8px rgba(255, 105, 180, 0.5)';
       animation = 'none';
     } else if (cash >= 1e6) { // Millions (M)
-      displayText = (cash / 1e6).toFixed(3) + ' M';
+      displayText = (cash / 1e6).toFixed(2) + 'M';
       fontSize = '1.4rem';
       color = '#00D4FF'; // Cyan
       textShadow = '0 0 6px rgba(0, 212, 255, 0.4)';
       animation = 'none';
     } else if (cash >= 1e3) { // Thousands (K)
-      displayText = (cash / 1e3).toFixed(3) + ' K';
+      displayText = (cash / 1e3).toFixed(2) + 'K';
       fontSize = '1.2rem';
       color = '#4ECCA3'; // Green
       textShadow = 'none';
       animation = 'none';
     } else {
-      displayText = Math.floor(cash).toLocaleString();
+      // For numbers under 1000, show clean format
+      if (cash >= 100) displayText = cash.toFixed(0);
+      else if (cash >= 10) displayText = cash.toFixed(1);
+      else displayText = cash.toFixed(2).replace(/\.?0+$/, '');
       fontSize = '1rem';
       color = 'white';
       textShadow = 'none';
@@ -8870,9 +9434,365 @@ Generate ONLY the message, no quotes, no explanation:`;
   }
   
   /**
-   * Render the social feed with virtual scrolling
+   * ===== NEW SIMPLIFIED SOCIAL FEED SYSTEM =====
+   * Direct rendering with no virtual scrolling
+   * Posts open in modal for comments
+   * Much better performance!
    */
+  
   function renderSocialFeed(forceFullRender = false) {
+    const feedContent = $('socialFeedContent');
+    const emptyState = $('feedEmptyState');
+    
+    if (!feedContent) return;
+    
+    // Get filtered and sorted posts
+    let posts = filterAndSortPosts();
+    
+    // Show empty state if no posts
+    if (posts.length === 0) {
+      if (emptyState) emptyState.style.display = 'block';
+      feedContent.innerHTML = '';
+      feedContent.appendChild(emptyState);
+      return;
+    }
+    
+    // Hide empty state
+    if (emptyState) emptyState.style.display = 'none';
+    
+    // Store scroll position for smooth updates
+    const scrollTop = feedContent.scrollTop;
+    const firstPost = feedContent.firstElementChild;
+    const firstPostTop = firstPost ? firstPost.offsetTop : 0;
+    
+    // Clear and render all posts
+    feedContent.innerHTML = '';
+    
+    posts.forEach(post => {
+      const postCard = createFeedPostCard(post);
+      feedContent.appendChild(postCard);
+    });
+    
+    // Restore scroll position to prevent jumping
+    if (scrollTop > 0) {
+      feedContent.scrollTop = scrollTop;
+    }
+  }
+  
+  /**
+   * Create a simplified post card for the feed
+   * No inline comments - click to open modal
+   */
+  function createFeedPostCard(post) {
+    const postCard = document.createElement('div');
+    postCard.className = 'social-post-card';
+    postCard.dataset.postId = post.id;
+    postCard.style.cssText = 'background:#16181c; border:1px solid #2f3336; border-radius:16px; padding:20px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,0.12); transition:all 0.3s ease; cursor:pointer;';
+    
+    // Hover effect
+    postCard.onmouseenter = function() {
+      this.style.background = '#1a1d21';
+      this.style.borderColor = '#3f4348';
+    };
+    postCard.onmouseleave = function() {
+      this.style.background = '#16181c';
+      this.style.borderColor = '#2f3336';
+    };
+    
+    // Click to open modal
+    postCard.onclick = function(e) {
+      // Don't open if clicking interactive elements
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'IMG' || e.target.closest('button')) {
+        return;
+      }
+      openPostModal(post.id);
+    };
+    
+    // Get author info
+    const author = post.isPlayerPost ? 
+      { name: 'You', profileImage: null, employmentStatus: 'active' } :
+      gameState.employees.find(e => e.id === post.authorId) || { name: post.authorName, profileImage: null, employmentStatus: 'unknown' };
+    
+    const avatarUrl = author.profileImage || 'https://placehold.co/50x50?text=' + (author.name?.[0] || '?');
+    const isAlumni = author.employmentStatus === 'alumni';
+    
+    // Format timestamp
+    const timeAgo = formatTimeAgo(post.timestamp);
+    
+    // Check if boss liked this post
+    const bossLiked = post.likes.includes('player');
+    
+    postCard.innerHTML = `
+      <!-- Post Header -->
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+        <img src="${avatarUrl}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : post.isPlayerPost ? '#e94560' : '#00d4ff'}; flex-shrink:0;" onclick="event.stopPropagation(); ${post.isPlayerPost ? '' : `showEmployeeProfile('${post.authorId}')`}">
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <strong style="font-size:0.95rem; font-weight:600;">${post.isPlayerPost ? '<span style="color:#fff;">You</span>' : getColoredName(author)}</strong>
+            ${post.isPlayerPost ? `<span style="color:#e94560; font-size:0.85rem; font-weight:600;">@TheBoss</span>` : author.social?.username ? `<span style="color:#8899a6; font-size:0.85rem;">@${author.social.username}</span>` : ''}
+            ${isAlumni ? '<span style="background:#555; padding:3px 10px; border-radius:12px; font-size:0.7rem; color:#ccc;">Alumni</span>' : ''}
+            ${post.explicitLevel >= 1 ? '<span style="background:linear-gradient(135deg, #e94560, #d63850); padding:3px 10px; border-radius:12px; font-size:0.7rem; color:white; font-weight:600;">🔞</span>' : ''}
+          </div>
+          <div style="color:#8899a6; font-size:0.8rem; margin-top:2px;">${timeAgo}</div>
+        </div>
+      </div>
+      
+      ${post.explicitLevel >= 3 ? `
+        <div style="background:rgba(233, 69, 96, 0.15); padding:10px 14px; border-radius:8px; border-left:4px solid #e94560; margin-bottom:14px; font-size:0.85rem; color:#ff9fb3;">
+          <strong style="display:flex; align-items:center; gap:6px;"><span>🔞</span> Explicit Content Warning</strong>
+        </div>
+      ` : ''}
+      
+      <!-- Post Content -->
+      <div style="color:#e7e9ea; line-height:1.6; margin-bottom:14px; font-size:0.95rem; word-wrap:break-word;">
+        ${linkifyMentions(post.content)}
+      </div>
+      
+      <!-- Post Image -->
+      ${post.imageUrl ? `
+        <div style="margin-bottom:14px; border-radius:12px; overflow:hidden; border:1px solid #2f3336;">
+          <img src="${post.imageUrl}" style="width:100%; height:auto; display:block; cursor:pointer;" onclick="event.stopPropagation(); showImageLightbox('${post.imageUrl}')">
+        </div>
+      ` : ''}
+      
+      <!-- Post Actions -->
+      <div style="display:flex; gap:20px; padding-top:10px; border-top:1px solid #2f3336;">
+        <button onclick="event.stopPropagation(); toggleLikePost('${post.id}')" style="background:transparent; border:none; color:${bossLiked ? '#e94560' : '#8899a6'}; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px; border-radius:8px; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
+          <span style="font-size:1.1rem;">${bossLiked ? '❤️' : '🤍'}</span>
+          <span>${post.likes.length}</span>
+        </button>
+        <button onclick="event.stopPropagation(); openPostModal('${post.id}')" style="background:transparent; border:none; color:#8899a6; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px; border-radius:8px; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
+          <span style="font-size:1.1rem;">💬</span>
+          <span>${post.comments.length}</span>
+        </button>
+      </div>
+    `;
+    
+    return postCard;
+  }
+  
+  /**
+   * Open post in modal with full comment functionality
+   */
+  function openPostModal(postId) {
+    const post = gameState.socialNetwork.posts.find(p => p.id === postId);
+    if (!post) return;
+    
+    // Get author info
+    const author = post.isPlayerPost ? 
+      { name: 'You', profileImage: null, employmentStatus: 'active', id: 'player' } :
+      gameState.employees.find(e => e.id === post.authorId) || { name: post.authorName, profileImage: null, employmentStatus: 'unknown', id: post.authorId };
+    
+    const avatarUrl = author.profileImage || 'https://placehold.co/50x50?text=' + (author.name?.[0] || '?');
+    const isAlumni = author.employmentStatus === 'alumni';
+    const timeAgo = formatTimeAgo(post.timestamp);
+    const bossLiked = post.likes.includes('player');
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'postModal';
+    modal.style.background = 'rgba(0,0,0,0.85)';
+    modal.style.padding = '20px';
+    modal.style.overflow = 'auto';
+    
+    modal.innerHTML = `
+      <div style="background:#16181c; border:1px solid #2f3336; border-radius:20px; max-width:700px; width:100%; max-height:90vh; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.5); display:flex; flex-direction:column;">
+        <!-- Modal Header -->
+        <div style="padding:16px 20px; border-bottom:1px solid #2f3336; display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="color:#fff; margin:0; font-size:1.1rem; font-weight:600;">Post</h3>
+          <button onclick="ModalManager.close('postModal')" style="background:transparent; border:none; color:#8899a6; cursor:pointer; font-size:1.5rem; padding:4px 10px; border-radius:50%; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#8899a6'">×</button>
+        </div>
+        
+        <!-- Post Content (Fixed) -->
+        <div style="padding:20px; border-bottom:1px solid #2f3336;">
+          <!-- Post Header -->
+          <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+            <img src="${avatarUrl}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : post.isPlayerPost ? '#e94560' : '#00d4ff'}; flex-shrink:0; cursor:${post.isPlayerPost ? 'default' : 'pointer'};" ${post.isPlayerPost ? '' : `onclick="ModalManager.close('postModal'); showEmployeeProfile('${post.authorId}')"`}>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <strong style="font-size:0.95rem; font-weight:600;">${post.isPlayerPost ? '<span style="color:#fff;">You</span>' : getColoredName(author)}</strong>
+                ${post.isPlayerPost ? `<span style="color:#e94560; font-size:0.85rem; font-weight:600;">@TheBoss</span>` : author.social?.username ? `<span style="color:#8899a6; font-size:0.85rem;">@${author.social.username}</span>` : ''}
+                ${isAlumni ? '<span style="background:#555; padding:3px 10px; border-radius:12px; font-size:0.7rem; color:#ccc;">Alumni</span>' : ''}
+                ${post.explicitLevel >= 1 ? '<span style="background:linear-gradient(135deg, #e94560, #d63850); padding:3px 10px; border-radius:12px; font-size:0.7rem; color:white; font-weight:600;">🔞</span>' : ''}
+              </div>
+              <div style="color:#8899a6; font-size:0.8rem; margin-top:2px;">${timeAgo}</div>
+            </div>
+          </div>
+          
+          ${post.explicitLevel >= 3 ? `
+            <div style="background:rgba(233, 69, 96, 0.15); padding:10px 14px; border-radius:8px; border-left:4px solid #e94560; margin-bottom:14px; font-size:0.85rem; color:#ff9fb3;">
+              <strong style="display:flex; align-items:center; gap:6px;"><span>🔞</span> Explicit Content Warning</strong>
+              <div style="margin-top:4px; opacity:0.9;">This post contains adult content</div>
+            </div>
+          ` : ''}
+          
+          <!-- Post Text -->
+          <div style="color:#e7e9ea; line-height:1.6; margin-bottom:14px; font-size:0.95rem; word-wrap:break-word;">
+            ${linkifyMentions(post.content)}
+          </div>
+          
+          <!-- Post Image -->
+          ${post.imageUrl ? `
+            <div style="margin-bottom:14px; border-radius:12px; overflow:hidden; border:1px solid #2f3336;">
+              <img src="${post.imageUrl}" style="width:100%; height:auto; display:block; cursor:pointer;" onclick="showImageLightbox('${post.imageUrl}')">
+            </div>
+          ` : ''}
+          
+          <!-- Post Actions -->
+          <div style="display:flex; gap:20px; padding-top:10px; border-top:1px solid #2f3336;">
+            <button onclick="toggleLikePost('${post.id}')" style="background:transparent; border:none; color:${bossLiked ? '#e94560' : '#8899a6'}; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px; border-radius:8px; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
+              <span style="font-size:1.1rem;">${bossLiked ? '❤️' : '🤍'}</span>
+              <span id="modalLikeCount">${post.likes.length}</span>
+            </button>
+            <div style="color:#8899a6; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px;">
+              <span style="font-size:1.1rem;">💬</span>
+              <span id="modalCommentCount">${post.comments.length}</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Comments Section (Scrollable) -->
+        <div id="modalCommentsContainer" style="flex:1; overflow-y:auto; padding:20px; min-height:200px; max-height:400px;">
+          <!-- Comments will be rendered here -->
+        </div>
+        
+        <!-- Comment Input (Fixed at bottom) -->
+        <div style="padding:16px 20px; border-top:1px solid #2f3336; background:#0d0f12;">
+          <div style="display:flex; gap:10px; align-items:start;">
+            <textarea id="modalCommentInput" placeholder="Write a comment..." style="flex:1; background:#16181c; border:1px solid #2f3336; border-radius:12px; padding:12px; color:#e7e9ea; font-size:0.9rem; resize:none; min-height:40px; max-height:120px; font-family:inherit;" rows="1"></textarea>
+            <button onclick="submitModalComment('${post.id}')" style="background:linear-gradient(135deg, #00d4ff, #0099cc); border:none; color:white; padding:12px 24px; border-radius:12px; cursor:pointer; font-weight:600; font-size:0.9rem; transition:all 0.3s; box-shadow:0 2px 8px rgba(0,212,255,0.3);" onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,212,255,0.4)'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,212,255,0.3)'">
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Show modal
+    ModalManager.show(modal, 'postModal');
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) ModalManager.close('postModal');
+    });
+    
+    // Render comments
+    renderModalComments(post.id);
+    
+    // Auto-resize textarea
+    const textarea = $('modalCommentInput');
+    if (textarea) {
+      textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+      });
+    }
+  }
+  
+  /**
+   * Render comments in the post modal
+   */
+  function renderModalComments(postId) {
+    const container = $('modalCommentsContainer');
+    if (!container) return;
+    
+    const post = gameState.socialNetwork.posts.find(p => p.id === postId);
+    if (!post) return;
+    
+    container.innerHTML = '';
+    
+    if (post.comments.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:40px 20px; color:#8899a6;">
+          <div style="font-size:2rem; margin-bottom:10px;">💬</div>
+          <div style="font-size:0.9rem;">No comments yet</div>
+          <div style="font-size:0.8rem; margin-top:4px; opacity:0.7;">Be the first to comment!</div>
+        </div>
+      `;
+      return;
+    }
+    
+    // Render each comment
+    post.comments.forEach(comment => {
+      const commentEl = createModalCommentElement(comment, postId);
+      container.appendChild(commentEl);
+    });
+  }
+  
+  /**
+   * Create a comment element for the modal
+   */
+  function createModalCommentElement(comment, postId) {
+    const commentEl = document.createElement('div');
+    commentEl.style.cssText = 'background:#1a1d21; border:1px solid #2f3336; border-radius:12px; padding:14px; margin-bottom:10px;';
+    
+    // Get commenter info
+    const commenter = comment.isPlayerComment ? 
+      { name: 'You', profileImage: null, employmentStatus: 'active' } :
+      gameState.employees.find(e => e.id === comment.authorId) || { name: comment.authorName, profileImage: null, employmentStatus: 'unknown' };
+    
+    const avatarUrl = commenter.profileImage || 'https://placehold.co/40x40?text=' + (commenter.name?.[0] || '?');
+    const isAlumni = commenter.employmentStatus === 'alumni';
+    const timeAgo = formatTimeAgo(comment.timestamp);
+    
+    commentEl.innerHTML = `
+      <div style="display:flex; gap:10px;">
+        <img src="${avatarUrl}" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : comment.isPlayerComment ? '#e94560' : '#00d4ff'}; flex-shrink:0;">
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+            <strong style="font-size:0.85rem; font-weight:600;">${comment.isPlayerComment ? '<span style="color:#fff;">You</span>' : getColoredName(commenter)}</strong>
+            ${comment.isPlayerComment ? `<span style="color:#e94560; font-size:0.75rem; font-weight:600;">@TheBoss</span>` : commenter.social?.username ? `<span style="color:#8899a6; font-size:0.75rem;">@${commenter.social.username}</span>` : ''}
+            ${isAlumni ? '<span style="background:#555; padding:2px 8px; border-radius:10px; font-size:0.65rem; color:#ccc;">Alumni</span>' : ''}
+            <span style="color:#8899a6; font-size:0.75rem;">${timeAgo}</span>
+          </div>
+          <div style="color:#e7e9ea; line-height:1.5; font-size:0.9rem; word-wrap:break-word;">
+            ${linkifyMentions(comment.content)}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    return commentEl;
+  }
+  
+  /**
+   * Submit a comment from the modal
+   */
+  function submitModalComment(postId) {
+    const input = $('modalCommentInput');
+    if (!input) return;
+    
+    const content = input.value.trim();
+    if (!content) return;
+    
+    // Add comment
+    addCommentToPost(postId, content, true);
+    
+    // Clear input
+    input.value = '';
+    input.style.height = 'auto';
+    
+    // Re-render comments
+    renderModalComments(postId);
+    
+    // Update comment count
+    const countEl = $('modalCommentCount');
+    const post = gameState.socialNetwork.posts.find(p => p.id === postId);
+    if (countEl && post) {
+      countEl.textContent = post.comments.length;
+    }
+    
+    // Update feed to show new comment count
+    renderSocialFeed();
+  }
+  
+  /**
+   * ===== OLD SYSTEM (COMMENTED OUT FOR REFERENCE) =====
+   * This was the old virtual scrolling system
+   * Keeping it commented in case we need to reference it
+   */
+  /*
+  function renderSocialFeedOLD(forceFullRender = false) {
     const feedContent = $('socialFeedContent');
     const emptyState = $('feedEmptyState');
     
@@ -9053,6 +9973,8 @@ Generate ONLY the message, no quotes, no explanation:`;
     // Restore scroll position to prevent jumping
     container.scrollTop = currentScrollTop;
   }
+  */
+  // ===== END OLD SYSTEM =====
   
   /**
    * Filter and sort posts based on current settings
@@ -9115,8 +10037,10 @@ Generate ONLY the message, no quotes, no explanation:`;
   }
   
   /**
-   * Create a post DOM element
+   * OLD createPostElement - NO LONGER USED
+   * (Kept commented for reference)
    */
+  /*
   function createPostElement(post) {
     const postEl = document.createElement('div');
     postEl.className = 'social-post';
@@ -9148,7 +10072,7 @@ Generate ONLY the message, no quotes, no explanation:`;
         <div style="flex:1; min-width:0;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:4px;">
-              <strong style="color:#fff; font-size:0.95rem; font-weight:600; cursor:${post.isPlayerPost ? 'default' : 'pointer'}; transition:color 0.2s;" ${post.isPlayerPost ? '' : `onclick="showEmployeeProfile('${post.authorId}')" onmouseenter="this.style.color='#00d4ff'" onmouseleave="this.style.color='#fff'"`}>${post.authorName}</strong>
+              <strong style="font-size:0.95rem; font-weight:600; cursor:${post.isPlayerPost ? 'default' : 'pointer'}; transition:color 0.2s;" ${post.isPlayerPost ? '' : `onclick="showEmployeeProfile('${post.authorId}')" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'"`}>${post.isPlayerPost ? '<span style="color:#fff;">You</span>' : getColoredName(author)}</strong>
               ${post.isPlayerPost ? `<span style="color:#e94560; font-size:0.85rem; font-weight:600; text-shadow:0 0 8px rgba(233,69,96,0.4);">@TheBoss</span>` : author.social?.username ? `<span style="color:#8899a6; font-size:0.85rem; cursor:pointer;" onclick="showEmployeeProfile('${post.authorId}')" onmouseenter="this.style.color='#00d4ff'" onmouseleave="this.style.color='#8899a6'">@${author.social.username}</span>` : ''}
             </div>
             ${isAlumni ? '<span style="background:#555; padding:3px 10px; border-radius:12px; font-size:0.7rem; color:#ccc; font-weight:500;">Alumni</span>' : ''}
@@ -9257,6 +10181,8 @@ Generate ONLY the message, no quotes, no explanation:`;
     
     return postEl;
   }
+  */
+  // ===== END OLD createPostElement =====
   
   /**
    * Create comment HTML
@@ -9285,7 +10211,7 @@ Generate ONLY the message, no quotes, no explanation:`;
         <div style="flex:1; min-width:0;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:8px;">
             <div style="display:flex; align-items:center; gap:6px;">
-              <strong style="color:#00d4ff; font-size:0.88rem; font-weight:600; cursor:${isPlayer ? 'default' : 'pointer'}; transition:color 0.2s;" ${isPlayer ? '' : `onclick="showEmployeeProfile('${comment.authorId}')" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='#00d4ff'"`}>${comment.authorName}</strong>
+              <strong style="font-size:0.88rem; font-weight:600; cursor:${isPlayer ? 'default' : 'pointer'}; transition:opacity 0.2s;" ${isPlayer ? '' : `onclick="showEmployeeProfile('${comment.authorId}')" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'"`}>${isPlayer ? '<span style="color:#00d4ff;">You</span>' : getColoredName(author)}</strong>
               ${isPlayer ? `<span style="color:#8899a6; font-size:0.75rem;">@TheBoss</span>` : author.social?.username ? `<span style="color:#8899a6; font-size:0.75rem;">@${author.social.username}</span>` : ''}
             </div>
             <span style="color:#71767b; font-size:0.78rem; white-space:nowrap;">${timeAgo}</span>
@@ -9394,7 +10320,7 @@ Generate ONLY the message, no quotes, no explanation:`;
             <img src="${avatarUrl}" style="width:100px; height:100px; border-radius:50%; border:3px solid ${isAlumni ? '#666' : '#00d4ff'}; object-fit:cover;">
             <div style="flex:1;">
               <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                <h2 style="color:#fff; margin:0; font-size:1.5rem; font-weight:600;">${employee.name}</h2>
+                <h2 style="margin:0; font-size:1.5rem; font-weight:600;">${getColoredName(employee)}</h2>
                 ${isAlumni ? '<span style="background:#555; padding:4px 12px; border-radius:14px; font-size:0.75rem; color:#ccc; font-weight:600;">Alumni</span>' : ''}
               </div>
               ${social.username ? `<div style="color:#8899a6; font-size:1rem; margin-bottom:12px;">@${social.username}</div>` : ''}
@@ -9610,7 +10536,7 @@ Generate ONLY the message, no quotes, no explanation:`;
               <img src="${relAvatar}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #00d4ff;">
               <div style="flex:1;">
                 <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                  <strong style="color:#fff; font-size:0.95rem;">${relEmployee.name}</strong>
+                  <strong style="font-size:0.95rem;">${getColoredName(relEmployee)}</strong>
                   ${relEmployee.social?.username ? `<span style="color:#8899a6; font-size:0.8rem;">@${relEmployee.social.username}</span>` : ''}
                 </div>
                 <div style="color:#00d4ff; font-size:0.85rem;">${icon} ${relationshipName}</div>
@@ -9639,7 +10565,7 @@ Generate ONLY the message, no quotes, no explanation:`;
             <div style="display:grid; gap:10px;">
               <div style="display:flex; justify-content:space-between;">
                 <span style="color:#8899a6;">Full Name:</span>
-                <span style="color:#e7e9ea; font-weight:500;">${employee.name}</span>
+                <span style="font-weight:500;">${getColoredName(employee)}</span>
               </div>
               ${social.username ? `
               <div style="display:flex; justify-content:space-between;">
@@ -9741,8 +10667,10 @@ Generate ONLY the message, no quotes, no explanation:`;
   }
   
   /**
-   * Toggle comments section
+   * OLD toggleComments - NO LONGER USED
+   * (Kept commented for reference)
    */
+  /*
   function toggleComments(postId) {
     const commentsSection = document.querySelector(`.post-comments[data-post-id="${postId}"]`);
     if (!commentsSection) return;
@@ -9765,6 +10693,8 @@ Generate ONLY the message, no quotes, no explanation:`;
       commentsSection.style.display = 'none';
     }
   }
+  */
+  // ===== END OLD toggleComments =====
   
   /**
    * Add comment to post
@@ -9798,38 +10728,6 @@ Generate ONLY the message, no quotes, no explanation:`;
     mentionedEmployeeIds.forEach(employeeId => {
       trackPlayerMention(employeeId);
     });
-    
-    // Clear input, hide reply indicator
-    const input = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
-    if (input) input.value = '';
-    
-    const replyIndicator = document.querySelector(`.reply-indicator[data-post-id="${postId}"]`);
-    if (replyIndicator) {
-      replyIndicator.style.display = 'none';
-      replyIndicator.removeAttribute('data-reply-to-id');
-    }
-    
-    // CRITICAL FIX: Immediate update of comments section
-    const postEl = document.querySelector(`[data-post-id="${postId}"]`);
-    const commentsSection = document.querySelector(`.post-comments[data-post-id="${postId}"]`);
-    
-    if (postEl && commentsSection) {
-      console.log(`[Comments] Immediately updating comments section for post ${postId}`);
-      
-      // Ensure comments section is visible
-      commentsSection.style.display = 'block';
-      
-      // Update comments content immediately
-      updateCommentsSection(postEl, post);
-      
-      // Clear any pending refresh flags
-      delete commentsSection.dataset.needsRefresh;
-    } else {
-      console.warn(`[Comments] Could not find post element or comments section for immediate update`);
-    }
-    
-    // Also request smart feed update as backup
-    requestSmartFeedUpdate(postId);
     
     // Trigger responses from mentioned NPCs (high likelihood)
     if (mentionedEmployeeIds.length > 0) {
@@ -10683,7 +11581,10 @@ Just write the comment:`;
       }
     }
     
-    const prompt = `You are ${employee.name}, commenting on ${post.isPlayerPost ? 'your boss\'s' : 'a coworker\'s'} social media post.
+    // Gender-appropriate description
+    const genderDesc = employee.gender ? `, a ${employee.age || 'young'}-year-old ${employee.gender === 'male' ? 'man' : employee.gender === 'transMan' ? 'trans man' : employee.gender === 'transWoman' ? 'trans woman' : employee.gender === 'femaleFuta' ? 'woman' : 'woman'}` : '';
+    
+    const prompt = `You are ${employee.name}${genderDesc}, commenting on ${post.isPlayerPost ? 'your boss\'s' : 'a coworker\'s'} social media post.
 
 YOUR PERSONALITY: ${personalityDesc}
 YOUR RELATIONSHIP WITH ${post.isPlayerPost ? 'BOSS' : 'POST AUTHOR'}: ${relationshipLevel} (affection: ${affection}/100, desire: ${desire}/100, intimacy: ${intimacy}/100)
@@ -11285,6 +12186,8 @@ Write ONLY the message:`;
       cashEl.style.animation = cashStyle.animation;
       cashEl.style.fontWeight = 'bold';
       cashEl.style.transition = 'all 0.3s ease';
+    } else {
+      console.warn('cashEl is null in updateUI()');
     }
     if (cashPerSecEl) cashPerSecEl.textContent = formatNumber(calculateCashPerSecond());
     if (employeeCountEl) employeeCountEl.textContent = gameState.employees.length;
@@ -12239,10 +13142,10 @@ Write ONLY the message:`;
           <div style="display:flex; gap:20px; margin-bottom:25px; align-items:start;">
             <img src="${employee.profileImage || 'https://placehold.co/150x150'}" style="width:120px; height:120px; border-radius:10px; object-fit:cover; box-shadow:0 2px 10px rgba(0,0,0,0.3);">
             <div style="flex:1;">
-              <h3 id="bioName" contenteditable="false" style="margin:0 0 8px 0; font-size:1.8rem; outline:none; padding:4px; border-radius:4px;" data-field="name">${employee.name}</h3>
+              <h3 id="bioName" contenteditable="false" style="margin:0 0 8px 0; font-size:1.8rem; outline:none; padding:4px; border-radius:4px;" data-field="name">${getColoredName(employee)}</h3>
               <p style="margin:0 0 6px 0; color:#aaa;">
                 <span id="bioAge" contenteditable="false" style="outline:none; padding:2px 4px; border-radius:4px;" data-field="age">${employee.age || 'N/A'}</span> years old • 
-                <span id="bioGender" contenteditable="false" style="outline:none; padding:2px 4px; border-radius:4px;" data-field="gender">${employee.gender || 'Female'}</span>
+                <span id="bioGender" contenteditable="false" style="outline:none; padding:2px 4px; border-radius:4px; color:${getGenderColor(employee.gender)};" data-field="gender">${employee.gender || 'Female'}</span>
               </p>
               <p style="margin:0; color:#00d4ff; font-weight:600;">
                 <span id="bioPosition" contenteditable="false" style="outline:none; padding:2px 4px; border-radius:4px;" data-field="position">${employee.position || 'Employee'}</span>
@@ -12488,6 +13391,26 @@ Write ONLY the message:`;
                   <div id="bioDistinguishing" contenteditable="false" style="color:#ddd; outline:none; padding:2px;" data-field="physical.distinguishingFeature">${getNestedValue(employee, 'physical.distinguishingFeature', 'None noted')}</div>
                 </div>
               </div>
+              
+              <!-- Genital Information (for image generation) -->
+              <div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,215,0,0.2);">
+                <div style="font-size:.9rem; color:#ffd700; margin-bottom:8px; font-weight:600;">🔞 Genital Information</div>
+                <div style="font-size:.75rem; color:#aaa; margin-bottom:10px; font-style:italic;">Used for accurate image generation</div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+                  <div>
+                    <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Type</div>
+                    <div id="bioGenitalType" contenteditable="false" style="color:#ddd; outline:none; padding:2px;" data-field="physical.genitals.type">${getNestedValue(employee, 'physical.genitals.type', 'Not specified')}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Size</div>
+                    <div id="bioGenitalSize" contenteditable="false" style="color:#ddd; outline:none; padding:2px;" data-field="physical.genitals.size">${getNestedValue(employee, 'physical.genitals.size', 'Not specified')}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:.85rem; color:#aaa; margin-bottom:4px;">Characteristics</div>
+                    <div id="bioGenitalCharacteristics" contenteditable="false" style="color:#ddd; outline:none; padding:2px;" data-field="physical.genitals.characteristics">${getNestedValue(employee, 'physical.genitals.characteristics', 'Not specified')}</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -12541,7 +13464,7 @@ Write ONLY the message:`;
         // Make text fields editable
         editableElements.forEach(el => {
           // Skip stat values - they get buttons instead
-          if (!el.id || !el.id.startsWith('bio') || el.id.includes('Name') || el.id.includes('Bio') || el.id.includes('Personality') || el.id.includes('Hobbies') || el.id.includes('Kinks') || el.id.includes('KeyTrait') || el.id.includes('Position') || el.id.includes('Age') || el.id.includes('Gender') || el.id.includes('Product') || el.id.includes('Physical') || el.id.includes('Height') || el.id.includes('Body') || el.id.includes('Hair') || el.id.includes('Eyes') || el.id.includes('Face') || el.id.includes('Skin') || el.id.includes('Fashion') || el.id.includes('Distinguishing')) {
+          if (!el.id || !el.id.startsWith('bio') || el.id.includes('Name') || el.id.includes('Bio') || el.id.includes('Personality') || el.id.includes('Hobbies') || el.id.includes('Kinks') || el.id.includes('KeyTrait') || el.id.includes('Position') || el.id.includes('Age') || el.id.includes('Gender') || el.id.includes('Product') || el.id.includes('Physical') || el.id.includes('Height') || el.id.includes('Body') || el.id.includes('Hair') || el.id.includes('Eyes') || el.id.includes('Face') || el.id.includes('Skin') || el.id.includes('Fashion') || el.id.includes('Distinguishing') || el.id.includes('Genital')) {
             el.contentEditable = 'true';
             el.style.background = 'rgba(255, 215, 0, 0.15)';
             el.style.border = '1px dashed #ffd700';
@@ -12583,6 +13506,128 @@ Write ONLY the message:`;
           { value: 'onboarding', label: 'Onboarding (In training)' },
           { value: 'former', label: 'Former (Left company)' }
         ]));
+        
+        // Add dropdowns for genital information (gender-specific options)
+        const gender = employee.gender || 'Female';
+        
+        // Genital Type options based on gender
+        let typeOptions = [];
+        if (gender === 'Male') {
+          typeOptions = [
+            { value: 'penis', label: 'Penis' }
+          ];
+        } else if (gender === 'Trans Man') {
+          typeOptions = [
+            { value: 'enlarged clitoris', label: 'Enlarged Clitoris (Pre-HRT)' },
+            { value: 'post-op penis', label: 'Post-Op Penis (Phalloplasty)' },
+            { value: 'pre-op anatomy', label: 'Pre-Op Anatomy' }
+          ];
+        } else if (gender === 'Female Futa') {
+          typeOptions = [
+            { value: 'penis and vagina', label: 'Penis and Vagina (Dual)' }
+          ];
+        } else if (gender === 'Trans Woman') {
+          typeOptions = [
+            { value: 'vagina (post-op)', label: 'Vagina (Post-Op)' },
+            { value: 'penis (pre-op)', label: 'Penis (Pre-Op)' },
+            { value: 'tucked', label: 'Tucked (HRT)' }
+          ];
+        } else { // Female
+          typeOptions = [
+            { value: 'vagina', label: 'Vagina' }
+          ];
+        }
+        
+        // Genital Size options based on gender and type
+        let sizeOptions = [];
+        const currentType = employee.physical?.genitals?.type || typeOptions[0]?.value || 'vagina';
+        
+        if (currentType.includes('penis') && !currentType.includes('vagina')) {
+          if (gender === 'Trans Man' && currentType === 'post-op penis') {
+            sizeOptions = [
+              { value: 'small', label: 'Small (Typical for phalloplasty)' },
+              { value: 'modest', label: 'Modest' },
+              { value: 'average', label: 'Average' }
+            ];
+          } else {
+            sizeOptions = [
+              { value: 'small', label: 'Small' },
+              { value: 'modest', label: 'Modest' },
+              { value: 'average', label: 'Average' },
+              { value: 'above average', label: 'Above Average' },
+              { value: 'large', label: 'Large' },
+              { value: 'very large', label: 'Very Large' }
+            ];
+          }
+        } else if (currentType === 'penis and vagina') {
+          sizeOptions = [
+            { value: 'average', label: 'Average' },
+            { value: 'above average', label: 'Above Average' },
+            { value: 'large', label: 'Large' },
+            { value: 'very large', label: 'Very Large' },
+            { value: 'impressive', label: 'Impressive' }
+          ];
+        } else if (currentType.includes('vagina') || currentType === 'pre-op anatomy') {
+          sizeOptions = [
+            { value: 'tight', label: 'Tight' },
+            { value: 'snug', label: 'Snug' },
+            { value: 'average', label: 'Average' },
+            { value: 'relaxed', label: 'Relaxed' },
+            { value: 'accommodating', label: 'Accommodating' }
+          ];
+        } else if (currentType === 'enlarged clitoris') {
+          sizeOptions = [
+            { value: 'slightly enlarged', label: 'Slightly Enlarged' },
+            { value: 'noticeably enlarged', label: 'Noticeably Enlarged' },
+            { value: 'significantly enlarged', label: 'Significantly Enlarged' }
+          ];
+        } else {
+          sizeOptions = [
+            { value: 'average', label: 'Average' }
+          ];
+        }
+        
+        // Characteristics options based on gender and type
+        let characteristicsOptions = [];
+        
+        if (currentType.includes('penis') && !currentType.includes('vagina')) {
+          characteristicsOptions = [
+            { value: 'circumcised', label: 'Circumcised' },
+            { value: 'uncircumcised', label: 'Uncircumcised' }
+          ];
+        } else if (currentType === 'penis and vagina') {
+          characteristicsOptions = [
+            { value: 'fully functional dual anatomy', label: 'Fully Functional Dual Anatomy' },
+            { value: 'prominent dual features', label: 'Prominent Dual Features' }
+          ];
+        } else if (currentType.includes('vagina') || currentType === 'pre-op anatomy') {
+          characteristicsOptions = [
+            { value: 'waxed smooth', label: 'Waxed Smooth' },
+            { value: 'neatly trimmed', label: 'Neatly Trimmed' },
+            { value: 'natural', label: 'Natural' },
+            { value: 'fully shaved', label: 'Fully Shaved' },
+            { value: 'landing strip', label: 'Landing Strip' },
+            { value: 'shaped', label: 'Shaped' }
+          ];
+        } else if (currentType === 'enlarged clitoris') {
+          characteristicsOptions = [
+            { value: 'sensitive and prominent', label: 'Sensitive and Prominent' },
+            { value: 'HRT-enhanced', label: 'HRT-Enhanced' }
+          ];
+        } else if (currentType === 'tucked') {
+          characteristicsOptions = [
+            { value: 'carefully tucked', label: 'Carefully Tucked' },
+            { value: 'HRT-softened', label: 'HRT-Softened' }
+          ];
+        } else {
+          characteristicsOptions = [
+            { value: 'natural', label: 'Natural' }
+          ];
+        }
+        
+        originalHTMLs.set('bioGenitalType', createDropdownControl('bioGenitalType', employee.physical?.genitals?.type ?? typeOptions[0]?.value, typeOptions));
+        originalHTMLs.set('bioGenitalSize', createDropdownControl('bioGenitalSize', employee.physical?.genitals?.size ?? sizeOptions[0]?.value, sizeOptions));
+        originalHTMLs.set('bioGenitalCharacteristics', createDropdownControl('bioGenitalCharacteristics', employee.physical?.genitals?.characteristics ?? characteristicsOptions[0]?.value, characteristicsOptions));
         
       } else {
         // Exit edit mode without saving - restore original HTML
@@ -12669,6 +13714,44 @@ Write ONLY the message:`;
       const employmentStatusEl = document.getElementById('bioEmploymentStatus');
       if (employmentStatusEl) {
         employee.employmentStatus = employmentStatusEl.value || 'active';
+      }
+      
+      // Read genital information dropdowns
+      const genitalTypeEl = document.getElementById('bioGenitalType');
+      const genitalSizeEl = document.getElementById('bioGenitalSize');
+      const genitalCharacteristicsEl = document.getElementById('bioGenitalCharacteristics');
+      
+      if (genitalTypeEl || genitalSizeEl || genitalCharacteristicsEl) {
+        if (!employee.physical) employee.physical = {};
+        if (!employee.physical.genitals) employee.physical.genitals = {};
+        
+        if (genitalTypeEl) {
+          employee.physical.genitals.type = genitalTypeEl.value || 'Not specified';
+        }
+        if (genitalSizeEl) {
+          employee.physical.genitals.size = genitalSizeEl.value || 'Not specified';
+        }
+        if (genitalCharacteristicsEl) {
+          employee.physical.genitals.characteristics = genitalCharacteristicsEl.value || 'Not specified';
+        }
+        
+        // Update the full description
+        if (employee.physical.genitals.type && employee.physical.genitals.size && employee.physical.genitals.characteristics) {
+          employee.physical.genitals.full = `${employee.physical.genitals.size} ${employee.physical.genitals.type}, ${employee.physical.genitals.characteristics}`;
+          
+          // Also update fullDescription if it exists
+          if (employee.physical.fullDescription) {
+            // Replace the genitals line in fullDescription
+            const genitalLine = `Genitals: ${employee.physical.genitals.full}`;
+            const genitalRegex = /Genitals:.*?(?=\n|$)/;
+            if (genitalRegex.test(employee.physical.fullDescription)) {
+              employee.physical.fullDescription = employee.physical.fullDescription.replace(genitalRegex, genitalLine);
+            } else {
+              // Add it if not present
+              employee.physical.fullDescription += `\nGenitals: ${employee.physical.genitals.full}`;
+            }
+          }
+        }
       }
       
       // Read from text fields
@@ -16329,7 +17412,10 @@ JUST the number:`;
       ? `\nYour boss: ${playerDesc}`
       : '';
     
-    const prompt = `You are ${employee.name}, an employee posting on an uncensored social media about a recent event.
+    // Gender-appropriate description
+    const genderDesc = employee.gender ? `, a ${employee.age || 'young'}-year-old ${employee.gender === 'male' ? 'man' : employee.gender === 'transMan' ? 'trans man' : employee.gender === 'transWoman' ? 'trans woman' : employee.gender === 'femaleFuta' ? 'woman' : 'woman'}` : '';
+    
+    const prompt = `You are ${employee.name}${genderDesc}, an employee posting on an uncensored social media about a recent event.
 
 Event: ${eventDescription}
 Your personality: ${personalityDesc}
@@ -16354,9 +17440,11 @@ Post:`;
       // Determine if image should be generated
       let imagePrompt = null;
       if (event.type === 'promotion' && Math.random() < 0.6) {
-        imagePrompt = `Professional celebration selfie of ${employee.name} smiling, office setting, happy expression`;
+        const physDesc = employee.physical?.shortDescription || `${employee.age || 'young'}-year-old ${employee.gender === 'male' ? 'man' : employee.gender === 'transMan' ? 'trans man' : 'woman'}`;
+        imagePrompt = `Professional celebration selfie: ${physDesc} smiling, office setting, happy expression, high quality`;
       } else if (event.type === 'achievement' && Math.random() < 0.5) {
-        imagePrompt = `Excited ${employee.name} celebrating achievement, office environment, triumphant pose`;
+        const physDesc = employee.physical?.shortDescription || `${employee.age || 'young'}-year-old ${employee.gender === 'male' ? 'man' : employee.gender === 'transMan' ? 'trans man' : 'woman'}`;
+        imagePrompt = `Excited celebration photo: ${physDesc} celebrating achievement, office environment, triumphant pose, high quality`;
       }
       
       return {
@@ -16644,7 +17732,14 @@ ${gossipDetails}
       }
     }
     
-    const prompt = `You are ${employee.name}, posting on an uncensored social media.
+    // Gender and physical description for full self-awareness
+    const genderDesc = employee.gender ? `, a ${employee.age || 'young'}-year-old ${employee.gender === 'Male' ? 'man' : employee.gender === 'Trans Man' ? 'trans man' : employee.gender === 'Trans Woman' ? 'trans woman' : employee.gender === 'Female Futa' ? 'woman with unique anatomy' : 'woman'}` : '';
+    const physicalDesc = context.employee?.physicalDescription || getPhysicalDescriptionForPrompt(employee);
+    
+    const prompt = `You are ${employee.name}${genderDesc}, posting on an uncensored social media.
+
+YOUR PHYSICAL APPEARANCE: ${physicalDesc}
+(You are fully aware of your body, gender, and physical characteristics. Reference them naturally if relevant to your post, especially in selfies or intimate content.)
 
 Personality: ${personalityDesc}
 Post type: ${postType}
@@ -16734,7 +17829,7 @@ Write ONLY the social media post text:`;
       // Generate image prompt for visual post types
       let imagePrompt = null;
       if (['selfie', 'thirst_trap', 'explicit', 'meme', 'food', 'travel', 'life_update'].includes(postType)) {
-        imagePrompt = await generateImagePrompt(employee, postType, content);
+        imagePrompt = await generateImagePrompt(employee, postType, content, context);
       }
       
       return {
@@ -17131,12 +18226,103 @@ Write ONLY the social media post text:`;
    * Generate image prompt for visual posts
    * NOW WITH CAPTION ANALYSIS FOR PERFECT CONTINUITY!
    */
-  async function generateImagePrompt(employee, postType, postCaption) {
+  async function generateImagePrompt(employee, postType, postCaption, context = null) {
     const personality = employee.personality || {};
-    const analysis = analyzeCaption(postCaption);
     
     // Get consistent physical description for THIS employee
     const physicalDesc = getPhysicalDescriptionForPrompt(employee);
+    
+    // ===== NEW: AI-POWERED IMAGE PROMPT GENERATION =====
+    // Use AI to intelligently generate image prompt based on full context
+    
+    // Only include chat context for explicit/thirst_trap posts or boss-requested posts
+    let chatContextForImage = '';
+    let bossRequestContext = '';
+    
+    const shouldIncludeContext = postType === 'explicit' || postType === 'thirst_trap' || context?.requestedByBoss;
+    
+    if (shouldIncludeContext) {
+      // Get recent chat context if available
+      const chatHistory = gameState.chatHistory[employee.id] || [];
+      const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
+      const recentChats = chatHistory
+        .filter(msg => (msg.timestamp || 0) > twoHoursAgo)
+        .slice(-5); // Last 5 messages within 2 hours
+      
+      if (recentChats.length >= 2) {
+        const recentMessages = recentChats.slice(-3).map(msg => `${msg.sender}: "${msg.content}"`).join('\n');
+        chatContextForImage = `\n\nRECENT CONVERSATION WITH BOSS:\n${recentMessages}\n(Consider if the post is responding to or related to this conversation)`;
+      }
+      
+      // Check if this was a boss-requested post
+      if (context?.requestedByBoss) {
+        bossRequestContext = `\n\nBOSS REQUESTED THIS POST: The boss specifically asked for this type of post${context.requestContext ? `: "${context.requestContext}"` : ''}. The image should fulfill their request.`;
+      }
+    }
+    
+    // Build AI prompt for image generation
+    const imagePromptGenerationPrompt = `You are creating an image prompt for a social media post.
+
+EMPLOYEE PHYSICAL DESCRIPTION:
+${physicalDesc}
+
+POST TYPE: ${postType}
+POST CAPTION: "${postCaption}"
+${chatContextForImage}${bossRequestContext}
+
+CRITICAL INSTRUCTIONS:
+1. Generate a DETAILED image prompt that EXACTLY matches what the caption describes or implies
+2. Use the employee's EXACT physical description (copy it verbatim - don't summarize)
+3. If caption mentions specific clothing, pose, location, mood - include ALL of it
+4. If caption implies nudity/explicit content, describe it explicitly (this is for adult content)
+5. If caption references a conversation (like "your request"), consider recent chat context
+6. Be HIGHLY SPECIFIC about pose, clothing, expression, setting, camera angle
+7. For explicit posts: describe anatomy visibility in detail (use anatomical terms from physical description)
+8. For Female Futa: explicitly mention BOTH penis and vagina if nude/explicit
+9. For Trans characters: use their appropriate anatomy from physical description
+10. Make the image and caption tell ONE COHESIVE STORY
+
+EXAMPLES OF GOOD IMAGE PROMPTS:
+
+Caption: "Locked door, unlocked desires... your special request delivered fresh 😈"
+Type: explicit
+Context: Boss requested nude photo
+Image Prompt: "[Physical description] stands in front of a locked wooden door in bedroom. She is completely nude, full frontal nudity. Her [specific breast description from profile] are fully exposed, nipples visible. Her [specific genital description - both penis and vagina for futa] are on full display in an erotic showcase. Face shows passionate, teasing expression looking directly at camera. Hands on hips, confident pose. Soft bedroom lighting. NSFW explicit content for boss's private request."
+
+Caption: "That post-workout glow though 💪"
+Type: selfie
+Image Prompt: "[Physical description] taking gym mirror selfie. Wearing sports bra and leggings, slightly sweaty from workout. Face shows accomplished smile with flushed cheeks from exercise. Gym equipment visible in background. Phone in hand. Natural gym lighting. Athletic, healthy vibe."
+
+Caption: "Coffee and chaos, the Monday mood ☕😩"
+Type: text/food
+Image Prompt: "Close-up of artisan coffee cup on messy office desk. Laptop visible, papers scattered. Morning natural lighting through window. Cozy but slightly overwhelmed atmosphere. No person visible, focus on coffee and workspace chaos."
+
+NOW GENERATE THE IMAGE PROMPT:
+Write ONLY the detailed image prompt - no explanations, no meta-commentary:`;
+
+    try {
+      // Generate AI-powered image prompt
+      let aiImagePrompt = await generateText(imagePromptGenerationPrompt);
+      
+      // Clean up any meta-commentary
+      aiImagePrompt = aiImagePrompt.replace(/^\*\*[^*]+\*\*\s*/g, '');
+      aiImagePrompt = aiImagePrompt.split(/\n\s*\(/)[0];
+      aiImagePrompt = aiImagePrompt.split(/\(Note:/)[0];
+      aiImagePrompt = aiImagePrompt.trim();
+      
+      // Validate it's not empty
+      if (aiImagePrompt && aiImagePrompt.length > 20) {
+        console.log(`AI-generated image prompt for ${employee.name}:`, aiImagePrompt.substring(0, 100) + '...');
+        return aiImagePrompt;
+      } else {
+        console.warn('AI image prompt too short, falling back to template');
+      }
+    } catch (error) {
+      console.error('AI image prompt generation failed:', error);
+    }
+    
+    // ===== FALLBACK: Template-based system (if AI fails) =====
+    const analysis = analyzeCaption(postCaption);
     
     const basePrompts = {
       selfie: [
@@ -18593,7 +19779,10 @@ Write ONLY the comment, no quotation marks:`;
     // Generate AI-powered first post
     const personalityDesc = `outgoing: ${personality.outgoing || 50}/100, professional: ${personality.professional || 50}/100, confidence: ${personality.confidence || 50}/100`;
     
-    const prompt = `You are ${employee.name}, posting on an uncensored social media for the FIRST TIME after just getting hired.
+    // Gender-appropriate description
+    const genderDesc = employee.gender ? `, a ${employee.age || 'young'}-year-old ${employee.gender === 'male' ? 'man' : employee.gender === 'transMan' ? 'trans man' : employee.gender === 'transWoman' ? 'trans woman' : employee.gender === 'femaleFuta' ? 'woman' : 'woman'}` : '';
+    
+    const prompt = `You are ${employee.name}${genderDesc}, posting on an uncensored social media for the FIRST TIME after just getting hired.
 
 Your personality: ${personalityDesc}
 Your role: ${employee.position || 'Employee'}
@@ -19617,12 +20806,12 @@ Post:`;
     const personalities = ['Friendly', 'Reserved', 'Outgoing', 'Thoughtful', 'Energetic', 'Calm'];
     const hobbies = ['Reading', 'Photography', 'Hiking', 'Gaming', 'Cooking', 'Traveling', 'Music', 'Art', 'Yoga', 'Dancing'];
     const kinks = ['Exhibitionism', 'Bondage', 'Roleplay', 'Dominance', 'Submission', 'Voyeurism', 'Teasing', 'Spanking'];
-    const genders = ['Male', 'Female', 'Non-binary'];
     
     // Generate 2 initial employees
     for (let i = 0; i < 2; i++) {
-      const fullName = generateUniqueName(); // Use unique name generator
-      const gender = genders[Math.floor(Math.random() * genders.length)];
+      // Use gender selection system
+      const gender = selectGenderForEmployee();
+      const fullName = generateUniqueName(gender); // Use unique name generator with gender
       
       // Generate random traits and personality
       const trait = traits[Math.floor(Math.random() * traits.length)];
@@ -19658,8 +20847,8 @@ Post:`;
         productivity: 50 + Math.floor(Math.random() * 30)  // Work performance (affects game mechanics)
       };
       
-      // Generate detailed physical appearance (NEW SYSTEM!)
-      const detailedPhysical = generateDetailedPhysicalAppearance();
+      // Generate detailed physical appearance (NEW SYSTEM!) - Gender-aware
+      const detailedPhysical = generateDetailedPhysicalAppearance(gender);
       
       // Generate AI personality attributes (C.O.F.P.H.)
       const aiPersonality = {
