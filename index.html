@@ -7513,14 +7513,14 @@ Generate ONLY the message, no quotes, no explanation:`;
         handleLikePost(postId);
       }
       
-      // Comment button
+      // Comment button - open post modal
       if (e.target.closest('.comment-btn')) {
         const btn = e.target.closest('.comment-btn');
         const postId = btn.dataset.postId;
-        toggleComments(postId);
+        openPostModal(postId);
       }
       
-      // Submit comment button
+      // Submit comment button (legacy support - modal has its own)
       if (e.target.closest('.submit-comment-btn')) {
         const btn = e.target.closest('.submit-comment-btn');
         const postId = btn.dataset.postId;
@@ -9163,7 +9163,7 @@ Generate ONLY the message, no quotes, no explanation:`;
     if (gameState.activeTab !== 'social') return;
     
     updateFeedStats();
-    requestSmartFeedUpdate(); // Use smart update instead of immediate render
+    renderSocialFeed(); // Direct render on tab load
   }
   
   /**
@@ -9551,13 +9551,13 @@ Generate ONLY the message, no quotes, no explanation:`;
       <!-- Post Image -->
       ${post.imageUrl ? `
         <div style="margin-bottom:14px; border-radius:12px; overflow:hidden; border:1px solid #2f3336;">
-          <img src="${post.imageUrl}" style="width:100%; height:auto; display:block; cursor:pointer;" onclick="event.stopPropagation(); showImageLightbox('${post.imageUrl}')">
+          <img src="${post.imageUrl}" style="width:100%; height:auto; display:block; cursor:pointer;" onclick="event.stopPropagation(); openImageViewer('${post.imageUrl}')">
         </div>
       ` : ''}
       
       <!-- Post Actions -->
       <div style="display:flex; gap:20px; padding-top:10px; border-top:1px solid #2f3336;">
-        <button onclick="event.stopPropagation(); toggleLikePost('${post.id}')" style="background:transparent; border:none; color:${bossLiked ? '#e94560' : '#8899a6'}; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px; border-radius:8px; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
+        <button onclick="event.stopPropagation(); handleLikePost('${post.id}')" style="background:transparent; border:none; color:${bossLiked ? '#e94560' : '#8899a6'}; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px; border-radius:8px; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
           <span style="font-size:1.1rem;">${bossLiked ? '❤️' : '🤍'}</span>
           <span>${post.likes.length}</span>
         </button>
@@ -9592,20 +9592,24 @@ Generate ONLY the message, no quotes, no explanation:`;
     const modal = document.createElement('div');
     modal.id = 'postModal';
     modal.style.background = 'rgba(0,0,0,0.85)';
-    modal.style.padding = '20px';
+    modal.style.padding = '10px';
     modal.style.overflow = 'auto';
     
+    // Check if mobile for responsive sizing
+    const isMobile = window.innerWidth <= 768;
+    
     modal.innerHTML = `
-      <div style="background:#16181c; border:1px solid #2f3336; border-radius:20px; max-width:700px; width:100%; max-height:90vh; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.5); display:flex; flex-direction:column;">
+      <div style="background:#16181c; border:1px solid #2f3336; border-radius:${isMobile ? '16px' : '20px'}; max-width:${isMobile ? '100%' : '700px'}; width:100%; max-height:${isMobile ? '95vh' : '90vh'}; height:${isMobile ? 'auto' : 'auto'}; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.5); display:flex; flex-direction:column; margin:auto;">
         <!-- Modal Header -->
-        <div style="padding:16px 20px; border-bottom:1px solid #2f3336; display:flex; justify-content:space-between; align-items:center;">
-          <h3 style="color:#fff; margin:0; font-size:1.1rem; font-weight:600;">Post</h3>
-          <button onclick="ModalManager.close('postModal')" style="background:transparent; border:none; color:#8899a6; cursor:pointer; font-size:1.5rem; padding:4px 10px; border-radius:50%; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#8899a6'">×</button>
+        <div style="padding:${isMobile ? '12px 16px' : '16px 20px'}; border-bottom:1px solid #2f3336; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+          <h3 style="color:#fff; margin:0; font-size:${isMobile ? '1rem' : '1.1rem'}; font-weight:600;">Post</h3>
+          <button onclick="ModalManager.close('postModal')" style="background:transparent; border:none; color:#8899a6; cursor:pointer; font-size:1.5rem; padding:4px 10px; border-radius:50%; transition:all 0.2s; min-width:40px; min-height:40px; display:flex; align-items:center; justify-content:center;" onmouseenter="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#8899a6'">×</button>
         </div>
         
-        <!-- Post Content (Fixed) -->
-        <div style="padding:20px; border-bottom:1px solid #2f3336;">
-          <!-- Post Header -->
+        <!-- Post Content (Scrollable with comments) -->
+        <div style="flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;">
+          <div style="padding:${isMobile ? '16px' : '20px'}; border-bottom:1px solid #2f3336;">
+            <!-- Post Header -->
           <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
             <img src="${avatarUrl}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : post.isPlayerPost ? '#e94560' : '#00d4ff'}; flex-shrink:0; cursor:${post.isPlayerPost ? 'default' : 'pointer'};" ${post.isPlayerPost ? '' : `onclick="ModalManager.close('postModal'); showEmployeeProfile('${post.authorId}')"`}>
             <div style="flex:1; min-width:0;">
@@ -9634,13 +9638,13 @@ Generate ONLY the message, no quotes, no explanation:`;
           <!-- Post Image -->
           ${post.imageUrl ? `
             <div style="margin-bottom:14px; border-radius:12px; overflow:hidden; border:1px solid #2f3336;">
-              <img src="${post.imageUrl}" style="width:100%; height:auto; display:block; cursor:pointer;" onclick="showImageLightbox('${post.imageUrl}')">
+              <img src="${post.imageUrl}" style="width:100%; height:auto; display:block; cursor:pointer;" onclick="openImageViewer('${post.imageUrl}')">
             </div>
           ` : ''}
           
           <!-- Post Actions -->
           <div style="display:flex; gap:20px; padding-top:10px; border-top:1px solid #2f3336;">
-            <button onclick="toggleLikePost('${post.id}')" style="background:transparent; border:none; color:${bossLiked ? '#e94560' : '#8899a6'}; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px; border-radius:8px; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
+            <button onclick="handleLikePost('${post.id}')" style="background:transparent; border:none; color:${bossLiked ? '#e94560' : '#8899a6'}; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px; border-radius:8px; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
               <span style="font-size:1.1rem;">${bossLiked ? '❤️' : '🤍'}</span>
               <span id="modalLikeCount">${post.likes.length}</span>
             </button>
@@ -9651,17 +9655,18 @@ Generate ONLY the message, no quotes, no explanation:`;
           </div>
         </div>
         
-        <!-- Comments Section (Scrollable) -->
-        <div id="modalCommentsContainer" style="flex:1; overflow-y:auto; padding:20px; min-height:200px; max-height:400px;">
+        <!-- Comments Section (Inside scrollable area) -->
+        <div id="modalCommentsContainer" style="padding:${isMobile ? '16px' : '20px'}; padding-top:0;">
           <!-- Comments will be rendered here -->
+        </div>
         </div>
         
         <!-- Comment Input (Fixed at bottom) -->
-        <div style="padding:16px 20px; border-top:1px solid #2f3336; background:#0d0f12;">
+        <div style="padding:${isMobile ? '12px 16px' : '16px 20px'}; border-top:1px solid #2f3336; background:#0d0f12; flex-shrink:0;">
           <div style="display:flex; gap:10px; align-items:start;">
-            <textarea id="modalCommentInput" placeholder="Write a comment..." style="flex:1; background:#16181c; border:1px solid #2f3336; border-radius:12px; padding:12px; color:#e7e9ea; font-size:0.9rem; resize:none; min-height:40px; max-height:120px; font-family:inherit;" rows="1"></textarea>
-            <button onclick="submitModalComment('${post.id}')" style="background:linear-gradient(135deg, #00d4ff, #0099cc); border:none; color:white; padding:12px 24px; border-radius:12px; cursor:pointer; font-weight:600; font-size:0.9rem; transition:all 0.3s; box-shadow:0 2px 8px rgba(0,212,255,0.3);" onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,212,255,0.4)'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,212,255,0.3)'">
-              Send
+            <textarea id="modalCommentInput" placeholder="Write a comment..." style="flex:1; background:#16181c; border:1px solid #2f3336; border-radius:12px; padding:12px; color:#e7e9ea; font-size:${isMobile ? '16px' : '0.9rem'}; resize:none; min-height:${isMobile ? '44px' : '40px'}; max-height:120px; font-family:inherit;" rows="1"></textarea>
+            <button onclick="submitModalComment('${post.id}')" style="background:linear-gradient(135deg, #00d4ff, #0099cc); border:none; color:white; padding:${isMobile ? '12px 20px' : '12px 24px'}; border-radius:12px; cursor:pointer; font-weight:600; font-size:0.9rem; transition:all 0.3s; box-shadow:0 2px 8px rgba(0,212,255,0.3); min-height:${isMobile ? '44px' : 'auto'};" onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,212,255,0.4)'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,212,255,0.3)'">
+              ${isMobile ? '📤' : 'Send'}
             </button>
           </div>
         </div>
@@ -9724,7 +9729,8 @@ Generate ONLY the message, no quotes, no explanation:`;
    */
   function createModalCommentElement(comment, postId) {
     const commentEl = document.createElement('div');
-    commentEl.style.cssText = 'background:#1a1d21; border:1px solid #2f3336; border-radius:12px; padding:14px; margin-bottom:10px;';
+    const isMobile = window.innerWidth <= 768;
+    commentEl.style.cssText = `background:#1a1d21; border:1px solid #2f3336; border-radius:12px; padding:${isMobile ? '10px' : '14px'}; margin-bottom:10px;`;
     
     // Get commenter info
     const commenter = comment.isPlayerComment ? 
@@ -9736,16 +9742,16 @@ Generate ONLY the message, no quotes, no explanation:`;
     const timeAgo = formatTimeAgo(comment.timestamp);
     
     commentEl.innerHTML = `
-      <div style="display:flex; gap:10px;">
-        <img src="${avatarUrl}" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : comment.isPlayerComment ? '#e94560' : '#00d4ff'}; flex-shrink:0;">
+      <div style="display:flex; gap:${isMobile ? '8px' : '10px'};">
+        <img src="${avatarUrl}" style="width:${isMobile ? '28px' : '32px'}; height:${isMobile ? '28px' : '32px'}; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : comment.isPlayerComment ? '#e94560' : '#00d4ff'}; flex-shrink:0;">
         <div style="flex:1; min-width:0;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
-            <strong style="font-size:0.85rem; font-weight:600;">${comment.isPlayerComment ? '<span style="color:#fff;">You</span>' : getColoredName(commenter)}</strong>
-            ${comment.isPlayerComment ? `<span style="color:#e94560; font-size:0.75rem; font-weight:600;">@TheBoss</span>` : commenter.social?.username ? `<span style="color:#8899a6; font-size:0.75rem;">@${commenter.social.username}</span>` : ''}
-            ${isAlumni ? '<span style="background:#555; padding:2px 8px; border-radius:10px; font-size:0.65rem; color:#ccc;">Alumni</span>' : ''}
-            <span style="color:#8899a6; font-size:0.75rem;">${timeAgo}</span>
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; flex-wrap:wrap;">
+            <strong style="font-size:${isMobile ? '0.8rem' : '0.85rem'}; font-weight:600;">${comment.isPlayerComment ? '<span style="color:#fff;">You</span>' : getColoredName(commenter)}</strong>
+            ${comment.isPlayerComment ? `<span style="color:#e94560; font-size:${isMobile ? '0.7rem' : '0.75rem'}; font-weight:600;">@TheBoss</span>` : commenter.social?.username ? `<span style="color:#8899a6; font-size:${isMobile ? '0.7rem' : '0.75rem'};">@${commenter.social.username}</span>` : ''}
+            ${isAlumni ? `<span style="background:#555; padding:2px 8px; border-radius:10px; font-size:${isMobile ? '0.6rem' : '0.65rem'}; color:#ccc;">Alumni</span>` : ''}
+            <span style="color:#8899a6; font-size:${isMobile ? '0.7rem' : '0.75rem'};">${timeAgo}</span>
           </div>
-          <div style="color:#e7e9ea; line-height:1.5; font-size:0.9rem; word-wrap:break-word;">
+          <div style="color:#e7e9ea; line-height:1.5; font-size:${isMobile ? '0.85rem' : '0.9rem'}; word-wrap:break-word; overflow-wrap:break-word;">
             ${linkifyMentions(comment.content)}
           </div>
         </div>
@@ -9786,195 +9792,7 @@ Generate ONLY the message, no quotes, no explanation:`;
     renderSocialFeed();
   }
   
-  /**
-   * ===== OLD SYSTEM (COMMENTED OUT FOR REFERENCE) =====
-   * This was the old virtual scrolling system
-   * Keeping it commented in case we need to reference it
-   */
-  /*
-  function renderSocialFeedOLD(forceFullRender = false) {
-    const feedContent = $('socialFeedContent');
-    const emptyState = $('feedEmptyState');
-    
-    if (!feedContent) return;
-    
-    // Store scroll container reference
-    if (!virtualScrollState.scrollContainer) {
-      virtualScrollState.scrollContainer = feedContent;
-      // Set up scroll listener
-      feedContent.addEventListener('scroll', handleFeedScroll);
-    }
-    
-    // Get filtered and sorted posts
-    let posts = filterAndSortPosts();
-    const previousPostCount = virtualScrollState.allPosts.length;
-    virtualScrollState.allPosts = posts;
-    
-    // Show empty state if no posts
-    if (posts.length === 0) {
-      if (emptyState) emptyState.style.display = 'block';
-      // Clear any existing posts
-      Array.from(feedContent.children).forEach(child => {
-        if (child.id !== 'feedEmptyState') child.remove();
-      });
-      return;
-    }
-    
-    // Hide empty state
-    if (emptyState) emptyState.style.display = 'none';
-    
-    // Check if user is scrolled down (more than 100px from top)
-    const isScrolledDown = feedContent.scrollTop > 100;
-    const hasNewPosts = posts.length > previousPostCount;
-    
-    // If user is scrolled down and new posts appeared, only prepend new posts
-    // This prevents disrupting their reading/commenting experience
-    if (!forceFullRender && isScrolledDown && hasNewPosts) {
-      prependNewPosts(previousPostCount);
-      return;
-    }
-    
-    // Otherwise do full render (user is at top or forced refresh)
-    renderVisiblePosts();
-  }
-  
-  /**
-   * Prepend only new posts without disrupting scroll position or active inputs
-   */
-  function prependNewPosts(previousCount) {
-    const feedContent = $('socialFeedContent');
-    if (!feedContent) return;
-    
-    const posts = virtualScrollState.allPosts;
-    const newPostCount = posts.length - previousCount;
-    
-    if (newPostCount <= 0) return;
-    
-    // Get the current first post element (to insert before it)
-    const children = Array.from(feedContent.children);
-    const firstPostEl = children.find(child => 
-      child.className === 'social-post' && child.id !== 'feedEmptyState'
-    );
-    
-    // Create new post elements (in reverse order since we're prepending)
-    for (let i = newPostCount - 1; i >= 0; i--) {
-      const postEl = createPostElement(posts[i]);
-      
-      if (firstPostEl) {
-        feedContent.insertBefore(postEl, firstPostEl);
-      } else {
-        // No existing posts, just append
-        feedContent.appendChild(postEl);
-      }
-    }
-    
-    // Update the top spacer height if it exists
-    const topSpacer = $('feedTopSpacer');
-    if (topSpacer) {
-      const currentHeight = parseInt(topSpacer.style.height) || 0;
-      topSpacer.style.height = `${currentHeight + (newPostCount * 400)}px`;
-    }
-  }
-  
-  /**
-   * Handle scroll events for virtual scrolling
-   */
-  function handleFeedScroll() {
-    const container = virtualScrollState.scrollContainer;
-    if (!container) return;
-    
-    // Debounce scroll handling
-    clearTimeout(virtualScrollState.scrollTimeout);
-    virtualScrollState.isScrolling = true;
-    
-    virtualScrollState.scrollTimeout = setTimeout(() => {
-      virtualScrollState.isScrolling = false;
-      updateVisiblePosts();
-    }, 150);
-  }
-  
-  /**
-   * Update which posts are visible based on scroll position
-   */
-  function updateVisiblePosts() {
-    const container = virtualScrollState.scrollContainer;
-    if (!container) return;
-    
-    const scrollTop = container.scrollTop;
-    const containerHeight = container.clientHeight;
-    const scrollHeight = container.scrollHeight;
-    
-    // Calculate which posts should be visible
-    const posts = virtualScrollState.allPosts;
-    const totalPosts = posts.length;
-    
-    if (totalPosts === 0) return;
-    
-    // Estimate average post height (will be adjusted after first render)
-    const avgPostHeight = 400; // pixels
-    const postsPerPage = virtualScrollState.postsPerPage;
-    
-    // Calculate visible range with buffer
-    const bufferPages = 1; // Load 1 extra page above and below
-    const startIndex = Math.max(0, Math.floor(scrollTop / avgPostHeight) - (postsPerPage * bufferPages));
-    const endIndex = Math.min(totalPosts, Math.ceil((scrollTop + containerHeight) / avgPostHeight) + (postsPerPage * bufferPages));
-    
-    // Only update if range changed significantly
-    const currentStart = virtualScrollState.renderedRange.start;
-    const currentEnd = virtualScrollState.renderedRange.end;
-    
-    if (Math.abs(startIndex - currentStart) > 10 || Math.abs(endIndex - currentEnd) > 10) {
-      virtualScrollState.renderedRange = { start: startIndex, end: endIndex };
-      renderVisiblePosts();
-    }
-  }
-  
-  /**
-   * Render only the visible posts
-   */
-  function renderVisiblePosts() {
-    const container = virtualScrollState.scrollContainer;
-    const emptyState = $('feedEmptyState');
-    if (!container) return;
-    
-    const posts = virtualScrollState.allPosts;
-    const { start, end } = virtualScrollState.renderedRange;
-    
-    // Save current scroll position
-    const currentScrollTop = container.scrollTop;
-    
-    // Clear existing posts (except empty state)
-    Array.from(container.children).forEach(child => {
-      if (child.id !== 'feedEmptyState') child.remove();
-    });
-    
-    // Create spacer at the top for scrolled-past posts
-    if (start > 0) {
-      const topSpacer = document.createElement('div');
-      topSpacer.id = 'feedTopSpacer';
-      topSpacer.style.height = `${start * 400}px`; // Approximate height
-      container.appendChild(topSpacer);
-    }
-    
-    // Render visible posts
-    for (let i = start; i < end && i < posts.length; i++) {
-      const postEl = createPostElement(posts[i]);
-      container.appendChild(postEl);
-    }
-    
-    // Create spacer at the bottom for not-yet-rendered posts
-    if (end < posts.length) {
-      const bottomSpacer = document.createElement('div');
-      bottomSpacer.id = 'feedBottomSpacer';
-      bottomSpacer.style.height = `${(posts.length - end) * 400}px`; // Approximate height
-      container.appendChild(bottomSpacer);
-    }
-    
-    // Restore scroll position to prevent jumping
-    container.scrollTop = currentScrollTop;
-  }
-  */
-  // ===== END OLD SYSTEM =====
+  // ===== OLD SYSTEM REMOVED FOR CLEAN CODE =====
   
   /**
    * Filter and sort posts based on current settings
@@ -10036,153 +9854,7 @@ Generate ONLY the message, no quotes, no explanation:`;
     });
   }
   
-  /**
-   * OLD createPostElement - NO LONGER USED
-   * (Kept commented for reference)
-   */
-  /*
-  function createPostElement(post) {
-    const postEl = document.createElement('div');
-    postEl.className = 'social-post';
-    postEl.dataset.postId = post.id;
-    postEl.style.cssText = 'background:#16181c; border:1px solid #2f3336; border-radius:16px; padding:20px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,0.12); transition:all 0.3s ease; cursor:default;';
-    
-    // Get author info
-    const author = post.isPlayerPost ? 
-      { name: 'You', profileImage: null, employmentStatus: 'active' } :
-      gameState.employees.find(e => e.id === post.authorId) || { name: post.authorName, profileImage: null, employmentStatus: 'unknown' };
-    
-    const avatarUrl = author.profileImage || 'https://placehold.co/50x50?text=' + (author.name?.[0] || '?');
-    const isAlumni = author.employmentStatus === 'alumni';
-    
-    // Format timestamp
-    const timeAgo = formatTimeAgo(post.timestamp);
-    
-    // Explicit warning
-    const explicitWarning = post.explicitLevel >= 3 ? 
-      `<div style="background:rgba(233, 69, 96, 0.15); padding:10px 14px; border-radius:8px; border-left:4px solid #e94560; margin-bottom:14px; font-size:0.85rem; color:#ff9fb3;">
-        <strong style="display:flex; align-items:center; gap:6px;"><span style="font-size:1.1rem;">🔞</span> Explicit Content Warning</strong>
-        <div style="margin-top:4px; opacity:0.9;">This post contains adult content</div>
-      </div>` : '';
-    
-    postEl.innerHTML = `
-      <!-- Post Header -->
-      <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
-        <img src="${avatarUrl}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : post.isPlayerPost ? '#e94560' : '#00d4ff'}; flex-shrink:0; cursor:${post.isPlayerPost ? 'default' : 'pointer'};" ${post.isPlayerPost ? '' : `onclick="showEmployeeProfile('${post.authorId}')"`}>
-        <div style="flex:1; min-width:0;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <div style="display:flex; align-items:center; gap:4px;">
-              <strong style="font-size:0.95rem; font-weight:600; cursor:${post.isPlayerPost ? 'default' : 'pointer'}; transition:color 0.2s;" ${post.isPlayerPost ? '' : `onclick="showEmployeeProfile('${post.authorId}')" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'"`}>${post.isPlayerPost ? '<span style="color:#fff;">You</span>' : getColoredName(author)}</strong>
-              ${post.isPlayerPost ? `<span style="color:#e94560; font-size:0.85rem; font-weight:600; text-shadow:0 0 8px rgba(233,69,96,0.4);">@TheBoss</span>` : author.social?.username ? `<span style="color:#8899a6; font-size:0.85rem; cursor:pointer;" onclick="showEmployeeProfile('${post.authorId}')" onmouseenter="this.style.color='#00d4ff'" onmouseleave="this.style.color='#8899a6'">@${author.social.username}</span>` : ''}
-            </div>
-            ${isAlumni ? '<span style="background:#555; padding:3px 10px; border-radius:12px; font-size:0.7rem; color:#ccc; font-weight:500;">Alumni</span>' : ''}
-            ${post.explicitLevel >= 1 ? '<span style="background:linear-gradient(135deg, #e94560, #d63850); padding:3px 10px; border-radius:12px; font-size:0.7rem; color:white; font-weight:600; box-shadow:0 2px 8px rgba(233,69,96,0.3);">🔞</span>' : ''}
-          </div>
-          <div style="color:#8899a6; font-size:0.8rem; margin-top:3px;">${timeAgo}</div>
-        </div>
-      </div>
-      
-      ${explicitWarning}
-      
-      <!-- Post Content -->
-      ${post.content ? `<p style="color:#e7e9ea; margin:0 0 ${post.imageUrl ? '14px' : '0'}; font-size:0.95rem; line-height:1.6; white-space:pre-wrap; word-wrap:break-word;">${linkifyMentions(post.content)}</p>` : ''}
-      
-      <!-- Post Image -->
-      ${post.imageUrl ? `
-        <div style="margin:14px -20px; border-radius:0; overflow:hidden; background:#000; cursor:pointer;" onclick="openImageViewer('${post.imageUrl}')">
-          <img src="${post.imageUrl}" style="width:100%; display:block; object-fit:contain; max-height:600px; background:#000;">
-        </div>
-      ` : ''}
-      
-      <!-- Post Actions -->
-      <div style="display:flex; gap:12px; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08);">
-        <button class="post-action-btn like-btn" data-post-id="${post.id}" style="flex:1; padding:10px 14px; background:${post.likes.includes('player') ? 'rgba(233, 69, 96, 0.1)' : 'transparent'}; border:none; border-radius:8px; color:${post.likes.includes('player') ? '#e94560' : '#8899a6'}; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all 0.2s; font-size:0.9rem; font-weight:500;">
-          <span style="font-size:1.3rem;">${post.likes.includes('player') ? '❤️' : '🤍'}</span>
-          <span>${post.likes.length}</span>
-        </button>
-        <button class="post-action-btn comment-btn" data-post-id="${post.id}" style="flex:1; padding:10px 14px; background:transparent; border:none; border-radius:8px; color:#8899a6; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all 0.2s; font-size:0.9rem; font-weight:500;">
-          <span style="font-size:1.3rem;">💬</span>
-          <span>${post.comments.length}</span>
-        </button>
-      </div>
-      
-      <!-- Comments Section (initially hidden) -->
-      <div class="post-comments" data-post-id="${post.id}" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08);">
-        <div class="comments-list" style="margin-bottom:14px;">
-          ${post.comments.map(comment => createCommentHTML(comment, post.id)).join('')}
-        </div>
-        
-        <!-- Add Comment Input -->
-        <div style="display:flex; gap:10px; align-items:center; position:relative;">
-          <button class="comment-emoji-btn emoji-picker-trigger" data-post-id="${post.id}" style="padding:8px 12px; background:#16181c; border:1px solid #2f3336; border-radius:20px; cursor:pointer; font-size:1.2rem; transition:all 0.2s;" onmouseenter="this.style.background='#1f2329'" onmouseleave="this.style.background='#16181c'">😊</button>
-          
-          <div style="flex:1; position:relative;">
-            <input type="text" class="comment-input" data-post-id="${post.id}" placeholder="Write a comment... Type @ to mention" style="width:100%; padding:11px 16px; background:#16181c; border:1px solid #2f3336; border-radius:20px; color:#e7e9ea; font-size:0.9rem; transition:all 0.2s;">
-            
-            <!-- Reply indicator (hidden by default) -->
-            <div class="reply-indicator" data-post-id="${post.id}" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:#1f2329; border:1px solid #2f3336; border-bottom:none; border-radius:8px 8px 0 0; padding:6px 12px; font-size:0.85rem; color:#aaa; margin-bottom:-1px;">
-              <span class="reply-text"></span>
-              <button class="cancel-reply-btn" data-post-id="${post.id}" style="float:right; background:transparent; border:none; color:#e94560; cursor:pointer; padding:0 4px; font-size:1rem;">✕</button>
-            </div>
-            
-            <!-- Mention Suggestions Dropdown for Comments -->
-            <div class="comment-mention-suggestions" data-post-id="${post.id}" style="display:none; position:absolute; bottom:100%; left:0; width:100%; max-height:200px; overflow-y:auto; background:#16213e; border:2px solid #00d4ff; border-radius:8px; box-shadow:0 -4px 15px rgba(0,0,0,0.5); z-index:1000; margin-bottom:5px;">
-              <!-- Dynamically populated -->
-            </div>
-          </div>
-          
-          <button class="submit-comment-btn" data-post-id="${post.id}" style="padding:11px 24px; background:#00d4ff; border:none; border-radius:20px; color:#0a0e14; cursor:pointer; font-weight:600; font-size:0.9rem; transition:all 0.2s; box-shadow:0 2px 8px rgba(0,212,255,0.3);">
-            Post
-          </button>
-        </div>
-      </div>
-    `;
-    
-    // Enhanced hover effects
-    const likeBtn = postEl.querySelector('.like-btn');
-    const commentBtn = postEl.querySelector('.comment-btn');
-    
-    likeBtn?.addEventListener('mouseenter', () => {
-      if (!post.likes.includes('player')) {
-        likeBtn.style.background = 'rgba(233, 69, 96, 0.1)';
-        likeBtn.style.color = '#e94560';
-      }
-    });
-    likeBtn?.addEventListener('mouseleave', () => {
-      if (!post.likes.includes('player')) {
-        likeBtn.style.background = 'transparent';
-        likeBtn.style.color = '#8899a6';
-      }
-    });
-    
-    commentBtn?.addEventListener('mouseenter', () => {
-      commentBtn.style.background = 'rgba(0, 212, 255, 0.1)';
-      commentBtn.style.color = '#00d4ff';
-    });
-    commentBtn?.addEventListener('mouseleave', () => {
-      commentBtn.style.background = 'transparent';
-      commentBtn.style.color = '#8899a6';
-    });
-    
-    postEl.addEventListener('mouseenter', () => {
-      postEl.style.boxShadow = '0 4px 20px rgba(0,0,0,0.4)';
-      postEl.style.transform = 'translateY(-2px)';
-    });
-    postEl.addEventListener('mouseleave', () => {
-      postEl.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-      postEl.style.transform = 'translateY(0)';
-    });
-    
-    // Setup mention autocomplete for this post's comment input
-    const commentInput = postEl.querySelector(`.comment-input[data-post-id="${post.id}"]`);
-    if (commentInput) {
-      setupMentionAutocomplete(commentInput, post.id);
-    }
-    
-    return postEl;
-  }
-  */
-  // ===== END OLD createPostElement =====
+  // ===== OLD createPostElement REMOVED =====
   
   /**
    * Create comment HTML
@@ -10666,35 +10338,7 @@ Generate ONLY the message, no quotes, no explanation:`;
     requestSmartFeedUpdate(postId);
   }
   
-  /**
-   * OLD toggleComments - NO LONGER USED
-   * (Kept commented for reference)
-   */
-  /*
-  function toggleComments(postId) {
-    const commentsSection = document.querySelector(`.post-comments[data-post-id="${postId}"]`);
-    if (!commentsSection) return;
-    
-    const isCurrentlyHidden = commentsSection.style.display === 'none';
-    
-    if (isCurrentlyHidden) {
-      commentsSection.style.display = 'block';
-      
-      // Force immediate update when expanding to ensure fresh content
-      const post = gameState.socialNetwork.posts.find(p => p.id === postId);
-      if (post) {
-        const postEl = document.querySelector(`[data-post-id="${postId}"]`);
-        if (postEl) {
-          console.log(`[Comments] Force updating on expand for post ${postId}`);
-          updateCommentsSection(postEl, post);
-        }
-      }
-    } else {
-      commentsSection.style.display = 'none';
-    }
-  }
-  */
-  // ===== END OLD toggleComments =====
+  // ===== OLD toggleComments REMOVED =====
   
   /**
    * Add comment to post
@@ -20963,7 +20607,9 @@ Post:`;
   window.submitPlayerPostToFeed = submitPlayerPostToFeed;
   window.regeneratePlayerPostImage = regeneratePlayerPostImage;
   window.handleLikePost = handleLikePost;
-  window.toggleComments = toggleComments;
+  // toggleComments removed - now using modal system (openPostModal)
+  window.openPostModal = openPostModal;
+  window.submitModalComment = submitModalComment;
   window.addCommentToPost = addCommentToPost;
   window.openImageViewer = openImageViewer;
   window.showEmployeeProfile = showEmployeeProfile;
