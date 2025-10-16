@@ -24,6 +24,7 @@
   <button class="tab-btn" data-tab="gifts" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Gifts</button>
   <button class="tab-btn" data-tab="hr" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">HR</button>
   <button class="tab-btn" data-tab="invest" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Invest</button>
+  <button class="tab-btn" data-tab="ceocorner" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">👑 CEO Corner</button>
 </div>
 
 <!-- Main Content Area -->
@@ -333,7 +334,10 @@
         
         <!-- Feed Header -->
         <div style="padding:15px 20px; border-bottom:1px solid #0f3460; display:flex; justify-content:space-between; align-items:center;">
-          <h2 style="margin:0; color:#00d4ff; font-size:1.3rem;">🌐 The Social Feed</h2>
+          <div>
+            <h2 style="margin:0; color:#00d4ff; font-size:1.3rem;">🌐 The Social Feed</h2>
+            <div id="feedStatsText" style="color:#8899a6; font-size:0.85rem; margin-top:4px;">Loading...</div>
+          </div>
           <button id="refreshFeedBtn" style="padding:8px 16px; background:#0f3460; border:1px solid #00d4ff; border-radius:6px; color:#00d4ff; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:6px; transition:all 0.2s;">
             <span style="font-size:1.1rem;">🔄</span> Refresh
           </button>
@@ -521,6 +525,40 @@
       </div>
     </div>
   </div>
+  
+  <!-- CEO Corner Tab -->
+  <div id="ceocornerTab" class="tab-content" hidden>
+    <h2 style="margin-top:0;">👑 CEO Corner - Global Chatroom</h2>
+    
+    <div style="background:#0f3460; border-radius:15px; padding:25px; margin-bottom:20px; border:2px solid #ffd700;">
+      <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
+        <div style="font-size:3rem;">💬</div>
+        <div>
+          <h3 style="margin:0; color:#ffd700;">Welcome to the CEO Corner!</h3>
+          <p style="color:#aaa; margin:5px 0 0 0; line-height:1.5;">
+            Chat with other players from around the world. Share tips, strategies, and stories from your business empire!
+          </p>
+        </div>
+      </div>
+      
+      <div style="background:#16213e; border-radius:10px; padding:15px; margin-top:15px;">
+        <h4 style="margin:0 0 10px 0; color:#00d4ff;">📜 Chat Rules</h4>
+        <ul style="color:#aaa; font-size:0.9rem; margin:0; padding-left:20px; line-height:1.8;">
+          <li>Be respectful to all players</li>
+          <li>No spam or excessive caps</li>
+          <li>Share game tips and help others</li>
+          <li>Have fun and make friends! 🎉</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Chatroom Container -->
+    <div style="background:#16213e; border-radius:15px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+      <div id="ceoChatroom" style="width:100%; height:600px;">
+        [commentsPlugin(ceoChatOptions)]
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Settings Panel -->
@@ -548,11 +586,36 @@
     </div>
     
     <div style="margin-bottom:20px;">
+      <h3>⚡ Performance Settings</h3>
+      <div style="background:#0f3460; border-radius:10px; padding:15px; margin-top:10px;">
+        <p style="color:#aaa; font-size:0.85rem; margin:0 0 12px 0;">Adjust these settings if you experience lag or freezing, especially with large social feeds.</p>
+        <div style="margin-bottom:15px;">
+          <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span>Posts Per Page</span>
+            <span id="postsPerPageValue" style="color:#00d4ff; font-weight:600;">20</span>
+          </label>
+          <input type="range" id="postsPerPageSlider" min="10" max="50" value="20" step="5" style="width:100%;">
+          <div style="color:#8899a6; font-size:0.75rem; margin-top:4px;">Lower = Better performance</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:20px;">
       <h3>Player Profile</h3>
       <div style="background:#0f3460; border-radius:10px; padding:15px; margin-top:10px;">
         <p style="color:#aaa; font-size:0.9rem; margin:0 0 10px 0;">Set up your detailed profile so NPCs can reference you accurately in conversations, image generation, and social posts.</p>
         <button id="openPlayerProfileBtn" style="width:100%; padding:12px; background:#00d4ff; border:none; border-radius:6px; color:#0f1419; cursor:pointer; font-weight:600; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px;">
           <span style="font-size:1.3rem;">👤</span> Edit Your Profile
+        </button>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:20px;">
+      <h3>🎮 Cheats & Debugging</h3>
+      <div style="background:#0f3460; border-radius:10px; padding:15px; margin-top:10px;">
+        <p style="color:#aaa; font-size:0.85rem; margin:0 0 10px 0;">Modify game values for testing or just having fun!</p>
+        <button id="openCheatsBtn" style="width:100%; padding:12px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span style="font-size:1.3rem;">⚡</span> Open Cheats Panel
         </button>
       </div>
     </div>
@@ -598,6 +661,9 @@
       
       <!-- Attachment Menu (hidden by default) -->
       <div id="attachmentMenu" style="display:none; position:absolute; bottom:60px; left:0; background:#0f3460; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.4); min-width:200px; z-index:10;">
+        <button class="attach-menu-item" data-action="send-money" style="width:100%; padding:12px 16px; background:transparent; border:none; color:#4ecca3; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px; font-weight:600;">
+          <span style="font-size:1.2rem;">💰</span> Send Money
+        </button>
         <button class="attach-menu-item" data-action="request" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px;">
           <span style="font-size:1.2rem;">📷</span> Request Image
         </button>
@@ -615,6 +681,59 @@
     
     <div id="chatTypingIndicator" style="padding:10px 15px; color:#aaa; font-style:italic; display:none;">
       <span id="chatTypingName"></span> is typing...
+    </div>
+  </div>
+</div>
+
+<!-- Send Money Modal -->
+<div id="sendMoneyModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999999; justify-content:center; align-items:center;">
+  <div style="background:#16213e; width:90%; max-width:500px; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); padding:25px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0; color:#4ecca3;">💰 Send Money</h3>
+      <button id="closeSendMoneyModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <div style="background:#0f3460; padding:15px; border-radius:8px; margin-bottom:20px;">
+      <p style="color:#aaa; margin:0 0 5px 0; font-size:0.9rem;">Your Balance:</p>
+      <p id="sendMoneyBalance" style="color:#4ecca3; margin:0; font-size:1.4rem; font-weight:600;">$0</p>
+    </div>
+    
+    <p style="color:#aaa; margin-bottom:15px;">Choose an amount to send or enter a custom value:</p>
+    
+    <!-- Quick Amount Presets -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
+      <button class="money-preset" data-preset="small" style="padding:12px; background:#0f3460; border:1px solid #4ecca3; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+        <div style="font-size:0.85rem; color:#aaa;">Small</div>
+        <div id="moneySmall" style="font-weight:600; color:#4ecca3; margin-top:3px;">$0</div>
+      </button>
+      <button class="money-preset" data-preset="medium" style="padding:12px; background:#0f3460; border:1px solid #4ecca3; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+        <div style="font-size:0.85rem; color:#aaa;">Medium</div>
+        <div id="moneyMedium" style="font-weight:600; color:#4ecca3; margin-top:3px;">$0</div>
+      </button>
+      <button class="money-preset" data-preset="large" style="padding:12px; background:#0f3460; border:1px solid #4ecca3; border-radius:8px; color:white; cursor:pointer; transition:all 0.2s;">
+        <div style="font-size:0.85rem; color:#aaa;">Large</div>
+        <div id="moneyLarge" style="font-weight:600; color:#4ecca3; margin-top:3px;">$0</div>
+      </button>
+    </div>
+    
+    <!-- Custom Amount Input -->
+    <div style="margin-bottom:15px;">
+      <label style="color:#aaa; font-size:0.9rem; display:block; margin-bottom:8px;">Custom Amount:</label>
+      <div style="position:relative;">
+        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#4ecca3; font-weight:600; font-size:1.1rem;">$</span>
+        <input type="number" id="customMoneyAmount" placeholder="0" min="1" style="width:100%; padding:12px 12px 12px 30px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; font-size:1.1rem;" />
+      </div>
+    </div>
+    
+    <!-- Message/Purpose Input -->
+    <div style="margin-bottom:15px;">
+      <label style="color:#aaa; font-size:0.9rem; display:block; margin-bottom:8px;">What's this for? (Optional)</label>
+      <textarea id="moneyMessage" placeholder="E.g., 'For your hard work', 'Buy yourself something nice', 'Just because', etc." style="width:100%; height:60px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical;"></textarea>
+    </div>
+    
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="cancelSendMoney" style="padding:10px 20px; background:#0f3460; border:none; border-radius:6px; color:white; cursor:pointer;">Cancel</button>
+      <button id="confirmSendMoney" style="padding:10px 20px; background:#4ecca3; border:none; border-radius:6px; color:#16213e; cursor:pointer; font-weight:600;">Send Money</button>
     </div>
   </div>
 </div>
@@ -1294,6 +1413,285 @@
   
   <div id="emojiPickerContent" style="padding:8px; max-height:310px; overflow-y:auto; overflow-x:hidden; display:flex; flex-wrap:wrap; gap:2px; align-content:flex-start;">
     <!-- Emojis will be populated here -->
+  </div>
+</div>
+
+<!-- Cheats Modal -->
+<div id="cheatsModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; justify-content:center; align-items:center; overflow-y:auto;">
+  <div style="background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); width:95%; max-width:900px; max-height:90vh; border-radius:20px; box-shadow:0 10px 40px rgba(233,69,96,0.4); border:2px solid #e94560; overflow-y:auto; margin:20px;">
+    <div style="position:sticky; top:0; background:linear-gradient(135deg, #16213e 0%, #0f3460 100%); padding:20px; border-bottom:2px solid #e94560; z-index:10; border-radius:20px 20px 0 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:2rem;">⚡</span>
+          <h2 style="margin:0; color:#e94560; text-shadow:0 0 10px rgba(233,69,96,0.5);">Cheats & Debugging</h2>
+        </div>
+        <button id="closeCheatsBtn" style="background:transparent; border:2px solid #e94560; color:#e94560; font-size:1.5rem; cursor:pointer; width:40px; height:40px; border-radius:50%; transition:all 0.3s;" onmouseenter="this.style.background='#e94560'; this.style.color='white'" onmouseleave="this.style.background='transparent'; this.style.color='#e94560'">✕</button>
+      </div>
+    </div>
+    
+    <div style="padding:25px;">
+      
+      <!-- Money Setter -->
+      <div style="background:#0f3460; border-radius:12px; padding:20px; margin-bottom:20px; border:1px solid #00d4ff;">
+        <h3 style="margin:0 0 15px 0; color:#00d4ff; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.5rem;">💰</span> Set Money
+        </h3>
+        <div style="display:flex; gap:15px; align-items:end;">
+          <div style="flex:1;">
+            <label style="display:block; margin-bottom:8px; color:#aaa; font-size:0.9rem;">Base Number (1-999)</label>
+            <input type="number" id="cheatMoneyBase" min="1" max="999" value="100" style="width:100%; padding:12px; background:#16213e; border:1px solid #00d4ff; border-radius:8px; color:white; font-size:1.2rem; font-weight:600;">
+          </div>
+          <div style="flex:1;">
+            <label style="display:block; margin-bottom:8px; color:#aaa; font-size:0.9rem;">Magnitude</label>
+            <select id="cheatMoneyMagnitude" style="width:100%; padding:12px; background:#16213e; border:1px solid #00d4ff; border-radius:8px; color:white; font-size:1.1rem; cursor:pointer;">
+              <option value="1">Ones (1)</option>
+              <option value="1000">Thousand (K)</option>
+              <option value="1000000" selected>Million (M)</option>
+              <option value="1000000000">Billion (B)</option>
+              <option value="1000000000000">Trillion (Tr)</option>
+              <option value="1000000000000000">Quadrillion (Qd)</option>
+              <option value="1000000000000000000">Quintillion (Qn)</option>
+            </select>
+          </div>
+          <button id="cheatSetMoneyBtn" style="padding:12px 24px; background:#e94560; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; font-size:1rem; transition:all 0.3s; white-space:nowrap;" onmouseenter="this.style.background='#ff0055'" onmouseleave="this.style.background='#e94560'">
+            Set Balance
+          </button>
+        </div>
+        <div style="margin-top:12px; padding:12px; background:#16213e; border-radius:8px; border-left:3px solid #00d4ff;">
+          <span style="color:#aaa; font-size:0.9rem;">Preview: $</span><span id="cheatMoneyPreview" style="color:#00d4ff; font-weight:600; font-size:1.1rem;">100,000,000</span>
+        </div>
+      </div>
+      
+      <!-- Stat Multipliers -->
+      <div style="background:#0f3460; border-radius:12px; padding:20px; margin-bottom:20px; border:1px solid #00d4ff;">
+        <h3 style="margin:0 0 15px 0; color:#00d4ff; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.5rem;">📊</span> Stat Gain Multipliers
+        </h3>
+        <p style="color:#aaa; font-size:0.85rem; margin:0 0 15px 0;">Multiply how fast stats increase. 1x = normal, 10x = 10 times faster</p>
+        
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">
+          <!-- Affection -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#ff69b4;">💖 Affection</span>
+              <span id="affectionMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="affectionMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+          
+          <!-- Trust -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#4ecdc4;">🤝 Trust</span>
+              <span id="trustMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="trustMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+          
+          <!-- Comfort -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#95e1d3;">🛋️ Comfort</span>
+              <span id="comfortMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="comfortMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+          
+          <!-- Desire -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#ff6b6b;">🔥 Desire</span>
+              <span id="desireMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="desireMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+          
+          <!-- Productivity -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#f9ca24;">⚡ Productivity</span>
+              <span id="productivityMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="productivityMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+          
+          <!-- Confidence -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#00d4ff;">💪 Confidence</span>
+              <span id="confidenceMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="confidenceMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+          
+          <!-- Obedience -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#a29bfe;">🙇 Obedience</span>
+              <span id="obedienceMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="obedienceMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+          
+          <!-- Flirtiness -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#fd79a8;">😘 Flirtiness</span>
+              <span id="flirtinessMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="flirtinessMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+          
+          <!-- Professionalism -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#74b9ff;">💼 Professionalism</span>
+              <span id="professionalismMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="professionalismMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+          
+          <!-- Humor -->
+          <div>
+            <label style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="color:#ffeaa7;">😂 Humor</span>
+              <span id="humorMultValue" style="color:#00d4ff; font-weight:600;">1.0x</span>
+            </label>
+            <input type="range" id="humorMultSlider" min="0" max="50" value="10" step="1" style="width:100%;">
+          </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-top:15px;">
+          <button id="resetMultipliersBtn" style="flex:1; padding:10px; background:#533483; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600;">Reset All to 1x</button>
+          <button id="maxMultipliersBtn" style="flex:1; padding:10px; background:#e94560; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600;">Set All to 5x</button>
+        </div>
+      </div>
+      
+      <!-- Set Stats Max -->
+      <div style="background:#0f3460; border-radius:12px; padding:20px; margin-bottom:20px; border:1px solid #e94560;">
+        <h3 style="margin:0 0 15px 0; color:#e94560; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.5rem;">🎯</span> Set All NPCs' Stats
+        </h3>
+        <p style="color:#aaa; font-size:0.85rem; margin:0 0 15px 0;">Instantly set a specific stat to a chosen value for ALL active employees</p>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div>
+            <label style="display:block; margin-bottom:6px; color:#aaa; font-size:0.9rem;">Stat Type</label>
+            <select id="cheatStatType" style="width:100%; padding:10px; background:#16213e; border:1px solid #e94560; border-radius:8px; color:white; cursor:pointer;">
+              <option value="affection">💖 Affection</option>
+              <option value="trust">🤝 Trust</option>
+              <option value="comfort">🛋️ Comfort</option>
+              <option value="desire">🔥 Desire</option>
+              <option value="productivity">⚡ Productivity</option>
+              <option value="confidence">💪 Confidence</option>
+              <option value="obedience">🙇 Obedience</option>
+              <option value="flirty">😘 Flirtiness</option>
+              <option value="professional">💼 Professionalism</option>
+              <option value="humor">😂 Humor</option>
+            </select>
+          </div>
+          
+          <div>
+            <label style="display:block; margin-bottom:6px; color:#aaa; font-size:0.9rem;">Value (0-100)</label>
+            <input type="number" id="cheatStatValue" min="0" max="100" value="100" style="width:100%; padding:10px; background:#16213e; border:1px solid #e94560; border-radius:8px; color:white; font-size:1.1rem;">
+          </div>
+          
+          <div style="display:flex; align-items:end;">
+            <button id="cheatSetStatBtn" style="width:100%; padding:10px; background:#e94560; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; transition:all 0.3s;" onmouseenter="this.style.background='#ff0055'" onmouseleave="this.style.background='#e94560'">
+              Set for All NPCs
+            </button>
+          </div>
+        </div>
+        
+        <div style="margin-top:15px; padding:12px; background:#16213e; border-radius:8px; border-left:3px solid #e94560;">
+          <span style="color:#aaa; font-size:0.85rem;">⚠️ This will affect all active employees at once</span>
+        </div>
+      </div>
+      
+      <!-- Quick Actions -->
+      <div style="background:#0f3460; border-radius:12px; padding:20px; border:1px solid #00d4ff;">
+        <h3 style="margin:0 0 15px 0; color:#00d4ff; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.5rem;">⚡</span> Quick Actions
+        </h3>
+        
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+          <button id="cheatMaxAllStatsBtn" style="padding:12px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; transition:all 0.3s;">
+            🌟 Max All Stats (All NPCs)
+          </button>
+          
+          <button id="cheatUnlockAllLocationsBtn" style="padding:12px; background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; transition:all 0.3s;">
+            🏢 Unlock All Locations
+          </button>
+          
+          <button id="cheatUnlockAllProductsBtn" style="padding:12px; background:linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; transition:all 0.3s;">
+            📦 Unlock All Products
+          </button>
+          
+          <button id="cheatHireAllBtn" style="padding:12px; background:linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; transition:all 0.3s;">
+            👥 Hire All Candidates
+          </button>
+          
+          <button id="cheatClearPostsBtn" style="padding:12px; background:linear-gradient(135deg, #fa709a 0%, #fee140 100%); border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; transition:all 0.3s;">
+            🗑️ Clear All Posts
+          </button>
+          
+          <button id="cheatSpawnPostsBtn" style="padding:12px; background:linear-gradient(135deg, #30cfd0 0%, #330867 100%); border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; transition:all 0.3s;">
+            📱 Spawn 10 NPC Posts
+          </button>
+        </div>
+      </div>
+      
+      <!-- Context Windows -->
+      <div style="background:#0f3460; border-radius:12px; padding:20px; margin-top:20px; border:1px solid #ffd700;">
+        <h3 style="margin:0 0 15px 0; color:#ffd700; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.5rem;">🧠</span> Context Windows
+        </h3>
+        <p style="color:#aaa; font-size:0.85rem; margin:0 0 15px 0;">View and edit what NPCs "know" - Company-Wide Context and Gossip Engine data</p>
+        
+        <!-- Company-Wide Context -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h4 style="margin:0; color:#00d4ff; display:flex; align-items:center; gap:8px;">
+              <span style="font-size:1.2rem;">🏢</span> Company-Wide Context
+              <span id="contextCountLabel" style="font-size:0.9rem; color:#aaa; font-weight:normal;">(0/40)</span>
+            </h4>
+            <div style="display:flex; gap:8px;">
+              <button id="cheatRefreshContextBtn" style="padding:6px 12px; background:#00d4ff; border:none; border-radius:6px; color:#0f1419; cursor:pointer; font-weight:600; font-size:0.85rem;">
+                🔄 Refresh
+              </button>
+              <button id="cheatClearContextBtn" style="padding:6px 12px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600; font-size:0.85rem;">
+                🗑️ Clear All
+              </button>
+            </div>
+          </div>
+          <div id="contextList" style="max-height:300px; overflow-y:auto; background:#16213e; border-radius:8px; padding:10px;">
+            <p style="color:#aaa; text-align:center; margin:20px 0;">Loading context...</p>
+          </div>
+        </div>
+        
+        <!-- Gossip Engine -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h4 style="margin:0; color:#ff69b4; display:flex; align-items:center; gap:8px;">
+              <span style="font-size:1.2rem;">💬</span> Gossip Engine
+              <span id="gossipCountLabel" style="font-size:0.9rem; color:#aaa; font-weight:normal;">(0 NPCs)</span>
+            </h4>
+            <div style="display:flex; gap:8px;">
+              <button id="cheatRefreshGossipBtn" style="padding:6px 12px; background:#ff69b4; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600; font-size:0.85rem;">
+                🔄 Refresh
+              </button>
+              <button id="cheatClearGossipBtn" style="padding:6px 12px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600; font-size:0.85rem;">
+                🗑️ Clear All
+              </button>
+            </div>
+          </div>
+          <div id="gossipList" style="max-height:300px; overflow-y:auto; background:#16213e; border-radius:8px; padding:10px;">
+            <p style="color:#aaa; text-align:center; margin:20px 0;">Loading gossip...</p>
+          </div>
+        </div>
+      </div>
+      
+    </div>
   </div>
 </div>
 
@@ -3196,7 +3594,68 @@
       recentFires: [], // Last 5 fires with alumni status
       recentPromotions: [], // Last 10 promotions
       interdepartmentalEvents: [] // Cross-location events (competitions, collaborations, etc.)
+    },
+    
+    // Company-Wide Context - "Public Knowledge" that everyone knows
+    companyWideContext: {
+      currentBuzz: [], // Array of hot topics/gossip that's common knowledge (max 40 items)
+      lastUpdate: Date.now(),
+      maxItems: 40, // Keep only the juiciest/most recent items
+      decayTime: 604800000 // 7 days - old info gets trimmed
     }
+  };
+
+  // ============================================
+  // AI REQUEST OPTIMIZATION SYSTEM
+  // ============================================
+  
+  const aiOptimization = {
+    // Relationship evaluation batching
+    relationshipQueue: [],
+    relationshipBatchInterval: null,
+    relationshipBatchDelay: 30000, // Process every 30 seconds
+    
+    // Stat change heuristics (avoid AI calls for common cases)
+    statChangeHeuristics: {
+      like_post: { affection: 1, trust: 0.5, comfort: 0.5 },
+      comment_positive: { affection: 2, trust: 1, comfort: 1 },
+      comment_supportive: { affection: 3, trust: 2, comfort: 1.5 },
+      comment_funny: { affection: 2.5, trust: 1, comfort: 1, desire: 0.5 },
+      comment_flirty: { affection: 2, trust: 0.5, comfort: -0.5, desire: 3 },
+      comment_dramatic: { affection: 3, trust: -1, comfort: -1, desire: 1 },
+      comment_negative: { affection: -2, trust: -2, comfort: -1 },
+      mentioned_in_post: { affection: 2, trust: 1.5, comfort: 1 },
+      explicit_content_comfortable: { desire: 3, obedience: 1, comfort: -0.5 },
+      explicit_content_uncomfortable: { desire: -1, comfort: -3, trust: -1 }
+    },
+    
+    // Relationship change heuristics (EXPANDED for better coverage)
+    relationshipHeuristics: {
+      like_post: 1,
+      comment_positive: 2,
+      comment_funny: 3,
+      comment_supportive: 3,
+      comment_dramatic: 2,
+      comment_negative: -2,
+      comment_flirty: 2,
+      mentioned: 2,
+      explicit_post_flirty_viewer: 3,
+      explicit_post_professional_viewer: -1,
+      achievement_post: 2,
+      boring_post: 0,
+      // NEW: Additional common cases to reduce AI calls
+      casual_view: 0, // Just viewing a normal post, no change
+      meme_post: 1, // Light positive for funny content
+      selfie_view: 1, // Small positive for personal content
+      work_post: 0 // Neutral for work updates
+    },
+    
+    // Recent topics for duplicate prevention
+    recentTopics: new Map(), // Changed from [] to Map()
+    topicCooldown: 300000, // 5 minutes
+    
+    // Proactive message blocking
+    blockedProactiveMessages: new Set()
   };
 
   // ============================================
@@ -3429,7 +3888,8 @@
     authorName,
     authorImage = null,
     content = '',
-    replyToCommentId = null
+    replyToCommentId = null,
+    mentionedEmployees = []
   } = {}) {
     return {
       id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -3439,6 +3899,7 @@
       authorImage,
       content,
       replyToCommentId,
+      mentionedEmployees,
       timestamp: Date.now(),
       likes: []
     };
@@ -4451,6 +4912,251 @@
     };
   }
   
+  // ========== COMPANY-WIDE CONTEXT SYSTEM - PUBLIC KNOWLEDGE ==========
+  
+  /**
+   * Add information to the Company-Wide Context
+   * This is "public knowledge" that everyone in the office knows about
+   */
+  function addToCompanyWideContext(info) {
+    if (!gameState.companyWideContext) {
+      gameState.companyWideContext = {
+        currentBuzz: [],
+        lastUpdate: Date.now(),
+        maxItems: 40,
+        decayTime: 604800000 // 7 days
+      };
+    }
+    
+    const context = gameState.companyWideContext;
+    const now = Date.now();
+    
+    // Create context item
+    const contextItem = {
+      id: `context_${now}_${Math.random().toString(36).substr(2, 9)}`,
+      content: info.content, // The public knowledge string
+      type: info.type, // 'hookup', 'scandal', 'promotion', 'fight', 'post', etc.
+      subjectIds: info.subjectIds || [], // People involved
+      juiciness: info.juiciness || 50, // How interesting/scandalous
+      timestamp: now,
+      source: info.source || 'unknown' // 'social_post', 'gossip', 'witnessed', etc.
+    };
+    
+    console.log(`[CompanyContext] 📢 Adding to public knowledge: "${info.content}"`);
+    
+    // Add to the buzz
+    context.currentBuzz.unshift(contextItem); // Add to front
+    
+    // Trim old/stale items
+    const decayThreshold = now - context.decayTime;
+    context.currentBuzz = context.currentBuzz.filter(item => item.timestamp > decayThreshold);
+    
+    // Keep only the juiciest items if we exceed maxItems
+    if (context.currentBuzz.length > context.maxItems) {
+      // Sort by juiciness * recency factor
+      context.currentBuzz.sort((a, b) => {
+        const recencyA = (now - a.timestamp) / 86400000; // Days old
+        const recencyB = (now - b.timestamp) / 86400000;
+        const scoreA = a.juiciness * (1 / (1 + recencyA * 0.5)); // Decay over time
+        const scoreB = b.juiciness * (1 / (1 + recencyB * 0.5));
+        return scoreB - scoreA;
+      });
+      
+      // Keep only top items
+      context.currentBuzz = context.currentBuzz.slice(0, context.maxItems);
+    }
+    
+    context.lastUpdate = now;
+    
+    console.log(`[CompanyContext] Current buzz has ${context.currentBuzz.length} items`);
+    return contextItem;
+  }
+  
+  /**
+   * Get the current company-wide context as a formatted string
+   * This can be used in AI prompts to give NPCs awareness of office drama
+   */
+  function getCompanyWideContextString() {
+    if (!gameState.companyWideContext || gameState.companyWideContext.currentBuzz.length === 0) {
+      return "The office is relatively quiet right now - no major drama or gossip.";
+    }
+    
+    const buzzItems = gameState.companyWideContext.currentBuzz
+      .slice(0, 10) // Top 10 items
+      .map((item, index) => `${index + 1}. ${item.content}`)
+      .join('\n');
+    
+    return `CURRENT OFFICE BUZZ (Public Knowledge):\n${buzzItems}`;
+  }
+  
+  /**
+   * Extract juicy information from posts and add to company context
+   */
+  function analyzePostForPublicKnowledge(post) {
+    const content = (post.content || '').toLowerCase();
+    const mentions = post.referencedEmployees || [];
+    const isExplicit = post.explicitLevel >= 2;
+    
+    let juiciness = 30; // Base juiciness for any post
+    let contextContent = null;
+    let contextType = 'post';
+    
+    // Check for relationship reveals
+    const relationshipKeywords = ['dating', 'together', 'couple', 'boyfriend', 'girlfriend', 'relationship', 'hooked up', 'kissed', 'makeout', 'sleeping with'];
+    const hasRelationshipContent = relationshipKeywords.some(kw => content.includes(kw));
+    
+    if (hasRelationshipContent && mentions.length >= 1) {
+      juiciness = 85;
+      const mentionedNames = mentions.map(id => {
+        const emp = gameState.employees.find(e => e.id === id);
+        return emp ? emp.name : 'someone';
+      });
+      
+      if (post.isPlayerPost) {
+        contextContent = `Boss revealed something about ${mentionedNames.join(' and ')} on social media`;
+      } else {
+        contextContent = `${post.authorName} posted about ${mentionedNames.join(' and ')} - relationship drama!`;
+      }
+      contextType = 'hookup';
+    }
+    
+    // Check for explicit content
+    if (isExplicit && mentions.length >= 1) {
+      juiciness = Math.max(juiciness, 75);
+      const mentionedNames = mentions.map(id => {
+        const emp = gameState.employees.find(e => e.id === id);
+        return emp ? emp.name : 'someone';
+      });
+      
+      if (!contextContent) { // Don't override relationship content
+        if (post.isPlayerPost) {
+          contextContent = `Boss posted explicit content featuring ${mentionedNames.join(' and ')}`;
+        } else {
+          contextContent = `${post.authorName} shared explicit content about ${mentionedNames.join(' and ')}`;
+        }
+        contextType = 'scandal';
+      }
+    }
+    
+    // Check for callouts/drama
+    const dramaKeywords = ['drama', 'fight', 'angry', 'hate', 'betrayed', 'liar', 'cheat', 'exposed', 'caught'];
+    const hasDrama = dramaKeywords.some(kw => content.includes(kw));
+    
+    if (hasDrama && mentions.length >= 1) {
+      juiciness = Math.max(juiciness, 70);
+      const mentionedNames = mentions.map(id => {
+        const emp = gameState.employees.find(e => e.id === id);
+        return emp ? emp.name : 'someone';
+      });
+      
+      if (!contextContent) {
+        contextContent = `${post.authorName} called out ${mentionedNames.join(' and ')} - office drama!`;
+        contextType = 'fight';
+      }
+    }
+    
+    // High engagement = newsworthy
+    if (post.likes && post.likes.length > 5) {
+      juiciness += 15; // Popular posts are juicier
+    }
+    
+    if (post.comments && post.comments.length > 3) {
+      juiciness += 20; // Lots of discussion = juicy
+    }
+    
+    // If we found something juicy, add to context
+    if (contextContent && juiciness >= 60) {
+      addToCompanyWideContext({
+        content: contextContent,
+        type: contextType,
+        subjectIds: [post.authorId || 'player', ...mentions],
+        juiciness: juiciness,
+        source: 'social_post'
+      });
+      
+      console.log(`[CompanyContext] Extracted public knowledge from post (juiciness: ${juiciness})`);
+      
+      // Feed this into the Gossip Engine - NPCs gossip about current events!
+      feedContextToGossipEngine({
+        content: contextContent,
+        type: contextType,
+        subjectIds: [post.authorId || 'player', ...mentions],
+        juiciness: juiciness
+      });
+    }
+  }
+  
+  /**
+   * Feed Company-Wide Context into the Gossip Engine
+   * NPCs will gossip about the interesting things happening in the office
+   */
+  function feedContextToGossipEngine(contextItem) {
+    if (!gameState.activeGossip) gameState.activeGossip = [];
+    
+    // Determine which NPCs "witnessed" or know about this event
+    const activeEmployees = gameState.employees.filter(e => e.employmentStatus === 'active');
+    const knownBy = [];
+    
+    // Everyone involved knows firsthand
+    for (const subjectId of contextItem.subjectIds) {
+      if (subjectId !== 'player' && activeEmployees.find(e => e.id === subjectId)) {
+        knownBy.push(subjectId);
+      }
+    }
+    
+    // Random 30-60% of other employees "hear about it" based on juiciness
+    const spreadChance = Math.min(0.8, (contextItem.juiciness / 100) * 0.6); // 60-80% for high juiciness
+    for (const emp of activeEmployees) {
+      if (!knownBy.includes(emp.id) && Math.random() < spreadChance) {
+        knownBy.push(emp.id);
+        
+        // Add to their known gossip
+        if (!emp.gossip) initializeGossipSystem(emp);
+        
+        const gossipItem = createGossipItem({
+          type: contextItem.type,
+          subjectId: contextItem.subjectIds[0] || 'player',
+          targetId: contextItem.subjectIds[1] || null,
+          content: contextItem.content,
+          truthLevel: 100, // Public posts are 100% accurate
+          juiciness: contextItem.juiciness,
+          spreadCount: knownBy.length,
+          originatorId: 'public' // From public social media
+        });
+        
+        // Avoid duplicates
+        if (!emp.gossip.knownGossip.find(g => g.content === gossipItem.content)) {
+          emp.gossip.knownGossip.push(gossipItem);
+          
+          // Keep only 20 most recent gossip items per NPC
+          if (emp.gossip.knownGossip.length > 20) {
+            emp.gossip.knownGossip.sort((a, b) => b.timestamp - a.timestamp);
+            emp.gossip.knownGossip = emp.gossip.knownGossip.slice(0, 20);
+          }
+        }
+      }
+    }
+    
+    // Add to global gossip pool
+    gameState.activeGossip.push({
+      id: `gossip_${Date.now()}_${Math.random()}`,
+      subjectId: contextItem.subjectIds[0] || 'player',
+      targetId: contextItem.subjectIds[1] || null,
+      content: contextItem.content,
+      juiciness: contextItem.juiciness,
+      timestamp: Date.now(),
+      accuracy: 100,
+      knownBy: knownBy
+    });
+    
+    // Keep gossip list manageable
+    if (gameState.activeGossip.length > 50) {
+      gameState.activeGossip = gameState.activeGossip.slice(-50);
+    }
+    
+    console.log(`[GossipEngine] Fed context to ${knownBy.length} NPCs: "${contextItem.content}"`);
+  }
+  
   /**
    * Simulated Event Structure
    * Things that "happened" when player wasn't looking
@@ -5098,7 +5804,7 @@
   }
 
   // Sanitize and tighten model outputs
-  function sanitizeNpcResponse(text, maxSentences = 2) {
+  function sanitizeNpcResponse(text, maxSentences = 10) {
     if (!text) return '';
     let t = String(text);
     
@@ -5114,42 +5820,29 @@
     // Collapse excessive whitespace
     t = t.replace(/\s+/g, ' ').trim();
     
-    // Split into sentences - handle multiple punctuation marks
-    const sentenceEndings = /([.!?]+)\s+/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-    
-    while ((match = sentenceEndings.exec(t)) !== null) {
-      parts.push(t.slice(lastIndex, match.index + match[1].length));
-      lastIndex = match.index + match[0].length;
+    // Apply generous character limit - no sentence counting to avoid breaking on periods inside asterisks
+    // This allows full dramatic responses with multiple action blocks to display properly
+    const maxLength = 3000;
+    if (t.length <= maxLength) {
+      return t;
     }
     
-    // Add remaining text if it forms a complete sentence
-    const remaining = t.slice(lastIndex).trim();
-    if (remaining) {
-      // Check if it ends with punctuation (complete sentence)
-      if (/[.!?]$/.test(remaining)) {
-        parts.push(remaining);
-      } else if (parts.length === 0) {
-        // If we have no complete sentences but have text, include it
-        // This handles cases where AI didn't add ending punctuation
-        parts.push(remaining + '.');
-      }
-      // Otherwise, it's a trailing fragment - check if it looks intentional
-      else if (/\.\.\.$/.test(remaining)) {
-        // Trailing ellipsis is intentional (suspense/drama)
-        parts.push(remaining);
-      }
-      // Else drop the incomplete fragment
+    // If we need to truncate, try to find a sentence boundary near the limit
+    // Look backwards from maxLength to find the last sentence ending
+    const truncated = t.slice(0, maxLength);
+    const lastSentenceEnd = Math.max(
+      truncated.lastIndexOf('. '),
+      truncated.lastIndexOf('! '),
+      truncated.lastIndexOf('? ')
+    );
+    
+    // If we found a sentence boundary in the last 500 chars, use it
+    if (lastSentenceEnd > maxLength - 500) {
+      return t.slice(0, lastSentenceEnd + 1).trim();
     }
     
-    // Take up to maxSentences complete sentences
-    const sentences = parts.slice(0, maxSentences).join(' ');
-    
-    // Increased character limit to allow fuller, more descriptive responses
-    // Allows for dialogue + action descriptions without being excessive
-    return sentences.slice(0, 800);
+    // Otherwise just truncate at maxLength and add ellipsis
+    return truncated.trim() + '...';
   }
 
   // Build a professional, non-repetitive prompt
@@ -5718,6 +6411,10 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
 
       // Set up autosave
       setupAutosave();
+      
+      // Start AI optimization systems
+      startRelationshipBatching();
+      console.log('[AI Optimization] Systems initialized');
     } catch (error) {
       console.error('Error initializing game:', error);
       showNotification('Failed to initialize game. Please refresh the page.');
@@ -6704,6 +7401,512 @@ Generate ONLY the message, no quotes, no explanation:`;
       });
     }
     
+    // Posts per page slider
+    const postsPerPageSlider = $('postsPerPageSlider');
+    const postsPerPageValue = $('postsPerPageValue');
+    if (postsPerPageSlider && postsPerPageValue) {
+      postsPerPageSlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        feedPaginationState.postsPerPage = value;
+        postsPerPageValue.textContent = value;
+        
+        // Save to settings for persistence
+        if (!gameState.settings.performance) {
+          gameState.settings.performance = {};
+        }
+        gameState.settings.performance.postsPerPage = value;
+        
+        // Re-render feed if currently viewing it
+        const socialTab = $('socialTab');
+        if (socialTab && !socialTab.classList.contains('tab-content') || 
+            (socialTab && socialTab.style.display !== 'none')) {
+          renderSocialFeed(true);
+        }
+      });
+      
+      // Load saved value on startup
+      if (gameState.settings.performance?.postsPerPage) {
+        const savedValue = gameState.settings.performance.postsPerPage;
+        postsPerPageSlider.value = savedValue;
+        postsPerPageValue.textContent = savedValue;
+        feedPaginationState.postsPerPage = savedValue;
+      }
+    }
+    
+    // ====================
+    // CHEATS SYSTEM
+    // ====================
+    
+    // Initialize cheat multipliers in gameState
+    if (!gameState.cheatMultipliers) {
+      gameState.cheatMultipliers = {
+        affection: 1.0,
+        trust: 1.0,
+        comfort: 1.0,
+        desire: 1.0,
+        productivity: 1.0,
+        confidence: 1.0,
+        obedience: 1.0,
+        flirty: 1.0,
+        professional: 1.0,
+        humor: 1.0
+      };
+    }
+    
+    // Open/Close Cheats Modal
+    const openCheatsBtn = $('openCheatsBtn');
+    const closeCheatsBtn = $('closeCheatsBtn');
+    const cheatsModal = $('cheatsModal');
+    
+    if (openCheatsBtn && cheatsModal) {
+      openCheatsBtn.addEventListener('click', () => {
+        cheatsModal.style.display = 'flex';
+        // Refresh context windows when opening
+        if (typeof refreshContextWindow === 'function') refreshContextWindow();
+        if (typeof refreshGossipWindow === 'function') refreshGossipWindow();
+      });
+    }
+    
+    if (closeCheatsBtn && cheatsModal) {
+      closeCheatsBtn.addEventListener('click', () => {
+        cheatsModal.style.display = 'none';
+      });
+    }
+    
+    // Close on background click
+    if (cheatsModal) {
+      cheatsModal.addEventListener('click', (e) => {
+        if (e.target === cheatsModal) {
+          cheatsModal.style.display = 'none';
+        }
+      });
+    }
+    
+    // Money Setter
+    const cheatMoneyBase = $('cheatMoneyBase');
+    const cheatMoneyMagnitude = $('cheatMoneyMagnitude');
+    const cheatMoneyPreview = $('cheatMoneyPreview');
+    const cheatSetMoneyBtn = $('cheatSetMoneyBtn');
+    
+    function updateMoneyPreview() {
+      if (!cheatMoneyBase || !cheatMoneyMagnitude || !cheatMoneyPreview) return;
+      const base = parseInt(cheatMoneyBase.value) || 100;
+      const magnitude = parseInt(cheatMoneyMagnitude.value) || 1000000;
+      const total = base * magnitude;
+      cheatMoneyPreview.textContent = total.toLocaleString();
+    }
+    
+    if (cheatMoneyBase) cheatMoneyBase.addEventListener('input', updateMoneyPreview);
+    if (cheatMoneyMagnitude) cheatMoneyMagnitude.addEventListener('change', updateMoneyPreview);
+    
+    if (cheatSetMoneyBtn && cheatMoneyBase && cheatMoneyMagnitude) {
+      cheatSetMoneyBtn.addEventListener('click', () => {
+        const base = parseInt(cheatMoneyBase.value) || 100;
+        const magnitude = parseInt(cheatMoneyMagnitude.value) || 1000000;
+        const total = base * magnitude;
+        gameState.cash = total;
+        showNotification(`💰 Money set to $${total.toLocaleString()}!`, 'success');
+        updateCashDisplay();
+      });
+    }
+    
+    // Stat Multiplier Sliders
+    const statMultipliers = ['affection', 'trust', 'comfort', 'desire', 'productivity', 'confidence', 'obedience', 'flirtiness', 'professionalism', 'humor'];
+    
+    statMultipliers.forEach(stat => {
+      const slider = $(`${stat}MultSlider`);
+      const value = $(`${stat}MultValue`);
+      
+      if (slider && value) {
+        // Map slider value (0-50) to multiplier (0-5x)
+        slider.addEventListener('input', (e) => {
+          const mult = parseFloat(e.target.value) / 10;
+          gameState.cheatMultipliers[stat] = mult;
+          value.textContent = `${mult.toFixed(1)}x`;
+        });
+        
+        // Set initial value
+        const initialMult = gameState.cheatMultipliers[stat] || 1.0;
+        slider.value = initialMult * 10;
+        value.textContent = `${initialMult.toFixed(1)}x`;
+      }
+    });
+    
+    // Reset Multipliers
+    const resetMultipliersBtn = $('resetMultipliersBtn');
+    if (resetMultipliersBtn) {
+      resetMultipliersBtn.addEventListener('click', () => {
+        statMultipliers.forEach(stat => {
+          gameState.cheatMultipliers[stat] = 1.0;
+          const slider = $(`${stat}MultSlider`);
+          const value = $(`${stat}MultValue`);
+          if (slider) slider.value = 10;
+          if (value) value.textContent = '1.0x';
+        });
+        showNotification('🔄 All multipliers reset to 1x', 'info');
+      });
+    }
+    
+    // Max Multipliers (5x)
+    const maxMultipliersBtn = $('maxMultipliersBtn');
+    if (maxMultipliersBtn) {
+      maxMultipliersBtn.addEventListener('click', () => {
+        statMultipliers.forEach(stat => {
+          gameState.cheatMultipliers[stat] = 5.0;
+          const slider = $(`${stat}MultSlider`);
+          const value = $(`${stat}MultValue`);
+          if (slider) slider.value = 50;
+          if (value) value.textContent = '5.0x';
+        });
+        showNotification('⚡ All multipliers set to 5x!', 'success');
+      });
+    }
+    
+    // Set Stats for All NPCs
+    const cheatStatType = $('cheatStatType');
+    const cheatStatValue = $('cheatStatValue');
+    const cheatSetStatBtn = $('cheatSetStatBtn');
+    
+    if (cheatSetStatBtn && cheatStatType && cheatStatValue) {
+      cheatSetStatBtn.addEventListener('click', () => {
+        const statType = cheatStatType.value;
+        const value = parseInt(cheatStatValue.value);
+        
+        if (value < 0 || value > 100) {
+          showNotification('⚠️ Value must be between 0 and 100', 'error');
+          return;
+        }
+        
+        let count = 0;
+        gameState.employees.forEach(emp => {
+          if (emp.employmentStatus === 'active') {
+            // Handle different stat locations
+            if (['affection', 'trust', 'comfort', 'desire', 'productivity'].includes(statType)) {
+              if (!emp.stats) emp.stats = {};
+              emp.stats[statType] = value;
+              count++;
+            } else if (['confidence', 'obedience', 'flirty', 'professional', 'humor'].includes(statType)) {
+              if (!emp.personality) emp.personality = {};
+              emp.personality[statType] = value;
+              count++;
+            }
+          }
+        });
+        
+        showNotification(`✅ Set ${statType} to ${value} for ${count} employees!`, 'success');
+      });
+    }
+    
+    // Quick Actions
+    const cheatMaxAllStatsBtn = $('cheatMaxAllStatsBtn');
+    if (cheatMaxAllStatsBtn) {
+      cheatMaxAllStatsBtn.addEventListener('click', () => {
+        let count = 0;
+        gameState.employees.forEach(emp => {
+          if (emp.employmentStatus === 'active') {
+            if (!emp.stats) emp.stats = {};
+            emp.stats.affection = 100;
+            emp.stats.trust = 100;
+            emp.stats.comfort = 100;
+            emp.stats.desire = 100;
+            emp.stats.productivity = 100;
+            
+            if (!emp.personality) emp.personality = {};
+            emp.personality.confidence = 100;
+            emp.personality.obedience = 100;
+            emp.personality.flirty = 100;
+            emp.personality.professional = 100;
+            emp.personality.humor = 100;
+            
+            count++;
+          }
+        });
+        showNotification(`🌟 Maxed all stats for ${count} employees!`, 'success');
+      });
+    }
+    
+    const cheatUnlockAllLocationsBtn = $('cheatUnlockAllLocationsBtn');
+    if (cheatUnlockAllLocationsBtn) {
+      cheatUnlockAllLocationsBtn.addEventListener('click', () => {
+        let count = 0;
+        gameState.locations.forEach(loc => {
+          if (!loc.owned) {
+            loc.owned = true;
+            loc.unlocked = true;
+            count++;
+          }
+        });
+        showNotification(`🏢 Unlocked ${count} locations!`, 'success');
+        renderLocations();
+      });
+    }
+    
+    const cheatUnlockAllProductsBtn = $('cheatUnlockAllProductsBtn');
+    if (cheatUnlockAllProductsBtn) {
+      cheatUnlockAllProductsBtn.addEventListener('click', () => {
+        let count = 0;
+        gameState.products.forEach(prod => {
+          if (!prod.unlocked) {
+            prod.unlocked = true;
+            count++;
+          }
+        });
+        showNotification(`📦 Unlocked ${count} products!`, 'success');
+        renderProducts();
+      });
+    }
+    
+    const cheatHireAllBtn = $('cheatHireAllBtn');
+    if (cheatHireAllBtn) {
+      cheatHireAllBtn.addEventListener('click', () => {
+        if (!gameState.candidates || gameState.candidates.length === 0) {
+          showNotification('⚠️ No candidates available to hire!', 'error');
+          return;
+        }
+        
+        const toHire = gameState.candidates.filter(c => !c.hired);
+        toHire.forEach(candidate => {
+          candidate.hired = true;
+          candidate.employmentStatus = 'active';
+          candidate.hireDate = Date.now();
+          candidate.bioComplete = true;
+          candidate.onboarding = false;
+          
+          // Initialize social data
+          initializeEmployeeSocialData(candidate);
+          
+          gameState.employees.push(candidate);
+          generateRandomRelationships(candidate.id);
+        });
+        
+        gameState.candidates = gameState.candidates.filter(c => c.hired);
+        
+        showNotification(`👥 Hired ${toHire.length} candidates!`, 'success');
+        updateCompanyAwareness();
+      });
+    }
+    
+    const cheatClearPostsBtn = $('cheatClearPostsBtn');
+    if (cheatClearPostsBtn) {
+      cheatClearPostsBtn.addEventListener('click', () => {
+        const count = gameState.socialNetwork.posts.length;
+        gameState.socialNetwork.posts = [];
+        showNotification(`🗑️ Cleared ${count} posts!`, 'info');
+        if (gameState.activeTab === 'social') {
+          renderSocialFeed(true);
+        }
+      });
+    }
+    
+    const cheatSpawnPostsBtn = $('cheatSpawnPostsBtn');
+    if (cheatSpawnPostsBtn) {
+      cheatSpawnPostsBtn.addEventListener('click', async () => {
+        const activeEmployees = gameState.employees.filter(e => e.employmentStatus === 'active');
+        if (activeEmployees.length === 0) {
+          showNotification('⚠️ No active employees to create posts!', 'error');
+          return;
+        }
+        
+        showNotification('📱 Generating 10 NPC posts...', 'info');
+        
+        for (let i = 0; i < 10; i++) {
+          const randomEmp = activeEmployees[Math.floor(Math.random() * activeEmployees.length)];
+          
+          // Generate a random post type
+          const postTypes = ['text', 'selfie', 'life_update', 'work', 'gossip'];
+          const postType = postTypes[Math.floor(Math.random() * postTypes.length)];
+          
+          await generateNPCPost(randomEmp, postType);
+          
+          // Small delay between posts
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        showNotification('✅ Generated 10 NPC posts!', 'success');
+        if (gameState.activeTab === 'social') {
+          renderSocialFeed(true);
+        }
+      });
+    }
+    
+    // ========== CONTEXT WINDOWS ==========
+    
+    // Refresh Company-Wide Context
+    const cheatRefreshContextBtn = $('cheatRefreshContextBtn');
+    if (cheatRefreshContextBtn) {
+      cheatRefreshContextBtn.addEventListener('click', () => {
+        refreshContextWindow();
+      });
+    }
+    
+    // Clear Company-Wide Context
+    const cheatClearContextBtn = $('cheatClearContextBtn');
+    if (cheatClearContextBtn) {
+      cheatClearContextBtn.addEventListener('click', () => {
+        if (confirm('Clear all Company-Wide Context items? NPCs will forget all recent company events.')) {
+          gameState.companyWideContext.currentBuzz = [];
+          refreshContextWindow();
+          showNotification('🗑️ Company-Wide Context cleared!', 'info');
+        }
+      });
+    }
+    
+    // Refresh Gossip Engine
+    const cheatRefreshGossipBtn = $('cheatRefreshGossipBtn');
+    if (cheatRefreshGossipBtn) {
+      cheatRefreshGossipBtn.addEventListener('click', () => {
+        refreshGossipWindow();
+      });
+    }
+    
+    // Clear Gossip Engine
+    const cheatClearGossipBtn = $('cheatClearGossipBtn');
+    if (cheatClearGossipBtn) {
+      cheatClearGossipBtn.addEventListener('click', () => {
+        if (confirm('Clear all gossip from all NPCs? This will reset their knowledge of company drama.')) {
+          gameState.employees.forEach(emp => {
+            if (emp.gossip) {
+              emp.gossip = [];
+            }
+          });
+          refreshGossipWindow();
+          showNotification('🗑️ All gossip cleared!', 'info');
+        }
+      });
+    }
+    
+    // Functions to refresh context windows
+    function refreshContextWindow() {
+      const contextList = $('contextList');
+      const contextCountLabel = $('contextCountLabel');
+      
+      if (!contextList || !contextCountLabel) return;
+      
+      const items = gameState.companyWideContext?.currentBuzz || [];
+      contextCountLabel.textContent = `(${items.length}/${gameState.companyWideContext?.maxItems || 40})`;
+      
+      if (items.length === 0) {
+        contextList.innerHTML = '<p style="color:#aaa; text-align:center; margin:20px 0;">No context items yet</p>';
+        return;
+      }
+      
+      // Sort by timestamp (newest first)
+      const sortedItems = [...items].sort((a, b) => b.timestamp - a.timestamp);
+      
+      contextList.innerHTML = sortedItems.map((item, index) => {
+        const timeAgo = formatTimeAgo(item.timestamp);
+        const juiciness = item.juiciness || 0;
+        const juiceColor = juiciness > 70 ? '#e94560' : juiciness > 40 ? '#ffd700' : '#00d4ff';
+        
+        return `
+          <div style="background:#0f3460; border-radius:8px; padding:12px; margin-bottom:8px; border-left:3px solid ${juiceColor};">
+            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:6px;">
+              <div style="flex:1;">
+                <div style="color:#ddd; font-size:0.95rem; line-height:1.4; margin-bottom:6px;">${item.info}</div>
+                <div style="display:flex; gap:12px; font-size:0.8rem; color:#aaa;">
+                  <span>🔥 ${juiciness}/100</span>
+                  <span>⏰ ${timeAgo}</span>
+                  ${item.involvedEmployees ? `<span>👥 ${item.involvedEmployees.length}</span>` : ''}
+                </div>
+              </div>
+              <button onclick="removeContextItem(${index})" style="background:#e94560; border:none; padding:6px 10px; border-radius:6px; color:white; cursor:pointer; font-size:0.8rem; margin-left:8px;">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function refreshGossipWindow() {
+      const gossipList = $('gossipList');
+      const gossipCountLabel = $('gossipCountLabel');
+      
+      if (!gossipList || !gossipCountLabel) return;
+      
+      const activeEmployees = gameState.employees.filter(e => e.employmentStatus === 'active');
+      const employeesWithGossip = activeEmployees.filter(e => 
+        e.gossip && e.gossip.knownGossip && e.gossip.knownGossip.length > 0
+      );
+      
+      gossipCountLabel.textContent = `(${employeesWithGossip.length} NPCs)`;
+      
+      if (employeesWithGossip.length === 0) {
+        gossipList.innerHTML = '<p style="color:#aaa; text-align:center; margin:20px 0;">No gossip yet</p>';
+        return;
+      }
+      
+      gossipList.innerHTML = employeesWithGossip.map(emp => {
+        const gossipItems = emp.gossip?.knownGossip || [];
+        const totalGossip = gossipItems.length;
+        
+        return `
+          <div style="background:#0f3460; border-radius:8px; padding:12px; margin-bottom:12px; border:1px solid #ff69b4;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${emp.profileImage || 'https://placehold.co/40x40'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                <div>
+                  <div style="color:#fff; font-weight:600;">${emp.name}</div>
+                  <div style="color:#aaa; font-size:0.85rem;">${totalGossip} gossip item${totalGossip !== 1 ? 's' : ''}</div>
+                </div>
+              </div>
+              <button onclick="clearEmployeeGossip('${emp.id}')" style="background:#e94560; border:none; padding:6px 12px; border-radius:6px; color:white; cursor:pointer; font-size:0.8rem;">
+                Clear
+              </button>
+            </div>
+            <div style="max-height:150px; overflow-y:auto;">
+              ${gossipItems.slice(0, 5).map(g => {
+                const timeAgo = formatTimeAgo(g.timestamp || g.heardAt || Date.now());
+                const juiceColor = g.juiciness > 70 ? '#e94560' : g.juiciness > 40 ? '#ffd700' : '#00d4ff';
+                
+                return `
+                  <div style="background:#16213e; border-radius:6px; padding:8px; margin-bottom:6px; border-left:2px solid ${juiceColor};">
+                    <div style="color:#ddd; font-size:0.9rem; margin-bottom:4px;">${g.content || g.info || g.description || 'Unknown gossip'}</div>
+                    <div style="display:flex; gap:8px; font-size:0.75rem; color:#aaa;">
+                      <span>🔥 ${g.juiciness || 0}</span>
+                      <span>⏰ ${timeAgo}</span>
+                      ${g.source ? `<span>📢 ${g.source}</span>` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+              ${totalGossip > 5 ? `<p style="color:#aaa; font-size:0.85rem; text-align:center; margin:8px 0 0 0;">+${totalGossip - 5} more...</p>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // Helper functions (global scope for onclick)
+    window.removeContextItem = function(index) {
+      if (confirm('Remove this context item?')) {
+        gameState.companyWideContext.currentBuzz.splice(index, 1);
+        refreshContextWindow();
+        showNotification('Context item removed', 'info');
+      }
+    };
+    
+    window.clearEmployeeGossip = function(employeeId) {
+      const emp = gameState.employees.find(e => e.id === employeeId);
+      if (emp && emp.gossip && emp.gossip.knownGossip) {
+        emp.gossip.knownGossip = [];
+        refreshGossipWindow();
+        showNotification(`Cleared gossip for ${emp.name}`, 'info');
+      }
+    };
+    
+    // Helper function to format time ago
+    function formatTimeAgo(timestamp) {
+      const seconds = Math.floor((Date.now() - timestamp) / 1000);
+      if (seconds < 60) return `${seconds}s ago`;
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      return `${days}d ago`;
+    }
+    
     // Player Bio - DEPRECATED: Now handled by player profile modal
     // Old textarea-based bio system has been replaced
     const playerBioInput = $('playerBioInput'); // No longer exists in HTML
@@ -7178,7 +8381,9 @@ Generate ONLY the message, no quotes, no explanation:`;
           const action = item.dataset.action;
           attachmentMenu.style.display = 'none';
           
-          if (action === 'request') {
+          if (action === 'send-money') {
+            openSendMoneyModal();
+          } else if (action === 'request') {
             $('requestImageModal').style.display = 'flex';
           } else if (action === 'send') {
             $('sendImageModal').style.display = 'flex';
@@ -7220,6 +8425,99 @@ Generate ONLY the message, no quotes, no explanation:`;
           sendImagePrompt.value = '';
           await sendImageToNPC(prompt);
         }
+      });
+    }
+    
+    // Send Money Modal
+    const sendMoneyModal = $('sendMoneyModal');
+    const closeSendMoneyModal = $('closeSendMoneyModal');
+    const cancelSendMoney = $('cancelSendMoney');
+    const confirmSendMoney = $('confirmSendMoney');
+    const customMoneyAmount = $('customMoneyAmount');
+    
+    function openSendMoneyModal() {
+      const balance = gameState.cash || 0;
+      $('sendMoneyBalance').textContent = '$' + formatCash(balance);
+      
+      // Calculate preset amounts (1%, 5%, 10% of balance)
+      const small = Math.max(100, Math.floor(balance * 0.01));
+      const medium = Math.max(1000, Math.floor(balance * 0.05));
+      const large = Math.max(10000, Math.floor(balance * 0.10));
+      
+      $('moneySmall').textContent = '$' + formatCash(small);
+      $('moneyMedium').textContent = '$' + formatCash(medium);
+      $('moneyLarge').textContent = '$' + formatCash(large);
+      
+      customMoneyAmount.value = '';
+      $('moneyMessage').value = '';
+      sendMoneyModal.style.display = 'flex';
+    }
+    
+    if (closeSendMoneyModal) {
+      closeSendMoneyModal.addEventListener('click', () => {
+        sendMoneyModal.style.display = 'none';
+        customMoneyAmount.value = '';
+        $('moneyMessage').value = '';
+      });
+    }
+    
+    if (cancelSendMoney) {
+      cancelSendMoney.addEventListener('click', () => {
+        sendMoneyModal.style.display = 'none';
+        customMoneyAmount.value = '';
+        $('moneyMessage').value = '';
+      });
+    }
+    
+    // Money preset buttons - populate custom amount field instead of immediately sending
+    document.querySelectorAll('.money-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = btn.dataset.preset;
+        const balance = gameState.cash || 0;
+        
+        let amount = 0;
+        if (preset === 'small') amount = Math.max(100, Math.floor(balance * 0.01));
+        else if (preset === 'medium') amount = Math.max(1000, Math.floor(balance * 0.05));
+        else if (preset === 'large') amount = Math.max(10000, Math.floor(balance * 0.10));
+        
+        // Populate the custom amount field with the preset value
+        if (customMoneyAmount) {
+          customMoneyAmount.value = amount;
+          customMoneyAmount.focus();
+        }
+      });
+      
+      // Hover effects
+      btn.addEventListener('mouseenter', () => {
+        btn.style.background = '#4ecca3';
+        btn.style.borderColor = '#4ecca3';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.background = '#0f3460';
+        btn.style.borderColor = '#4ecca3';
+      });
+    });
+    
+    if (confirmSendMoney) {
+      confirmSendMoney.addEventListener('click', async () => {
+        const amount = parseInt(customMoneyAmount.value) || 0;
+        const balance = gameState.cash || 0;
+        const message = $('moneyMessage').value.trim();
+        
+        if (amount <= 0) {
+          showNotification('❌ Please enter a valid amount', 'error');
+          return;
+        }
+        
+        if (amount > balance) {
+          showNotification('❌ Insufficient funds!', 'error');
+          return;
+        }
+        
+        sendMoneyModal.style.display = 'none';
+        customMoneyAmount.value = '';
+        $('moneyMessage').value = '';
+        await sendMoneyToNPC(amount, message);
       });
     }
     
@@ -7743,6 +9041,9 @@ Generate ONLY the message, no quotes, no explanation:`;
       case 'invest':
         updatePrestigeUI();
         renderInfluenceUpgrades();
+        break;
+      case 'ceocorner':
+        // CEO Corner doesn't need updates, just display the chat
         break;
     }
   }
@@ -8576,8 +9877,11 @@ Generate ONLY the message, no quotes, no explanation:`;
         employeesList.appendChild(card);
     }
 
-    // Hired employees
+    // Hired employees (filter out alumni/fired employees)
     for (const e of gameState.employees) {
+        // Skip fired employees
+        if (e.employmentStatus === 'alumni') continue;
+        
         const card = document.createElement('div');
         card.className = 'employee-card';
         card.style.cssText = 'background:#16213e; border-radius:10px; padding:15px; box-shadow:0 4px 10px rgba(0,0,0,0.2);';
@@ -8788,6 +10092,11 @@ Generate ONLY the message, no quotes, no explanation:`;
     }
     
     return { displayText, fontSize, color, textShadow, animation };
+  }
+  
+  // Helper to get just the display text from formatCashDisplay
+  function formatCash(amount) {
+    return formatCashDisplay(amount).displayText;
   }
 
   // Update Upgrades Tab
@@ -9145,18 +10454,22 @@ Generate ONLY the message, no quotes, no explanation:`;
   /**
    * Update the Social Feed tab
    */
-  // Virtual scrolling state for social feed
-  let virtualScrollState = {
-    postsPerPage: 50,
-    currentPage: 0,
-    allPosts: [],
-    renderedRange: { start: 0, end: 50 },
-    scrollContainer: null,
-    isScrolling: false,
-    scrollTimeout: null,
-    lastRenderTime: 0,
-    pendingUpdates: new Set(), // Track which posts need updates
-    updateThrottle: null
+  // Pagination state for social feed
+  let feedPaginationState = {
+    postsPerPage: 20, // Reduced from 50 for better performance
+    currentPage: 1,
+    totalPages: 1,
+    pendingUpdates: new Set(), // Track posts that need updates
+    updateThrottle: null, // Throttle timer for updates
+    allPosts: [], // Cache of all posts for comparison
+  };
+  
+  // Live update state for post modal
+  let postModalState = {
+    activePostId: null,        // Currently open post ID
+    updateInterval: null,      // Interval handle for live updates
+    lastCommentCount: 0,       // Last known comment count
+    lastLikeCount: 0,          // Last known like count
   };
 
   function updateSocialTab() {
@@ -9173,17 +10486,17 @@ Generate ONLY the message, no quotes, no explanation:`;
   function requestSmartFeedUpdate(postId = null) {
     // If specific post needs update, track it
     if (postId) {
-      virtualScrollState.pendingUpdates.add(postId);
+      feedPaginationState.pendingUpdates.add(postId);
     }
     
     // Clear existing throttle
-    if (virtualScrollState.updateThrottle) {
-      clearTimeout(virtualScrollState.updateThrottle);
+    if (feedPaginationState.updateThrottle) {
+      clearTimeout(feedPaginationState.updateThrottle);
     }
     
     // SIMPLIFIED: Just do immediate updates for posts
     // The debounce was causing comment visibility issues
-    virtualScrollState.updateThrottle = setTimeout(() => {
+    feedPaginationState.updateThrottle = setTimeout(() => {
       performSmartFeedUpdate();
     }, 50); // Reduced from 100ms to 50ms
   }
@@ -9197,14 +10510,14 @@ Generate ONLY the message, no quotes, no explanation:`;
     
     // SIMPLIFIED: Always update posts in place, skip gentle/full render logic
     // The comment immediate updates handle the UI, this is just backup
-    if (virtualScrollState.pendingUpdates.size > 0) {
-      virtualScrollState.pendingUpdates.forEach(postId => {
+    if (feedPaginationState.pendingUpdates.size > 0) {
+      feedPaginationState.pendingUpdates.forEach(postId => {
         updatePostInPlace(postId);
       });
     }
     
     // Clear pending updates
-    virtualScrollState.pendingUpdates.clear();
+    feedPaginationState.pendingUpdates.clear();
   }
   
   /**
@@ -9217,7 +10530,7 @@ Generate ONLY the message, no quotes, no explanation:`;
     
     // Get current posts
     const posts = filterAndSortPosts();
-    const previousPosts = virtualScrollState.allPosts;
+    const previousPosts = feedPaginationState.allPosts;
     
     // Check for new posts at the top
     const newPosts = [];
@@ -9232,12 +10545,12 @@ Generate ONLY the message, no quotes, no explanation:`;
     // Show notification for new posts instead of auto-inserting
     if (newPosts.length > 0) {
       showNewPostsNotification(newPosts.length);
-      virtualScrollState.allPosts = posts; // Update state for when they refresh
+      feedPaginationState.allPosts = posts; // Update state for when they refresh
     }
     
     // Update existing posts in place (likes, comments)
-    if (virtualScrollState.pendingUpdates.size > 0) {
-      virtualScrollState.pendingUpdates.forEach(postId => {
+    if (feedPaginationState.pendingUpdates.size > 0) {
+      feedPaginationState.pendingUpdates.forEach(postId => {
         updatePostInPlace(postId);
       });
     }
@@ -9447,35 +10760,144 @@ Generate ONLY the message, no quotes, no explanation:`;
     if (!feedContent) return;
     
     // Get filtered and sorted posts
-    let posts = filterAndSortPosts();
+    let allPosts = filterAndSortPosts();
     
     // Show empty state if no posts
-    if (posts.length === 0) {
+    if (allPosts.length === 0) {
       if (emptyState) emptyState.style.display = 'block';
       feedContent.innerHTML = '';
       feedContent.appendChild(emptyState);
+      updateFeedStats(0, 0);
       return;
     }
     
     // Hide empty state
     if (emptyState) emptyState.style.display = 'none';
     
+    // Calculate pagination
+    feedPaginationState.totalPages = Math.ceil(allPosts.length / feedPaginationState.postsPerPage);
+    
+    // Reset to page 1 if filter/sort changed or forced
+    if (forceFullRender) {
+      feedPaginationState.currentPage = 1;
+    }
+    
+    // Ensure current page is valid
+    if (feedPaginationState.currentPage > feedPaginationState.totalPages) {
+      feedPaginationState.currentPage = feedPaginationState.totalPages;
+    }
+    
+    // Calculate which posts to show
+    const startIndex = (feedPaginationState.currentPage - 1) * feedPaginationState.postsPerPage;
+    const endIndex = startIndex + feedPaginationState.postsPerPage;
+    const postsToShow = allPosts.slice(startIndex, endIndex);
+    
     // Store scroll position for smooth updates
     const scrollTop = feedContent.scrollTop;
-    const firstPost = feedContent.firstElementChild;
-    const firstPostTop = firstPost ? firstPost.offsetTop : 0;
     
-    // Clear and render all posts
+    // Clear and render paginated posts
     feedContent.innerHTML = '';
     
-    posts.forEach(post => {
+    postsToShow.forEach(post => {
       const postCard = createFeedPostCard(post);
       feedContent.appendChild(postCard);
     });
     
-    // Restore scroll position to prevent jumping
-    if (scrollTop > 0) {
+    // Add pagination controls at the bottom
+    const paginationDiv = createPaginationControls(allPosts.length);
+    feedContent.appendChild(paginationDiv);
+    
+    // Update feed stats
+    updateFeedStats(allPosts.length, postsToShow.length);
+    
+    // Restore scroll position only if not changing pages
+    if (!forceFullRender && scrollTop > 0) {
       feedContent.scrollTop = scrollTop;
+    } else {
+      // Scroll to top when changing pages/filters
+      feedContent.scrollTop = 0;
+    }
+  }
+  
+  /**
+   * Create pagination controls for the feed
+   */
+  function createPaginationControls(totalPosts) {
+    const paginationDiv = document.createElement('div');
+    paginationDiv.style.cssText = 'display:flex; justify-content:center; align-items:center; gap:10px; padding:30px 20px; margin-top:20px; border-top:1px solid #2f3336;';
+    
+    const currentPage = feedPaginationState.currentPage;
+    const totalPages = feedPaginationState.totalPages;
+    
+    // Previous button
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '← Previous';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.style.cssText = `
+      padding:10px 20px; 
+      background:${currentPage === 1 ? '#2f3336' : 'linear-gradient(135deg, #00d4ff, #0099cc)'}; 
+      border:none; 
+      border-radius:8px; 
+      color:${currentPage === 1 ? '#666' : 'white'}; 
+      cursor:${currentPage === 1 ? 'not-allowed' : 'pointer'}; 
+      font-weight:600;
+      transition:all 0.2s;
+    `;
+    if (currentPage > 1) {
+      prevBtn.onmouseenter = function() { this.style.transform = 'translateY(-2px)'; };
+      prevBtn.onmouseleave = function() { this.style.transform = 'translateY(0)'; };
+      prevBtn.onclick = () => {
+        feedPaginationState.currentPage--;
+        renderSocialFeed(false);
+      };
+    }
+    
+    // Page info
+    const pageInfo = document.createElement('div');
+    pageInfo.style.cssText = 'color:#e7e9ea; font-weight:600; padding:0 15px; font-size:0.95rem;';
+    pageInfo.innerHTML = `Page <span style="color:#00d4ff;">${currentPage}</span> of <span style="color:#00d4ff;">${totalPages}</span>`;
+    
+    // Next button
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = 'Next →';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.style.cssText = `
+      padding:10px 20px; 
+      background:${currentPage === totalPages ? '#2f3336' : 'linear-gradient(135deg, #00d4ff, #0099cc)'}; 
+      border:none; 
+      border-radius:8px; 
+      color:${currentPage === totalPages ? '#666' : 'white'}; 
+      cursor:${currentPage === totalPages ? 'not-allowed' : 'pointer'}; 
+      font-weight:600;
+      transition:all 0.2s;
+    `;
+    if (currentPage < totalPages) {
+      nextBtn.onmouseenter = function() { this.style.transform = 'translateY(-2px)'; };
+      nextBtn.onmouseleave = function() { this.style.transform = 'translateY(0)'; };
+      nextBtn.onclick = () => {
+        feedPaginationState.currentPage++;
+        renderSocialFeed(false);
+      };
+    }
+    
+    paginationDiv.appendChild(prevBtn);
+    paginationDiv.appendChild(pageInfo);
+    paginationDiv.appendChild(nextBtn);
+    
+    return paginationDiv;
+  }
+  
+  /**
+   * Update feed statistics in the header
+   */
+  function updateFeedStats(totalPosts, visiblePosts) {
+    const statsEl = $('feedStatsText');
+    if (statsEl) {
+      if (totalPosts === visiblePosts) {
+        statsEl.textContent = `${totalPosts} post${totalPosts !== 1 ? 's' : ''}`;
+      } else {
+        statsEl.textContent = `Showing ${visiblePosts} of ${totalPosts} posts`;
+      }
     }
   }
   
@@ -9575,8 +10997,20 @@ Generate ONLY the message, no quotes, no explanation:`;
    * Open post in modal with full comment functionality
    */
   function openPostModal(postId) {
+    console.log(`[PostModal] Opening modal for post ${postId}`);
+    
     const post = gameState.socialNetwork.posts.find(p => p.id === postId);
-    if (!post) return;
+    if (!post) {
+      console.error(`[PostModal] Post ${postId} not found!`);
+      return;
+    }
+    
+    // Store active post ID for live updates
+    postModalState.activePostId = postId;
+    postModalState.lastCommentCount = post.comments.length;
+    postModalState.lastLikeCount = post.likes.length;
+    
+    console.log(`[PostModal] Initial state - Comments: ${post.comments.length}, Likes: ${post.likes.length}`);
     
     // Get author info
     const author = post.isPlayerPost ? 
@@ -9603,7 +11037,7 @@ Generate ONLY the message, no quotes, no explanation:`;
         <!-- Modal Header -->
         <div style="padding:${isMobile ? '12px 16px' : '16px 20px'}; border-bottom:1px solid #2f3336; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
           <h3 style="color:#fff; margin:0; font-size:${isMobile ? '1rem' : '1.1rem'}; font-weight:600;">Post</h3>
-          <button onclick="ModalManager.close('postModal')" style="background:transparent; border:none; color:#8899a6; cursor:pointer; font-size:1.5rem; padding:4px 10px; border-radius:50%; transition:all 0.2s; min-width:40px; min-height:40px; display:flex; align-items:center; justify-content:center;" onmouseenter="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#8899a6'">×</button>
+          <button onclick="closePostModal()" style="background:transparent; border:none; color:#8899a6; cursor:pointer; font-size:1.5rem; padding:4px 10px; border-radius:50%; transition:all 0.2s; min-width:40px; min-height:40px; display:flex; align-items:center; justify-content:center;" onmouseenter="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#8899a6'">×</button>
         </div>
         
         <!-- Post Content (Scrollable with comments) -->
@@ -9611,7 +11045,7 @@ Generate ONLY the message, no quotes, no explanation:`;
           <div style="padding:${isMobile ? '16px' : '20px'}; border-bottom:1px solid #2f3336;">
             <!-- Post Header -->
           <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
-            <img src="${avatarUrl}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : post.isPlayerPost ? '#e94560' : '#00d4ff'}; flex-shrink:0; cursor:${post.isPlayerPost ? 'default' : 'pointer'};" ${post.isPlayerPost ? '' : `onclick="ModalManager.close('postModal'); showEmployeeProfile('${post.authorId}')"`}>
+            <img src="${avatarUrl}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : post.isPlayerPost ? '#e94560' : '#00d4ff'}; flex-shrink:0; cursor:${post.isPlayerPost ? 'default' : 'pointer'};" ${post.isPlayerPost ? '' : `onclick="closePostModal(); showEmployeeProfile('${post.authorId}')"`}>
             <div style="flex:1; min-width:0;">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 <strong style="font-size:0.95rem; font-weight:600;">${post.isPlayerPost ? '<span style="color:#fff;">You</span>' : getColoredName(author)}</strong>
@@ -9644,8 +11078,8 @@ Generate ONLY the message, no quotes, no explanation:`;
           
           <!-- Post Actions -->
           <div style="display:flex; gap:20px; padding-top:10px; border-top:1px solid #2f3336;">
-            <button onclick="handleLikePost('${post.id}')" style="background:transparent; border:none; color:${bossLiked ? '#e94560' : '#8899a6'}; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px; border-radius:8px; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
-              <span style="font-size:1.1rem;">${bossLiked ? '❤️' : '🤍'}</span>
+            <button id="modalLikeBtn" onclick="handleLikePost('${post.id}')" style="background:transparent; border:none; color:${bossLiked ? '#e94560' : '#8899a6'}; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px; border-radius:8px; transition:all 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">
+              <span id="modalLikeIcon" style="font-size:1.1rem;">${bossLiked ? '❤️' : '🤍'}</span>
               <span id="modalLikeCount">${post.likes.length}</span>
             </button>
             <div style="color:#8899a6; display:flex; align-items:center; gap:6px; font-size:0.9rem; padding:8px 12px;">
@@ -9662,7 +11096,12 @@ Generate ONLY the message, no quotes, no explanation:`;
         </div>
         
         <!-- Comment Input (Fixed at bottom) -->
-        <div style="padding:${isMobile ? '12px 16px' : '16px 20px'}; border-top:1px solid #2f3336; background:#0d0f12; flex-shrink:0;">
+        <div style="padding:${isMobile ? '12px 16px' : '16px 20px'}; border-top:1px solid #2f3336; background:#0d0f12; flex-shrink:0; position:relative;">
+          <!-- @Mention Autocomplete Dropdown -->
+          <div id="modalMentionSuggestions" style="position:absolute; bottom:100%; left:${isMobile ? '16px' : '20px'}; right:${isMobile ? '16px' : '20px'}; background:#16181c; border:1px solid #2f3336; border-radius:12px; max-height:280px; overflow-y:auto; display:none; z-index:10000; box-shadow:0 -4px 12px rgba(0,0,0,0.5); margin-bottom:8px;">
+            <!-- Suggestions will be populated here -->
+          </div>
+          
           <div style="display:flex; gap:10px; align-items:start;">
             <textarea id="modalCommentInput" placeholder="Write a comment..." style="flex:1; background:#16181c; border:1px solid #2f3336; border-radius:12px; padding:12px; color:#e7e9ea; font-size:${isMobile ? '16px' : '0.9rem'}; resize:none; min-height:${isMobile ? '44px' : '40px'}; max-height:120px; font-family:inherit;" rows="1"></textarea>
             <button onclick="submitModalComment('${post.id}')" style="background:linear-gradient(135deg, #00d4ff, #0099cc); border:none; color:white; padding:${isMobile ? '12px 20px' : '12px 24px'}; border-radius:12px; cursor:pointer; font-weight:600; font-size:0.9rem; transition:all 0.3s; box-shadow:0 2px 8px rgba(0,212,255,0.3); min-height:${isMobile ? '44px' : 'auto'};" onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,212,255,0.4)'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,212,255,0.3)'">
@@ -9678,7 +11117,9 @@ Generate ONLY the message, no quotes, no explanation:`;
     
     // Close on background click
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) ModalManager.close('postModal');
+      if (e.target === modal) {
+        closePostModal();
+      }
     });
     
     // Render comments
@@ -9691,20 +11132,153 @@ Generate ONLY the message, no quotes, no explanation:`;
         this.style.height = 'auto';
         this.style.height = this.scrollHeight + 'px';
       });
+      
+      // Setup @mention autocomplete for modal input
+      setupMentionAutocomplete(textarea, 'modalMentionSuggestions');
+    }
+    
+    // Start live updates for this post
+    startPostModalLiveUpdates();
+  }
+  
+  /**
+   * Close the post modal and stop live updates
+   */
+  function closePostModal() {
+    stopPostModalLiveUpdates();
+    ModalManager.close('postModal');
+  }
+  
+  /**
+   * Start live updates for the currently open post modal
+   */
+  function startPostModalLiveUpdates() {
+    // Clear any existing interval (but keep the post ID!)
+    if (postModalState.updateInterval) {
+      clearInterval(postModalState.updateInterval);
+      postModalState.updateInterval = null;
+    }
+    
+    console.log(`[PostModal] Setting up live updates for post ${postModalState.activePostId}...`);
+    
+    // Update every 500ms for smooth real-time experience
+    postModalState.updateInterval = setInterval(() => {
+      updatePostModalContent();
+    }, 500);
+    
+    console.log(`[PostModal] ✅ Live updates started - interval ID: ${postModalState.updateInterval}`);
+  }
+  
+  /**
+   * Stop live updates when modal closes
+   */
+  function stopPostModalLiveUpdates() {
+    if (postModalState.updateInterval) {
+      clearInterval(postModalState.updateInterval);
+      postModalState.updateInterval = null;
+      console.log('[PostModal] Stopped live updates');
+    }
+    postModalState.activePostId = null;
+    postModalState.lastCommentCount = 0;
+    postModalState.lastLikeCount = 0;
+  }
+  
+  /**
+   * Update the post modal content with latest data
+   */
+  function updatePostModalContent() {
+    // Check if modal is still open
+    if (!ModalManager.isOpen('postModal')) {
+      console.log('[PostModal Live] Modal not open, stopping updates');
+      stopPostModalLiveUpdates();
+      return;
+    }
+    
+    if (!postModalState.activePostId) {
+      console.log('[PostModal Live] No active post ID, stopping updates');
+      stopPostModalLiveUpdates();
+      return;
+    }
+    
+    const postId = postModalState.activePostId;
+    const post = gameState.socialNetwork.posts.find(p => p.id === postId);
+    
+    if (!post) {
+      // Post was deleted, close modal
+      console.log('[PostModal Live] Post deleted, closing modal');
+      closePostModal();
+      return;
+    }
+    
+    console.log(`[PostModal Live] ✅ Checking post ${postId}: ${post.comments.length} comments (last: ${postModalState.lastCommentCount}), ${post.likes.length} likes (last: ${postModalState.lastLikeCount})`);
+    
+    // Update like count and button state
+    const likeCountEl = $('modalLikeCount');
+    const likeIconEl = $('modalLikeIcon');
+    const likeBtnEl = $('modalLikeBtn');
+    
+    if (likeCountEl && post.likes.length !== postModalState.lastLikeCount) {
+      // Animate the count change
+      likeCountEl.style.transition = 'all 0.3s ease';
+      likeCountEl.style.transform = 'scale(1.3)';
+      likeCountEl.textContent = post.likes.length;
+      
+      setTimeout(() => {
+        likeCountEl.style.transform = 'scale(1)';
+      }, 300);
+      
+      postModalState.lastLikeCount = post.likes.length;
+    }
+    
+    // Update like button appearance
+    if (likeIconEl && likeBtnEl) {
+      const bossLiked = post.likes.includes('player');
+      likeIconEl.textContent = bossLiked ? '❤️' : '🤍';
+      likeBtnEl.style.color = bossLiked ? '#e94560' : '#8899a6';
+    }
+    
+    // Update comment count
+    const commentCountEl = $('modalCommentCount');
+    if (commentCountEl && post.comments.length !== postModalState.lastCommentCount) {
+      // Animate the count change
+      commentCountEl.style.transition = 'all 0.3s ease';
+      commentCountEl.style.transform = 'scale(1.3)';
+      commentCountEl.textContent = post.comments.length;
+      
+      setTimeout(() => {
+        commentCountEl.style.transform = 'scale(1)';
+      }, 300);
+      
+      // New comments detected - re-render with smooth scroll preservation
+      if (post.comments.length > postModalState.lastCommentCount) {
+        const container = $('modalCommentsContainer');
+        const wasAtBottom = container && (container.scrollHeight - container.scrollTop <= container.clientHeight + 100);
+        
+        renderModalComments(postId, true); // Pass true for smooth update
+        
+        // If user was at bottom, keep them there
+        if (wasAtBottom && container) {
+          setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+          }, 50);
+        }
+      }
+      
+      postModalState.lastCommentCount = post.comments.length;
     }
   }
   
   /**
    * Render comments in the post modal
+   * @param {string} postId - The post ID
+   * @param {boolean} smoothUpdate - If true, only add new comments without clearing existing ones
    */
-  function renderModalComments(postId) {
+  function renderModalComments(postId, smoothUpdate = false) {
     const container = $('modalCommentsContainer');
     if (!container) return;
     
     const post = gameState.socialNetwork.posts.find(p => p.id === postId);
     if (!post) return;
-    
-    container.innerHTML = '';
     
     if (post.comments.length === 0) {
       container.innerHTML = `
@@ -9717,11 +11291,47 @@ Generate ONLY the message, no quotes, no explanation:`;
       return;
     }
     
-    // Render each comment
-    post.comments.forEach(comment => {
-      const commentEl = createModalCommentElement(comment, postId);
-      container.appendChild(commentEl);
-    });
+    if (smoothUpdate) {
+      // Smooth update: only add new comments
+      const existingComments = container.querySelectorAll('[data-comment-id]');
+      const existingIds = Array.from(existingComments).map(el => el.dataset.commentId);
+      
+      // If we had 0 comments before, clear the "No comments yet" message
+      if (existingIds.length === 0 && post.comments.length > 0) {
+        container.innerHTML = '';
+      }
+      
+      // Add only new comments
+      post.comments.forEach(comment => {
+        if (!existingIds.includes(comment.id)) {
+          const commentEl = createModalCommentElement(comment, postId);
+          commentEl.dataset.commentId = comment.id;
+          
+          // Add with animation
+          commentEl.style.opacity = '0';
+          commentEl.style.transform = 'translateY(-10px)';
+          commentEl.style.transition = 'all 0.3s ease';
+          
+          container.appendChild(commentEl);
+          
+          // Trigger animation
+          setTimeout(() => {
+            commentEl.style.opacity = '1';
+            commentEl.style.transform = 'translateY(0)';
+          }, 50);
+        }
+      });
+    } else {
+      // Full render: clear and rebuild
+      container.innerHTML = '';
+      
+      // Render each comment
+      post.comments.forEach(comment => {
+        const commentEl = createModalCommentElement(comment, postId);
+        commentEl.dataset.commentId = comment.id; // Add ID for tracking
+        container.appendChild(commentEl);
+      });
+    }
   }
   
   /**
@@ -9745,11 +11355,18 @@ Generate ONLY the message, no quotes, no explanation:`;
       <div style="display:flex; gap:${isMobile ? '8px' : '10px'};">
         <img src="${avatarUrl}" style="width:${isMobile ? '28px' : '32px'}; height:${isMobile ? '28px' : '32px'}; border-radius:50%; object-fit:cover; border:2px solid ${isAlumni ? '#666' : comment.isPlayerComment ? '#e94560' : '#00d4ff'}; flex-shrink:0;">
         <div style="flex:1; min-width:0;">
-          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; flex-wrap:wrap;">
-            <strong style="font-size:${isMobile ? '0.8rem' : '0.85rem'}; font-weight:600;">${comment.isPlayerComment ? '<span style="color:#fff;">You</span>' : getColoredName(commenter)}</strong>
-            ${comment.isPlayerComment ? `<span style="color:#e94560; font-size:${isMobile ? '0.7rem' : '0.75rem'}; font-weight:600;">@TheBoss</span>` : commenter.social?.username ? `<span style="color:#8899a6; font-size:${isMobile ? '0.7rem' : '0.75rem'};">@${commenter.social.username}</span>` : ''}
-            ${isAlumni ? `<span style="background:#555; padding:2px 8px; border-radius:10px; font-size:${isMobile ? '0.6rem' : '0.65rem'}; color:#ccc;">Alumni</span>` : ''}
-            <span style="color:#8899a6; font-size:${isMobile ? '0.7rem' : '0.75rem'};">${timeAgo}</span>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <strong style="font-size:${isMobile ? '0.8rem' : '0.85rem'}; font-weight:600;">${comment.isPlayerComment ? '<span style="color:#fff;">You</span>' : getColoredName(commenter)}</strong>
+              ${comment.isPlayerComment ? `<span style="color:#e94560; font-size:${isMobile ? '0.7rem' : '0.75rem'}; font-weight:600;">@TheBoss</span>` : commenter.social?.username ? `<span style="color:#8899a6; font-size:${isMobile ? '0.7rem' : '0.75rem'};">@${commenter.social.username}</span>` : ''}
+              ${isAlumni ? `<span style="background:#555; padding:2px 8px; border-radius:10px; font-size:${isMobile ? '0.6rem' : '0.65rem'}; color:#ccc;">Alumni</span>` : ''}
+              <span style="color:#8899a6; font-size:${isMobile ? '0.7rem' : '0.75rem'};">${timeAgo}</span>
+            </div>
+            ${!comment.isPlayerComment ? `
+              <button onclick="replyToComment('${comment.id}', '${commenter.name}', '${commenter.social?.username || ''}')" style="background:transparent; border:1px solid #2f3336; color:#8899a6; padding:4px 10px; border-radius:6px; font-size:${isMobile ? '0.7rem' : '0.75rem'}; cursor:pointer; transition:all 0.2s;" onmouseenter="this.style.background='rgba(0,212,255,0.1)'; this.style.borderColor='#00d4ff'; this.style.color='#00d4ff'" onmouseleave="this.style.background='transparent'; this.style.borderColor='#2f3336'; this.style.color='#8899a6'">
+                Reply
+              </button>
+            ` : ''}
           </div>
           <div style="color:#e7e9ea; line-height:1.5; font-size:${isMobile ? '0.85rem' : '0.9rem'}; word-wrap:break-word; overflow-wrap:break-word;">
             ${linkifyMentions(comment.content)}
@@ -9786,10 +11403,39 @@ Generate ONLY the message, no quotes, no explanation:`;
     const post = gameState.socialNetwork.posts.find(p => p.id === postId);
     if (countEl && post) {
       countEl.textContent = post.comments.length;
+      postModalState.lastCommentCount = post.comments.length;
     }
     
     // Update feed to show new comment count
     renderSocialFeed();
+  }
+  
+  /**
+   * Reply to a comment (adds @mention to input)
+   */
+  function replyToComment(commentId, commenterName, commenterUsername) {
+    const input = $('modalCommentInput');
+    if (!input) return;
+    
+    // Add @mention to the input
+    const mention = commenterUsername ? `@${commenterUsername} ` : `@${commenterName.replace(/\s+/g, '_')} `;
+    
+    // If input already has content, add the mention at the beginning
+    if (input.value.trim()) {
+      input.value = mention + input.value;
+    } else {
+      input.value = mention;
+    }
+    
+    // Focus the input
+    input.focus();
+    
+    // Move cursor to end
+    input.setSelectionRange(input.value.length, input.value.length);
+    
+    // Trigger resize
+    input.style.height = 'auto';
+    input.style.height = input.scrollHeight + 'px';
   }
   
   // ===== OLD SYSTEM REMOVED FOR CLEAN CODE =====
@@ -10389,6 +12035,14 @@ Generate ONLY the message, no quotes, no explanation:`;
         await generateNPCCommentReply(post, comment);
       }, 2000 + Math.random() * 3000); // 2-5 second delay
     }
+    
+    // NEW: Trigger additional NPC engagement if post is getting active
+    if (post.comments.length >= 3) {
+      // Post has 3+ comments, trigger other NPCs to join conversation
+      setTimeout(async () => {
+        await triggerAdditionalNPCComments(post);
+      }, 4000 + Math.random() * 6000); // 4-10 second delay
+    }
   }
   
   /**
@@ -10478,12 +12132,10 @@ Just write the reply comment directly:`;
       let reply = rawReply.trim()
         .replace(/^["']|["']$/g, '') // Remove quotes
         .replace(/\s*\([^)]*personality[^)]*\)\.?$/i, '') // Remove personality notes
-        .replace(/^(I would (say|reply|comment):|My comment would be:)\s*/i, ''); // Remove meta-text
-      
-      // Truncate if too long (instead of rejecting entirely)
-      if (reply.length > 150) {
-        reply = reply.substring(0, 147) + '...';
-      }
+        .replace(/^(I would (say|reply|comment):|My comment would be:)\s*/i, '') // Remove meta-text
+        .replace(/\n\n\(Word count:.*?\)$/i, '') // Remove word count metadata
+        .replace(/\s*\*\(\d+\s*characters?\)\*\s*$/i, '') // Remove character count
+        .replace(/\s*\(\d+\s*words?\)\s*$/i, ''); // Remove word count variations
       
       if (!reply || reply.length === 0) return; // Safety check
       
@@ -10686,10 +12338,10 @@ Just write the reply comment directly:`;
         // Remove "I would say" or similar meta phrases
         response = response.replace(/^(I would (say|reply|respond|comment):|My response would be:)\s*/i, '');
         
-        // Truncate to 120 chars if needed
-        if (response.length > 120) {
-          response = response.substring(0, 117) + '...';
-        }
+        // Remove word count / character count metadata
+        response = response.replace(/\n\n\(Word count:.*?\)$/i, '');
+        response = response.replace(/\s*\*\(\d+\s*characters?\)\*\s*$/i, '');
+        response = response.replace(/\s*\(\d+\s*words?\)\s*$/i, '');
         
         response = response.trim();
         console.log(`[Social] Sanitized response for ${npc.name}: "${response}"`);
@@ -10959,11 +12611,10 @@ Just write the comment:`;
         let response = rawResponse.trim()
           .replace(/^["']|["']$/g, '')
           .replace(/\s*\([^)]*personality[^)]*\)\.?$/i, '')
-          .replace(/^(I would (say|reply|comment):|My comment would be:)\s*/i, '');
-        
-        if (response.length > 100) {
-          response = response.substring(0, 97) + '...';
-        }
+          .replace(/^(I would (say|reply|comment):|My comment would be:)\s*/i, '')
+          .replace(/\n\n\(Word count:.*?\)$/i, '')
+          .replace(/\s*\*\(\d+\s*characters?\)\*\s*$/i, '')
+          .replace(/\s*\(\d+\s*words?\)\s*$/i, '');
         
         response = response.trim();
         console.log(`[Chain] Sanitized: "${response}"`);
@@ -11137,6 +12788,14 @@ Just write the comment:`;
         
         post.comments.push(comment);
         
+        // Small chance (10%) for this comment to trigger more engagement
+        if (post.comments.length >= 3 && Math.random() < 0.10) {
+          console.log(`[Social] 🔥 ${npc.name}'s comment sparked more discussion!`);
+          setTimeout(async () => {
+            await triggerAdditionalNPCComments(post);
+          }, 5000 + Math.random() * 6000); // 5-11 seconds delay
+        }
+        
         // Boost affection slightly for commenting
         if (npc.stats) {
           npc.stats.affection = Math.min(100, (npc.stats.affection || 0) + 1);
@@ -11148,6 +12807,85 @@ Just write the comment:`;
           renderSocialFeed();
         }
       }, delay);
+    }
+  }
+  
+  /**
+   * Trigger additional NPCs to join an active conversation
+   * Called when a post reaches 3+ comments to reinvigorate discussion
+   */
+  async function triggerAdditionalNPCComments(post) {
+    const activeEmployees = gameState.employees.filter(e => e.employmentStatus === 'active');
+    if (activeEmployees.length === 0) return;
+    
+    // Get NPCs who haven't commented yet
+    const alreadyCommented = new Set(
+      post.comments
+        .filter(c => c.authorId !== 'player')
+        .map(c => c.authorId)
+    );
+    
+    const eligibleNPCs = activeEmployees.filter(npc => !alreadyCommented.has(npc.id));
+    if (eligibleNPCs.length === 0) return;
+    
+    console.log(`[Social] 🔄 Reinvigorating conversation on post ${post.id} (${post.comments.length} comments)`);
+    
+    // 30% chance per eligible NPC, max 2 additional comments
+    let additionalComments = 0;
+    const maxAdditional = 2;
+    
+    for (const npc of eligibleNPCs) {
+      if (additionalComments >= maxAdditional) break;
+      
+      // Higher chance if they're friends with someone in the conversation
+      let baseChance = 0.30;
+      for (const comment of post.comments) {
+        if (comment.authorId === 'player') continue;
+        const relationship = npc.relationships?.[comment.authorId];
+        if (relationship && relationship.strength > 60) {
+          baseChance += 0.20; // +20% if friends with a commenter
+          break;
+        }
+      }
+      
+      if (Math.random() < baseChance) {
+        console.log(`[Social] ${npc.name} joining active conversation (${Math.round(baseChance * 100)}% chance)`);
+        
+        // Generate comment using existing context-aware system
+        try {
+          const commentText = await generateContextAwareComment(npc, post);
+          
+          if (commentText) {
+            const comment = createComment({
+              postId: post.id,
+              authorId: npc.id,
+              authorName: npc.name,
+              content: commentText
+            });
+            
+            post.comments.push(comment);
+            additionalComments++;
+            
+            console.log(`[Social] ✓ ${npc.name} added to conversation: "${commentText}"`);
+            
+            // Boost affection slightly for commenting
+            if (npc.stats) {
+              npc.stats.affection = Math.min(100, (npc.stats.affection || 0) + 1);
+            }
+            
+            remember(npc, `I joined a conversation on ${post.isPlayerPost ? "boss's" : "a coworker's"} post: "${commentText}"`, 'interaction', 0.7);
+            
+            // Update feed
+            requestSmartFeedUpdate(post.id);
+          }
+        } catch (error) {
+          console.error(`Error generating reinvigoration comment from ${npc.name}:`, error);
+        }
+      }
+    }
+    
+    if (additionalComments > 0) {
+      console.log(`[Social] 🎉 Added ${additionalComments} new voice(s) to the conversation`);
     }
   }
   
@@ -11272,10 +13010,10 @@ Write ONLY the comment, no quotation marks or explanation:`;
       // Remove quotes if AI added them
       comment = comment.replace(/^["']|["']$/g, '');
       
-      // Ensure reasonable length
-      if (comment.length > 100) {
-        comment = comment.substring(0, 97) + '...';
-      }
+      // Remove AI meta-text (word counts, character counts, etc.)
+      comment = comment.replace(/\n\n\(Word count:.*?\)$/i, '')
+                       .replace(/\s*\*\(\d+\s*characters?\)\*\s*$/i, '')
+                       .replace(/\s*\(\d+\s*words?\)\s*$/i, '');
       
       return comment || '🔥'; // Fallback
       
@@ -11372,8 +13110,14 @@ Write ONLY the comment, no quotation marks or explanation:`;
   
   /**
    * Evaluate if an NPC should send a proactive message 
+   * OPTIMIZATION: Skip employees that are already blocked
    */
   async function evaluateProactiveMessageTriggers(npc) {
+    // AI Optimization: Skip if already blocked
+    if (aiOptimization.blockedProactiveMessages.has(npc.id)) {
+      return false;
+    }
+    
     const now = Date.now();
     
     // Get chat history
@@ -11388,6 +13132,7 @@ Write ONLY the comment, no quotation marks or explanation:`;
     // If ANY message (player or NPC) was sent in the last 5 minutes, consider it an active conversation
     if (minutesSinceLastMessage < 5) {
       console.log(`[Proactive Message] ${npc.name}: Blocked - Active conversation (${Math.round(secondsSinceLastMessage)}s since last message)`);
+      aiOptimization.blockedProactiveMessages.add(npc.id);
       return false;
     }
     
@@ -11399,6 +13144,7 @@ Write ONLY the comment, no quotation marks or explanation:`;
     
     if (minutesSincePlayerMessage < 10) {
       console.log(`[Proactive Message] ${npc.name}: Blocked - Recent player activity (${Math.round(minutesSincePlayerMessage)} min since player's last message)`);
+      aiOptimization.blockedProactiveMessages.add(npc.id);
       return false;
     }
     
@@ -11415,6 +13161,7 @@ Write ONLY the comment, no quotation marks or explanation:`;
     // If NPC has already sent 1+ message since player's last message, don't send more until player responds
     if (consecutiveNPCMessages >= 1) {
       console.log(`[Proactive Message] ${npc.name}: Blocked - Already sent ${consecutiveNPCMessages} message(s) waiting for player response`);
+      aiOptimization.blockedProactiveMessages.add(npc.id);
       return false;
     }
     
@@ -13718,6 +15465,217 @@ Write ONLY the message:`;
     chatMessages.appendChild(messageEl);
   }
   
+  // Add a money request message with Accept/Deny buttons
+  function addMoneyRequestMessage(emp, amount, reason, messageIndex) {
+    if (!chatMessages) return;
+    
+    const messageEl = document.createElement('div');
+    messageEl.style.cssText = 'max-width:80%; padding:10px 15px; border-radius:18px; margin-bottom:10px; word-wrap:break-word; position:relative; background:#0f3460; align-self:flex-start; border:2px solid #4ecca3;';
+    
+    // Message content
+    const textEl = document.createElement('p');
+    textEl.style.margin = '0 0 10px 0';
+    textEl.innerHTML = styleActionText(reason);
+    messageEl.appendChild(textEl);
+    
+    // Money request badge
+    const badge = document.createElement('div');
+    badge.style.cssText = 'display:inline-block; background:#4ecca3; color:#16213e; padding:5px 10px; border-radius:8px; font-weight:600; margin-bottom:10px;';
+    badge.textContent = `💰 $${formatCash(amount)}`;
+    messageEl.appendChild(badge);
+    
+    // Button container
+    const btnContainer = document.createElement('div');
+    btnContainer.style.cssText = 'display:flex; gap:8px; margin-top:10px;';
+    btnContainer.id = `money-request-${messageIndex}`;
+    
+    // Accept button
+    const acceptBtn = document.createElement('button');
+    acceptBtn.style.cssText = 'flex:1; padding:8px 12px; background:#4ecca3; border:none; border-radius:6px; color:#16213e; cursor:pointer; font-weight:600; transition:all 0.2s;';
+    acceptBtn.textContent = '✓ Accept';
+    acceptBtn.addEventListener('mouseenter', () => {
+      acceptBtn.style.background = '#5efcb3';
+    });
+    acceptBtn.addEventListener('mouseleave', () => {
+      acceptBtn.style.background = '#4ecca3';
+    });
+    acceptBtn.addEventListener('click', async () => {
+      await handleMoneyRequestResponse(emp, amount, reason, messageIndex, true);
+    });
+    
+    // Deny button
+    const denyBtn = document.createElement('button');
+    denyBtn.style.cssText = 'flex:1; padding:8px 12px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600; transition:all 0.2s;';
+    denyBtn.textContent = '✗ Deny';
+    denyBtn.addEventListener('mouseenter', () => {
+      denyBtn.style.background = '#ff5570';
+    });
+    denyBtn.addEventListener('mouseleave', () => {
+      denyBtn.style.background = '#e94560';
+    });
+    denyBtn.addEventListener('click', async () => {
+      await handleMoneyRequestResponse(emp, amount, reason, messageIndex, false);
+    });
+    
+    btnContainer.appendChild(acceptBtn);
+    btnContainer.appendChild(denyBtn);
+    messageEl.appendChild(btnContainer);
+    
+    chatMessages.appendChild(messageEl);
+  }
+  
+  // Handle money request response (Accept/Deny)
+  async function handleMoneyRequestResponse(emp, amount, reason, messageIndex, accepted) {
+    // Remove the buttons
+    const btnContainer = document.getElementById(`money-request-${messageIndex}`);
+    if (btnContainer) {
+      btnContainer.remove();
+    }
+    
+    if (accepted) {
+      // Check if player has enough money
+      if (gameState.cash < amount) {
+        addChatMessage('You', `[Insufficient funds - need $${formatCash(amount)}]`, true);
+        
+        // NPC reaction to rejection due to no money
+        const response = await generateText(`${emp.name} (${emp.personality}) asked you for $${formatCash(amount)} but you don't have enough money. Respond to being told you can't afford it (2-3 sentences, conversational).`);
+        const sanitized = sanitizeNpcResponse(response, 3);
+        
+        gameState.chatHistory[emp.id].push({
+          sender: emp.name,
+          content: sanitized,
+          isPlayer: false,
+          timestamp: Date.now()
+        });
+        
+        const newIndex = gameState.chatHistory[emp.id].length - 1;
+        addChatMessage(emp.name, sanitized, false, null, newIndex);
+        
+        return;
+      }
+      
+      // Deduct money
+      gameState.cash = Math.max(0, gameState.cash - amount);
+      updateUI();
+      
+      // Add acceptance message
+      addChatMessage('You', `✓ Accepted - Sent $${formatCash(amount)}`, true);
+      
+      // Add to history
+      gameState.chatHistory[emp.id].push({
+        sender: 'You',
+        content: `✓ Accepted money request - Sent $${formatCash(amount)}`,
+        isPlayer: true,
+        isMoneyRequest: true,
+        accepted: true,
+        amount: amount,
+        timestamp: Date.now()
+      });
+      
+      // Generate grateful response
+      const conversationHistory = gameState.chatHistory[emp.id]
+        .slice(-10)
+        .map(msg => `${msg.sender}: ${msg.content}`)
+        .join('\n');
+      
+      const responsePrompt = `${buildChatPrompt(emp, conversationHistory, '').prompt}
+
+You just asked the player for $${formatCash(amount)} (reason: "${reason}") and they ACCEPTED and sent you the money!
+
+Respond with gratitude and acknowledgment (3-8 sentences). Consider:
+- Your personality (${emp.personality})
+- Your relationship with them (Obedience: ${emp.obedience}, Desire: ${emp.desire}, Trust: ${emp.trust})
+- What you asked the money for
+- How this makes you feel about them
+
+${emp.name}'s response:`;
+      
+      const raw = await generateText(responsePrompt);
+      const response = sanitizeNpcResponse(raw, 10);
+      
+      gameState.chatHistory[emp.id].push({
+        sender: emp.name,
+        content: response,
+        isPlayer: false,
+        timestamp: Date.now()
+      });
+      
+      const newIndex = gameState.chatHistory[emp.id].length - 1;
+      addChatMessage(emp.name, response, false, null, newIndex);
+      
+      // Update stats - accepting requests increases trust and obedience
+      emp.trust = Math.min(100, emp.trust + 8);
+      emp.obedience = Math.min(100, emp.obedience + 5);
+      emp.desire = Math.min(100, emp.desire + 3);
+      
+      showNotification(`💰 Gave ${emp.name} $${formatCash(amount)}\n+8 Trust, +5 Obedience, +3 Desire`, 'success');
+      
+      // Memory
+      remember(emp, `Player accepted my request for $${formatCash(amount)} (${reason})`, 'event', 2.0);
+      
+      updateUI();
+      
+    } else {
+      // Denied
+      addChatMessage('You', `✗ Denied money request`, true);
+      
+      gameState.chatHistory[emp.id].push({
+        sender: 'You',
+        content: `✗ Denied money request for $${formatCash(amount)}`,
+        isPlayer: true,
+        isMoneyRequest: true,
+        accepted: false,
+        amount: amount,
+        timestamp: Date.now()
+      });
+      
+      // Generate disappointed response
+      const conversationHistory = gameState.chatHistory[emp.id]
+        .slice(-10)
+        .map(msg => `${msg.sender}: ${msg.content}`)
+        .join('\n');
+      
+      const responsePrompt = `${buildChatPrompt(emp, conversationHistory, '').prompt}
+
+You just asked the player for $${formatCash(amount)} (reason: "${reason}") and they DENIED your request.
+
+Respond with disappointment but stay in character (3-6 sentences). Consider:
+- Your personality (${emp.personality})
+- Your relationship with them (Obedience: ${emp.obedience}, Desire: ${emp.desire}, Trust: ${emp.trust})
+- What you asked the money for
+- How this rejection makes you feel
+
+${emp.name}'s response:`;
+      
+      const raw = await generateText(responsePrompt);
+      const response = sanitizeNpcResponse(raw, 8);
+      
+      gameState.chatHistory[emp.id].push({
+        sender: emp.name,
+        content: response,
+        isPlayer: false,
+        timestamp: Date.now()
+      });
+      
+      const newIndex = gameState.chatHistory[emp.id].length - 1;
+      addChatMessage(emp.name, response, false, null, newIndex);
+      
+      // Update stats - denying requests decreases trust and desire slightly
+      emp.trust = Math.max(0, emp.trust - 3);
+      emp.desire = Math.max(0, emp.desire - 2);
+      
+      showNotification(`${emp.name} was denied\n-3 Trust, -2 Desire`, 'warning');
+      
+      // Memory
+      remember(emp, `Player denied my request for $${formatCash(amount)} (${reason})`, 'event', 1.5);
+      
+      updateUI();
+    }
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
   // Send chat message
   async function sendChatMessage() {
     if (!chatInput || !chatMessages) return;
@@ -13742,6 +15700,10 @@ Write ONLY the message:`;
       isPlayer: true,
       timestamp: Date.now()
     });
+    
+    // AI Optimization: Clear blocked status when player sends a message
+    aiOptimization.blockedProactiveMessages.delete(employeeId);
+    
     // Extract salient facts from user's message
     const facts = extractSalientFacts(message, gameState.activeChat);
     for (const f of facts) remember(gameState.activeChat, `Player ${f.text}`, f.type, f.importance);
@@ -13767,7 +15729,7 @@ Write ONLY the message:`;
       ensureEmployeeMemory(emp);
       const { prompt, personalAllowed } = buildChatPrompt(emp, conversationHistory, message);
       const raw = await generateText(prompt);
-      const response = sanitizeNpcResponse(raw, 5);
+      const response = sanitizeNpcResponse(raw, 10);
       
       // Add to history first (works even if chat is closed)
       gameState.chatHistory[employeeId].push({
@@ -13823,6 +15785,9 @@ Write ONLY the message:`;
       
       // Check if player is requesting an image/photo
       await detectImageRequest(emp, message, response);
+      
+      // Occasionally, NPC might request money (5% chance if certain conditions met)
+      await considerMoneyRequest(emp, message, response);
       
       // Update employee stats based on conversation
       await updateEmployeeStatsFromChat(emp, message, response);
@@ -14158,6 +16123,130 @@ Write ONLY the message:`;
         await generateAndSendRequestedImage(employee, requestedType, requestContent);
       }, 2000 + Math.random() * 4000); // 2-6 seconds delay
     }
+  }
+  
+  /**
+   * Consider if NPC should request money from player
+   * Happens occasionally based on relationship, personality, and conversation context
+   */
+  async function considerMoneyRequest(employee, playerMessage, npcResponse) {
+    // Don't request money if not in active chat
+    if (!gameState.activeChat || gameState.activeChat.id !== employee.id) return;
+    
+    // Initialize money request tracking if needed
+    if (!employee.lastMoneyRequest) employee.lastMoneyRequest = 0;
+    
+    // Check cooldown - don't request too often (at least 5 minutes between requests)
+    const timeSinceLastRequest = Date.now() - employee.lastMoneyRequest;
+    if (timeSinceLastRequest < 300000) return; // 5 minutes
+    
+    // Base chance: 5%
+    let requestChance = 0.05;
+    
+    // Increase chance if low trust/obedience (more demanding)
+    if (employee.trust < 30) requestChance += 0.05;
+    if (employee.obedience < 30) requestChance += 0.03;
+    
+    // Increase chance if high desire (wants things from you)
+    if (employee.desire > 70) requestChance += 0.04;
+    
+    // Personality affects chance
+    if (employee.personality === 'greedy' || employee.personality === 'materialistic') requestChance += 0.08;
+    if (employee.personality === 'flirty' || employee.personality === 'seductive') requestChance += 0.03;
+    if (employee.personality === 'shy' || employee.personality === 'professional') requestChance -= 0.03;
+    
+    // Conversation context - increase chance if talking about money, gifts, shopping, etc.
+    const moneyTalk = /\b(money|cash|pay|expensive|buy|shop|purchase|afford|broke|rich|cost)\b/i;
+    if (moneyTalk.test(playerMessage) || moneyTalk.test(npcResponse)) {
+      requestChance += 0.10;
+    }
+    
+    // Cap at 25% max
+    requestChance = Math.min(0.25, Math.max(0, requestChance));
+    
+    // Roll the dice
+    if (Math.random() > requestChance) return;
+    
+    // NPC will request money! Update timestamp
+    employee.lastMoneyRequest = Date.now();
+    
+    // Calculate requested amount based on company scale
+    const companyScale = Math.log10(gameState.cash + 1000);
+    const baseAmount = Math.pow(10, companyScale - 2); // Typically ~1% of player's cash
+    
+    // Vary the amount
+    const variation = 0.5 + Math.random() * 2; // 0.5x to 2.5x
+    const requestedAmount = Math.floor(baseAmount * variation);
+    
+    // Ensure minimum and maximum
+    const finalAmount = Math.max(500, Math.min(requestedAmount, gameState.cash * 0.15)); // Between $500 and 15% of cash
+    
+    // Generate reason for money request
+    const conversationHistory = gameState.chatHistory[employee.id]
+      .slice(-5)
+      .map(msg => `${msg.sender}: ${msg.content}`)
+      .join('\n');
+    
+    const reasonPrompt = `${employee.name} (${employee.personality}) wants to ask their boss (the player) for $${formatCash(finalAmount)}.
+
+Recent conversation:
+${conversationHistory}
+
+Generate a natural, in-character reason why ${employee.name} would ask for this money. Consider:
+- Their personality (${employee.personality})
+- Their relationship with the boss (Obedience: ${employee.obedience}, Desire: ${employee.desire}, Trust: ${employee.trust})
+- Recent conversation context
+- What they might need the money for (shopping, bills, emergency, something they want, etc.)
+
+Write ONLY the request message (2-4 sentences), naturally asking for the money. Start directly with the request. Examples:
+- "Hey boss, I hate to ask but... my car broke down and the repair is gonna cost like $X. Any chance you could help me out?"
+- "So I saw this amazing [item] and I really want it, but it's $X... would you maybe consider lending me the money? I'd be super grateful 🥺"
+- "I'm a bit short on rent this month... could you spot me $X? I promise I'll make it up to you 😊"
+
+${employee.name}'s request:`;
+    
+    const rawReason = await generateText(reasonPrompt);
+    const reason = sanitizeNpcResponse(rawReason, 4);
+    
+    // Add a delay to make it feel natural
+    setTimeout(() => {
+      // Make sure chat is still open
+      if (!gameState.activeChat || gameState.activeChat.id !== employee.id || !chatMessages) return;
+      
+      // Show typing indicator briefly
+      if (chatTypingIndicator && chatTypingName) {
+        chatTypingIndicator.style.display = 'block';
+        chatTypingName.textContent = employee.name;
+        
+        setTimeout(() => {
+          if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+          
+          // Add to chat history
+          if (!gameState.chatHistory[employee.id]) {
+            gameState.chatHistory[employee.id] = [];
+          }
+          gameState.chatHistory[employee.id].push({
+            sender: employee.name,
+            content: reason,
+            isPlayer: false,
+            isMoneyRequest: true,
+            requestedAmount: finalAmount,
+            timestamp: Date.now()
+          });
+          
+          const messageIndex = gameState.chatHistory[employee.id].length - 1;
+          
+          // Add money request message with buttons
+          addMoneyRequestMessage(employee, finalAmount, reason, messageIndex);
+          
+          // Memory
+          remember(employee, `Asked player for $${formatCash(finalAmount)}`, 'event', 1.5);
+          
+          // Scroll to bottom
+          if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 1500); // Brief typing delay
+      }
+    }, 3000 + Math.random() * 4000); // 3-7 seconds after their previous message
   }
   
   /**
@@ -14651,6 +16740,150 @@ ${emp.name}'s response:`;
       console.error('Error handling sent image:', error);
       if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
       addChatMessage(emp.name, "Sorry, I couldn't process that image.", false);
+    }
+  }
+  
+  // Handle sending money to NPC
+  /**
+   * Send money to NPC via bribery system
+   */
+  async function sendMoneyToNPC(amount, message = '') {
+    if (!gameState.activeChat || amount <= 0) return;
+    
+    const emp = gameState.activeChat;
+    
+    // Deduct money from player
+    gameState.cash = Math.max(0, gameState.cash - amount);
+    updateUI();
+    
+    // Show typing indicator
+    if (chatTypingIndicator && chatTypingName) {
+      chatTypingIndicator.style.display = 'block';
+      chatTypingName.textContent = emp.name;
+    }
+    
+    try {
+      // Add money transfer message to chat
+      const moneyMessage = message 
+        ? `💰 Sent $${formatCash(amount)}\n"${message}"`
+        : `💰 Sent $${formatCash(amount)}`;
+      
+      // Add to history
+      if (!gameState.chatHistory[emp.id]) {
+        gameState.chatHistory[emp.id] = [];
+      }
+      gameState.chatHistory[emp.id].push({
+        sender: 'You',
+        content: moneyMessage,
+        isPlayer: true,
+        isMoney: true,
+        amount: amount,
+        message: message,
+        timestamp: Date.now()
+      });
+      
+      // Add to chat display
+      addChatMessage('You', moneyMessage, true);
+      
+      // Determine bribe size relative to company scale
+      const companyScale = Math.log10(gameState.totalCash + 1);
+      const bribeScale = Math.log10(amount + 1);
+      const relativeSize = bribeScale / Math.max(companyScale, 1);
+      
+      // Categorize bribe size
+      let bribeCategory = 'token';
+      if (relativeSize > 0.8) bribeCategory = 'extravagant';
+      else if (relativeSize > 0.5) bribeCategory = 'generous';
+      else if (relativeSize > 0.2) bribeCategory = 'moderate';
+      else if (relativeSize > 0.05) bribeCategory = 'small';
+      
+      // Build conversation history
+      const conversationHistory = gameState.chatHistory[emp.id]
+        .slice(-10) // Last 10 messages for context
+        .map(msg => `${msg.sender}: ${msg.content}`)
+        .join('\n');
+      
+      const playerBio = gameState.settings?.playerBio || '';
+      const playerContext = playerBio ? `\nPlayer description: ${playerBio}` : '';
+      
+      // Build message context
+      const messageContext = message 
+        ? `\nThey included this message with the money: "${message}"`
+        : '';
+      
+      // Build AI prompt with bribery context
+      const responsePrompt = `${buildChatPrompt(emp, conversationHistory, '').prompt}${playerContext}
+
+The player just sent you $${formatCash(amount)}! This is a ${bribeCategory} amount relative to the company's scale.${messageContext}
+
+Consider in your response:
+- Your personality (${emp.personality})
+- Your relationship with the player (Obedience: ${emp.obedience}, Desire: ${emp.desire}, Trust: ${emp.trust})
+- Whether this feels like a gift, a bribe, or something else
+- How you feel about receiving money from your boss
+- The context of your conversation (were they asking for something?)
+${message ? `- IMPORTANT: Acknowledge their message: "${message}"` : ''}
+
+Possible reactions based on amount:
+- Token ($100s): "Thanks! That's sweet"
+- Small ($1000s): "Oh, thank you! I appreciate it"
+- Moderate ($10,000s+): "Wow, this is generous. What's the occasion?"
+- Generous ($100,000s+): "Oh my god, this is amazing! Thank you so much!"
+- Extravagant ($millions+): "This is... a LOT. Are you trying to buy me? ...I mean, it's working 😏"
+
+Respond naturally and conversationally (3-8 sentences). Show genuine emotion based on the amount and your relationship.
+
+${emp.name}'s response:`;
+
+      const raw = await generateText(responsePrompt);
+      const response = sanitizeNpcResponse(raw, 10);
+      
+      // Hide typing indicator
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+      
+      // Add to history
+      gameState.chatHistory[emp.id].push({
+        sender: emp.name,
+        content: response,
+        isPlayer: false,
+        timestamp: Date.now()
+      });
+      
+      // Add AI response with message index for regenerate button
+      const messageIndex = gameState.chatHistory[emp.id].length - 1;
+      addChatMessage(emp.name, response, false, null, messageIndex);
+      
+      // Memory: remember receiving money
+      const memoryText = message 
+        ? `Received $${formatCash(amount)} from player (${bribeCategory} bribe) - Message: "${message}"`
+        : `Received $${formatCash(amount)} from player (${bribeCategory} bribe)`;
+      remember(emp, memoryText, 'event', 2.0);
+      
+      // Update stats based on bribe size
+      const obedienceGain = Math.min(20, 5 + Math.floor(relativeSize * 30));
+      const desireGain = Math.min(10, 2 + Math.floor(relativeSize * 15));
+      const trustChange = bribeCategory === 'extravagant' ? -5 : Math.floor(relativeSize * 5);
+      
+      emp.obedience = Math.min(100, emp.obedience + obedienceGain);
+      emp.desire = Math.min(100, emp.desire + desireGain);
+      emp.trust = Math.max(0, Math.min(100, emp.trust + trustChange));
+      
+      // Show notification
+      showNotification(`💰 ${emp.name} received $${formatCash(amount)}\n+${obedienceGain} Obedience, +${desireGain} Desire${trustChange < 0 ? `, ${trustChange} Trust` : ''}`, 'success');
+      
+      updateUI();
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (error) {
+      console.error('Error handling money transfer:', error);
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+      addChatMessage(emp.name, "Um... thanks for the money I guess?", false);
+      
+      // Still apply basic stat gains even if AI fails
+      emp.obedience = Math.min(100, emp.obedience + 5);
+      emp.desire = Math.min(100, emp.desire + 2);
+      updateUI();
     }
   }
   
@@ -15167,6 +17400,13 @@ Numbers only:`;
             console.log(`[Stat Bonus] ${emp.name}'s ${statName}: Amplifying gain to ${change.toFixed(1)} (NPC enthusiastic)`);
           }
           
+          // Apply cheat multiplier if it exists
+          const multiplier = gameState.cheatMultipliers?.[statName.toLowerCase()] || 1.0;
+          if (multiplier !== 1.0) {
+            change = change * multiplier;
+            console.log(`[Cheat Multiplier] ${emp.name}'s ${statName}: ${multiplier.toFixed(1)}x multiplier applied`);
+          }
+          
           let newVal = current + change;
           
           // Diminishing returns near caps
@@ -15263,13 +17503,301 @@ Numbers only:`;
    * ═══════════════════════════════════════════════════════════════════
    * Evaluates how NPCs feel about each other based on social interactions
    * Posts, comments, likes, and tags all influence relationships
+   * 
+   * OPTIMIZATION: Uses batching and heuristics to reduce AI calls by 60%
    */
   
   /**
-   * Evaluate NPC reaction to another NPC's post
-   * Called when NPC views/comments on another NPC's post
+   * Track post topic keywords to prevent duplicates (AI Optimization)
    */
-  async function evaluateNPCReactionToPost(viewer, postAuthor, post, comment = null) {
+  function trackPostTopic(postContent) {
+    if (!postContent) return;
+    
+    const content = postContent.toLowerCase();
+    
+    // Extract key terms
+    const keywords = [
+      // Work related
+      'meeting', 'deadline', 'project', 'presentation', 'report', 'work',
+      // Social
+      'coffee', 'lunch', 'drinks', 'party', 'dinner', 'hangout',
+      // Objects
+      'keys', 'phone', 'laptop', 'car', 'desk', 'folder',
+      // Actions
+      'lost', 'found', 'looking for', 'searching', 'organize', 'clean',
+      // Locations
+      'garage', 'parking', 'office', 'break room', 'kitchen',
+      // Common themes
+      'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'weekend',
+      'tired', 'stressed', 'excited', 'happy', 'frustrated'
+    ];
+    
+    const foundKeywords = keywords.filter(kw => content.includes(kw));
+    
+    if (foundKeywords.length > 0) {
+      const topicKey = foundKeywords.join('_');
+      aiOptimization.recentTopics.set(topicKey, Date.now());
+      
+      // Clean old topics (older than 5 minutes)
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+      for (const [key, timestamp] of aiOptimization.recentTopics.entries()) {
+        if (timestamp < fiveMinutesAgo) {
+          aiOptimization.recentTopics.delete(key);
+        }
+      }
+    }
+  }
+  
+  /**
+   * Check if a topic was recently used (AI Optimization)
+   */
+  function wasTopicRecentlyUsed(postContent) {
+    if (!postContent) return false;
+    
+    const content = postContent.toLowerCase();
+    const threeMinutesAgo = Date.now() - (3 * 60 * 1000);
+    
+    // Check if this content contains any recently used keyword combinations
+    for (const [topicKey, timestamp] of aiOptimization.recentTopics.entries()) {
+      if (timestamp > threeMinutesAgo) {
+        const keywords = topicKey.split('_');
+        const matchCount = keywords.filter(kw => content.includes(kw)).length;
+        
+        // If 50%+ of the keywords match, consider it a duplicate topic
+        if (matchCount >= Math.ceil(keywords.length / 2)) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Start relationship evaluation batching system
+   */
+  function startRelationshipBatching() {
+    if (aiOptimization.relationshipBatchInterval) return;
+    
+    aiOptimization.relationshipBatchInterval = setInterval(() => {
+      processRelationshipBatch();
+    }, aiOptimization.relationshipBatchDelay);
+    
+    console.log('[AI Optimization] Relationship batching started (30s intervals)');
+  }
+  
+  /**
+   * Process batched relationship evaluations
+   * IMPROVED: Limits batch size and processes most important first
+   */
+  async function processRelationshipBatch() {
+    if (aiOptimization.relationshipQueue.length === 0) return;
+    
+    // OPTIMIZATION: Limit queue size to prevent memory issues and excessive AI calls
+    const MAX_QUEUE_SIZE = 50; // Process max 50 evaluations per batch
+    
+    if (aiOptimization.relationshipQueue.length > MAX_QUEUE_SIZE) {
+      console.log(`[AI Optimization] ⚠️ Queue too large (${aiOptimization.relationshipQueue.length}), trimming to ${MAX_QUEUE_SIZE}`);
+      
+      // Keep most recent items (they're more relevant)
+      aiOptimization.relationshipQueue = aiOptimization.relationshipQueue.slice(-MAX_QUEUE_SIZE);
+    }
+    
+    const batch = [...aiOptimization.relationshipQueue];
+    aiOptimization.relationshipQueue = [];
+    
+    console.log(`[AI Optimization] Processing ${batch.length} queued relationship evaluations`);
+    
+    // OPTIMIZATION: Process sequentially with a small delay to avoid rate limiting
+    for (let i = 0; i < batch.length; i++) {
+      const item = batch[i];
+      try {
+        await evaluateNPCReactionToPostImmediate(item.viewer, item.postAuthor, item.post, item.comment);
+        
+        // Add small delay between calls (100ms) to prevent overwhelming the AI
+        if (i < batch.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      } catch (error) {
+        console.error('[AI Optimization] Batch processing error:', error);
+      }
+    }
+    
+    console.log(`[AI Optimization] ✓ Batch complete. Queue now at ${aiOptimization.relationshipQueue.length}`);
+  }
+  
+  /**
+   * Queue a relationship evaluation (will be processed in batch)
+   * This is the main entry point - uses heuristics first, queues for AI if needed
+   */
+  function evaluateNPCReactionToPost(viewer, postAuthor, post, comment = null) {
+    if (!viewer || !postAuthor || viewer.id === postAuthor.id) return;
+    
+    // Check if we can use heuristics instead
+    const heuristicChange = tryRelationshipHeuristic(viewer, postAuthor, post, comment);
+    
+    if (heuristicChange !== null) {
+      // Use heuristic instead of AI
+      applyRelationshipChange(viewer, postAuthor, heuristicChange, 'heuristic');
+      return;
+    }
+    
+    // Queue for AI evaluation
+    aiOptimization.relationshipQueue.push({
+      viewer,
+      postAuthor,
+      post,
+      comment,
+      timestamp: Date.now()
+    });
+  }
+  
+  /**
+   * Try to use heuristics instead of AI for relationship changes
+   * Returns change value if heuristic applies, null if AI needed
+   * IMPROVED: Catches more cases to reduce AI calls by ~40-60%
+   */
+  function tryRelationshipHeuristic(viewer, postAuthor, post, comment) {
+    const h = aiOptimization.relationshipHeuristics;
+    
+    // Get relationship
+    if (!viewer.relationships) viewer.relationships = {};
+    const relationship = viewer.relationships[postAuthor.id] || { strength: 50, type: 'colleague' };
+    
+    // Simple cases we can handle without AI
+    if (!comment) {
+      // Just viewing, no comment - use heuristics for common post types
+      if (post.type === 'meme' || post.type === 'funny') return h.meme_post;
+      if (post.type === 'achievement') return h.achievement_post;
+      if (post.type === 'work_update') return h.work_post;
+      if (post.type === 'selfie' && post.explicitLevel < 2) return h.selfie_view;
+      if (post.type === 'text' && !post.imageUrl && post.content.length < 100) return h.boring_post;
+      
+      // NEW: Most casual views don't need evaluation (90% of cases)
+      // Only evaluate if it's special content or high relationship
+      if (post.explicitLevel < 2 && relationship.strength < 70) {
+        return h.casual_view; // No change for casual viewing
+      }
+      
+      // Explicit content reaction based on viewer personality
+      if (post.explicitLevel >= 2) {
+        const viewerFlirty = viewer.personality?.flirty || 50;
+        const viewerProfessional = viewer.personality?.professional || 50;
+        
+        if (viewerFlirty > 70) return h.explicit_post_flirty_viewer;
+        if (viewerProfessional > 70) return h.explicit_post_professional_viewer;
+        
+        // NEW: Default for explicit content viewing (neutral if not strongly opinionated)
+        return h.casual_view;
+      }
+    } else {
+      // Has comment - analyze tone
+      const commentLower = comment.toLowerCase();
+      
+      // Emoji-based detection (fast)
+      if (commentLower.includes('😂') || commentLower.includes('🤣') || commentLower.includes('💀')) {
+        return h.comment_funny;
+      }
+      if (commentLower.includes('❤️') || commentLower.includes('💕') || commentLower.includes('😍')) {
+        return h.comment_supportive;
+      }
+      if (commentLower.includes('😏') || commentLower.includes('🥵') || commentLower.includes('🔥')) {
+        return h.comment_flirty;
+      }
+      if (commentLower.includes('👀') || commentLower.includes('☕') || commentLower.includes('🫖')) {
+        return h.comment_dramatic;
+      }
+      if (commentLower.includes('🙄') || commentLower.includes('😒') || commentLower.includes('💀')) {
+        return h.comment_negative;
+      }
+      
+      // Keyword-based detection
+      if (commentLower.includes('lol') || commentLower.includes('haha') || commentLower.includes('lmao')) {
+        return h.comment_funny;
+      }
+      if (commentLower.includes('love') || commentLower.includes('amazing') || commentLower.includes('proud')) {
+        return h.comment_supportive;
+      }
+      if (commentLower.includes('hot') || commentLower.includes('sexy') || commentLower.includes('damn')) {
+        return h.comment_flirty;
+      }
+      if (commentLower.includes('tea') || commentLower.includes('drama') || commentLower.includes('omg')) {
+        return h.comment_dramatic;
+      }
+      if (commentLower.includes('seriously?') || commentLower.includes('wtf') || commentLower.includes('ugh')) {
+        return h.comment_negative;
+      }
+      
+      // NEW: Short generic comments get default positive (no AI needed)
+      if (comment.length < 20) {
+        return h.comment_positive;
+      }
+      
+      // Default positive for comments (most comments are friendly)
+      return h.comment_positive;
+    }
+    
+    // Need AI evaluation for complex cases (should be <30% now)
+    return null;
+  }
+  
+  /**
+   * Apply relationship change without AI evaluation
+   */
+  function applyRelationshipChange(viewer, postAuthor, change, source = 'ai') {
+    if (!viewer || !postAuthor || viewer.id === postAuthor.id) return;
+    
+    // Get or initialize relationship
+    if (!viewer.relationships) viewer.relationships = {};
+    if (!viewer.relationships[postAuthor.id]) {
+      viewer.relationships[postAuthor.id] = {
+        strength: 50,
+        type: 'colleague',
+        history: []
+      };
+    }
+    
+    const relationship = viewer.relationships[postAuthor.id];
+    const oldStrength = relationship.strength || 50; // Default to 50 if undefined
+    const newStrength = oldStrength + change;
+    relationship.strength = Math.max(0, Math.min(100, newStrength));
+    
+    // Update relationship type based on strength
+    if (relationship.strength > 80) relationship.type = 'best_friend';
+    else if (relationship.strength > 65) relationship.type = 'friend';
+    else if (relationship.strength > 35) relationship.type = 'colleague';
+    else if (relationship.strength > 15) relationship.type = 'acquaintance';
+    else relationship.type = 'distant';
+    
+    if (change !== 0) {
+      console.log(`[Social Dynamics${source === 'heuristic' ? ' 🎯' : ''}] ${viewer.name} → ${postAuthor.name}: ${change > 0 ? '+' : ''}${change} (${oldStrength} → ${relationship.strength}, ${relationship.type})`);
+      
+      // Add to history
+      relationship.history.push({
+        timestamp: Date.now(),
+        type: 'social_interaction',
+        change: change,
+        source: source
+      });
+      
+      // Keep history reasonable
+      if (relationship.history.length > 20) {
+        relationship.history = relationship.history.slice(-20);
+      }
+      
+      // Create gossip if relationship changed significantly
+      if (Math.abs(change) >= 4) {
+        createGossipFromSocialInteraction(viewer, postAuthor, null, null, change);
+      }
+    }
+  }
+  
+  /**
+   * Evaluate NPC reaction to another NPC's post (IMMEDIATE - used by batch processor)
+   * Called when NPC views/comments on another NPC's post
+   * This is the AI-powered version that gets called for complex cases
+   */
+  async function evaluateNPCReactionToPostImmediate(viewer, postAuthor, post, comment = null) {
     if (!viewer || !postAuthor || viewer.id === postAuthor.id) return;
     
     // Get or initialize relationship
@@ -15352,37 +17880,7 @@ JUST the number:`;
       const change = parseFloat(raw.trim());
       
       if (!isNaN(change) && change >= -5 && change <= 5) {
-        const oldStrength = relationship.strength;
-        relationship.strength = Math.max(0, Math.min(100, oldStrength + change));
-        
-        // Update relationship type based on strength
-        if (relationship.strength > 80) relationship.type = 'best_friend';
-        else if (relationship.strength > 65) relationship.type = 'friend';
-        else if (relationship.strength > 35) relationship.type = 'colleague';
-        else if (relationship.strength > 15) relationship.type = 'acquaintance';
-        else relationship.type = 'distant';
-        
-        if (change !== 0) {
-          console.log(`[Social Dynamics] ${viewer.name} → ${postAuthor.name}: ${change > 0 ? '+' : ''}${change} (${oldStrength} → ${relationship.strength}, ${relationship.type})`);
-          
-          // Add to history
-          relationship.history.push({
-            timestamp: Date.now(),
-            type: 'post_reaction',
-            description: hasComment ? `Commented on ${postAuthor.name}'s ${postType} post` : `Viewed ${postAuthor.name}'s ${postType} post`,
-            change: change
-          });
-          
-          // Keep history reasonable
-          if (relationship.history.length > 20) {
-            relationship.history = relationship.history.slice(-20);
-          }
-          
-          // Create gossip if relationship changed significantly
-          if (Math.abs(change) >= 3) {
-            createGossipFromSocialInteraction(viewer, postAuthor, post, comment, change);
-          }
-        }
+        applyRelationshipChange(viewer, postAuthor, change, 'ai');
       }
     } catch (error) {
       console.error(`[Social Dynamics] Error evaluating ${viewer.name}'s reaction:`, error);
@@ -15471,22 +17969,29 @@ JUST the number:`;
    */
   function createGossipFromSocialInteraction(viewer, postAuthor, post, comment, relationshipChange) {
     // Only create gossip for significant changes or explicit content
-    if (Math.abs(relationshipChange) < 3 && post.explicitLevel < 2) return;
+    const postExplicitLevel = post?.explicitLevel || 0;
+    if (Math.abs(relationshipChange) < 3 && postExplicitLevel < 2) return;
     
     let gossipContent = '';
+    let contextType = 'gossip';
     
     if (relationshipChange >= 4) {
       // Positive bonding
       gossipContent = `${viewer.name} and ${postAuthor.name} seem to be getting really close on social media`;
+      contextType = 'friendship';
     } else if (relationshipChange <= -4) {
       // Drama/conflict
       gossipContent = `${viewer.name} and ${postAuthor.name} had tension on social media`;
-    } else if (post.explicitLevel >= 3) {
+      contextType = 'fight';
+    } else if (postExplicitLevel >= 3) {
       // Explicit content reaction
       gossipContent = `${postAuthor.name} posted something VERY explicit and ${viewer.name} ${comment ? 'commented on it' : 'saw it'}`;
+      contextType = 'scandal';
     }
     
     if (gossipContent) {
+      const juiciness = Math.abs(relationshipChange) * 10 + (postExplicitLevel * 15);
+      
       // Add to gossip engine for other NPCs to discover
       if (!gameState.activeGossip) gameState.activeGossip = [];
       
@@ -15495,7 +18000,7 @@ JUST the number:`;
         subjectId: postAuthor.id,
         targetId: viewer.id,
         content: gossipContent,
-        juiciness: Math.abs(relationshipChange) + post.explicitLevel,
+        juiciness: juiciness,
         timestamp: Date.now(),
         accuracy: 100, // Direct observation
         knownBy: [viewer.id] // Viewer knows it firsthand
@@ -15506,7 +18011,19 @@ JUST the number:`;
         gameState.activeGossip = gameState.activeGossip.slice(-50);
       }
       
-      console.log(`[Gossip Created] ${gossipContent} (juiciness: ${Math.abs(relationshipChange) + post.explicitLevel})`);
+      console.log(`[Gossip Created] ${gossipContent} (juiciness: ${juiciness})`);
+      
+      // Add juicy gossip to Company-Wide Context if it's scandalous enough
+      if (juiciness >= 65) {
+        addToCompanyWideContext({
+          content: gossipContent,
+          type: contextType,
+          subjectIds: [viewer.id, postAuthor.id],
+          juiciness: juiciness,
+          source: 'gossip'
+        });
+        console.log(`[CompanyContext] Gossip was juicy enough to become public knowledge!`);
+      }
     }
   }
   
@@ -15871,7 +18388,7 @@ JUST the number:`;
     }
     
     // Hide dropdown
-    const dropdown = dropdownId === 'mentionSuggestions' ? $(dropdownId) : 
+    const dropdown = (dropdownId === 'mentionSuggestions' || dropdownId === 'modalMentionSuggestions') ? $(dropdownId) : 
                      document.querySelector(`.comment-mention-suggestions[data-post-id="${dropdownId}"]`);
     if (dropdown) dropdown.style.display = 'none';
     
@@ -15890,8 +18407,11 @@ JUST the number:`;
     let currentHighlightIndex = 0;
     
     const getDropdown = () => {
-      return dropdownId === 'mentionSuggestions' ? $(dropdownId) : 
-             document.querySelector(`.comment-mention-suggestions[data-post-id="${dropdownId}"]`);
+      // Handle standard suggestions dropdown, modal suggestions dropdown, or post-specific comment dropdowns
+      if (dropdownId === 'mentionSuggestions' || dropdownId === 'modalMentionSuggestions') {
+        return $(dropdownId);
+      }
+      return document.querySelector(`.comment-mention-suggestions[data-post-id="${dropdownId}"]`);
     };
     
     const updateHighlight = () => {
@@ -16412,6 +18932,11 @@ JUST the number:`;
     console.log('[POST CREATION] ✅ Post added to feed (position: 0)');
     console.log(`[POST CREATION] Total posts in feed: ${gameState.socialNetwork.posts.length}`);
     
+    // Analyze post for public knowledge
+    setTimeout(() => {
+      analyzePostForPublicKnowledge(post);
+    }, 2000); // Slight delay to let engagement start
+    
     // Refresh dashboard to show new posts/mentions
     if (gameState.activeTab === 'dashboard') {
       refreshDashboardSections();
@@ -16638,6 +19163,7 @@ JUST the number:`;
   /**
    * Check if content is too similar to recent posts by the same author
    * Uses simple keyword overlap and phrase matching
+   * IMPROVED: Less aggressive to allow natural topic variations
    */
   function isContentTooSimilar(content, authorId, maxRecentPosts = 5) {
     if (!content) return false;
@@ -16664,22 +19190,24 @@ JUST the number:`;
     for (const post of authorPosts) {
       const existingWords = normalizeText(post.content);
       
-      // Calculate word overlap
+      // Calculate word overlap (INCREASED THRESHOLD: 70% instead of 50%)
       const commonWords = newWords.filter(word => existingWords.includes(word));
       const overlapRatio = commonWords.length / Math.min(newWords.length, existingWords.length);
       
-      // If more than 50% overlap, consider it too similar
-      if (overlapRatio > 0.5) {
+      // If more than 70% overlap, consider it too similar (was 50%)
+      if (overlapRatio > 0.7) {
         console.log(`Content similarity detected: ${Math.round(overlapRatio * 100)}% overlap with recent post`);
         return true;
       }
       
-      // Check for exact phrase repetition (3+ word sequences)
+      // Check for exact phrase repetition (IMPROVED: 5+ word sequences instead of 3+)
+      // This allows common phrases like "weirdest chat with" to pass through
       const newText = content.toLowerCase();
       const existingText = post.content.toLowerCase();
-      for (let i = 0; i < newWords.length - 2; i++) {
-        const phrase = newWords.slice(i, i + 3).join(' ');
-        if (phrase.length > 15 && existingText.includes(phrase)) {
+      for (let i = 0; i < newWords.length - 4; i++) { // Changed from -2 to -4 (5 words instead of 3)
+        const phrase = newWords.slice(i, i + 5).join(' '); // Changed from 3 to 5
+        // Also increased minimum phrase length from 15 to 25 characters
+        if (phrase.length > 25 && existingText.includes(phrase)) {
           console.log(`Duplicate phrase detected: "${phrase}"`);
           return true;
         }
@@ -16777,6 +19305,9 @@ JUST the number:`;
     
     // Add to feed
     gameState.socialNetwork.posts.unshift(post);
+    
+    // Track topic to avoid duplicates (AI Optimization)
+    trackPostTopic(postContent);
     
     // Refresh dashboard to show new posts/mentions
     if (gameState.activeTab === 'dashboard') {
@@ -17931,11 +20462,11 @@ EXAMPLES OF GOOD IMAGE PROMPTS:
 Caption: "Locked door, unlocked desires... your special request delivered fresh 😈"
 Type: explicit
 Context: Boss requested nude photo
-Image Prompt: "[Physical description] stands in front of a locked wooden door in bedroom. She is completely nude, full frontal nudity. Her [specific breast description from profile] are fully exposed, nipples visible. Her [specific genital description - both penis and vagina for futa] are on full display in an erotic showcase. Face shows passionate, teasing expression looking directly at camera. Hands on hips, confident pose. Soft bedroom lighting. NSFW explicit content for boss's private request."
+Image Prompt: "(Physical description) stands in front of a locked wooden door in bedroom. She is completely nude, full frontal nudity. Her (specific breast description from profile) are fully exposed, nipples visible. Her (specific genital description - both penis and vagina for futa) are on full display in an erotic showcase. Face shows passionate, teasing expression looking directly at camera. Hands on hips, confident pose. Soft bedroom lighting. NSFW explicit content for boss's private request."
 
 Caption: "That post-workout glow though 💪"
 Type: selfie
-Image Prompt: "[Physical description] taking gym mirror selfie. Wearing sports bra and leggings, slightly sweaty from workout. Face shows accomplished smile with flushed cheeks from exercise. Gym equipment visible in background. Phone in hand. Natural gym lighting. Athletic, healthy vibe."
+Image Prompt: "(Physical description) taking gym mirror selfie. Wearing sports bra and leggings, slightly sweaty from workout. Face shows accomplished smile with flushed cheeks from exercise. Gym equipment visible in background. Phone in hand. Natural gym lighting. Athletic, healthy vibe."
 
 Caption: "Coffee and chaos, the Monday mood ☕😩"
 Type: text/food
@@ -18695,6 +21226,14 @@ Write ONLY the detailed image prompt - no explanations, no meta-commentary:`;
       
       post.comments.push(comment);
       
+      // Small chance (15%) for viral engagement - NPC comment triggers reinvigoration
+      if (post.comments.length >= 3 && Math.random() < 0.15) {
+        console.log(`[Autonomous] 🔥 ${employee.name}'s comment sparked viral engagement!`);
+        setTimeout(async () => {
+          await triggerAdditionalNPCComments(post);
+        }, 6000 + Math.random() * 8000); // 6-14 seconds delay
+      }
+      
       // 🌐 Evaluate relationship between commenter and post author
       const postAuthor = gameState.employees.find(e => e.id === post.authorId);
       
@@ -18853,10 +21392,6 @@ Write ONLY the comment:`;
     try {
       const response = await generateText(prompt, { temperature: 1.0, max_tokens: 40 });
       let comment = response.trim().replace(/^["']|["']$/g, '');
-      
-      if (comment.length > 80) {
-        comment = comment.substring(0, 77) + '...';
-      }
       
       return comment;
       
@@ -19153,19 +21688,24 @@ Write ONLY the comment, no quotation marks:`;
     // Remove "Name:" prefix (e.g., "Laura Rodriguez: Your plant's living...")
     comment = comment.replace(/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*:\s*/g, '');
     
-    // Remove parenthetical meta-commentary patterns
-    comment = comment.split(/\n\s*\(/)[0]; // Remove "(Note: ...)" style
-    comment = comment.split(/\n\s*\*/)[0]; // Remove "*(Word count...)" style
-    comment = comment.split(/\(Note:/)[0]; // Remove inline notes
-    comment = comment.split(/\*\(Word count/i)[0]; // Remove word count
-    comment = comment.split(/\*\*Relationship Impact/i)[0]; // Remove relationship analysis
-    comment = comment.split(/\(Relationship/i)[0]; // Remove relationship notes
+    // Remove **Name** prefix (e.g., "**(Laura Rodriguez)** Your plant's...")
+    comment = comment.replace(/^\*\*\([^)]+\)\*\*\s*/g, '');
     
-    // CRITICAL FIX: Remove standalone parenthetical commentary at end
+    // CRITICAL: Split on newlines and take only first line (removes multi-line meta-commentary)
+    comment = comment.split('\n')[0].trim();
+    
+    // Remove parenthetical meta-commentary patterns
     comment = comment.replace(/\s*\([^)]*consequence[^)]*\)\s*$/i, ''); // "(Relationship consequence: ...)"
     comment = comment.replace(/\s*\([^)]*sparking[^)]*\)\s*$/i, ''); // Other meta analysis
     comment = comment.replace(/\s*\([^)]*tension[^)]*\)\s*$/i, ''); // Tension notes
     comment = comment.replace(/\s*\([^)]*playful[^)]*\)\s*$/i, ''); // Playful notes
+    comment = comment.replace(/\s*\([^)]*Word count[^)]*\)\s*$/i, ''); // Word count notes
+    comment = comment.replace(/\s*\([^)]*dynamic[^)]*\)\s*$/i, ''); // Dynamic notes
+    
+    // Remove AI meta-text (word counts, character counts, etc.)
+    comment = comment.replace(/\n\n\(Word count:.*?\)$/i, '');
+    comment = comment.replace(/\s*\*\(\d+\s*characters?\)\*\s*$/i, '');
+    comment = comment.replace(/\s*\(\d+\s*words?\)\s*$/i, '');
     
     comment = comment.replace(/\s*\*\s*$/g, ''); // Remove trailing asterisks
     comment = comment.trim();
@@ -20609,6 +23149,7 @@ Post:`;
   window.handleLikePost = handleLikePost;
   // toggleComments removed - now using modal system (openPostModal)
   window.openPostModal = openPostModal;
+  window.closePostModal = closePostModal;
   window.submitModalComment = submitModalComment;
   window.addCommentToPost = addCommentToPost;
   window.openImageViewer = openImageViewer;
@@ -20657,14 +23198,18 @@ Post:`;
   #dashRecentMessages::-webkit-scrollbar,
   #dashSocialMentions::-webkit-scrollbar,
   #dashTopPerformers::-webkit-scrollbar,
-  #newsFeed::-webkit-scrollbar {
+  #newsFeed::-webkit-scrollbar,
+  #contextList::-webkit-scrollbar,
+  #gossipList::-webkit-scrollbar {
     width: 6px;
   }
   
   #dashRecentMessages::-webkit-scrollbar-track,
   #dashSocialMentions::-webkit-scrollbar-track,
   #dashTopPerformers::-webkit-scrollbar-track,
-  #newsFeed::-webkit-scrollbar-track {
+  #newsFeed::-webkit-scrollbar-track,
+  #contextList::-webkit-scrollbar-track,
+  #gossipList::-webkit-scrollbar-track {
     background: #0f3460;
     border-radius: 3px;
   }
@@ -20672,7 +23217,9 @@ Post:`;
   #dashRecentMessages::-webkit-scrollbar-thumb,
   #dashSocialMentions::-webkit-scrollbar-thumb,
   #dashTopPerformers::-webkit-scrollbar-thumb,
-  #newsFeed::-webkit-scrollbar-thumb {
+  #newsFeed::-webkit-scrollbar-thumb,
+  #contextList::-webkit-scrollbar-thumb,
+  #gossipList::-webkit-scrollbar-thumb {
     background: #00d4ff;
     border-radius: 3px;
   }
@@ -20680,7 +23227,9 @@ Post:`;
   #dashRecentMessages::-webkit-scrollbar-thumb:hover,
   #dashSocialMentions::-webkit-scrollbar-thumb:hover,
   #dashTopPerformers::-webkit-scrollbar-thumb:hover,
-  #newsFeed::-webkit-scrollbar-thumb:hover {
+  #newsFeed::-webkit-scrollbar-thumb:hover,
+  #contextList::-webkit-scrollbar-thumb:hover,
+  #gossipList::-webkit-scrollbar-thumb:hover {
     background: #00a8cc;
   }
   
