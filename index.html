@@ -621,16 +621,32 @@
     </div>
     
     <div style="margin-bottom:20px;">
-      <h3>Data Management</h3>
-      <div style="display:flex; gap:10px; margin-top:10px;">
-        <button id="saveBtn" style="flex:1; padding:10px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer;">Save Game</button>
-        <button id="loadBtn" style="flex:1; padding:10px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer;">Load Game</button>
+      <h3>📋 Patch Notes</h3>
+      <div style="background:#0f3460; border-radius:10px; padding:15px; margin-top:10px;">
+        <p style="color:#aaa; font-size:0.85rem; margin:0 0 10px 0;">View update history and recent changes.</p>
+        <button id="openPatchNotesBtn" style="width:100%; padding:12px; background:#667eea; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span style="font-size:1.3rem;">📝</span> View Patch Notes
+        </button>
       </div>
-      <button id="exportBtn" style="width:100%; padding:10px; background:#0f3460; border:none; border-radius:5px; color:white; cursor:pointer; margin-top:10px;">Export Save Data</button>
-      <button id="resetBtn" style="width:100%; padding:10px; background:#533483; border:none; border-radius:5px; color:white; cursor:pointer; margin-top:10px;">Reset Game</button>
+    </div>
+    
+    <div style="margin-bottom:20px;">
+      <h3>Data Management</h3>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+        <div style="display:flex; gap:10px;">
+          <button id="saveBtn" style="flex:1; padding:10px; background:#4ecca3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">💾 Save Now</button>
+          <button id="loadBtn" style="flex:1; padding:10px; background:#00d4ff; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">📂 Load Save</button>
+        </div>
+        <button id="exportBtn" style="width:100%; padding:10px; background:#667eea; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">📤 Export to File</button>
+        <button id="importBtn" style="width:100%; padding:10px; background:#764ba2; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">📥 Import from File</button>
+        <button id="resetBtn" style="width:100%; padding:10px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">🗑️ Reset Game</button>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Hidden file input for importing saves -->
+<input type="file" id="importFileInput" accept=".json" style="display:none;">
 
 <!-- Chat Modal -->
 <div id="chatModal" class="modal" style="position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:100% !important; background:rgba(0,0,0,0.7) !important; z-index:999999 !important; display:none !important; justify-content:center !important; align-items:center !important; pointer-events:none !important;">
@@ -685,6 +701,26 @@
   </div>
 </div>
 
+<!-- Patch Notes Modal -->
+<div id="patchNotesModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; justify-content:center; align-items:center; overflow-y:auto;">
+  <div style="background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); width:95%; max-width:900px; max-height:90vh; border-radius:20px; box-shadow:0 10px 40px rgba(102,126,234,0.4); border:2px solid #667eea; overflow-y:auto; margin:20px;">
+    <div style="position:sticky; top:0; background:linear-gradient(135deg, #16213e 0%, #0f3460 100%); padding:20px; border-bottom:2px solid #667eea; z-index:10; border-radius:20px 20px 0 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:2rem;">📝</span>
+          <h2 style="margin:0; color:#667eea; text-shadow:0 0 10px rgba(102,126,234,0.5);">Patch Notes</h2>
+        </div>
+        <button id="closePatchNotesBtn" style="background:transparent; border:2px solid #667eea; color:#667eea; font-size:1.5rem; cursor:pointer; width:40px; height:40px; border-radius:50%; transition:all 0.3s;" onmouseenter="this.style.background='#667eea'; this.style.color='white'" onmouseleave="this.style.background='transparent'; this.style.color='#667eea'">✕</button>
+      </div>
+    </div>
+    
+    <div id="patchNotesContent" style="padding:25px; color:white;">
+      <!-- Patch notes will be dynamically inserted here -->
+      <p style="color:#aaa; text-align:center;">Loading patch notes...</p>
+    </div>
+  </div>
+</div>
+
 <!-- Send Money Modal -->
 <div id="sendMoneyModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999999; justify-content:center; align-items:center;">
   <div style="background:#16213e; width:90%; max-width:500px; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); padding:25px;">
@@ -734,6 +770,48 @@
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button id="cancelSendMoney" style="padding:10px 20px; background:#0f3460; border:none; border-radius:6px; color:white; cursor:pointer;">Cancel</button>
       <button id="confirmSendMoney" style="padding:10px 20px; background:#4ecca3; border:none; border-radius:6px; color:#16213e; cursor:pointer; font-weight:600;">Send Money</button>
+    </div>
+  </div>
+</div>
+
+<!-- Counter Offer Modal -->
+<div id="counterOfferModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000000; justify-content:center; align-items:center;">
+  <div style="background:#16213e; width:90%; max-width:500px; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); padding:25px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0; color:#ff9800;">↔️ Counter Offer</h3>
+      <button id="closeCounterOfferModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <div style="background:#0f3460; padding:15px; border-radius:8px; margin-bottom:15px;">
+      <p style="color:#aaa; margin:0 0 5px 0; font-size:0.9rem;">They requested:</p>
+      <p id="counterOriginalAmount" style="color:#ff9800; margin:0; font-size:1.3rem; font-weight:600;">$0</p>
+    </div>
+    
+    <div style="background:#0f3460; padding:15px; border-radius:8px; margin-bottom:20px;">
+      <p style="color:#aaa; margin:0 0 5px 0; font-size:0.9rem;">Your Balance:</p>
+      <p id="counterYourBalance" style="color:#4ecca3; margin:0; font-size:1.4rem; font-weight:600;">$0</p>
+    </div>
+    
+    <p style="color:#aaa; margin-bottom:15px;">Enter the amount you want to send instead:</p>
+    
+    <!-- Counter Amount Input -->
+    <div style="margin-bottom:15px;">
+      <label style="color:#aaa; font-size:0.9rem; display:block; margin-bottom:8px;">Counter Amount:</label>
+      <div style="position:relative;">
+        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#4ecca3; font-weight:600; font-size:1.1rem;">$</span>
+        <input type="number" id="counterAmount" placeholder="0" min="1" style="width:100%; padding:12px 12px 12px 30px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; font-size:1.1rem;" />
+      </div>
+    </div>
+    
+    <!-- Justification Input -->
+    <div style="margin-bottom:15px;">
+      <label style="color:#aaa; font-size:0.9rem; display:block; margin-bottom:8px;">Why this amount? (Optional)</label>
+      <textarea id="counterJustification" placeholder="E.g., 'This is all I can spare right now', 'I think this should be enough', 'Here's a bit extra because I care', etc." style="width:100%; height:80px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical;"></textarea>
+    </div>
+    
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="cancelCounterOffer" style="padding:10px 20px; background:#0f3460; border:none; border-radius:6px; color:white; cursor:pointer;">Cancel</button>
+      <button id="confirmCounterOffer" style="padding:10px 20px; background:#ff9800; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Send Counter</button>
     </div>
   </div>
 </div>
@@ -5803,6 +5881,42 @@
       .slice(0, limit);
   }
 
+  /**
+   * Calculate NPC spending rate scaled to company progression
+   * As the company grows, employees develop more expensive lifestyles
+   */
+  function calculateScaledSpendingRate(baseRate = null) {
+    // Company scale based on total cash (log scale)
+    // $1K company = scale 1.0x
+    // $10K company = scale 1.2x
+    // $100K company = scale 1.5x
+    // $1M company = scale 2.0x
+    // $10M company = scale 3.0x
+    // $100M company = scale 4.5x
+    // $1B company = scale 6.0x
+    const companyValue = Math.max(1000, gameState.cash);
+    const companyLog = Math.log10(companyValue);
+    
+    // Scale factor: ranges from 1.0x at $1K to ~6x at $1B+
+    // Formula: 1 + (log10(cash) - 3) * 0.5
+    // This means every 10x increase in company value = +0.5x spending multiplier
+    const scaleFactor = Math.max(1.0, 1 + (companyLog - 3) * 0.5);
+    
+    // Base rate if not provided (new employee)
+    if (baseRate === null) {
+      baseRate = 50 + Math.random() * 100; // $50-150/day
+    }
+    
+    // Apply scale factor
+    const scaledRate = baseRate * scaleFactor;
+    
+    // Cap at reasonable maximum to prevent absurdity
+    // At $1B+ company, max spending could be ~$50K/day for materialistic employees
+    const maxRate = 50000;
+    
+    return Math.min(scaledRate, maxRate);
+  }
+
   // Sanitize and tighten model outputs
   function sanitizeNpcResponse(text, maxSentences = 10) {
     if (!text) return '';
@@ -7482,6 +7596,33 @@ Generate ONLY the message, no quotes, no explanation:`;
       });
     }
     
+    // Patch Notes Modal
+    const openPatchNotesBtn = $('openPatchNotesBtn');
+    const closePatchNotesBtn = $('closePatchNotesBtn');
+    const patchNotesModal = $('patchNotesModal');
+    
+    if (openPatchNotesBtn && patchNotesModal) {
+      openPatchNotesBtn.addEventListener('click', () => {
+        patchNotesModal.style.display = 'flex';
+        loadPatchNotes();
+      });
+    }
+    
+    if (closePatchNotesBtn && patchNotesModal) {
+      closePatchNotesBtn.addEventListener('click', () => {
+        patchNotesModal.style.display = 'none';
+      });
+    }
+    
+    // Close on background click
+    if (patchNotesModal) {
+      patchNotesModal.addEventListener('click', (e) => {
+        if (e.target === patchNotesModal) {
+          patchNotesModal.style.display = 'none';
+        }
+      });
+    }
+    
     // Money Setter
     const cheatMoneyBase = $('cheatMoneyBase');
     const cheatMoneyMagnitude = $('cheatMoneyMagnitude');
@@ -7977,10 +8118,18 @@ Generate ONLY the message, no quotes, no explanation:`;
     });
     
     // Data management
-    if (saveBtn) saveBtn.addEventListener('click', saveGame);
+    if (saveBtn) saveBtn.addEventListener('click', () => saveGame(true)); // Show toast
     if (loadBtn) loadBtn.addEventListener('click', loadGame);
     if (exportBtn) exportBtn.addEventListener('click', exportSave);
     if (resetBtn) resetBtn.addEventListener('click', resetGame);
+    
+    // Import button
+    const importBtn = $('importBtn');
+    if (importBtn) importBtn.addEventListener('click', importSave);
+    
+    // File input for import
+    const importFileInput = $('importFileInput');
+    if (importFileInput) importFileInput.addEventListener('change', handleImportedFile);
     
     // Chat modal
     if (closeChatBtn) {
@@ -8518,6 +8667,36 @@ Generate ONLY the message, no quotes, no explanation:`;
         customMoneyAmount.value = '';
         $('moneyMessage').value = '';
         await sendMoneyToNPC(amount, message);
+      });
+    }
+    
+    // Counter Offer Modal
+    const counterOfferModal = $('counterOfferModal');
+    const closeCounterOfferModal = $('closeCounterOfferModal');
+    const cancelCounterOffer = $('cancelCounterOffer');
+    const confirmCounterOffer = $('confirmCounterOffer');
+    const counterAmount = $('counterAmount');
+    const counterJustification = $('counterJustification');
+    
+    if (closeCounterOfferModal) {
+      closeCounterOfferModal.addEventListener('click', () => {
+        counterOfferModal.style.display = 'none';
+        counterAmount.value = '';
+        counterJustification.value = '';
+      });
+    }
+    
+    if (cancelCounterOffer) {
+      cancelCounterOffer.addEventListener('click', () => {
+        counterOfferModal.style.display = 'none';
+        counterAmount.value = '';
+        counterJustification.value = '';
+      });
+    }
+    
+    if (confirmCounterOffer) {
+      confirmCounterOffer.addEventListener('click', async () => {
+        await submitCounterOffer();
       });
     }
     
@@ -13148,19 +13327,22 @@ Write ONLY the comment, no quotation marks or explanation:`;
       return false;
     }
     
-    // Count consecutive NPC messages since the last player message
+    // FIXED: Count consecutive NPC messages since the last player message
     // Prevent NPC from spamming multiple messages without player response
     let consecutiveNPCMessages = 0;
     for (let i = chatHistory.length - 1; i >= 0; i--) {
       if (chatHistory[i].isPlayer) {
         break; // Found the last player message
       }
-      consecutiveNPCMessages++;
+      if (!chatHistory[i].isPlayer) {
+        consecutiveNPCMessages++;
+      }
     }
     
-    // If NPC has already sent 1+ message since player's last message, don't send more until player responds
-    if (consecutiveNPCMessages >= 1) {
-      console.log(`[Proactive Message] ${npc.name}: Blocked - Already sent ${consecutiveNPCMessages} message(s) waiting for player response`);
+    // FIXED: Only block if NPC has sent unreplied messages
+    // The old logic incorrectly assumed NPC was always last sender
+    if (consecutiveNPCMessages >= 1 && lastMessage && !lastMessage.isPlayer) {
+      console.log(`[Proactive Message] ${npc.name}: Blocked - Already sent ${consecutiveNPCMessages} unreplied message(s)`);
       aiOptimization.blockedProactiveMessages.add(npc.id);
       return false;
     }
@@ -13487,6 +13669,43 @@ Write ONLY the message:`;
   }
   
   // Game tick - main update loop
+  /**
+   * Gradually adjust employee spending rates to match company growth
+   * Called periodically from gameTick to simulate lifestyle creep
+   */
+  function adjustEmployeeLifestyles() {
+    // Calculate target spending rate for company scale
+    const targetBaseRate = 50 + Math.random() * 100; // Random base for reference
+    const targetScaledRate = calculateScaledSpendingRate(targetBaseRate);
+    const companyScale = targetScaledRate / targetBaseRate; // Get the multiplier
+    
+    gameState.employees.forEach(emp => {
+      if (!emp.spendingRate) {
+        // Initialize with company-scaled rate
+        emp.spendingRate = calculateScaledSpendingRate();
+        return;
+      }
+      
+      // Calculate what their "natural" base rate would be (reverse engineer)
+      const estimatedBaseRate = emp.spendingRate / Math.max(1, companyScale / 1.5);
+      
+      // Calculate new target rate for current company scale
+      const newTargetRate = calculateScaledSpendingRate(estimatedBaseRate);
+      
+      // Gradually adjust toward target (move 5% closer each adjustment)
+      // This creates smooth lifestyle creep as company grows
+      const adjustment = (newTargetRate - emp.spendingRate) * 0.05;
+      
+      // Only adjust if difference is significant (> $1/day)
+      if (Math.abs(adjustment) > 1) {
+        emp.spendingRate += adjustment;
+        
+        // Ensure minimum and maximum bounds
+        emp.spendingRate = Math.max(50, Math.min(50000, emp.spendingRate));
+      }
+    });
+  }
+
   function gameTick() {
     const dt = GAME_TICK_INTERVAL;
 
@@ -13560,6 +13779,16 @@ Write ONLY the message:`;
     autonomousPostGeneration().catch(err => {
       console.error('Autonomous post generation error:', err);
     });
+
+    // Periodic lifestyle adjustment - employees gradually adopt company-scaled spending
+    // Only update every ~10 ticks to avoid excessive calculations
+    if (!gameState.lifestyleAdjustmentCounter) gameState.lifestyleAdjustmentCounter = 0;
+    gameState.lifestyleAdjustmentCounter++;
+    
+    if (gameState.lifestyleAdjustmentCounter >= 10) {
+      gameState.lifestyleAdjustmentCounter = 0;
+      adjustEmployeeLifestyles();
+    }
 
     // UI refresh (lightweight progress updates recommended)
     updateUI();
@@ -15068,8 +15297,7 @@ Write ONLY the message:`;
       if (intimacyEl) employee.intimacy = parseInt(intimacyEl.textContent) || 0;
       
       const memoryCapEl = document.getElementById('bioMemoryCap');
-      if (memoryCapEl) {
-        if (!employee.memory) employee.memory = {};
+      if (memoryCapEl && employee.memory) {
         employee.memory.cap = parseInt(memoryCapEl.textContent) || 300;
       }
       
@@ -15079,8 +15307,9 @@ Write ONLY the message:`;
       const loyaltyBonusEl = document.getElementById('bioLoyaltyBonus');
       if (loyaltyBonusEl) employee.loyaltyBonus = (parseInt(loyaltyBonusEl.textContent) || 0) / 100;
       
-      // Read personality attributes
+      // Read personality attributes - FIXED: Ensure personality object exists
       if (!employee.personality) employee.personality = {};
+      
       const confidenceEl = document.getElementById('bioConfidence');
       if (confidenceEl) employee.personality.confidence = parseInt(confidenceEl.textContent) || 50;
       
@@ -15096,9 +15325,10 @@ Write ONLY the message:`;
       const humorEl = document.getElementById('bioHumor');
       if (humorEl) employee.personality.humor = parseInt(humorEl.textContent) || 50;
       
-      // Read dropdowns
+      // Read dropdowns - FIXED: Ensure memory object exists for conversationPhase
       const conversationPhaseEl = document.getElementById('bioConversationPhase');
-      if (conversationPhaseEl && employee.memory) {
+      if (conversationPhaseEl) {
+        if (!employee.memory) employee.memory = {};
         employee.memory.conversationPhase = conversationPhaseEl.value || 'early';
       }
       
@@ -15465,7 +15695,7 @@ Write ONLY the message:`;
     chatMessages.appendChild(messageEl);
   }
   
-  // Add a money request message with Accept/Deny buttons
+  // Add a money request message with Accept/Deny/Counter buttons
   function addMoneyRequestMessage(emp, amount, reason, messageIndex) {
     if (!chatMessages) return;
     
@@ -15500,7 +15730,21 @@ Write ONLY the message:`;
       acceptBtn.style.background = '#4ecca3';
     });
     acceptBtn.addEventListener('click', async () => {
-      await handleMoneyRequestResponse(emp, amount, reason, messageIndex, true);
+      await handleMoneyRequestResponse(emp, amount, reason, messageIndex, 'accept');
+    });
+    
+    // Counter button (new!)
+    const counterBtn = document.createElement('button');
+    counterBtn.style.cssText = 'flex:1; padding:8px 12px; background:#ff9800; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600; transition:all 0.2s;';
+    counterBtn.textContent = '↔️ Counter';
+    counterBtn.addEventListener('mouseenter', () => {
+      counterBtn.style.background = '#ffa726';
+    });
+    counterBtn.addEventListener('mouseleave', () => {
+      counterBtn.style.background = '#ff9800';
+    });
+    counterBtn.addEventListener('click', () => {
+      openCounterOfferModal(emp, amount, reason, messageIndex);
     });
     
     // Deny button
@@ -15514,25 +15758,26 @@ Write ONLY the message:`;
       denyBtn.style.background = '#e94560';
     });
     denyBtn.addEventListener('click', async () => {
-      await handleMoneyRequestResponse(emp, amount, reason, messageIndex, false);
+      await handleMoneyRequestResponse(emp, amount, reason, messageIndex, 'deny');
     });
     
     btnContainer.appendChild(acceptBtn);
+    btnContainer.appendChild(counterBtn);
     btnContainer.appendChild(denyBtn);
     messageEl.appendChild(btnContainer);
     
     chatMessages.appendChild(messageEl);
   }
   
-  // Handle money request response (Accept/Deny)
-  async function handleMoneyRequestResponse(emp, amount, reason, messageIndex, accepted) {
+  // Handle money request response (Accept/Deny/Counter)
+  async function handleMoneyRequestResponse(emp, amount, reason, messageIndex, action) {
     // Remove the buttons
     const btnContainer = document.getElementById(`money-request-${messageIndex}`);
     if (btnContainer) {
       btnContainer.remove();
     }
     
-    if (accepted) {
+    if (action === 'accept') {
       // Check if player has enough money
       if (gameState.cash < amount) {
         addChatMessage('You', `[Insufficient funds - need $${formatCash(amount)}]`, true);
@@ -15553,6 +15798,16 @@ Write ONLY the message:`;
         
         return;
       }
+      
+      // Show typing indicator while NPC generates response
+      if (chatTypingIndicator && chatTypingName) {
+        chatTypingIndicator.style.display = 'block';
+        chatTypingName.textContent = emp.name;
+      }
+      
+      // Update bank balance
+      if (!emp.bankBalance) emp.bankBalance = 0;
+      emp.bankBalance += amount;
       
       // Deduct money
       gameState.cash = Math.max(0, gameState.cash - amount);
@@ -15584,7 +15839,7 @@ You just asked the player for $${formatCash(amount)} (reason: "${reason}") and t
 
 Respond with gratitude and acknowledgment (3-8 sentences). Consider:
 - Your personality (${emp.personality})
-- Your relationship with them (Obedience: ${emp.obedience}, Desire: ${emp.desire}, Trust: ${emp.trust})
+- Your relationship with them (Affection: ${emp.stats?.affection || 0}, Obedience: ${emp.obedience}, Desire: ${emp.desire}, Trust: ${emp.trust})
 - What you asked the money for
 - How this makes you feel about them
 
@@ -15592,6 +15847,9 @@ ${emp.name}'s response:`;
       
       const raw = await generateText(responsePrompt);
       const response = sanitizeNpcResponse(raw, 10);
+      
+      // Hide typing indicator
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
       
       gameState.chatHistory[emp.id].push({
         sender: emp.name,
@@ -15603,19 +15861,20 @@ ${emp.name}'s response:`;
       const newIndex = gameState.chatHistory[emp.id].length - 1;
       addChatMessage(emp.name, response, false, null, newIndex);
       
-      // Update stats - accepting requests increases trust and obedience
-      emp.trust = Math.min(100, emp.trust + 8);
-      emp.obedience = Math.min(100, emp.obedience + 5);
-      emp.desire = Math.min(100, emp.desire + 3);
+      // Update stats - accepting requests increases favor
+      emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 8);
+      emp.trust = Math.min(100, (emp.trust || 0) + 8);
+      emp.obedience = Math.min(100, (emp.obedience || 0) + 5);
+      emp.desire = Math.min(100, (emp.desire || 0) + 3);
       
-      showNotification(`💰 Gave ${emp.name} $${formatCash(amount)}\n+8 Trust, +5 Obedience, +3 Desire`, 'success');
+      showNotification(`💰 Gave ${emp.name} $${formatCash(amount)}\n+8 Affection, +8 Trust, +5 Obedience, +3 Desire`, 'success');
       
       // Memory
-      remember(emp, `Player accepted my request for $${formatCash(amount)} (${reason})`, 'event', 2.0);
+      remember(emp, `Boss accepted my request for $${formatCash(amount)} (${reason})`, 'event', 2.0);
       
       updateUI();
       
-    } else {
+    } else if (action === 'deny') {
       // Denied
       addChatMessage('You', `✗ Denied money request`, true);
       
@@ -15629,6 +15888,12 @@ ${emp.name}'s response:`;
         timestamp: Date.now()
       });
       
+      // Show typing indicator
+      if (chatTypingIndicator && chatTypingName) {
+        chatTypingIndicator.style.display = 'block';
+        chatTypingName.textContent = emp.name;
+      }
+      
       // Generate disappointed response
       const conversationHistory = gameState.chatHistory[emp.id]
         .slice(-10)
@@ -15641,7 +15906,7 @@ You just asked the player for $${formatCash(amount)} (reason: "${reason}") and t
 
 Respond with disappointment but stay in character (3-6 sentences). Consider:
 - Your personality (${emp.personality})
-- Your relationship with them (Obedience: ${emp.obedience}, Desire: ${emp.desire}, Trust: ${emp.trust})
+- Your relationship with them (Affection: ${emp.stats?.affection || 0}, Obedience: ${emp.obedience}, Desire: ${emp.desire}, Trust: ${emp.trust})
 - What you asked the money for
 - How this rejection makes you feel
 
@@ -15649,6 +15914,9 @@ ${emp.name}'s response:`;
       
       const raw = await generateText(responsePrompt);
       const response = sanitizeNpcResponse(raw, 8);
+      
+      // Hide typing indicator
+      if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
       
       gameState.chatHistory[emp.id].push({
         sender: emp.name,
@@ -15660,19 +15928,185 @@ ${emp.name}'s response:`;
       const newIndex = gameState.chatHistory[emp.id].length - 1;
       addChatMessage(emp.name, response, false, null, newIndex);
       
-      // Update stats - denying requests decreases trust and desire slightly
-      emp.trust = Math.max(0, emp.trust - 3);
-      emp.desire = Math.max(0, emp.desire - 2);
+      // Update stats - denying requests decreases favor slightly
+      emp.stats.affection = Math.max(0, (emp.stats.affection || 0) - 3);
+      emp.trust = Math.max(0, (emp.trust || 0) - 3);
+      emp.desire = Math.max(0, (emp.desire || 0) - 2);
       
-      showNotification(`${emp.name} was denied\n-3 Trust, -2 Desire`, 'warning');
+      showNotification(`${emp.name} was denied\n-3 Affection, -3 Trust, -2 Desire`, 'warning');
       
       // Memory
-      remember(emp, `Player denied my request for $${formatCash(amount)} (${reason})`, 'event', 1.5);
+      remember(emp, `Boss denied my request for $${formatCash(amount)} (${reason})`, 'event', 1.5);
       
       updateUI();
     }
     
     // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  // Open counter offer modal
+  function openCounterOfferModal(emp, requestedAmount, reason, messageIndex) {
+    // Store context for later
+    window.counterOfferContext = { emp, requestedAmount, reason, messageIndex };
+    
+    // Populate modal
+    document.getElementById('counterOriginalAmount').textContent = '$' + formatCash(requestedAmount);
+    document.getElementById('counterYourBalance').textContent = '$' + formatCash(gameState.cash);
+    document.getElementById('counterAmount').value = '';
+    document.getElementById('counterJustification').value = '';
+    
+    // Show modal
+    document.getElementById('counterOfferModal').style.display = 'flex';
+  }
+  
+  // Handle counter offer submission
+  async function submitCounterOffer() {
+    const context = window.counterOfferContext;
+    if (!context) return;
+    
+    const { emp, requestedAmount, reason, messageIndex } = context;
+    
+    const counterAmount = parseInt(document.getElementById('counterAmount').value) || 0;
+    const justification = document.getElementById('counterJustification').value.trim();
+    
+    if (counterAmount <= 0) {
+      showNotification('❌ Please enter a valid amount', 'error');
+      return;
+    }
+    
+    if (counterAmount > gameState.cash) {
+      showNotification('❌ Insufficient funds!', 'error');
+      return;
+    }
+    
+    // Close modal
+    document.getElementById('counterOfferModal').style.display = 'none';
+    
+    // Remove the buttons from the original request
+    const btnContainer = document.getElementById(`money-request-${messageIndex}`);
+    if (btnContainer) {
+      btnContainer.remove();
+    }
+    
+    // Show typing indicator while NPC thinks about counter
+    if (chatTypingIndicator && chatTypingName) {
+      chatTypingIndicator.style.display = 'block';
+      chatTypingName.textContent = emp.name;
+    }
+    
+    // Update bank balance
+    if (!emp.bankBalance) emp.bankBalance = 0;
+    emp.bankBalance += counterAmount;
+    
+    // Deduct money
+    gameState.cash = Math.max(0, gameState.cash - counterAmount);
+    updateUI();
+    
+    // Add counter offer message
+    const counterMessage = justification
+      ? `💰 Counter: Sending $${formatCash(counterAmount)} instead\n"${justification}"`
+      : `💰 Counter: Sending $${formatCash(counterAmount)} instead of requested $${formatCash(requestedAmount)}`;
+    
+    addChatMessage('You', counterMessage, true);
+    
+    gameState.chatHistory[emp.id].push({
+      sender: 'You',
+      content: counterMessage,
+      isPlayer: true,
+      isCounterOffer: true,
+      requestedAmount: requestedAmount,
+      counterAmount: counterAmount,
+      justification: justification,
+      timestamp: Date.now()
+    });
+    
+    // Generate NPC reaction to counter offer
+    const conversationHistory = gameState.chatHistory[emp.id]
+      .slice(-10)
+      .map(msg => `${msg.sender}: ${msg.content}`)
+      .join('\n');
+    
+    const diff = counterAmount - requestedAmount;
+    const diffPercent = Math.round((diff / requestedAmount) * 100);
+    const isMore = diff > 0;
+    const isLess = diff < 0;
+    const isSame = diff === 0;
+    
+    const responsePrompt = `${buildChatPrompt(emp, conversationHistory, '').prompt}
+
+You asked the boss for $${formatCash(requestedAmount)} (reason: "${reason}").
+Instead of accepting or denying, they made a COUNTER OFFER: $${formatCash(counterAmount)} (${diffPercent > 0 ? '+' : ''}${diffPercent}% ${isMore ? 'MORE' : isLess ? 'LESS' : 'same'}!)
+${justification ? `\nTheir justification: "${justification}"` : ''}
+
+Respond to this counter offer naturally (3-8 sentences). Consider:
+- Your personality (${emp.personality})
+- The difference: ${isMore ? `They're giving you MORE than you asked for!` : isLess ? `They're offering LESS than you need` : `They agreed to the exact amount`}
+- Your relationship with them (Affection: ${emp.stats?.affection || 0}, Trust: ${emp.trust}, Desire: ${emp.desire})
+- What you asked the money for originally
+${justification ? `- Their explanation for the amount` : ''}
+
+Possible reactions:
+${isMore ? `- Surprised, grateful, maybe a bit suspicious or excited
+- "Wait, you're giving me MORE? Seriously? Thank you so much!"` : ''}
+${isLess ? `- Disappointed but understanding, or frustrated depending on your personality
+- "I appreciate it but... I really needed the full amount"
+- Or: "That helps, thanks. I'll make it work"` : ''}
+${isSame ? `- A bit confused why they didn't just accept, but grateful
+- "Okay... so that's the same as I asked? Thanks I guess!"` : ''}
+
+${emp.name}'s response:`;
+    
+    const raw = await generateText(responsePrompt);
+    const response = sanitizeNpcResponse(raw, 10);
+    
+    // Hide typing indicator
+    if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
+    
+    gameState.chatHistory[emp.id].push({
+      sender: emp.name,
+      content: response,
+      isPlayer: false,
+      timestamp: Date.now()
+    });
+    
+    const newIndex = gameState.chatHistory[emp.id].length - 1;
+    addChatMessage(emp.name, response, false, null, newIndex);
+    
+    // Update stats based on counter offer
+    let favorChange = 0;
+    let trustChange = 0;
+    let desireChange = 0;
+    
+    if (isMore) {
+      // Gave MORE - big bonus!
+      favorChange = 12;
+      trustChange = 10;
+      desireChange = 6;
+    } else if (isSame) {
+      // Same amount - standard acceptance
+      favorChange = 8;
+      trustChange = 8;
+      desireChange = 3;
+    } else {
+      // Gave LESS - small bonus but some disappointment
+      const lessPenalty = Math.min(5, Math.abs(diffPercent) / 20);
+      favorChange = Math.max(2, 8 - lessPenalty);
+      trustChange = Math.max(2, 8 - lessPenalty);
+      desireChange = Math.max(1, 3 - lessPenalty / 2);
+    }
+    
+    emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + favorChange);
+    emp.trust = Math.min(100, (emp.trust || 0) + trustChange);
+    emp.desire = Math.min(100, (emp.desire || 0) + desireChange);
+    emp.obedience = Math.min(100, (emp.obedience || 0) + Math.floor(favorChange / 2));
+    
+    showNotification(`💰 Counter sent: $${formatCash(counterAmount)}\n+${favorChange} Affection, +${trustChange} Trust, +${desireChange} Desire`, 'success');
+    
+    // Memory
+    remember(emp, `Boss countered my $${formatCash(requestedAmount)} request with $${formatCash(counterAmount)}${justification ? ` - "${justification}"` : ''}`, 'event', 2.0);
+    
+    updateUI();
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
   
@@ -16133,15 +16567,39 @@ ${emp.name}'s response:`;
     // Don't request money if not in active chat
     if (!gameState.activeChat || gameState.activeChat.id !== employee.id) return;
     
-    // Initialize money request tracking if needed
+    // Initialize money request tracking and financial data if needed
     if (!employee.lastMoneyRequest) employee.lastMoneyRequest = 0;
+    if (!employee.bankBalance) employee.bankBalance = 0;
+    if (!employee.spendingRate) {
+      employee.spendingRate = calculateScaledSpendingRate(); // Company-scaled base rate
+    }
     
     // Check cooldown - don't request too often (at least 5 minutes between requests)
     const timeSinceLastRequest = Date.now() - employee.lastMoneyRequest;
     if (timeSinceLastRequest < 300000) return; // 5 minutes
     
+    // Calculate financial situation
+    const daysSinceLastRequest = timeSinceLastRequest / (1000 * 60 * 60 * 24);
+    const estimatedSpending = employee.spendingRate * daysSinceLastRequest;
+    const currentBalance = employee.bankBalance;
+    const isLowOnCash = currentBalance < (employee.spendingRate * 7); // Less than a week's spending
+    const isBroke = currentBalance < (employee.spendingRate * 2); // Less than 2 days' spending
+    
     // Base chance: 5%
     let requestChance = 0.05;
+    
+    // FINANCIAL SITUATION - biggest factor!
+    if (isBroke) {
+      requestChance += 0.15; // Desperate for money
+    } else if (isLowOnCash) {
+      requestChance += 0.08; // Getting tight
+    } else if (currentBalance > employee.spendingRate * 30) {
+      requestChance -= 0.05; // Well off, less likely to ask
+    }
+    
+    // High spending rate = more likely to need money
+    if (employee.spendingRate > 200) requestChance += 0.05;
+    if (employee.spendingRate > 500) requestChance += 0.10;
     
     // Increase chance if low trust/obedience (more demanding)
     if (employee.trust < 30) requestChance += 0.05;
@@ -16161,8 +16619,8 @@ ${emp.name}'s response:`;
       requestChance += 0.10;
     }
     
-    // Cap at 25% max
-    requestChance = Math.min(0.25, Math.max(0, requestChance));
+    // Cap at 35% max (increased from 25% to account for financial desperation)
+    requestChance = Math.min(0.35, Math.max(0, requestChance));
     
     // Roll the dice
     if (Math.random() > requestChance) return;
@@ -16170,16 +16628,39 @@ ${emp.name}'s response:`;
     // NPC will request money! Update timestamp
     employee.lastMoneyRequest = Date.now();
     
-    // Calculate requested amount based on company scale
-    const companyScale = Math.log10(gameState.cash + 1000);
-    const baseAmount = Math.pow(10, companyScale - 2); // Typically ~1% of player's cash
+    // Calculate requested amount based on financial need
+    let requestedAmount;
     
-    // Vary the amount
-    const variation = 0.5 + Math.random() * 2; // 0.5x to 2.5x
-    const requestedAmount = Math.floor(baseAmount * variation);
+    if (isBroke) {
+      // Desperate - ask for enough to cover immediate needs (1-2 weeks)
+      const weeksNeeded = 1 + Math.random();
+      requestedAmount = Math.floor(employee.spendingRate * 7 * weeksNeeded);
+    } else if (isLowOnCash) {
+      // Low on cash - ask for enough to get comfortable (1 week)
+      requestedAmount = Math.floor(employee.spendingRate * 7);
+    } else {
+      // Not desperate - asking for something specific they want
+      // Scale based on company scale
+      const companyScale = Math.log10(gameState.cash + 1000);
+      const baseAmount = Math.pow(10, companyScale - 2);
+      const variation = 0.5 + Math.random() * 2;
+      requestedAmount = Math.floor(baseAmount * variation);
+    }
     
     // Ensure minimum and maximum
     const finalAmount = Math.max(500, Math.min(requestedAmount, gameState.cash * 0.15)); // Between $500 and 15% of cash
+    
+    // Determine request category based on financial situation
+    let requestCategory;
+    if (isBroke) {
+      requestCategory = 'desperate_need';
+    } else if (isLowOnCash) {
+      requestCategory = 'financial_trouble';
+    } else if (currentBalance > employee.spendingRate * 30) {
+      requestCategory = 'luxury_want';
+    } else {
+      requestCategory = 'specific_purchase';
+    }
     
     // Generate reason for money request
     const conversationHistory = gameState.chatHistory[employee.id]
@@ -16189,19 +16670,35 @@ ${emp.name}'s response:`;
     
     const reasonPrompt = `${employee.name} (${employee.personality}) wants to ask their boss (the player) for $${formatCash(finalAmount)}.
 
+FINANCIAL CONTEXT:
+- Current bank balance: $${formatCash(currentBalance)}
+- Daily spending rate: $${formatCash(employee.spendingRate)}/day
+- Request category: ${requestCategory}
+${isBroke ? '- STATUS: Nearly broke! Urgent need.' : ''}
+${isLowOnCash ? '- STATUS: Running low on money, getting worried.' : ''}
+
 Recent conversation:
 ${conversationHistory}
 
-Generate a natural, in-character reason why ${employee.name} would ask for this money. Consider:
+Generate a creative, natural, in-character reason why ${employee.name} would ask for this money. Consider:
 - Their personality (${employee.personality})
+- Their financial situation (${requestCategory})
 - Their relationship with the boss (Obedience: ${employee.obedience}, Desire: ${employee.desire}, Trust: ${employee.trust})
 - Recent conversation context
-- What they might need the money for (shopping, bills, emergency, something they want, etc.)
 
-Write ONLY the request message (2-4 sentences), naturally asking for the money. Start directly with the request. Examples:
-- "Hey boss, I hate to ask but... my car broke down and the repair is gonna cost like $X. Any chance you could help me out?"
-- "So I saw this amazing [item] and I really want it, but it's $X... would you maybe consider lending me the money? I'd be super grateful 🥺"
-- "I'm a bit short on rent this month... could you spot me $X? I promise I'll make it up to you 😊"
+Request categories guide:
+- desperate_need: Bills overdue, can't afford rent/food, emergency situation, very apologetic
+- financial_trouble: Running low, stressed about money, multiple expenses piling up
+- specific_purchase: Want something specific (gadget, clothes, experience, date, hobby item)
+- luxury_want: Not needed but would love to have, indulgent, aspirational
+
+Write ONLY the request message (2-4 sentences), naturally asking for the money. Be creative and specific! Examples:
+- "Boss... I'm so sorry to ask but I'm really struggling. My rent is due and I'm short $X. I know it's awkward but could you help me out? 🥺"
+- "OMG so there's this [specific designer item/concert/experience] that I've been dreaming about and it's $X... I know it's a lot but would you maybe help me get it? I'd be SO grateful! 💕"
+- "Hey, so my [car/phone/laptop] died and I need $X to replace it. I hate asking but I'm kind of in a bind here... any chance you could help? 😅"
+- "I saw the cutest [specific item] at [specific store] and I NEED it but it's $X... pretty please? I'll make it worth your while 😘"
+
+Be specific with details (brand names, store names, specific items, real reasons). Make it feel real and urgent based on their financial situation.
 
 ${employee.name}'s request:`;
     
@@ -16745,12 +17242,21 @@ ${emp.name}'s response:`;
   
   // Handle sending money to NPC
   /**
-   * Send money to NPC via bribery system
+   * Send money to NPC - Enhanced with better framing and reactions
    */
   async function sendMoneyToNPC(amount, message = '') {
     if (!gameState.activeChat || amount <= 0) return;
     
     const emp = gameState.activeChat;
+    
+    // Update NPC bank balance (initialize if needed)
+    if (!emp.bankBalance) emp.bankBalance = 0;
+    emp.bankBalance += amount;
+    
+    // Initialize spending rate if needed (scaled to company size)
+    if (!emp.spendingRate) {
+      emp.spendingRate = calculateScaledSpendingRate(); // Company-scaled base rate
+    }
     
     // Deduct money from player
     gameState.cash = Math.max(0, gameState.cash - amount);
@@ -16785,55 +17291,76 @@ ${emp.name}'s response:`;
       // Add to chat display
       addChatMessage('You', moneyMessage, true);
       
-      // Determine bribe size relative to company scale
-      const companyScale = Math.log10(gameState.totalCash + 1);
-      const bribeScale = Math.log10(amount + 1);
-      const relativeSize = bribeScale / Math.max(companyScale, 1);
+      // Determine payment framing based on context and amount
+      const avgSalary = 50000; // Average employee salary for comparison
+      const monthlyEquiv = (amount / avgSalary) * 12;
       
-      // Categorize bribe size
-      let bribeCategory = 'token';
-      if (relativeSize > 0.8) bribeCategory = 'extravagant';
-      else if (relativeSize > 0.5) bribeCategory = 'generous';
-      else if (relativeSize > 0.2) bribeCategory = 'moderate';
-      else if (relativeSize > 0.05) bribeCategory = 'small';
+      // Categorize amount more contextually
+      let paymentType = 'gift';
+      let sizeDesc = 'small';
+      
+      if (amount < 100) {
+        sizeDesc = 'tiny';
+        paymentType = 'tip';
+      } else if (amount < 1000) {
+        sizeDesc = 'small';
+        paymentType = 'gift';
+      } else if (amount < 10000) {
+        sizeDesc = 'nice';
+        paymentType = message ? 'gift with meaning' : 'generous gift';
+      } else if (amount < 50000) {
+        sizeDesc = 'substantial';
+        paymentType = 'bonus';
+      } else if (amount < 200000) {
+        sizeDesc = 'major';
+        paymentType = 'windfall';
+      } else {
+        sizeDesc = 'life-changing';
+        paymentType = 'fortune';
+      }
       
       // Build conversation history
       const conversationHistory = gameState.chatHistory[emp.id]
-        .slice(-10) // Last 10 messages for context
+        .slice(-10)
         .map(msg => `${msg.sender}: ${msg.content}`)
         .join('\n');
       
-      const playerBio = gameState.settings?.playerBio || '';
-      const playerContext = playerBio ? `\nPlayer description: ${playerBio}` : '';
+      const playerBio = getPlayerDescription('conversation');
+      const playerContext = playerBio !== 'the boss' ? `\n👤 BOSS INFO: ${playerBio}` : '';
       
       // Build message context
       const messageContext = message 
-        ? `\nThey included this message with the money: "${message}"`
+        ? `\n\n💬 YOUR BOSS'S MESSAGE WITH THE MONEY:\n"${message}"\n**IMPORTANT**: Acknowledge this message in your response!`
         : '';
       
-      // Build AI prompt with bribery context
+      // Enhanced prompt that frames money more positively
       const responsePrompt = `${buildChatPrompt(emp, conversationHistory, '').prompt}${playerContext}
 
-The player just sent you $${formatCash(amount)}! This is a ${bribeCategory} amount relative to the company's scale.${messageContext}
+💰 SITUATION: Your boss just sent you $${formatCash(amount)} (a ${sizeDesc} ${paymentType})!${messageContext}
 
-Consider in your response:
-- Your personality (${emp.personality})
-- Your relationship with the player (Obedience: ${emp.obedience}, Desire: ${emp.desire}, Trust: ${emp.trust})
-- Whether this feels like a gift, a bribe, or something else
-- How you feel about receiving money from your boss
-- The context of your conversation (were they asking for something?)
-${message ? `- IMPORTANT: Acknowledge their message: "${message}"` : ''}
+📊 CONTEXT FOR YOUR REACTION:
+- Amount: $${formatCash(amount)} (equivalent to ${monthlyEquiv.toFixed(1)} months of average salary)
+- Your current bank balance: $${formatCash(emp.bankBalance)}
+- Your personality: ${emp.personality}
+- Your relationship: Affection ${emp.stats?.affection || 0}, Trust ${emp.trust || 0}, Obedience ${emp.obedience || 0}, Desire ${emp.desire || 0}
 
-Possible reactions based on amount:
-- Token ($100s): "Thanks! That's sweet"
-- Small ($1000s): "Oh, thank you! I appreciate it"
-- Moderate ($10,000s+): "Wow, this is generous. What's the occasion?"
-- Generous ($100,000s+): "Oh my god, this is amazing! Thank you so much!"
-- Extravagant ($millions+): "This is... a LOT. Are you trying to buy me? ...I mean, it's working 😏"
+💭 HOW TO REACT:
+1. **BE GENUINE**: Show real emotion appropriate to the amount (surprise, gratitude, excitement, suspicion, etc.)
+2. **FRAME POSITIVELY**: Unless you have serious trust issues or the amount is suspicious, treat this as a nice gesture
+3. **AVOID HR COMPLAINTS**: Don't immediately jump to "this feels wrong" unless amount is truly absurd
+4. **ACKNOWLEDGE THE GESTURE**: Recognize why they might be sending money (help, appreciation, flirting, etc.)
+5. **BE IN CHARACTER**: Respond based on YOUR personality and relationship with them
+${message ? '6. **ADDRESS THEIR MESSAGE**: Make sure to respond to what they said!' : ''}
 
-Respond naturally and conversationally (3-8 sentences). Show genuine emotion based on the amount and your relationship.
+📝 SUGGESTED REACTIONS BY AMOUNT:
+- Tiny ($1-99): Casual thanks, maybe confused why so small
+- Small ($100-999): Sweet gesture, appreciated
+- Nice ($1K-9K): Really grateful, touched by the thoughtfulness  
+- Substantial ($10K-49K): Wow, this is amazing! What's the occasion?
+- Major ($50K-199K): Holy shit, this is incredible! You're changing my life!
+- Life-changing ($200K+): I... I don't know what to say. This is unreal. Are you serious?!
 
-${emp.name}'s response:`;
+🎭 RESPOND NOW (3-8 sentences, natural conversation):`;
 
       const raw = await generateText(responsePrompt);
       const response = sanitizeNpcResponse(raw, 10);
@@ -16855,21 +17382,51 @@ ${emp.name}'s response:`;
       
       // Memory: remember receiving money
       const memoryText = message 
-        ? `Received $${formatCash(amount)} from player (${bribeCategory} bribe) - Message: "${message}"`
-        : `Received $${formatCash(amount)} from player (${bribeCategory} bribe)`;
+        ? `Received $${formatCash(amount)} from boss (${paymentType}) - "${message}"`
+        : `Received $${formatCash(amount)} from boss (${paymentType})`;
       remember(emp, memoryText, 'event', 2.0);
       
-      // Update stats based on bribe size
-      const obedienceGain = Math.min(20, 5 + Math.floor(relativeSize * 30));
-      const desireGain = Math.min(10, 2 + Math.floor(relativeSize * 15));
-      const trustChange = bribeCategory === 'extravagant' ? -5 : Math.floor(relativeSize * 5);
+      // Update stats - more nuanced based on context
+      let favorGain = 0;
+      let trustGain = 0;
+      let desireGain = 0;
       
-      emp.obedience = Math.min(100, emp.obedience + obedienceGain);
-      emp.desire = Math.min(100, emp.desire + desireGain);
-      emp.trust = Math.max(0, Math.min(100, emp.trust + trustChange));
+      if (amount < 1000) {
+        favorGain = 2 + Math.floor(amount / 200);
+        trustGain = 1;
+        desireGain = 1;
+      } else if (amount < 10000) {
+        favorGain = 5 + Math.floor(amount / 1000);
+        trustGain = 2;
+        desireGain = 2;
+      } else if (amount < 100000) {
+        favorGain = 10 + Math.floor(amount / 5000);
+        trustGain = 3;
+        desireGain = 4;
+      } else {
+        favorGain = 20;
+        trustGain = 5;
+        desireGain = 8;
+      }
+      
+      // Cap gains
+      favorGain = Math.min(25, favorGain);
+      trustGain = Math.min(10, trustGain);
+      desireGain = Math.min(12, desireGain);
+      
+      // Apply stat changes
+      emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + favorGain);
+      emp.trust = Math.min(100, (emp.trust || 0) + trustGain);
+      emp.desire = Math.min(100, (emp.desire || 0) + desireGain);
+      emp.obedience = Math.min(100, (emp.obedience || 0) + Math.floor(favorGain / 2));
+      
+      // Lifestyle inflation - receiving money increases spending rate
+      const lifestyleIncrease = amount / 10000; // $10k = +1/day spending
+      const maxSpendingIncrease = 50; // Cap at +50/day per gift
+      emp.spendingRate += Math.min(maxSpendingIncrease, lifestyleIncrease);
       
       // Show notification
-      showNotification(`💰 ${emp.name} received $${formatCash(amount)}\n+${obedienceGain} Obedience, +${desireGain} Desire${trustChange < 0 ? `, ${trustChange} Trust` : ''}`, 'success');
+      showNotification(`💰 ${emp.name}: +$${formatCash(amount)} to bank\n+${favorGain} Affection, +${trustGain} Trust, +${desireGain} Desire`, 'success');
       
       updateUI();
       
@@ -16878,11 +17435,12 @@ ${emp.name}'s response:`;
     } catch (error) {
       console.error('Error handling money transfer:', error);
       if (chatTypingIndicator) chatTypingIndicator.style.display = 'none';
-      addChatMessage(emp.name, "Um... thanks for the money I guess?", false);
+      addChatMessage(emp.name, "Wow, thank you so much! This is amazing! 💕", false);
       
       // Still apply basic stat gains even if AI fails
-      emp.obedience = Math.min(100, emp.obedience + 5);
-      emp.desire = Math.min(100, emp.desire + 2);
+      emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 5);
+      emp.trust = Math.min(100, (emp.trust || 0) + 2);
+      emp.desire = Math.min(100, (emp.desire || 0) + 3);
       updateUI();
     }
   }
@@ -22131,6 +22689,132 @@ Post:`;
 
   
   // Show notification
+  /**
+   * Load and display patch notes
+   * Version format: YYMMDDHHMMSS
+   */
+  function loadPatchNotes() {
+    const patchNotesContent = $('patchNotesContent');
+    if (!patchNotesContent) return;
+    
+    // Define patch notes (newest first)
+    const patchNotes = [
+      {
+        version: '250116200000',
+        date: 'January 16, 2025',
+        title: '💰 Payment System Overhaul & Complete Save System',
+        changes: [
+          {
+            category: '✨ Major New Features',
+            items: [
+              '<strong>Company-Scaled NPC Spending:</strong> NPCs now develop spending habits that scale with company success (1.0x to 6.0x multiplier)',
+              '<strong>Gradual Lifestyle Adjustment:</strong> NPCs smoothly adapt their spending as your business grows (5% per tick)',
+              '<strong>Dynamic Money Requests:</strong> NPCs ask for amounts proportional to company size and their financial situation',
+              '<strong>Counter-Offer System:</strong> Send custom amounts with personal justifications when NPCs request money',
+              '<strong>Bank Balance Tracking:</strong> Each NPC tracks their cumulative money received and spending patterns',
+              '<strong>Lifestyle Inflation:</strong> NPCs develop more expensive habits when receiving money (+$1/day per $10K sent)',
+              '<strong>AI-Enhanced Requests:</strong> Smart, context-aware money requests based on financial need, personality, and relationship',
+              '<strong>Complete Save/Load System:</strong> Import/Export saves as JSON files with metadata and validation',
+              '<strong>Patch Notes System:</strong> View update history with timestamp-based versioning (YYMMDDHHMMSS format)'
+            ]
+          },
+          {
+            category: '💾 Save System Improvements',
+            items: [
+              'Export saves to JSON files with metadata (version, timestamp, player stats)',
+              'Import saves from files with validation and preview before loading',
+              'Save files include confirmation dialog showing money, employees, prestige level',
+              'Automatic filename generation with timestamps',
+              'Legacy save format detection and migration support',
+              'Pretty-printed JSON for easy editing and debugging',
+              'Full state restoration with UI refresh after import'
+            ]
+          },
+          {
+            category: '🐛 Critical Bug Fixes',
+            items: [
+              '<strong>Fixed black screen after prestiging</strong> - Now properly loads dashboard with full UI refresh',
+              '<strong>Fixed sandbox settings not saving</strong> - Personality attributes, conversation phase, and memory cap now persist correctly',
+              'Fixed personality attributes (confidence, outgoing, flirty, professional, humor) not being saved',
+              'Fixed conversation phase dropdown not persisting between edits',
+              'Fixed memory cap adjustments being lost after save',
+              'Prestige now forces complete UI refresh for all tabs (dashboard, business, people)',
+              'Added object initialization checks to prevent undefined property errors'
+            ]
+          },
+          {
+            category: '📈 Financial System Balance',
+            items: [
+              '<strong>Early game ($1K-$100K):</strong> NPCs spend $60-180/day, request $500-$3,000',
+              '<strong>Mid game ($1M):</strong> NPCs spend $125-375/day, request $2,000-$20,000',
+              '<strong>Late game ($100M):</strong> NPCs spend $225-675/day, request $10,000-$150,000',
+              '<strong>End game ($1B+):</strong> NPCs spend $300-900/day, request $50,000-$500,000+',
+              'Request probability scales with financial desperation (broke NPCs more likely to ask)',
+              'Spending rate caps at $50,000/day to prevent absurdity',
+              'Request probability caps at 35% maximum to prevent spam'
+            ]
+          },
+          {
+            category: '🎨 UI Enhancements',
+            items: [
+              'Redesigned Data Management section with color-coded buttons',
+              'Added emojis and better labels for all save/load actions',
+              'New Patch Notes modal with organized categories and version history',
+              'Improved notification messages with context and status',
+              'Better visual hierarchy in settings panel',
+              'Confirmation dialogs show detailed info before destructive actions'
+            ]
+          },
+          {
+            category: '⚙️ Technical Improvements',
+            items: [
+              'Added <code>calculateScaledSpendingRate()</code> function for company-scaled spending',
+              'Added <code>adjustEmployeeLifestyles()</code> for gradual lifestyle creep',
+              'Enhanced <code>considerMoneyRequest()</code> with financial intelligence',
+              'Improved <code>sendMoneyToNPC()</code> with better framing and reactions',
+              'New <code>loadSaveData()</code> function for complete state restoration',
+              'Added <code>handleImportedFile()</code> for file validation and parsing',
+              'Enhanced <code>exportSave()</code> with metadata and pretty printing',
+              'Better error handling and user feedback throughout save/load system'
+            ]
+          }
+        ]
+      }
+      // Add future patch notes above this line
+    ];
+    
+    // Generate HTML
+    let html = '';
+    patchNotes.forEach((patch, index) => {
+      html += `
+        <div style="background:#0f3460; border-radius:12px; padding:20px; margin-bottom:${index < patchNotes.length - 1 ? '20px' : '0'}; border:1px solid #667eea;">
+          <div style="margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:10px;">
+              <div>
+                <h3 style="margin:0 0 5px 0; color:#667eea; font-size:1.5rem;">${patch.title}</h3>
+                <div style="color:#aaa; font-size:0.9rem;">${patch.date}</div>
+              </div>
+              <div style="background:rgba(102,126,234,0.2); padding:6px 12px; border-radius:6px; border:1px solid #667eea;">
+                <span style="color:#667eea; font-family:monospace; font-size:0.85rem;">v${patch.version}</span>
+              </div>
+            </div>
+          </div>
+          
+          ${patch.changes.map(category => `
+            <div style="margin-bottom:20px;">
+              <h4 style="margin:0 0 12px 0; color:#00d4ff; font-size:1.1rem;">${category.category}</h4>
+              <ul style="margin:0; padding-left:20px; color:#e0e0e0;">
+                ${category.items.map(item => `<li style="margin-bottom:8px; line-height:1.5;">${item}</li>`).join('')}
+              </ul>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    });
+    
+    patchNotesContent.innerHTML = html;
+  }
+
   function showNotification(message, type = 'success') {
     // Create notification element
     const colors = {
@@ -22866,8 +23550,16 @@ Post:`;
     // Show success notification
     showNotification(`✨ Prestiged! Gained ${influenceGain} Influence Points!`, 5000);
     
-    // Switch to main tab
-    switchTab('main');
+    // Switch to dashboard tab and force full refresh
+    switchTab('dashboard');
+    
+    // Force reload the dashboard content after prestige
+    setTimeout(() => {
+      updateDashboard();
+      refreshDashboardSections();
+      updateBusinessTab();
+      updatePeopleTab();
+    }, 100);
   }
 
   // Autosave setup
@@ -22887,18 +23579,155 @@ Post:`;
   }
   
   // Export save
+  /**
+   * Export save to downloadable JSON file
+   */
   function exportSave() {
-    const saveData = JSON.stringify(gameState);
-    const blob = new Blob([saveData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    try {
+      // Create a save object with metadata
+      const saveData = {
+        version: '250116200000', // Current game version
+        timestamp: Date.now(),
+        date: new Date().toISOString(),
+        gameState: gameState
+      };
+      
+      const jsonString = JSON.stringify(saveData, null, 2); // Pretty print for readability
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Generate filename with timestamp
+      const dateStr = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      const filename = `FreeUseOffice-Save-${dateStr}.json`;
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      URL.revokeObjectURL(url);
+      showNotification(`💾 Save exported: ${filename}`, 'success');
+    } catch (error) {
+      console.error('Error exporting save:', error);
+      showNotification('❌ Failed to export save!', 'error');
+    }
+  }
+  
+  /**
+   * Import save from JSON file
+   */
+  function importSave() {
+    const fileInput = document.getElementById('importFileInput');
+    if (!fileInput) {
+      showNotification('❌ Import system not available!', 'error');
+      return;
+    }
     
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'office-empire-save.json';
-    a.click();
+    // Trigger file picker
+    fileInput.click();
+  }
+  
+  /**
+   * Handle imported file
+   */
+  function handleImportedFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
     
-    URL.revokeObjectURL(url);
-    showNotification('Save data exported!');
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+      try {
+        const contents = e.target.result;
+        const saveData = JSON.parse(contents);
+        
+        // Validate save data structure
+        if (!saveData.gameState) {
+          // Try legacy format (direct gameState)
+          if (saveData.cash !== undefined && saveData.products !== undefined) {
+            // This looks like a direct gameState export
+            if (confirm('⚠️ This appears to be an old save format. Import anyway? (May cause issues)')) {
+              await loadSaveData(saveData);
+            }
+          } else {
+            showNotification('❌ Invalid save file format!', 'error');
+          }
+          return;
+        }
+        
+        // Show confirmation with save info
+        const saveDate = saveData.date ? new Date(saveData.date).toLocaleString() : 'Unknown';
+        const saveMoney = saveData.gameState.cash ? formatCash(saveData.gameState.cash) : 'Unknown';
+        const saveEmployees = saveData.gameState.employees ? saveData.gameState.employees.length : 0;
+        const savePrestige = saveData.gameState.prestigeLevel || 0;
+        
+        const confirmMsg = `📥 Import Save File?\n\n` +
+          `💰 Money: ${saveMoney}\n` +
+          `👥 Employees: ${saveEmployees}\n` +
+          `✨ Prestige Level: ${savePrestige}\n` +
+          `📅 Save Date: ${saveDate}\n\n` +
+          `⚠️ This will overwrite your current progress!`;
+        
+        if (confirm(confirmMsg)) {
+          await loadSaveData(saveData.gameState);
+          showNotification('✅ Save imported successfully!', 'success');
+        }
+      } catch (error) {
+        console.error('Error importing save:', error);
+        showNotification('❌ Failed to import save! File may be corrupted.', 'error');
+      }
+      
+      // Reset file input
+      event.target.value = '';
+    };
+    
+    reader.onerror = function() {
+      showNotification('❌ Failed to read file!', 'error');
+    };
+    
+    reader.readAsText(file);
+  }
+  
+  /**
+   * Load save data into game
+   */
+  async function loadSaveData(data) {
+    try {
+      // Clear current game state
+      Object.keys(gameState).forEach(key => delete gameState[key]);
+      
+      // Load new state
+      Object.assign(gameState, data);
+      
+      // Save to storage
+      await kv.gameSave.set("gameState", gameState);
+      
+      // Refresh entire UI
+      updateUI();
+      updatePrestigeUI();
+      renderInfluenceUpgrades();
+      
+      // Switch to dashboard and force refresh
+      switchTab('dashboard');
+      setTimeout(() => {
+        updateDashboard();
+        refreshDashboardSections();
+        updateBusinessTab();
+        updatePeopleTab();
+        updateSocialTab();
+      }, 100);
+      
+      // Restart autosave if enabled
+      setupAutosave();
+      
+      return true;
+    } catch (error) {
+      console.error('Error loading save data:', error);
+      showNotification('❌ Failed to load save data!', 'error');
+      return false;
+    }
   }
   
   // Reset game
