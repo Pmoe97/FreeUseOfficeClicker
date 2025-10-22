@@ -30064,8 +30064,8 @@ Write ONLY the social media post text:`;
       content = content.split(/\(Emojis used:/)[0]; // Remove emoji analysis
       content = content.split(/\(Approach:/)[0]; // Remove approach analysis
       content = content.split(/\(Style note:/)[0]; // Remove style notes
-      content = content.split(/\*\(Balanced/)[0]; // Remove specific patterns
-      content = content.split(/\*\(Casual/)[0];
+      content = content.split(/\*\(Balanced\)/)[0]; // Remove specific patterns
+      content = content.split(/\*\(Casual\)/)[0];
       content = content.split(/\*\(Keeps/)[0];
       content = content.split(/\*\(Style/)[0];
       // Remove trailing analysis markers
