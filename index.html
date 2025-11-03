@@ -1,4 +1,4 @@
-<!-- Top Bar -->
+﻿<!-- Top Bar -->
 <div id="topBar" style="position:sticky; top:0; z-index:1000; display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#1a1a2e; color:white; box-shadow:0 2px 10px rgba(0,0,0,0.5);">
   <div style="display:flex; gap:20px; align-items:center;">
     <div>Cash: $<span id="cashEl">0</span></div>
@@ -30,6 +30,7 @@
   <button class="tab-btn" data-tab="business" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Business</button>
   <button class="tab-btn" data-tab="upgrades" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">⚡ Upgrades</button>
   <button class="tab-btn" data-tab="people" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">People</button>
+  <button class="tab-btn" data-tab="meetings" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">💬 Meetings</button>
   <button class="tab-btn" data-tab="social" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Social</button>
   <button class="tab-btn" data-tab="gifts" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Gifts</button>
   <button class="tab-btn" data-tab="hr" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">HR</button>
@@ -402,6 +403,88 @@
       <h3>Employees</h3>
       <div id="employeesList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:15px; margin-top:10px;">
         <!-- Employee cards will be populated here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Meetings Tab -->
+  <div id="meetingsTab" class="tab-content" hidden>
+    <h2 style="margin-top:0;">💬 Group Meetings</h2>
+    <p style="color:#aaa; margin-bottom:20px;">Create meetings with up to 5 employees. They'll interact with each other naturally!</p>
+    
+    <div style="display:flex; gap:20px; height:calc(100vh - 200px); min-height:0;">
+      <!-- Left Sidebar - Meeting List -->
+      <div style="flex:0 0 300px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; background:#16213e; border-radius:12px; padding:15px;">
+        
+        <!-- Create New Meeting Button -->
+        <button id="createMeetingBtn" style="width:100%; padding:15px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none; border-radius:10px; color:white; cursor:pointer; font-weight:bold; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 4px 15px rgba(102,126,234,0.4); transition:all 0.3s;"
+                onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102,126,234,0.6)'"
+                onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102,126,234,0.4)'">
+          <span style="font-size:1.3rem;">➕</span>
+          <span>Create New Meeting</span>
+        </button>
+        
+        <!-- Meeting List -->
+        <div id="meetingsList" style="display:flex; flex-direction:column; gap:10px;">
+          <div style="text-align:center; color:#666; padding:40px 20px; font-style:italic;">
+            No meetings yet.<br>
+            <span style="font-size:2rem; margin-top:10px; display:block;">💼</span>
+            Click "Create New Meeting" to start!
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Side - Meeting Chat View -->
+      <div id="meetingChatView" style="flex:1; background:#0f3460; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; min-height:0;">
+        <!-- Placeholder when no meeting selected -->
+        <div id="meetingPlaceholder" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#666; text-align:center; padding:40px;">
+          <div style="font-size:4rem; margin-bottom:20px;">💬</div>
+          <h3 style="color:#aaa; margin:0 0 10px 0;">Select a Meeting</h3>
+          <p style="margin:0;">Choose a meeting from the left or create a new one</p>
+        </div>
+        
+        <!-- Meeting Chat Container (hidden by default) -->
+        <div id="meetingChatContainer" style="display:none; flex:1; flex-direction:column; min-height:0; overflow:hidden;">
+          <!-- Meeting Header -->
+          <div id="meetingHeader" style="padding:20px; border-bottom:2px solid #16213e; background:#0f3460; flex-shrink:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 id="meetingTitle" style="margin:0 0 10px 0;">Meeting Name</h3>
+                <div id="meetingParticipants" style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <!-- Participant avatars will go here -->
+                </div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button id="meetingSettingsBtn" style="background:#16213e; border:none; padding:10px 15px; border-radius:8px; color:#aaa; cursor:pointer; transition:all 0.2s;" 
+                        onmouseenter="this.style.color='#4ecca3'" onmouseleave="this.style.color='#aaa'" title="Meeting Settings">⚙️</button>
+                <button id="deleteMeetingBtn" style="background:#16213e; border:none; padding:10px 15px; border-radius:8px; color:#aaa; cursor:pointer; transition:all 0.2s;" 
+                        onmouseenter="this.style.color='#e94560'" onmouseleave="this.style.color='#aaa'" title="Delete Meeting">🗑️</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Meeting Messages -->
+          <div id="meetingMessages" style="flex:1; padding:20px; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; gap:15px; min-height:0;">
+            <!-- Messages will be added here -->
+          </div>
+          
+          <!-- Message Input -->
+          <div style="padding:20px; border-top:2px solid #16213e; background:#0f3460; flex-shrink:0;">
+            <div style="display:flex; gap:10px;">
+              <input id="meetingInput" type="text" placeholder="Type your message..." 
+                     style="flex:1; padding:12px 15px; background:#16213e; border:none; border-radius:8px; color:white; font-size:1rem;">
+              <button id="sendMeetingMessageBtn" style="padding:12px 20px; background:#e94560; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:bold; font-size:1rem;">
+                Send
+              </button>
+              <button id="stopMeetingRepliesBtn" style="padding:12px 20px; background:#ff6b6b; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:bold; font-size:1rem; display:none;">
+                ⏹️ Stop
+              </button>
+            </div>
+            <div style="margin-top:10px; font-size:0.85rem; color:#aaa;">
+              <span id="meetingReplyStatus">Reply limit: <span id="meetingRepliesLeft">5</span> responses remaining</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1016,7 +1099,7 @@
 
 <!-- Chat Modal -->
 <div id="chatModal" class="modal" style="position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:100% !important; background:rgba(0,0,0,0.7) !important; z-index:999999 !important; display:none !important; justify-content:center !important; align-items:center !important; pointer-events:none !important;">
-  <div style="background:#16213e; width:90%; max-width:500px; height:80%; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; pointer-events:auto;">
+  <div id="chatContainer" style="background:#16213e; width:90%; max-width:500px; height:80%; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); display:flex; flex-direction:column; pointer-events:auto;">
     <div style="padding:15px; border-bottom:1px solid #0f3460; display:flex; justify-content:space-between; align-items:center;">
       <div style="display:flex; align-items:center; gap:10px;">
         <img id="chatAvatar" src="" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
@@ -1026,8 +1109,34 @@
         </div>
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
+        <button id="chatSettingsBtn" style="background:#0f3460; border:none; padding:8px 12px; border-radius:5px; color:#aaa; cursor:pointer; font-size:1rem; transition:all 0.2s;" onmouseenter="this.style.background='#16213e'; this.style.color='#4ecca3'" onmouseleave="this.style.background='#0f3460'; this.style.color='#aaa'" title="Chat Display Settings">⚙️</button>
         <button id="clearChatBtn" style="background:#0f3460; border:none; padding:8px 12px; border-radius:5px; color:#aaa; cursor:pointer; font-size:0.8rem; transition:all 0.2s;" onmouseenter="this.style.background='#16213e'; this.style.color='#e94560'" onmouseleave="this.style.background='#0f3460'; this.style.color='#aaa'">🗑️ Clear</button>
         <button id="closeChatBtn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+      </div>
+    </div>
+    
+    <!-- Chat Display Settings Panel (hidden by default) -->
+    <div id="chatSettingsPanel" style="display:none; padding:15px; border-bottom:1px solid #0f3460; background:#0f1419;">
+      <h4 style="margin:0 0 15px 0; color:#4ecca3; font-size:0.9rem;">💻 Display Settings</h4>
+      
+      <div style="margin-bottom:12px;">
+        <label style="display:block; margin-bottom:5px; font-size:0.85rem; color:#aaa;">Chat Width: <span id="chatWidthValue2" style="color:#4ecca3; font-weight:bold;">500px</span></label>
+        <input type="range" id="chatWidthSlider2" min="300" max="800" value="500" step="10" style="width:100%;">
+      </div>
+      
+      <div style="margin-bottom:12px;">
+        <label style="display:block; margin-bottom:5px; font-size:0.85rem; color:#aaa;">Chat Height: <span id="chatHeightValue2" style="color:#4ecca3; font-weight:bold;">80%</span></label>
+        <input type="range" id="chatHeightSlider2" min="50" max="95" value="80" step="5" style="width:100%;">
+      </div>
+      
+      <div style="margin-bottom:12px;">
+        <label style="display:block; margin-bottom:5px; font-size:0.85rem; color:#aaa;">Text Size: <span id="textSizeValue2" style="color:#4ecca3; font-weight:bold;">100%</span></label>
+        <input type="range" id="textSizeSlider2" min="70" max="150" value="100" step="5" style="width:100%;">
+      </div>
+      
+      <div style="margin-bottom:0;">
+        <label style="display:block; margin-bottom:5px; font-size:0.85rem; color:#aaa;">Image Size: <span id="imagePreviewSizeValue2" style="color:#4ecca3; font-weight:bold;">300px</span></label>
+        <input type="range" id="imagePreviewSizeSlider2" min="200" max="600" value="300" step="25" style="width:100%;">
       </div>
     </div>
     
@@ -1087,6 +1196,58 @@
       <!-- Patch notes will be dynamically inserted here -->
       <p style="color:#aaa; text-align:center;">Loading patch notes...</p>
     </div>
+  </div>
+</div>
+
+<!-- Create Meeting Modal -->
+<div id="createMeetingModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999999; justify-content:center; align-items:center;">
+  <div style="background:#16213e; width:90%; max-width:700px; max-height:95vh; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); padding:25px; margin:20px; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0; color:#667eea;">💬 Create New Meeting</h3>
+      <button id="closeCreateMeetingModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <!-- Meeting Name -->
+    <div style="margin-bottom:20px;">
+      <label style="display:block; margin-bottom:8px; color:#aaa; font-weight:600;">Meeting Name</label>
+      <input id="meetingNameInput" type="text" placeholder="e.g., Q4 Planning Meeting" 
+             style="width:100%; padding:12px; background:#0f3460; border:1px solid #667eea; border-radius:8px; color:white; font-size:1rem;">
+    </div>
+    
+    <!-- Reply Limit Setting -->
+    <div style="margin-bottom:20px; background:#0f3460; padding:15px; border-radius:8px;">
+      <label style="display:block; margin-bottom:10px; color:#aaa; font-weight:600;">
+        Reply Limit per Message: <span id="replyLimitValue" style="color:#4ecca3; font-size:1.2rem;">5</span>
+      </label>
+      <input id="replyLimitSlider" type="range" min="1" max="10" value="5" 
+             style="width:100%; cursor:pointer;">
+      <p style="color:#666; font-size:0.85rem; margin:8px 0 0 0;">
+        Max number of NPC replies after each player message. Lower = faster, Higher = more detailed conversations.
+      </p>
+    </div>
+    
+    <!-- Participant Selection -->
+    <div style="margin-bottom:20px;">
+      <label style="display:block; margin-bottom:10px; color:#aaa; font-weight:600;">
+        Select Participants (Max 5): <span id="selectedCount" style="color:#4ecca3;">0/5</span>
+      </label>
+      
+      <!-- Search Box -->
+      <input id="participantSearch" type="text" placeholder="Search employees..." 
+             style="width:100%; padding:10px; background:#0f3460; border:1px solid #667eea; border-radius:8px; color:white; margin-bottom:12px;">
+      
+      <!-- Participant Grid -->
+      <div id="participantGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; max-height:400px; overflow-y:auto; padding:10px; background:#0f3460; border-radius:8px;">
+        <!-- Participant cards will be added here -->
+      </div>
+    </div>
+    
+    <!-- Create Button -->
+    <button id="confirmCreateMeeting" style="width:100%; padding:15px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none; border-radius:8px; color:white; cursor:pointer; font-weight:bold; font-size:1.1rem; transition:all 0.3s;"
+            onmouseenter="this.style.transform='translateY(-2px)'"
+            onmouseleave="this.style.transform='translateY(0)'">
+      Create Meeting
+    </button>
   </div>
 </div>
 
@@ -4318,6 +4479,15 @@
     ],
     employees: [],
     
+    // ========== MEETINGS / GROUP CHATS SYSTEM ==========
+    meetings: [],
+    meetingSettings: {
+      maxParticipants: 5,              // Max NPCs (player is +1 = 6 total)
+      defaultReplyLimit: 5,            // Default max replies per player message
+      intelligentPriority: true,       // Use AI to determine speaking order
+      perspectiveMode: true            // NPCs have different knowledge/perspectives
+    },
+    
     // ========== CORPORATE HIERARCHY SYSTEM ==========
     // 8-level corporate structure from Entry to Executive
     hierarchyLevels: {
@@ -4525,7 +4695,13 @@
       guidelines: 50,
       policy: 'professional',
       playerBio: '', // DEPRECATED: Replaced by playerProfile object
-      imageStyle: 'photorealistic' // Global image generation style
+      imageStyle: 'photorealistic', // Global image generation style
+      
+      // UI Customization (PC only - mobile ignores these)
+      chatWidth: 500,        // Chat window width in pixels (300-800)
+      chatHeight: 80,        // Chat window height in percent (50-95)
+      textSize: 100,         // Text size percentage (70-150)
+      imagePreviewSize: 300  // Image preview max width in pixels (200-600)
     },
     
     // Player Profile (detailed information about the player character)
@@ -6484,6 +6660,9 @@
   /**
    * Update time display in UI
    */
+  // Cache to prevent unnecessary DOM updates
+  let lastTimeDisplayValue = '';
+  
   function updateTimeDisplay() {
     const timeDisplay = document.getElementById('game-time-display');
     if (timeDisplay && gameState.time) {
@@ -6498,10 +6677,16 @@
         night: '🌙'
       };
       
-      timeDisplay.innerHTML = `
-        <span>${icons[timeOfDay]} ${date}</span>
-        <span style="margin-left: 10px;">${time}</span>
-      `;
+      const newValue = `${icons[timeOfDay]} ${date} ${time}`;
+      
+      // Only update DOM if the value actually changed
+      if (newValue !== lastTimeDisplayValue) {
+        lastTimeDisplayValue = newValue;
+        timeDisplay.innerHTML = `
+          <span>${icons[timeOfDay]} ${date}</span>
+          <span style="margin-left: 10px;">${time}</span>
+        `;
+      }
     }
   }
 
@@ -15605,6 +15790,155 @@ Generate ONLY the message, no quotes, no explanation:`;
       }
     }
     
+    // Chat Settings Panel Toggle
+    const chatSettingsBtn = $('chatSettingsBtn');
+    const chatSettingsPanel = $('chatSettingsPanel');
+    
+    if (chatSettingsBtn && chatSettingsPanel) {
+      chatSettingsBtn.addEventListener('click', () => {
+        const isHidden = chatSettingsPanel.style.display === 'none';
+        chatSettingsPanel.style.display = isHidden ? 'block' : 'none';
+      });
+    }
+    
+    // Improved mobile detection - only true mobile devices, not laptops with touchscreens
+    function isTrueMobileDevice() {
+      // Check if screen is small (mobile-sized)
+      const isSmallScreen = window.innerWidth <= 768;
+      // Check user agent for mobile devices
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      // Only consider it mobile if BOTH small screen AND mobile user agent
+      return isSmallScreen && isMobileUA;
+    }
+    
+    // Chat Width Slider (in chat modal)
+    const chatWidthSlider2 = $('chatWidthSlider2');
+    const chatWidthValue2 = $('chatWidthValue2');
+    if (chatWidthSlider2 && chatWidthValue2) {
+      chatWidthSlider2.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        gameState.settings.chatWidth = value;
+        chatWidthValue2.textContent = `${value}px`;
+        applyChatStyles();
+      });
+      
+      // Load saved value
+      if (gameState.settings.chatWidth) {
+        chatWidthSlider2.value = gameState.settings.chatWidth;
+        chatWidthValue2.textContent = `${gameState.settings.chatWidth}px`;
+      }
+    }
+    
+    // Chat Height Slider (in chat modal)
+    const chatHeightSlider2 = $('chatHeightSlider2');
+    const chatHeightValue2 = $('chatHeightValue2');
+    if (chatHeightSlider2 && chatHeightValue2) {
+      chatHeightSlider2.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        gameState.settings.chatHeight = value;
+        chatHeightValue2.textContent = `${value}%`;
+        applyChatStyles();
+      });
+      
+      // Load saved value
+      if (gameState.settings.chatHeight) {
+        chatHeightSlider2.value = gameState.settings.chatHeight;
+        chatHeightValue2.textContent = `${gameState.settings.chatHeight}%`;
+      }
+    }
+    
+    // Text Size Slider (in chat modal)
+    const textSizeSlider2 = $('textSizeSlider2');
+    const textSizeValue2 = $('textSizeValue2');
+    if (textSizeSlider2 && textSizeValue2) {
+      textSizeSlider2.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        gameState.settings.textSize = value;
+        textSizeValue2.textContent = `${value}%`;
+        applyChatStyles();
+      });
+      
+      // Load saved value
+      if (gameState.settings.textSize) {
+        textSizeSlider2.value = gameState.settings.textSize;
+        textSizeValue2.textContent = `${gameState.settings.textSize}%`;
+      }
+    }
+    
+    // Image Preview Size Slider (in chat modal)
+    const imagePreviewSizeSlider2 = $('imagePreviewSizeSlider2');
+    const imagePreviewSizeValue2 = $('imagePreviewSizeValue2');
+    if (imagePreviewSizeSlider2 && imagePreviewSizeValue2) {
+      imagePreviewSizeSlider2.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        gameState.settings.imagePreviewSize = value;
+        imagePreviewSizeValue2.textContent = `${value}px`;
+        applyChatStyles();
+      });
+      
+      // Load saved value
+      if (gameState.settings.imagePreviewSize) {
+        imagePreviewSizeSlider2.value = gameState.settings.imagePreviewSize;
+        imagePreviewSizeValue2.textContent = `${gameState.settings.imagePreviewSize}px`;
+      }
+    }
+    
+    // Function to apply chat customization styles
+    function applyChatStyles() {
+      const chatContainer = $('chatContainer');
+      if (!chatContainer) return;
+      
+      // Don't apply custom sizes on true mobile devices
+      if (isTrueMobileDevice()) {
+        chatContainer.style.setProperty('width', '90%', 'important');
+        chatContainer.style.setProperty('max-width', '500px', 'important');
+        chatContainer.style.setProperty('height', '80%', 'important');
+        return;
+      }
+      
+      // Apply custom sizes for PC/Laptops
+      const width = gameState.settings.chatWidth || 500;
+      const height = gameState.settings.chatHeight || 80;
+      const textSize = gameState.settings.textSize || 100;
+      const imageSize = gameState.settings.imagePreviewSize || 300;
+      
+      // Use setProperty with 'important' to override inline styles
+      chatContainer.style.setProperty('width', `${width}px`, 'important');
+      chatContainer.style.setProperty('max-width', `${width}px`, 'important');
+      chatContainer.style.setProperty('height', `${height}%`, 'important');
+      
+      // Apply text size to all messages
+      const chatMessages = $('chatMessages');
+      if (chatMessages) {
+        chatMessages.style.setProperty('font-size', `${textSize}%`, 'important');
+      }
+      
+      // Apply image size to all chat images and their containers
+      if (chatMessages) {
+        // Update image containers (parent divs with position:relative)
+        const imageContainers = chatMessages.querySelectorAll('div[style*="position:relative"][style*="inline-block"]');
+        imageContainers.forEach(container => {
+          container.style.setProperty('max-width', `${imageSize}px`, 'important');
+          
+          // Also update the message bubble (parent of parent) to accommodate larger images
+          const messageEl = container.parentElement;
+          if (messageEl) {
+            const messageMaxWidth = `${imageSize + 40}px`; // +40px for padding
+            messageEl.style.setProperty('max-width', messageMaxWidth, 'important');
+          }
+        });
+        
+        // Update the images themselves
+        const chatImages = chatMessages.querySelectorAll('img');
+        chatImages.forEach(img => {
+          img.style.setProperty('max-width', `${imageSize}px`, 'important');
+        });
+      }
+    }
+    
+    // Apply styles on page load and when chat opens
+    applyChatStyles();
+    
     // Image style selector
     const imageStyleSelect = $('imageStyleSelect');
     const customPromptContainer = $('customPromptContainer');
@@ -15718,6 +16052,153 @@ Generate ONLY the message, no quotes, no explanation:`;
         if (e.target === patchNotesModal) {
           patchNotesModal.style.display = 'none';
         }
+      });
+    }
+    
+    // ========== MEETINGS SYSTEM EVENT LISTENERS ==========
+    
+    // Create Meeting Button
+    const createMeetingBtn = $('createMeetingBtn');
+    const createMeetingModal = $('createMeetingModal');
+    const closeCreateMeetingModal = $('closeCreateMeetingModal');
+    
+    if (createMeetingBtn && createMeetingModal) {
+      createMeetingBtn.addEventListener('click', () => {
+        createMeetingModal.style.display = 'flex';
+        populateParticipantGrid();
+      });
+    }
+    
+    if (closeCreateMeetingModal && createMeetingModal) {
+      closeCreateMeetingModal.addEventListener('click', () => {
+        createMeetingModal.style.display = 'none';
+      });
+    }
+    
+    // Close on background click
+    if (createMeetingModal) {
+      createMeetingModal.addEventListener('click', (e) => {
+        if (e.target === createMeetingModal) {
+          createMeetingModal.style.display = 'none';
+        }
+      });
+    }
+    
+    // Reply Limit Slider
+    const replyLimitSlider = $('replyLimitSlider');
+    const replyLimitValue = $('replyLimitValue');
+    
+    if (replyLimitSlider && replyLimitValue) {
+      replyLimitSlider.addEventListener('input', (e) => {
+        replyLimitValue.textContent = e.target.value;
+      });
+    }
+    
+    // Participant Search
+    const participantSearch = $('participantSearch');
+    if (participantSearch) {
+      participantSearch.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        populateParticipantGrid(searchTerm);
+      });
+    }
+    
+    // Confirm Create Meeting
+    const confirmCreateMeeting = $('confirmCreateMeeting');
+    if (confirmCreateMeeting) {
+      confirmCreateMeeting.addEventListener('click', () => {
+        const nameInput = $('meetingNameInput');
+        const replyLimit = parseInt($('replyLimitSlider')?.value || 5);
+        const name = nameInput?.value.trim() || '';
+        
+        // Get selected participants
+        const selectedParticipants = Array.from(document.querySelectorAll('.participant-card.selected'))
+          .map(card => card.dataset.employeeId)
+          .filter(id => id);
+        
+        if (selectedParticipants.length === 0) {
+          showNotification('⚠️ Please select at least one participant', 'error');
+          return;
+        }
+        
+        if (selectedParticipants.length > 5) {
+          showNotification('⚠️ Maximum 5 participants allowed', 'error');
+          return;
+        }
+        
+        // Create the meeting
+        createMeeting(name, selectedParticipants, replyLimit);
+        
+        // Close modal and reset
+        createMeetingModal.style.display = 'none';
+        if (nameInput) nameInput.value = '';
+        if (replyLimitSlider) replyLimitSlider.value = 5;
+        if (replyLimitValue) replyLimitValue.textContent = '5';
+        
+        // Switch to meetings tab
+        switchTab('meetings');
+        
+        showNotification(`✅ Meeting created successfully!`, 'success');
+      });
+    }
+    
+    // Send Meeting Message
+    const sendMeetingMessageBtn = $('sendMeetingMessageBtn');
+    const meetingInput = $('meetingInput');
+    
+    if (sendMeetingMessageBtn) {
+      sendMeetingMessageBtn.addEventListener('click', () => {
+        const input = $('meetingInput');
+        if (input && input.value.trim()) {
+          sendMeetingMessage(input.value.trim());
+        }
+      });
+    }
+    
+    if (meetingInput) {
+      meetingInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && meetingInput.value.trim()) {
+          sendMeetingMessage(meetingInput.value.trim());
+        }
+      });
+    }
+    
+    // Delete Meeting Button
+    const deleteMeetingBtn = $('deleteMeetingBtn');
+    if (deleteMeetingBtn) {
+      deleteMeetingBtn.addEventListener('click', () => {
+        if (!gameState.activeMeeting) return;
+        
+        const meeting = gameState.meetings.find(m => m.id === gameState.activeMeeting);
+        if (!meeting) return;
+        
+        if (confirm(`Delete meeting "${meeting.name}"?`)) {
+          deleteMeeting(gameState.activeMeeting);
+          showNotification('🗑️ Meeting deleted', 'success');
+        }
+      });
+    }
+    
+    // Meeting Settings Button
+    const meetingSettingsBtn = $('meetingSettingsBtn');
+    if (meetingSettingsBtn) {
+      meetingSettingsBtn.addEventListener('click', () => {
+        if (!gameState.activeMeeting) return;
+        
+        const meeting = gameState.meetings.find(m => m.id === gameState.activeMeeting);
+        if (!meeting) return;
+        
+        // For now, show a simple alert with current settings
+        // TODO: Create a proper settings modal
+        alert(`Meeting Settings for "${meeting.name}"\n\nReply Limit: ${meeting.replyLimit} responses per turn\n\nSettings modal coming soon!`);
+      });
+    }
+    
+    // Stop Meeting Replies Button
+    const stopMeetingRepliesBtn = $('stopMeetingRepliesBtn');
+    if (stopMeetingRepliesBtn) {
+      stopMeetingRepliesBtn.addEventListener('click', () => {
+        stopMeetingReplies();
       });
     }
     
@@ -18267,6 +18748,9 @@ Generate ONLY the message, no quotes, no explanation:`;
         break;
       case 'people':
         updatePeopleTab();
+        break;
+      case 'meetings':
+        updateMeetingsList();
         break;
       case 'gifts':
         updateGiftsTab();
@@ -27973,6 +28457,1221 @@ Write ONLY the message:`;
     }
   }
   
+  // ========== MEETINGS / GROUP CHAT SYSTEM ==========
+  
+  /**
+   * Edit a message inline (player or NPC)
+   */
+  function editMessageInline(meeting, message, contentEl, messageEl) {
+    const isPlayer = message.speakerId === 'player';
+    
+    // Create textarea for editing
+    const textarea = document.createElement('textarea');
+    textarea.value = message.content;
+    textarea.style.cssText = `
+      width:100%;
+      min-height:80px;
+      background:#0f3460;
+      color:white;
+      border:1px solid #667eea;
+      border-radius:8px;
+      padding:8px;
+      font-family:inherit;
+      font-size:inherit;
+      resize:vertical;
+      margin-bottom:8px;
+    `;
+    
+    // Create save/cancel buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = 'display:flex; gap:8px; justify-content:flex-end;';
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.innerHTML = '✓ Save';
+    saveBtn.style.cssText = `
+      background:#4ecca3;
+      color:#0f3460;
+      border:none;
+      padding:6px 12px;
+      border-radius:6px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.2s;
+    `;
+    saveBtn.onmouseenter = () => saveBtn.style.background = '#5efcb3';
+    saveBtn.onmouseleave = () => saveBtn.style.background = '#4ecca3';
+    saveBtn.onclick = () => {
+      const newContent = textarea.value.trim();
+      if (newContent) {
+        // Find and update the message
+        const msgIndex = message.id 
+          ? meeting.messages.findIndex(m => m.id === message.id)
+          : meeting.messages.findIndex(m => 
+              m.speakerId === message.speakerId && 
+              m.timestamp === message.timestamp
+            );
+        
+        if (msgIndex !== -1) {
+          meeting.messages[msgIndex].content = newContent;
+          meeting.messages[msgIndex].edited = true;
+          
+          // Reload messages to show updated content
+          loadMeetingMessages(meeting);
+          showNotification('Message edited!', 'success');
+        }
+      }
+    };
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.innerHTML = '✕ Cancel';
+    cancelBtn.style.cssText = `
+      background:#e94560;
+      color:white;
+      border:none;
+      padding:6px 12px;
+      border-radius:6px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.2s;
+    `;
+    cancelBtn.onmouseenter = () => cancelBtn.style.background = '#f55570';
+    cancelBtn.onmouseleave = () => cancelBtn.style.background = '#e94560';
+    cancelBtn.onclick = () => {
+      // Reload messages to cancel edit
+      loadMeetingMessages(meeting);
+    };
+    
+    buttonContainer.appendChild(saveBtn);
+    buttonContainer.appendChild(cancelBtn);
+    
+    // Replace content with edit interface
+    contentEl.innerHTML = '';
+    contentEl.appendChild(textarea);
+    contentEl.appendChild(buttonContainer);
+    
+    // Focus textarea and select all
+    textarea.focus();
+    textarea.select();
+  }
+  
+  /**
+   * Resend a player message (triggers new NPC replies)
+   */
+  async function resendMessage(meeting, message) {
+    // Find the message in the array
+    const msgIndex = message.id 
+      ? meeting.messages.findIndex(m => m.id === message.id)
+      : meeting.messages.findIndex(m => 
+          m.speakerId === message.speakerId && 
+          m.timestamp === message.timestamp && 
+          m.content === message.content
+        );
+    
+    if (msgIndex === -1) return;
+    
+    // Remove all messages after this one
+    meeting.messages = meeting.messages.slice(0, msgIndex + 1);
+    
+    // Reload messages
+    loadMeetingMessages(meeting);
+    
+    // Reset replies and trigger new responses
+    meeting.repliesRemaining = meeting.replyLimit;
+    meeting.lastSpeakers = [];
+    meeting.activeReplyChainStartIndex = msgIndex;
+    
+    showNotification('Resending message...', 'info');
+    await processMeetingReplies(meeting);
+  }
+  
+  /**
+   * Old function kept for compatibility - now redirects to inline edit
+   */
+  async function editAndResendMessage(meeting, message) {
+    // This is now handled by separate edit and resend buttons
+    // Keeping function for any old references
+  }
+  
+  /**
+   * Regenerate an NPC message
+   */
+  async function regenerateNPCMessage(meeting, message) {
+    const npc = gameState.employees.find(e => e.id === message.speakerId);
+    if (!npc) return;
+    
+    // Find the message in the array by ID or by matching content
+    const msgIndex = message.id 
+      ? meeting.messages.findIndex(m => m.id === message.id)
+      : meeting.messages.findIndex(m => 
+          m.speakerId === message.speakerId && 
+          m.timestamp === message.timestamp
+        );
+    
+    if (msgIndex === -1) return;
+    
+    // Get the last player message before this NPC message
+    const playerMessages = meeting.messages.slice(0, msgIndex).filter(m => m.speakerId === 'player');
+    const lastPlayerMessage = playerMessages[playerMessages.length - 1];
+    
+    if (!lastPlayerMessage) {
+      showNotification('No player message found to respond to', 'error');
+      return;
+    }
+    
+    // Show loading indicator
+    showNotification(`Regenerating ${npc.name}'s response...`, 'info');
+    
+    // Generate new response
+    const newResponse = await generateMeetingResponse(npc, meeting, lastPlayerMessage.content);
+    
+    if (!newResponse) {
+      showNotification(`${npc.name} declined to speak`, 'warning');
+      return;
+    }
+    
+    // Update the message
+    meeting.messages[msgIndex].content = newResponse;
+    meeting.messages[msgIndex].regenerated = true;
+    
+    // Remove all messages after this one
+    meeting.messages = meeting.messages.slice(0, msgIndex + 1);
+    
+    // Reload messages
+    loadMeetingMessages(meeting);
+    
+    showNotification('Message regenerated!', 'success');
+  }
+  
+  /**
+   * Stop the current NPC reply chain
+   */
+  function stopMeetingReplies() {
+    if (!gameState.activeMeeting) return;
+    
+    const meeting = gameState.meetings.find(m => m.id === gameState.activeMeeting);
+    if (!meeting) return;
+    
+    // Set replies to 0 to stop the loop
+    meeting.repliesRemaining = 0;
+    
+    // Clear the active reply chain tracking
+    meeting.activeReplyChainStartIndex = null;
+    
+    // Hide stop button
+    const stopBtn = document.getElementById('stopMeetingRepliesBtn');
+    if (stopBtn) stopBtn.style.display = 'none';
+    
+    // Update status
+    const repliesLeft = document.getElementById('meetingRepliesLeft');
+    if (repliesLeft) repliesLeft.textContent = '0';
+    
+    console.log('[Meeting] Reply chain stopped by player');
+    showNotification('Reply chain stopped', 'info');
+  }
+  
+  /**
+   * Delete a message from a meeting
+   */
+  function deleteMeetingMessage(meeting, message) {
+    // Find the message index
+    const msgIndex = message.id 
+      ? meeting.messages.findIndex(m => m.id === message.id)
+      : meeting.messages.findIndex(m => 
+          m.speakerId === message.speakerId && 
+          m.timestamp === message.timestamp &&
+          m.content === message.content
+        );
+    
+    if (msgIndex === -1) {
+      showNotification('Message not found', 'error');
+      return;
+    }
+    
+    // Determine if NPC generation is currently active
+    const isGenerationActive = meeting.repliesRemaining > 0 && meeting.activeReplyChainStartIndex !== null;
+    
+    // Determine deletion behavior
+    let shouldCascadeDelete = false;
+    let shouldStopGeneration = false;
+    
+    if (isGenerationActive) {
+      // Check if the message is part of the active reply chain
+      // (at or after the chain start index)
+      if (msgIndex >= meeting.activeReplyChainStartIndex) {
+        shouldCascadeDelete = true;
+        shouldStopGeneration = true;
+      }
+      // else: message is before the chain, isolated delete
+    }
+    // else: no active generation, always isolated delete
+    
+    // Build confirmation message
+    const speaker = message.speakerId === 'player' ? 'your' : gameState.employees.find(e => e.id === message.speakerId)?.name + "'s";
+    let confirmMessage = `Delete ${speaker} message?`;
+    
+    if (shouldCascadeDelete) {
+      const messagesAfter = meeting.messages.length - msgIndex - 1;
+      confirmMessage += `\n\nThis will stop NPC generation and remove this message`;
+      if (messagesAfter > 0) {
+        confirmMessage += ` plus ${messagesAfter} message${messagesAfter > 1 ? 's' : ''} below it`;
+      }
+      confirmMessage += `.`;
+    } else {
+      confirmMessage += `\n\nThis message will be removed (other messages will remain).`;
+    }
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+    
+    // Stop generation if needed
+    if (shouldStopGeneration) {
+      meeting.repliesRemaining = 0;
+      meeting.activeReplyChainStartIndex = null;
+      
+      const stopBtn = document.getElementById('stopMeetingRepliesBtn');
+      if (stopBtn) stopBtn.style.display = 'none';
+      
+      const repliesLeft = document.getElementById('meetingRepliesLeft');
+      if (repliesLeft) repliesLeft.textContent = '0';
+      
+      console.log('[Meeting] Reply chain stopped by deletion');
+    }
+    
+    // Perform deletion
+    let deletedCount;
+    if (shouldCascadeDelete) {
+      // Cascade delete: remove this message and everything after it
+      deletedCount = meeting.messages.length - msgIndex;
+      meeting.messages = meeting.messages.slice(0, msgIndex);
+    } else {
+      // Isolated delete: remove only this message
+      meeting.messages.splice(msgIndex, 1);
+      deletedCount = 1;
+    }
+    
+    // Update last activity
+    if (meeting.messages.length > 0) {
+      meeting.lastActivity = meeting.messages[meeting.messages.length - 1].timestamp;
+    } else {
+      meeting.lastActivity = meeting.created;
+    }
+    
+    // Reload the messages UI
+    loadMeetingMessages(meeting);
+    
+    // Update meetings list to reflect changes
+    updateMeetingsList();
+    
+    const deleteType = shouldCascadeDelete ? 'cascade' : 'isolated';
+    console.log(`[Meeting] ${deleteType} deletion: removed ${deletedCount} message(s) from "${meeting.name}"`);
+    showNotification(`🗑️ Deleted ${deletedCount} message${deletedCount > 1 ? 's' : ''}`, 'success');
+  }
+  
+  /**
+   * Create a new meeting with selected participants
+   */
+  function createMeeting(name, participantIds, replyLimit = 5) {
+    const meeting = {
+      id: `meeting_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: name || `Meeting ${gameState.meetings.length + 1}`,
+      participants: participantIds, // Array of employee IDs
+      replyLimit: replyLimit,
+      messages: [],
+      created: gameState.time.currentTime,
+      lastActivity: gameState.time.currentTime,
+      repliesRemaining: replyLimit, // Tracks remaining replies for current turn
+      lastSpeakers: [], // Track who spoke recently for round-robin
+      unreadCount: 0
+    };
+    
+    gameState.meetings.push(meeting);
+    updateMeetingsList();
+    
+    // Auto-open the new meeting
+    loadMeeting(meeting.id);
+    
+    return meeting;
+  }
+  
+  /**
+   * Load and display a meeting in the chat view
+   */
+  function loadMeeting(meetingId) {
+    const meeting = gameState.meetings.find(m => m.id === meetingId);
+    if (!meeting) return;
+    
+    // Mark as read
+    meeting.unreadCount = 0;
+    
+    // Show chat container, hide placeholder
+    const placeholder = document.getElementById('meetingPlaceholder');
+    const container = document.getElementById('meetingChatContainer');
+    if (placeholder) placeholder.style.display = 'none';
+    if (container) container.style.display = 'flex';
+    
+    // Update header
+    const title = document.getElementById('meetingTitle');
+    if (title) title.textContent = meeting.name;
+    
+    // Update participants display
+    const participantsEl = document.getElementById('meetingParticipants');
+    if (participantsEl) {
+      participantsEl.innerHTML = meeting.participants.map(empId => {
+        const emp = gameState.employees.find(e => e.id === empId);
+        if (!emp) return '';
+        return `
+          <div style="display:flex; align-items:center; gap:5px; background:#16213e; padding:5px 10px; border-radius:20px;">
+            <img src="${emp.profileImage}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;">
+            <span style="font-size:0.85rem;">${emp.name}</span>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // Update reply status
+    const repliesLeft = document.getElementById('meetingRepliesLeft');
+    if (repliesLeft) repliesLeft.textContent = meeting.repliesRemaining;
+    
+    // Load messages
+    loadMeetingMessages(meeting);
+    
+    // Store active meeting
+    gameState.activeMeeting = meeting.id;
+    
+    // Update meetings list to show active state
+    updateMeetingsList();
+  }
+  
+  /**
+   * Load and display all messages in a meeting
+   */
+  function loadMeetingMessages(meeting) {
+    const messagesContainer = document.getElementById('meetingMessages');
+    if (!messagesContainer) return;
+    
+    messagesContainer.innerHTML = '';
+    
+    if (meeting.messages.length === 0) {
+      messagesContainer.innerHTML = `
+        <div style="text-align:center; color:#666; padding:40px 20px; font-style:italic;">
+          No messages yet. Start the conversation!
+        </div>
+      `;
+      return;
+    }
+    
+    meeting.messages.forEach(msg => {
+      addMeetingMessageToUI(msg, meeting);
+    });
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+  
+  /**
+   * Add a message to the meeting UI
+   */
+  function addMeetingMessageToUI(message, meeting) {
+    const messagesContainer = document.getElementById('meetingMessages');
+    if (!messagesContainer) return;
+    
+    const isPlayer = message.speakerId === 'player';
+    const speaker = isPlayer ? { name: 'You', profileImage: 'https://placehold.co/80x80?text=You' } 
+                             : gameState.employees.find(e => e.id === message.speakerId);
+    
+    if (!speaker && !isPlayer) return;
+    
+    const messageEl = document.createElement('div');
+    messageEl.setAttribute('data-message-id', message.id || `msg-${Date.now()}-${Math.random()}`);
+    messageEl.style.cssText = `
+      display:flex; 
+      gap:12px; 
+      align-items:flex-start;
+      ${isPlayer ? 'flex-direction:row-reverse;' : ''}
+      position:relative;
+      padding:4px 0;
+    `;
+    
+    // Avatar
+    const avatar = document.createElement('img');
+    avatar.src = speaker.profileImage || 'https://placehold.co/80x80';
+    avatar.style.cssText = 'width:40px; height:40px; border-radius:50%; object-fit:cover; flex-shrink:0;';
+    messageEl.appendChild(avatar);
+    
+    // Message bubble container
+    const bubbleContainer = document.createElement('div');
+    bubbleContainer.style.cssText = 'display:flex; flex-direction:column; gap:6px; max-width:70%;';
+    
+    // Message bubble
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `
+      background:${isPlayer ? '#e94560' : '#16213e'};
+      padding:12px 16px;
+      border-radius:18px;
+      ${isPlayer ? 'border-bottom-right-radius:4px;' : 'border-bottom-left-radius:4px;'}
+    `;
+    
+    // Speaker name
+    const nameEl = document.createElement('div');
+    nameEl.style.cssText = 'font-weight:600; margin-bottom:4px; font-size:0.9rem; opacity:0.8;';
+    nameEl.textContent = speaker.name;
+    bubble.appendChild(nameEl);
+    
+    // Message content
+    const contentEl = document.createElement('div');
+    contentEl.className = 'meeting-message-content';
+    contentEl.style.cssText = 'line-height:1.4;';
+    contentEl.innerHTML = styleActionText(message.content);
+    bubble.appendChild(contentEl);
+    
+    // Timestamp
+    const timeEl = document.createElement('div');
+    timeEl.style.cssText = 'font-size:0.7rem; opacity:0.5; margin-top:4px; font-style:italic;';
+    timeEl.textContent = getContextAwareTimestamp(message.timestamp);
+    bubble.appendChild(timeEl);
+    
+    bubbleContainer.appendChild(bubble);
+    
+    // Action buttons
+    const actionsEl = document.createElement('div');
+    actionsEl.style.cssText = `
+      display:flex; 
+      gap:4px; 
+      ${isPlayer ? 'justify-content:flex-end;' : 'justify-content:flex-start;'}
+      opacity:0.7;
+    `;
+    
+    if (isPlayer) {
+      // Edit button for player messages
+      const editBtn = document.createElement('button');
+      editBtn.innerHTML = '✏️';
+      editBtn.title = 'Edit';
+      editBtn.style.cssText = `
+        background:#0f3460;
+        border:1px solid #667eea;
+        color:#667eea;
+        padding:4px 8px;
+        border-radius:4px;
+        font-size:0.85rem;
+        cursor:pointer;
+        transition:all 0.2s;
+        min-width:28px;
+      `;
+      editBtn.onmouseenter = () => {
+        editBtn.style.background = '#667eea';
+        editBtn.style.color = 'white';
+      };
+      editBtn.onmouseleave = () => {
+        editBtn.style.background = '#0f3460';
+        editBtn.style.color = '#667eea';
+      };
+      editBtn.onclick = () => editMessageInline(meeting, message, contentEl, messageEl);
+      actionsEl.appendChild(editBtn);
+      
+      // Resend button for player messages
+      const resendBtn = document.createElement('button');
+      resendBtn.innerHTML = '↩️';
+      resendBtn.title = 'Resend (triggers new NPC replies)';
+      resendBtn.style.cssText = `
+        background:#0f3460;
+        border:1px solid #4ecca3;
+        color:#4ecca3;
+        padding:4px 8px;
+        border-radius:4px;
+        font-size:0.85rem;
+        cursor:pointer;
+        transition:all 0.2s;
+        min-width:28px;
+      `;
+      resendBtn.onmouseenter = () => {
+        resendBtn.style.background = '#4ecca3';
+        resendBtn.style.color = 'white';
+      };
+      resendBtn.onmouseleave = () => {
+        resendBtn.style.background = '#0f3460';
+        resendBtn.style.color = '#4ecca3';
+      };
+      resendBtn.onclick = () => resendMessage(meeting, message);
+      actionsEl.appendChild(resendBtn);
+    } else {
+      // Edit button for NPC messages
+      const editBtn = document.createElement('button');
+      editBtn.innerHTML = '✏️';
+      editBtn.title = 'Edit';
+      editBtn.style.cssText = `
+        background:#0f3460;
+        border:1px solid #667eea;
+        color:#667eea;
+        padding:4px 8px;
+        border-radius:4px;
+        font-size:0.85rem;
+        cursor:pointer;
+        transition:all 0.2s;
+        min-width:28px;
+      `;
+      editBtn.onmouseenter = () => {
+        editBtn.style.background = '#667eea';
+        editBtn.style.color = 'white';
+      };
+      editBtn.onmouseleave = () => {
+        editBtn.style.background = '#0f3460';
+        editBtn.style.color = '#667eea';
+      };
+      editBtn.onclick = () => editMessageInline(meeting, message, contentEl, messageEl);
+      actionsEl.appendChild(editBtn);
+      
+      // Regenerate button for NPC messages
+      const regenBtn = document.createElement('button');
+      regenBtn.innerHTML = '🔄';
+      regenBtn.title = 'Regenerate';
+      regenBtn.style.cssText = `
+        background:#0f3460;
+        border:1px solid #4ecca3;
+        color:#4ecca3;
+        padding:4px 8px;
+        border-radius:4px;
+        font-size:0.85rem;
+        cursor:pointer;
+        transition:all 0.2s;
+        min-width:28px;
+      `;
+      regenBtn.onmouseenter = () => {
+        regenBtn.style.background = '#4ecca3';
+        regenBtn.style.color = 'white';
+      };
+      regenBtn.onmouseleave = () => {
+        regenBtn.style.background = '#0f3460';
+        regenBtn.style.color = '#4ecca3';
+      };
+      regenBtn.onclick = () => regenerateNPCMessage(meeting, message);
+      actionsEl.appendChild(regenBtn);
+    }
+    
+    // Delete button for all messages
+    const deleteBtn = document.createElement('button');
+    deleteBtn.innerHTML = '🗑️';
+    deleteBtn.title = 'Delete';
+    deleteBtn.style.cssText = `
+      background:#0f3460;
+      border:1px solid #e94560;
+      color:#e94560;
+      padding:4px 8px;
+      border-radius:4px;
+      font-size:0.85rem;
+      cursor:pointer;
+      transition:all 0.2s;
+      min-width:28px;
+    `;
+    deleteBtn.onmouseenter = () => {
+      deleteBtn.style.background = '#e94560';
+      deleteBtn.style.color = 'white';
+    };
+    deleteBtn.onmouseleave = () => {
+      deleteBtn.style.background = '#0f3460';
+      deleteBtn.style.color = '#e94560';
+    };
+    deleteBtn.onclick = () => deleteMeetingMessage(meeting, message);
+    actionsEl.appendChild(deleteBtn);
+    
+    bubbleContainer.appendChild(actionsEl);
+    messageEl.appendChild(bubbleContainer);
+    messagesContainer.appendChild(messageEl);
+  }
+  
+  /**
+   * Player sends a message in a meeting
+   */
+  async function sendMeetingMessage(content) {
+    if (!gameState.activeMeeting) return;
+    
+    const meeting = gameState.meetings.find(m => m.id === gameState.activeMeeting);
+    if (!meeting) return;
+    
+    if (!content || content.trim() === '') return;
+    
+    // Add player message
+    const playerMessage = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      speakerId: 'player',
+      content: content.trim(),
+      timestamp: gameState.time.currentTime
+    };
+    
+    meeting.messages.push(playerMessage);
+    meeting.lastActivity = gameState.time.currentTime;
+    
+    // Reset replies remaining for this turn
+    meeting.repliesRemaining = meeting.replyLimit;
+    
+    // Track the start of this reply chain for deletion logic
+    meeting.activeReplyChainStartIndex = meeting.messages.length - 1;
+    
+    // Add to UI
+    addMeetingMessageToUI(playerMessage, meeting);
+    
+    // Clear input
+    const input = document.getElementById('meetingInput');
+    if (input) input.value = '';
+    
+    // Update reply status
+    const repliesLeft = document.getElementById('meetingRepliesLeft');
+    if (repliesLeft) repliesLeft.textContent = meeting.repliesRemaining;
+    
+    // Scroll to bottom
+    const messagesContainer = document.getElementById('meetingMessages');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    // Trigger NPC responses
+    await processMeetingReplies(meeting);
+  }
+  
+  /**
+   * Process NPC replies to the last player message
+   */
+  async function processMeetingReplies(meeting) {
+    console.log(`[Meeting] Processing replies for "${meeting.name}" (${meeting.repliesRemaining} remaining)`);
+    
+    // Show stop button
+    const stopBtn = document.getElementById('stopMeetingRepliesBtn');
+    if (stopBtn) stopBtn.style.display = 'block';
+    
+    // Get the last player message for context
+    const lastPlayerMessage = meeting.messages.filter(m => m.speakerId === 'player').pop();
+    if (!lastPlayerMessage) {
+      if (stopBtn) stopBtn.style.display = 'none';
+      return;
+    }
+    
+    // Process replies one by one
+    while (meeting.repliesRemaining > 0) {
+      // Determine next speaker
+      const nextSpeaker = selectNextSpeaker(meeting, lastPlayerMessage.content);
+      
+      if (!nextSpeaker) {
+        console.log('[Meeting] No suitable speaker found, ending turn');
+        break;
+      }
+      
+      // Generate response
+      const response = await generateMeetingResponse(nextSpeaker, meeting, lastPlayerMessage.content);
+      
+      if (!response) {
+        console.log(`[Meeting] ${nextSpeaker.name} declined to speak`);
+        meeting.repliesRemaining--;
+        continue;
+      }
+      
+      // Add NPC message
+      const npcMessage = {
+        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        speakerId: nextSpeaker.id,
+        content: response,
+        timestamp: gameState.time.currentTime
+      };
+      
+      meeting.messages.push(npcMessage);
+      meeting.repliesRemaining--;
+      
+      // Track who spoke
+      meeting.lastSpeakers = meeting.lastSpeakers || [];
+      meeting.lastSpeakers.push(nextSpeaker.id);
+      if (meeting.lastSpeakers.length > 3) meeting.lastSpeakers.shift();
+      
+      // Add to UI
+      addMeetingMessageToUI(npcMessage, meeting);
+      
+      // Update reply status
+      const repliesLeft = document.getElementById('meetingRepliesLeft');
+      if (repliesLeft) repliesLeft.textContent = meeting.repliesRemaining;
+      
+      // Scroll to bottom
+      const messagesContainer = document.getElementById('meetingMessages');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+      
+      console.log(`[Meeting] ${nextSpeaker.name} spoke (${meeting.repliesRemaining} replies left)`);
+      
+      // Small delay between responses for natural flow
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+    
+    // Hide stop button when done
+    if (stopBtn) stopBtn.style.display = 'none';
+    
+    // Clear the active reply chain tracking
+    meeting.activeReplyChainStartIndex = null;
+    
+    console.log('[Meeting] Turn complete, waiting for player');
+  }
+  
+  /**
+   * Delete a meeting
+   */
+  function deleteMeeting(meetingId) {
+    const index = gameState.meetings.findIndex(m => m.id === meetingId);
+    if (index === -1) return;
+    
+    gameState.meetings.splice(index, 1);
+    
+    // If this was the active meeting, clear it
+    if (gameState.activeMeeting === meetingId) {
+      gameState.activeMeeting = null;
+      
+      // Show placeholder
+      const placeholder = document.getElementById('meetingPlaceholder');
+      const container = document.getElementById('meetingChatContainer');
+      if (placeholder) placeholder.style.display = 'flex';
+      if (container) container.style.display = 'none';
+    }
+    
+    updateMeetingsList();
+  }
+  
+  /**
+   * Update the meetings list in the sidebar
+   */
+  function updateMeetingsList() {
+    const listEl = document.getElementById('meetingsList');
+    if (!listEl) return;
+    
+    if (gameState.meetings.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align:center; color:#666; padding:40px 20px; font-style:italic;">
+          No meetings yet.<br>
+          <span style="font-size:2rem; margin-top:10px; display:block;">💼</span>
+          Click "Create New Meeting" to start!
+        </div>
+      `;
+      return;
+    }
+    
+    // Sort by last activity (most recent first)
+    const sortedMeetings = [...gameState.meetings].sort((a, b) => b.lastActivity - a.lastActivity);
+    
+    listEl.innerHTML = sortedMeetings.map(meeting => {
+      const isActive = gameState.activeMeeting === meeting.id;
+      const lastMessage = meeting.messages[meeting.messages.length - 1];
+      const lastSpeaker = lastMessage ? 
+        (lastMessage.speakerId === 'player' ? 'You' : 
+         gameState.employees.find(e => e.id === lastMessage.speakerId)?.name || 'Unknown') : 
+        'No messages';
+      
+      return `
+        <div onclick="loadMeeting('${meeting.id}')" 
+             style="padding:15px; background:${isActive ? '#667eea' : '#0f3460'}; border-radius:10px; cursor:pointer; transition:all 0.2s; position:relative; border:2px solid ${isActive ? '#764ba2' : 'transparent'};"
+             onmouseenter="if(!${isActive}) this.style.background='#16213e'"
+             onmouseleave="if(!${isActive}) this.style.background='#0f3460'">
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h4 style="margin:0; font-size:1rem;">${meeting.name}</h4>
+            ${meeting.unreadCount > 0 ? `<span style="background:#e94560; color:white; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold;">${meeting.unreadCount}</span>` : ''}
+          </div>
+          
+          <div style="display:flex; gap:4px; margin-bottom:8px; flex-wrap:wrap;">
+            ${meeting.participants.slice(0, 3).map(empId => {
+              const emp = gameState.employees.find(e => e.id === empId);
+              return emp ? `<img src="${emp.profileImage}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;" title="${emp.name}">` : '';
+            }).join('')}
+            ${meeting.participants.length > 3 ? `<span style="font-size:0.8rem; opacity:0.7;">+${meeting.participants.length - 3}</span>` : ''}
+          </div>
+          
+          <div style="font-size:0.85rem; opacity:0.7; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            ${lastSpeaker}: ${lastMessage ? lastMessage.content.substring(0, 40) + (lastMessage.content.length > 40 ? '...' : '') : 'Start the conversation'}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  /**
+   * Select the next speaker based on intelligent priority
+   */
+  function selectNextSpeaker(meeting, lastMessageContent) {
+    const participants = meeting.participants
+      .map(id => gameState.employees.find(e => e.id === id))
+      .filter(e => e); // Filter out any not found
+    
+    if (participants.length === 0) return null;
+    
+    // Calculate priority scores for each participant
+    const scored = participants.map(emp => {
+      let score = 0;
+      const lowerContent = lastMessageContent.toLowerCase();
+      const scoreBreakdown = [];
+      
+      // 1. DIRECT MENTION: Highest priority if their name is mentioned
+      if (lowerContent.includes(emp.name.toLowerCase())) {
+        score += 100;
+        scoreBreakdown.push('mentioned:+100');
+      }
+      
+      // 2. QUESTION DETECTION: Higher priority if message contains a question
+      if (lowerContent.includes('?')) {
+        score += 30;
+        scoreBreakdown.push('question:+30');
+      }
+      
+      // 3. RECENCY PENALTY: Reduce score if they spoke recently
+      const lastSpeakers = meeting.lastSpeakers || [];
+      const recentSpeechIndex = lastSpeakers.indexOf(emp.id);
+      if (recentSpeechIndex !== -1) {
+        // More recent = higher penalty
+        const penalty = (3 - recentSpeechIndex) * 20;
+        score -= penalty;
+        scoreBreakdown.push(`recent:-${penalty}`);
+      }
+      
+      // 4. SILENCE BONUS: Increase score if they haven't spoken at all
+      const hasSpoken = meeting.messages.some(m => m.speakerId === emp.id);
+      if (!hasSpoken) {
+        score += 25;
+        scoreBreakdown.push('first_time:+25');
+      }
+      
+      // 5. CONTEXTUAL KEYWORDS: Check for job-related topics
+      const keywords = {
+        'budget': ['finance', 'cost', 'money', 'budget', 'expense'],
+        'technical': ['system', 'code', 'server', 'technical', 'bug', 'software'],
+        'creative': ['design', 'creative', 'visual', 'art', 'style'],
+        'management': ['team', 'schedule', 'deadline', 'priority', 'manage'],
+        'hr': ['hire', 'employee', 'staff', 'personnel', 'recruitment']
+      };
+      
+      // Boost score if message topic matches their expertise (based on department/role)
+      const empRole = emp.hierarchyLevel || 1;
+      if (empRole >= 5 && keywords.management.some(kw => lowerContent.includes(kw))) {
+        score += 15;
+        scoreBreakdown.push('management_topic:+15');
+      }
+      
+      // 6. RELATIONSHIP/ATTRACTION: Slight boost if high relationship
+      const relationship = emp.relationshipLevel || 0;
+      const relBonus = relationship * 0.5;
+      if (relBonus > 0) {
+        score += relBonus;
+        scoreBreakdown.push(`relationship:+${relBonus.toFixed(1)}`);
+      }
+      
+      // 7. RANDOM FACTOR: Add some randomness for natural variety
+      const randomBonus = Math.random() * 10;
+      score += randomBonus;
+      scoreBreakdown.push(`random:+${randomBonus.toFixed(1)}`);
+      
+      return { emp, score, breakdown: scoreBreakdown.join(', ') };
+    });
+    
+    // Sort by score descending
+    scored.sort((a, b) => b.score - a.score);
+    
+    console.log('[Meeting] Speaker Selection:');
+    scored.forEach((s, index) => {
+      const prefix = index === 0 ? '🎤 SELECTED' : '  ';
+      console.log(`${prefix} ${s.emp.name}: ${s.score.toFixed(1)} (${s.breakdown})`);
+    });
+    
+    // Return the highest scoring participant
+    return scored[0].emp;
+  }
+  
+  /**
+   * Generate an AI response for an NPC in a meeting
+   */
+  async function generateMeetingResponse(npc, meeting, lastPlayerMessage) {
+    console.log(`[Meeting] Generating response for ${npc.name}...`);
+    
+    // Get player's name - fallback to "Boss" if not set
+    let playerName = getPlayerName();
+    if (!playerName || playerName === 'the boss') {
+      playerName = 'Boss'; // Use "Boss" as the default addressable name
+    }
+    
+    // Dynamic message history based on group size (more people = fewer messages shown)
+    // 2-3 people: 25 messages, 4 people: 20 messages, 5+ people: 15 messages
+    const participantCount = meeting.participants.length;
+    const historyDepth = participantCount <= 3 ? 25 : participantCount === 4 ? 20 : 15;
+    const recentMessages = meeting.messages.slice(-historyDepth);
+    
+    const conversationHistory = recentMessages.map(msg => {
+      const speaker = msg.speakerId === 'player' ? playerName :
+                      gameState.employees.find(e => e.id === msg.speakerId)?.name || 'Unknown';
+      return `${speaker}: ${msg.content}`;
+    }).join('\n');
+    
+    // Extract overused phrases/topics to avoid
+    const recentContent = recentMessages.slice(-5).map(m => m.content.toLowerCase()).join(' ');
+    const overusedPhrases = [];
+    
+    // Detect repetitive phrases (mentioned 3+ times in last 5 messages)
+    const checkPhrases = [
+      'cleanup crew', 'waterproof', 'flood', 'overflow', 'hydration', 
+      'trembling', 'choking', 'slumping', 'leaning forward', 'coffee',
+      'breeding room', 'drainage', 'bapti', 'biblical', 'tsunami'
+    ];
+    
+    checkPhrases.forEach(phrase => {
+      const count = (recentContent.match(new RegExp(phrase, 'g')) || []).length;
+      if (count >= 2) overusedPhrases.push(phrase);
+    });
+    
+    // Build participant list with rich context
+    const participantObjs = meeting.participants
+      .map(id => gameState.employees.find(e => e.id === id))
+      .filter(e => e);
+    
+    // Build relationship map (compact format)
+    const relationshipMap = buildRelationshipMap(npc, participantObjs, playerName);
+    
+    // Build individual perspective context
+    const perspectiveContext = buildParticipantPerspective(npc, meeting);
+    
+    // Determine if NPC should respond based on relevance
+    const shouldRespond = await checkShouldRespond(npc, lastPlayerMessage, meeting);
+    if (!shouldRespond) {
+      console.log(`[Meeting] ${npc.name} has nothing to add right now`);
+      return null;
+    }
+    
+    // Build anti-repetition guidance
+    let freshGuidance = '';
+    if (overusedPhrases.length > 0) {
+      freshGuidance = `\nAVOID: ${overusedPhrases.join(', ')} (overused). Bring a NEW angle.`;
+      console.log(`[Meeting] ${npc.name} avoiding overused: ${overusedPhrases.join(', ')}`);
+    }
+    
+    // Build AI prompt with richer context
+    const prompt = `You are ${npc.name} in a group meeting with ${playerName} (boss) and ${participantObjs.map(e => e.name).join(', ')}.
+
+CHARACTER: ${npc.gender}, ${npc.personality || 'Professional'}
+RELATIONSHIPS:
+${relationshipMap}
+${perspectiveContext}
+
+CONVERSATION (last ${historyDepth} messages):
+${conversationHistory}
+
+RESPOND: 1-2 sentences. Address ${playerName} directly. Add something NEW to the discussion—don't repeat what others said. Vary your physical actions.${freshGuidance}
+
+${npc.name}:`;
+    
+    try {
+      const response = await generateText(prompt, {
+        temperature: 0.9, // Higher for more variety in group settings
+        max_tokens: 150, // Enough to complete thoughts, but encourages brevity
+        stop: ['\n\n', `${playerName}:`, '\n---', '\nNote:'] // Stop at natural breaks
+      });
+      
+      if (!response || response.trim() === '') {
+        return null;
+      }
+      
+      console.log(`[Meeting] ${npc.name}: ${response.substring(0, 60)}...`);
+      return response.trim();
+      
+    } catch (error) {
+      console.error(`[Meeting] Error generating response for ${npc.name}:`, error);
+      return null;
+    }
+  }
+  
+  /**
+   * Get relationship strength between two employees
+   */
+  function getRelationshipLevel(emp1Id, emp2Id) {
+    const emp1 = gameState.employees.find(e => e.id === emp1Id);
+    if (!emp1 || !emp1.relationships || !emp1.relationships[emp2Id]) {
+      return 0;
+    }
+    return emp1.relationships[emp2Id].strength || 0;
+  }
+  
+  /**
+   * Build compact relationship map for meeting context
+   */
+  function buildRelationshipMap(npc, participants, playerName) {
+    const lines = [];
+    
+    // Player relationship (always first, most important)
+    const playerRel = npc.relationshipLevel || 0;
+    const playerAttr = npc.attractionLevel || 0;
+    const flags = getActiveFlags(npc);
+    const children = getEmployeeChildren(npc.id);
+    
+    let playerLine = `→ ${playerName}: ${playerRel}♥`;
+    if (playerAttr > 50) playerLine += ` ${playerAttr}🔥`;
+    if (children && children.length > 0) playerLine += ` [${children.length} kid${children.length > 1 ? 's' : ''}]`;
+    if (flags.length > 0) {
+      const topFlag = flags[0].value || flags[0].key || String(flags[0]);
+      if (topFlag) playerLine += ` "${topFlag}"`;
+    }
+    lines.push(playerLine);
+    
+    // Other participants (compact format)
+    participants.forEach(emp => {
+      if (emp.id === npc.id) return; // Skip self
+      
+      const theirRel = getRelationshipLevel(npc.id, emp.id) || 0;
+      if (theirRel < 20) return; // Skip strangers/acquaintances (save tokens)
+      
+      let line = `→ ${emp.name}: ${Math.round(theirRel)}♥`;
+      
+      // Check if they know about any special relationship status
+      const theirFlags = getActiveFlags(emp);
+      const publicFlags = theirFlags.filter(f => {
+        const val = (f.value || f.key || '').toLowerCase();
+        return !val.includes('secret') && !val.includes('private');
+      });
+      
+      if (publicFlags.length > 0) {
+        const flag = publicFlags[0].value || publicFlags[0].key;
+        if (flag && flag.length < 20) line += ` "${flag}"`;
+      }
+      
+      lines.push(line);
+    });
+    
+    return lines.join('\n');
+  }
+  
+  /**
+   * Build perspective-specific context for an NPC
+   */
+  function buildParticipantPerspective(npc, meeting) {
+    const context = [];
+    
+    // Add role/hierarchy (compact)
+    const level = npc.hierarchyLevel || 1;
+    const hierarchyInfo = gameState.hierarchyLevels[level];
+    if (hierarchyInfo) {
+      context.push(`Role: ${hierarchyInfo.title}`);
+    }
+    
+    // Add recent memory/context (very compact)
+    if (npc.memory && npc.memory.recentTopics && npc.memory.recentTopics.length > 0) {
+      const topics = npc.memory.recentTopics.slice(0, 2).join(', ');
+      context.push(`Recent private topics: ${topics}`);
+    }
+    
+    // Add perspective mode note (if secrets exist)
+    if (gameState.meetingSettings.perspectiveMode) {
+      const otherParticipants = meeting.participants.filter(id => id !== npc.id);
+      const hasSecrets = otherParticipants.some(id => {
+        const emp = gameState.employees.find(e => e.id === id);
+        if (!emp) return false;
+        const theirFlags = getActiveFlags(emp);
+        return theirFlags.some(f => {
+          const flagValue = (f.value || f.key || '').toLowerCase();
+          return flagValue.includes('secret') || flagValue.includes('private');
+        });
+      });
+      
+      if (hasSecrets) {
+        context.push(`⚠️ Some relationships here may be unknown to you`);
+      }
+    }
+    
+    return context.length > 0 ? '\n' + context.join('\n') : '';
+  }
+  
+  /**
+   * Determine if an NPC should respond based on context
+   */
+  async function checkShouldRespond(npc, lastMessage, meeting) {
+    // Always respond if mentioned by name
+    if (lastMessage.toLowerCase().includes(npc.name.toLowerCase())) {
+      return true;
+    }
+    
+    // Always respond if this is their first time speaking
+    const hasSpoken = meeting.messages.some(m => m.speakerId === npc.id);
+    if (!hasSpoken) {
+      return true;
+    }
+    
+    // Check if message is a question - higher response chance
+    if (lastMessage.includes('?')) {
+      return Math.random() > 0.2; // 80% chance
+    }
+    
+    // Check if they spoke recently - lower response chance
+    const lastSpeakers = meeting.lastSpeakers || [];
+    if (lastSpeakers.includes(npc.id)) {
+      return Math.random() > 0.7; // 30% chance
+    }
+    
+    // Default: 60% chance to respond
+    return Math.random() > 0.4;
+  }
+  
+  /**
+   * Populate the participant selection grid in create meeting modal
+   */
+  function populateParticipantGrid(searchTerm = '') {
+    const grid = document.getElementById('participantGrid');
+    if (!grid) return;
+    
+    const filteredEmployees = gameState.employees.filter(emp => {
+      if (searchTerm) {
+        return emp.name.toLowerCase().includes(searchTerm.toLowerCase());
+      }
+      return true;
+    });
+    
+    if (filteredEmployees.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666; padding:20px;">No employees found</div>';
+      return;
+    }
+    
+    grid.innerHTML = filteredEmployees.map(emp => {
+      return `
+        <div class="participant-card" 
+             data-employee-id="${emp.id}"
+             style="background:#16213e; border-radius:8px; padding:12px; cursor:pointer; transition:all 0.2s; border:2px solid transparent; text-align:center;"
+             onmouseenter="this.style.background='#1e2a47'"
+             onmouseleave="if(!this.classList.contains('selected')) this.style.background='#16213e'">
+          <img src="${emp.profileImage}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; margin-bottom:8px;">
+          <div style="font-size:0.9rem; font-weight:600;">${emp.name}</div>
+          <div style="font-size:0.75rem; color:#aaa; margin-top:4px;">${gameState.hierarchyLevels[emp.hierarchyLevel || 1]?.title || 'Staff'}</div>
+          <div class="selection-indicator" style="display:none; margin-top:8px; color:#4ecca3; font-weight:bold;">✓ Selected</div>
+        </div>
+      `;
+    }).join('');
+    
+    // Add click handlers
+    grid.querySelectorAll('.participant-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const selectedCards = grid.querySelectorAll('.participant-card.selected');
+        
+        // Toggle selection
+        if (card.classList.contains('selected')) {
+          card.classList.remove('selected');
+          card.style.border = '2px solid transparent';
+          card.style.background = '#16213e';
+          card.querySelector('.selection-indicator').style.display = 'none';
+        } else {
+          // Check if already at max
+          if (selectedCards.length >= 5) {
+            showNotification('⚠️ Maximum 5 participants allowed', 'error');
+            return;
+          }
+          
+          card.classList.add('selected');
+          card.style.border = '2px solid #4ecca3';
+          card.style.background = '#1e2a47';
+          card.querySelector('.selection-indicator').style.display = 'block';
+        }
+        
+        // Update count
+        const selectedCount = $('selectedCount');
+        const newCount = grid.querySelectorAll('.participant-card.selected').length;
+        if (selectedCount) selectedCount.textContent = `${newCount}/5`;
+      });
+    });
+  }
+  
   // Open chat with employee
   function openChat(employee) {
     // If passed an ID string, look up the employee object
@@ -28008,6 +29707,10 @@ Write ONLY the message:`;
       chatModal.hidden = false;
       chatModal.style.display = 'flex';
       chatModal.style.pointerEvents = 'auto';
+      // Apply chat customization styles when opening
+      if (typeof applyChatStyles === 'function') {
+        applyChatStyles();
+      }
     }
     if (chatName) chatName.textContent = employee.name;
     if (chatAvatar) chatAvatar.src = employee.profileImage || 'https://placehold.co/80x80';
@@ -30798,8 +32501,12 @@ Write ONLY the message:`;
   function addChatMessage(sender, content, isPlayer, imageUrl = null, messageIndex = null, imagePrompt = null, storedTimestamp = null) {
     if (!chatMessages) return;
     
+    // Calculate max-width: if there's an image, make room for it; otherwise use 80%
+    const imageSize = gameState.settings.imagePreviewSize || 300;
+    const messageMaxWidth = imageUrl ? `${imageSize + 40}px` : '80%'; // +40px for padding
+    
     const messageEl = document.createElement('div');
-    messageEl.style.cssText = `max-width:80%; padding:10px 15px; border-radius:18px; margin-bottom:10px; word-wrap:break-word; position:relative; ${isPlayer ? 'background:#e94560; align-self:flex-end;' : 'background:#0f3460; align-self:flex-start;'}`;
+    messageEl.style.cssText = `max-width:${messageMaxWidth}; padding:10px 15px; border-radius:18px; margin-bottom:10px; word-wrap:break-word; position:relative; ${isPlayer ? 'background:#e94560; align-self:flex-end;' : 'background:#0f3460; align-self:flex-start;'}`;
     
     // Add in-game timestamp (use stored timestamp if provided, otherwise current time)
     const timestamp = document.createElement('div');
@@ -30879,7 +32586,8 @@ Write ONLY the message:`;
     // Add image if present
     if (imageUrl) {
       const imageContainer = document.createElement('div');
-      imageContainer.style.cssText = 'position:relative; display:inline-block; width:100%; max-width:300px;';
+      const imageSize = gameState.settings.imagePreviewSize || 300;
+      imageContainer.style.cssText = `position:relative; display:inline-block; width:100%; max-width:${imageSize}px;`;
       
       const img = document.createElement('img');
       img.src = imageUrl;
