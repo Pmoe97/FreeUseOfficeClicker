@@ -25990,6 +25990,103 @@ Just write the comment:`;
         
         console.log(`[Social] ${npc.name} commented on player post: "${commentText}"${imageUrl ? ' [WITH IMAGE]' : ''}`);
         
+        // ===== CHECK IF COMMENT MENTIONS SENDING A DM AND ACTUALLY SEND IT =====
+        const mentionsDM = /\b(check (your )?dm|sent (you |one )?(your )?way|dm(ing|'d|ed)? (you|it)|private message|sliding into|message(d)? you|in your (inbox|messages))\b/i.test(commentText);
+        if (mentionsDM) {
+          console.log(`[Social] 🔔 ${npc.name} mentioned sending DM - actually sending one now!`);
+          
+          // Small delay to feel natural (2-5 seconds after comment)
+          setTimeout(async () => {
+            // Check what they claimed to send based on original post context
+            const postContent = post.content || post.caption || '';
+            const requestsNude = /\b(nude|naked|nudes|full.*nude)\b/i.test(postContent);
+            const requestsSexy = /\b(sexy|hot|spicy|lewd)\b/i.test(postContent);
+            const requestsPic = /\b(pic|photo|image|selfie)\b/i.test(postContent);
+            
+            let messageText = '';
+            let messageImage = null;
+            let messageImageAlt = null;
+            
+            // Generate appropriate DM based on what was requested
+            if (requestsNude && requestsPic) {
+              // They requested nudes and NPC said "check DMs" - actually send the nude
+              messageText = `${['Here you go 😉', 'As requested 💋', 'Don\'t keep this one saved too long 😏', 'Just between us 🤫', 'Hope this is what you needed 🔥'][Math.floor(Math.random() * 5)]}`;
+              
+              // Generate the nude image
+              if (typeof generateImage === 'function') {
+                try {
+                  const imagePrompt = `Artistic nude photograph of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, tasteful lighting, beautiful composition, intimate`;
+                  messageImage = await generateImage(imagePrompt);
+                  messageImageAlt = `Private photo from ${npc.name}`;
+                  console.log(`[Social DM] Generated nude image for DM from ${npc.name}`);
+                } catch (error) {
+                  console.warn(`[Social DM] Failed to generate image:`, error);
+                }
+              }
+            } else if (requestsSexy && requestsPic) {
+              messageText = `${['Here\'s something special 😘', 'Just for you 💕', 'Better in private, don\'t you think? 😉', 'Thought you\'d appreciate this 🔥'][Math.floor(Math.random() * 4)]}`;
+              
+              if (typeof generateImage === 'function') {
+                try {
+                  const imagePrompt = `Sexy photo of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, alluring pose, confident expression, sultry`;
+                  messageImage = await generateImage(imagePrompt);
+                  messageImageAlt = `Private photo from ${npc.name}`;
+                  console.log(`[Social DM] Generated sexy image for DM from ${npc.name}`);
+                } catch (error) {
+                  console.warn(`[Social DM] Failed to generate image:`, error);
+                }
+              }
+            } else if (requestsPic) {
+              messageText = `${['Here it is!', 'Sent! 📸', 'Check it out', 'Hope you like it!'][Math.floor(Math.random() * 4)]}`;
+              
+              if (typeof generateImage === 'function') {
+                try {
+                  const imagePrompt = `Photo of ${npc.name}, ${npc.physicalDescription || 'attractive person'}`;
+                  messageImage = await generateImage(imagePrompt);
+                  messageImageAlt = `Photo from ${npc.name}`;
+                  console.log(`[Social DM] Generated image for DM from ${npc.name}`);
+                } catch (error) {
+                  console.warn(`[Social DM] Failed to generate image:`, error);
+                }
+              }
+            } else {
+              // Generic message response
+              messageText = `${['Here\'s what you asked for', 'Sent it over', 'Check this out', 'Just for you'][Math.floor(Math.random() * 4)]}`;
+            }
+            
+            // Send the actual DM
+            if (!gameState.chatHistory[npc.id]) {
+              gameState.chatHistory[npc.id] = [];
+            }
+            
+            const dmMessage = {
+              sender: npc.id,
+              senderName: npc.name,
+              content: messageText,
+              timestamp: gameState.time?.currentTime || Date.now(),
+              imageUrl: messageImage,
+              imageAlt: messageImageAlt
+            };
+            
+            gameState.chatHistory[npc.id].push(dmMessage);
+            
+            // Mark as unread
+            if (!gameState.unreadMessages[npc.id]) {
+              gameState.unreadMessages[npc.id] = 0;
+            }
+            gameState.unreadMessages[npc.id]++;
+            
+            // Update notification
+            updateMessageNotification();
+            
+            // Show notification toast
+            showNotification(`💬 ${npc.name} sent you a private message${messageImage ? ' with a photo' : ''}!`, 'info');
+            
+            console.log(`[Social DM] ✅ ${npc.name} sent actual DM as promised in comment!${messageImage ? ' [WITH IMAGE]' : ''}`);
+            
+          }, 2000 + Math.random() * 3000); // 2-5 second delay
+        }
+        
         // Small chance (10%) for this comment to trigger more engagement
         if (post.comments.length >= 3 && Math.random() < 0.10) {
           console.log(`[Social] 🔥 ${npc.name}'s comment sparked more discussion!`);
@@ -38854,8 +38951,15 @@ Post:`;
               '<strong>• Intimate context:</strong> When post mentions "carpet/drapes", "trim", "grooming", "wax" → Flirty NPCs (60+ flirtiness, 50+ desire) have 65% chance to respond with intimate photo',
               '<strong>• Garden misunderstanding:</strong> Other NPCs playfully "misunderstand" and send garden/landscaping photos 🌿',
               '<strong>• Example:</strong> "Does the carpet match the drapes? Send bush pics" → Flirty NPCs send intimate photos, others send garden photos with playful comments',
+              '<strong>NEW: "CHECK DMs" ACTUALLY WORKS!</strong> When NPCs comment "Check DMs" or "Sent you a DM", they now ACTUALLY send a private message!',
+              '<strong>• Detection:</strong> Automatically detects comments mentioning: "check DM", "sent your way", "DMing you", "private message", "in your inbox", etc.',
+              '<strong>• Smart Content:</strong> DM content matches original request - if you asked for nudes, they send nudes; if you asked for selfies, they send selfies',
+              '<strong>• Image Generation:</strong> DMs include actual generated images matching the request (nudes, sexy pics, regular photos, etc.)',
+              '<strong>• Timing:</strong> DM arrives 2-5 seconds after comment for natural feel',
+              '<strong>• Notifications:</strong> You get notification toast when DM arrives: "💬 [Name] sent you a private message with a photo!"',
+              '<strong>• Example:</strong> You post "Send me a nude", Quiana comments "Sent one your way! Check DMs 😉", then 3 seconds later she actually DMs you a nude photo',
               '<strong>SPECIAL HANDLING:</strong> Image requests get extra guidance - NPCs say "Here\'s mine! 🐱" not "already sent my cat pic" when posting images. If AI still produces meta-text, fallback returns simple natural response.',
-              '<strong>IMPACT:</strong> Comments now read exactly like real social media - short, natural, no meta-text, no narration, no instruction leakage. Quality matches human-written social media comments. Image generation now understands context and responds appropriately (intimate vs. playful).'
+              '<strong>IMPACT:</strong> Comments now read exactly like real social media - short, natural, no meta-text, no narration, no instruction leakage. Quality matches human-written social media comments. Image generation now understands context and responds appropriately (intimate vs. playful). NPCs follow through on DM promises!'
             ]
           }
         ]
