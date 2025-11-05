@@ -26613,19 +26613,64 @@ Image prompt:`;
     }
     
     try {
-      // ===== NEW SYSTEM: One AI analysis per post, personalized per NPC =====
+      // SIMPLIFIED SYSTEM: Direct AI generation like social posts
+      // The AI understands context and generates appropriate image prompts directly
       
-      // Step 1: Get or create the post's image template (AI called ONCE per post)
-      const template = await getOrCreatePostImageTemplate(post);
-      console.log(`[Social Image] Using template: "${template}"`);
+      const postContent = post.content || post.caption || '';
+      const physicalDesc = getPhysicalDescriptionForPrompt(npc);
       
-      // Step 2: Personalize template for this specific NPC
-      const imagePrompt = await personalizeImagePrompt(template, npc, post, commentText);
-      console.log(`[Social Image] ${npc.name} personalized prompt: "${imagePrompt.substring(0, 100)}..."`);
+      // Get relationship context
+      const intimacyLevel = npc.memory?.intimacyLevel || 0;
+      const affection = npc.stats?.affection || 0;
+      const desire = npc.stats?.desire || 0;
+      const isFlirty = npc.personality?.flirty > 65;
       
-      // Step 3: Generate the image
+      // Build AI prompt to generate the image description
+      const aiPrompt = `You create image generation prompts for social media comments.
+
+CONTEXT:
+Post by player: "${postContent}"
+${npc.name}'s comment: "${commentText}"
+
+PERSON DETAILS: ${physicalDesc.substring(0, 300)}
+
+RELATIONSHIP:
+- Intimacy level: ${intimacyLevel}/100
+- Affection: ${affection}/100
+- Desire: ${desire}/100
+${isFlirty ? '- Flirty personality' : ''}
+
+Based on the post and comment, what image should ${npc.name} have posted?
+
+RULES:
+- Be specific and visual (pose, setting, clothing, expression)
+- Match the comment's claim (if they said "my cat" → show a cat; "selfie" → show them)
+- Respect intimacy level (low intimacy = casual/safe, high intimacy = can be explicit if implied)
+- Include person's physical appearance only if they're IN the image
+- If post asked for something specific (pet, food, proof), focus on that
+- Be direct and descriptive (no meta-commentary)
+
+Image prompt:`;
+
+      const rawPrompt = await generateText(aiPrompt, {
+        temperature: 0.8,
+        max_tokens: 150,
+        stopSequences: ['\n\n', '\n---', 'Note:', 'Example:', 'CONTEXT:', 'Rationale:']
+      });
+      
+      // Clean up the prompt
+      let imagePrompt = rawPrompt.trim()
+        .replace(/^["']|["']$/g, '')
+        .replace(/^\*+|\*+$/g, '')
+        .replace(/^(Image prompt:|DETAILED PROMPT:|Final prompt:|Prompt:)\s*/i, '')
+        .replace(/\s*\([^)]*Note:.*\)$/i, '')
+        .trim();
+      
+      console.log(`[Social Image] Generated prompt for ${npc.name}: "${imagePrompt.substring(0, 100)}..."`);
+      
+      // Generate the actual image
       const imageUrl = await generateImage(applyImageStyle(imagePrompt));
-      console.log(`[Social Image] Generated successfully!`);
+      console.log(`[Social Image] Image generated successfully!`);
       
       return { imageUrl, imageAlt: imagePrompt };
       
