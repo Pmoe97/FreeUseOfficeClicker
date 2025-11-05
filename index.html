@@ -1,5 +1,5 @@
 ﻿<!-- Top Bar -->
-<div id="topBar" style="position:sticky; top:0; z-index:1000; display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#1a1a2e; color:white; box-shadow:0 2px 10px rgba(0,0,0,0.5);">
+<div id="topBar" style="position:sticky; top:0; z-index:1000; display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#1a1a2e; color:white; box-shadow:0 2px 10px rgba(0,0,0,0.5); transition:all 0.3s ease;">
   <div style="display:flex; gap:20px; align-items:center;">
     <div>Cash: $<span id="cashEl">0</span></div>
     <div>$/sec: $<span id="cashPerSecEl">0</span></div>
@@ -20,12 +20,12 @@
 </div>
 
 <!-- News Ticker -->
-<div id="newsTicker" style="position:sticky; top:49px; z-index:999; background:#0f3460; color:#e94560; padding:8px 20px; white-space:nowrap; overflow:hidden; font-size:0.9rem;">
+<div id="newsTicker" style="position:sticky; top:49px; z-index:999; background:#0f3460; color:#e94560; padding:8px 20px; white-space:nowrap; overflow:hidden; font-size:0.9rem; transition:all 0.3s ease;">
   <span id="newsContent">Welcome to your new business venture! Start clicking products to earn cash.</span>
 </div>
 
 <!-- Tab Navigation -->
-<div id="tabNav" style="position:sticky; top:82px; z-index:998; display:flex; background:#16213e; padding:0; overflow-x:auto;">
+<div id="tabNav" style="position:sticky; top:82px; z-index:998; display:flex; background:#16213e; padding:0; overflow-x:auto; transition:all 0.3s ease;">
   <button class="tab-btn active" data-tab="dashboard" style="padding:15px 20px; background:transparent; border:none; color:#e94560; cursor:pointer; font-weight:bold;">Dashboard</button>
   <button class="tab-btn" data-tab="business" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">Business</button>
   <button class="tab-btn" data-tab="upgrades" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">⚡ Upgrades</button>
@@ -38,8 +38,13 @@
   <button class="tab-btn" data-tab="ceocorner" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">👑 CEO Corner</button>
 </div>
 
+<!-- Header Collapse Toggle Button -->
+<button id="toggleHeaderBtn" style="position:fixed; top:0px; left:60%; transform:translateX(-50%); z-index:1001; width:40px; height:20px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none; border-radius:0 0 10px 10px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:white; font-size:12px; box-shadow:0 2px 8px rgba(0,0,0,0.3); transition:all 0.3s ease;" title="Collapse/Expand Header">
+  <span id="toggleHeaderIcon">▲</span>
+</button>
+
 <!-- Main Content Area -->
-<div id="mainContent" style="padding:20px; background:#0f1419; min-height:calc(100vh - 140px); color:white;">
+<div id="mainContent" style="padding:20px; background:#0f1419; min-height:calc(100vh - 140px); color:white; transition:min-height 0.3s ease;">
   
   <!-- Dashboard Tab -->
   <div id="dashboardTab" class="tab-content active">
@@ -412,9 +417,13 @@
     <h2 style="margin-top:0;">💬 Group Meetings</h2>
     <p style="color:#aaa; margin-bottom:20px;">Create meetings with up to 5 employees. They'll interact with each other naturally!</p>
     
-    <div style="display:flex; gap:20px; height:calc(100vh - 200px); min-height:0;">
+    <div style="display:flex; gap:20px; height:calc(100vh - 200px); min-height:0; position:relative;">
       <!-- Left Sidebar - Meeting List -->
-      <div style="flex:0 0 300px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; background:#16213e; border-radius:12px; padding:15px;">
+      <div id="meetingsSidebar" style="flex:0 0 300px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; background:#16213e; border-radius:12px; padding:15px;">
+        
+        <!-- Mobile sidebar toggle tab (hidden on desktop) -->
+        <button id="toggleMeetingsSidebarBtn" style="display:none; position:absolute; top:0px; right:-30px; width:30px; height:3px; background:linear-gradient(230deg, #75787f 0%, #0f3460 100%); border:none; border-radius:0 6px 6px 0; color:white; cursor:pointer; font-size:1.1rem; box-shadow:2px 0 8px rgba(0,0,0,0.3); z-index:101; transition:all 0.3s; align-items:center; justify-content:center; padding:0;">
+        </button>
         
         <!-- Create New Meeting Button -->
         <button id="createMeetingBtn" style="width:100%; padding:15px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none; border-radius:10px; color:white; cursor:pointer; font-weight:bold; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 4px 15px rgba(102,126,234,0.4); transition:all 0.3s;"
@@ -446,20 +455,46 @@
         <!-- Meeting Chat Container (hidden by default) -->
         <div id="meetingChatContainer" style="display:none; flex:1; flex-direction:column; min-height:0; overflow:hidden;">
           <!-- Meeting Header -->
-          <div id="meetingHeader" style="padding:20px; border-bottom:2px solid #16213e; background:#0f3460; flex-shrink:0;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <h3 id="meetingTitle" style="margin:0 0 10px 0;">Meeting Name</h3>
-                <div id="meetingParticipants" style="display:flex; gap:8px; flex-wrap:wrap;">
+          <div id="meetingHeader" style="padding:12px; border-bottom:2px solid #16213e; background:#0f3460; flex-shrink:0; position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+              <div style="flex:1; min-width:0;">
+                <h3 id="meetingTitle" style="margin:0 0 8px 0; font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Meeting Name</h3>
+                <div id="meetingParticipants" style="display:flex; gap:6px; flex-wrap:wrap;">
                   <!-- Participant avatars will go here -->
                 </div>
               </div>
-              <div style="display:flex; gap:8px;">
-                <button id="meetingSettingsBtn" style="background:#16213e; border:none; padding:10px 15px; border-radius:8px; color:#aaa; cursor:pointer; transition:all 0.2s;" 
+              <div style="display:flex; gap:6px; flex-shrink:0;">
+                <button id="meetingSettingsBtn" style="background:#16213e; border:none; padding:8px 10px; border-radius:6px; color:#aaa; cursor:pointer; transition:all 0.2s; font-size:1.2rem;" 
                         onmouseenter="this.style.color='#4ecca3'" onmouseleave="this.style.color='#aaa'" title="Meeting Settings">⚙️</button>
-                <button id="deleteMeetingBtn" style="background:#16213e; border:none; padding:10px 15px; border-radius:8px; color:#aaa; cursor:pointer; transition:all 0.2s;" 
+                <button id="deleteMeetingBtn" style="background:#16213e; border:none; padding:8px 10px; border-radius:6px; color:#aaa; cursor:pointer; transition:all 0.2s; font-size:1.2rem;" 
                         onmouseenter="this.style.color='#e94560'" onmouseleave="this.style.color='#aaa'" title="Delete Meeting">🗑️</button>
               </div>
+            </div>
+            
+            <!-- Meeting Attachments Menu (hidden by default) -->
+            <div id="meetingAttachmentMenu" style="display:none; position:absolute; top:100%; left:50%; transform:translateX(-50%); margin-top:10px; background:#0f3460; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.4); min-width:200px; z-index:1000; border:2px solid #667eea;">
+              <!-- Arrow pointing up to selected participant -->
+              <div id="meetingAttachmentArrow" style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:10px solid #667eea;"></div>
+              
+              <div style="padding:12px; border-bottom:1px solid #16213e; background:#16213e; border-radius:6px 6px 0 0;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <img id="meetingAttachmentTargetImage" src="" style="width:24px; height:24px; border-radius:50%; object-fit:cover;">
+                  <span id="meetingAttachmentTargetName" style="font-weight:600; color:#fff; font-size:0.9rem;">Select participant</span>
+                </div>
+              </div>
+              
+              <button class="meeting-attach-item" data-action="send-money" style="width:100%; padding:12px 16px; background:transparent; border:none; color:#4ecca3; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px; font-weight:600;">
+                <span style="font-size:1.2rem;">💰</span> Send Money
+              </button>
+              <button class="meeting-attach-item" data-action="give-gift" style="width:100%; padding:12px 16px; background:transparent; border:none; color:#ff6b9d; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px; font-weight:600;">
+                <span style="font-size:1.2rem;">🎁</span> Give Gift
+              </button>
+              <button class="meeting-attach-item" data-action="request" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.2rem;">📷</span> Request Image
+              </button>
+              <button class="meeting-attach-item" data-action="send" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.2rem;">📤</span> Send Image
+              </button>
             </div>
           </div>
           
@@ -469,8 +504,33 @@
           </div>
           
           <!-- Message Input -->
-          <div style="padding:20px; border-top:2px solid #16213e; background:#0f3460; flex-shrink:0;">
+          <div style="padding:20px; border-top:2px solid #16213e; background:#0f3460; flex-shrink:0; position:relative;">
+            <!-- Player Attachment Menu -->
+            <div id="meetingPlayerAttachmentMenu" style="display:none; position:absolute; bottom:100%; left:20px; margin-bottom:10px; width:280px; background:#0f3460; border:2px solid #4ecca3; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:1000; overflow:hidden;">
+              <div style="padding:12px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; font-weight:700; font-size:14px; text-align:center; border-bottom:2px solid #16213e;">
+                Meeting Actions
+              </div>
+              <div style="max-height:400px; overflow-y:auto;">
+                <button class="meeting-player-attach-item" data-action="send-money-group" style="width:100%; padding:12px 16px; background:transparent; border:none; color:#4ecca3; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px; font-weight:600;">
+                  <span style="font-size:1.2rem;">💰</span> Send Money (Group)
+                </button>
+                <button class="meeting-player-attach-item" data-action="order-food" style="width:100%; padding:12px 16px; background:transparent; border:none; color:#ff9f43; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px; font-weight:600;">
+                  <span style="font-size:1.2rem;">🍕</span> Order Food/Drinks
+                </button>
+                <button class="meeting-player-attach-item" data-action="visualize-scene" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:1.2rem;">🎬</span> Visualize Current Scene
+                </button>
+                <button class="meeting-player-attach-item" data-action="request-group-selfie" style="width:100%; padding:12px 16px; background:transparent; border:none; color:white; text-align:left; cursor:pointer; border-bottom:1px solid #16213e; display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:1.2rem;">📷</span> Request Group Selfie
+                </button>
+                <button class="meeting-player-attach-item" data-action="team-building" style="width:100%; padding:12px 16px; background:transparent; border:none; color:#a29bfe; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; font-weight:600;">
+                  <span style="font-size:1.2rem;">🎮</span> Start Team Building Activity
+                </button>
+              </div>
+            </div>
+            
             <div style="display:flex; gap:10px;">
+              <button id="meetingPlayerAttachBtn" style="width:45px; height:45px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; border-radius:8px; cursor:pointer; font-size:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">➕</button>
               <input id="meetingInput" type="text" placeholder="Type your message..." 
                      style="flex:1; padding:12px 15px; background:#16213e; border:none; border-radius:8px; color:white; font-size:1rem;">
               <button id="sendMeetingMessageBtn" style="padding:12px 20px; background:#e94560; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:bold; font-size:1rem;">
@@ -726,9 +786,10 @@
             <p style="margin:5px 0 0 0; font-size:0.9rem; color:#ddd;">This unique gift can only be created once! After you stock it in the store and someone purchases it, you can never create it again.</p>
           </div>
           
-          <div style="display:flex; gap:10px; margin-top:20px;">
+          <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
             <button id="approveGiftBtn" style="
               flex:1;
+              min-width:180px;
               padding:12px 20px;
               background:#4ecca3;
               border:none;
@@ -738,6 +799,16 @@
               cursor:pointer;
               font-size:1rem;
             ">✅ Approve - Stock in Store</button>
+            
+            <button id="redoGiftBtn" style="
+              padding:12px 20px;
+              background:#667eea;
+              border:none;
+              border-radius:8px;
+              color:white;
+              font-weight:bold;
+              cursor:pointer;
+            ">🔄 Redo</button>
             
             <button id="denyGiftBtn" style="
               padding:12px 20px;
@@ -1210,8 +1281,20 @@
     <!-- Meeting Name -->
     <div style="margin-bottom:20px;">
       <label style="display:block; margin-bottom:8px; color:#aaa; font-weight:600;">Meeting Name</label>
-      <input id="meetingNameInput" type="text" placeholder="e.g., Q4 Planning Meeting" 
+      <input id="meetingNameInput" type="text" placeholder="e.g., Q4 Planning, Pool Party, Friday Drinks..." 
              style="width:100%; padding:12px; background:#0f3460; border:1px solid #667eea; border-radius:8px; color:white; font-size:1rem;">
+    </div>
+    
+    <!-- Scenario Description -->
+    <div style="margin-bottom:20px;">
+      <label style="display:block; margin-bottom:8px; color:#aaa; font-weight:600;">
+        Scenario/Context <span style="color:#666; font-weight:400; font-size:0.85rem;">(Optional - sets the vibe)</span>
+      </label>
+      <textarea id="meetingScenarioInput" placeholder="e.g., 'Casual hangout at the boss's house' or 'Formal quarterly review' or 'Late night party getting wild'..." 
+             style="width:100%; padding:12px; background:#0f3460; border:1px solid #667eea; border-radius:8px; color:white; font-size:0.95rem; min-height:80px; resize:vertical; font-family:inherit;"></textarea>
+      <p style="color:#666; font-size:0.8rem; margin:6px 0 0 0;">
+        💡 Tip: Describe the setting, mood, or purpose. NPCs will match the vibe instead of defaulting to "work meeting" mode.
+      </p>
     </div>
     
     <!-- Reply Limit Setting -->
@@ -1248,6 +1331,80 @@
             onmouseleave="this.style.transform='translateY(0)'">
       Create Meeting
     </button>
+  </div>
+</div>
+
+<!-- Meeting Settings Modal -->
+<div id="meetingSettingsModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999999; justify-content:center; align-items:center;">
+  <div style="background:#16213e; width:90%; max-width:600px; border-radius:15px; box-shadow:0 5px 25px rgba(0,0,0,0.5); padding:25px; max-height:90vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0; color:#667eea;">⚙️ Meeting Settings</h3>
+      <button id="closeMeetingSettingsModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <!-- Meeting Name -->
+    <div style="margin-bottom:20px; background:#0f3460; padding:15px; border-radius:8px;">
+      <label style="display:block; margin-bottom:8px; color:#aaa; font-weight:600;">Meeting Name</label>
+      <input id="meetingSettingsName" type="text" placeholder="Meeting name..." 
+             style="width:100%; padding:12px; background:#16213e; border:1px solid #667eea; border-radius:8px; color:white; font-size:1rem;">
+    </div>
+    
+    <!-- Scenario Description -->
+    <div style="margin-bottom:20px; background:#0f3460; padding:15px; border-radius:8px;">
+      <label style="display:block; margin-bottom:8px; color:#aaa; font-weight:600;">
+        Scenario/Context <span style="color:#666; font-weight:400; font-size:0.85rem;">(Optional)</span>
+      </label>
+      <textarea id="meetingSettingsScenario" placeholder="Describe the setting, mood, or purpose..." 
+             style="width:100%; padding:12px; background:#16213e; border:1px solid #667eea; border-radius:8px; color:white; font-size:0.95rem; min-height:70px; resize:vertical; font-family:inherit;"></textarea>
+      <p style="color:#666; font-size:0.8rem; margin:6px 0 0 0;">
+        💡 NPCs will match the vibe you describe (party, meeting, hangout, etc.)
+      </p>
+    </div>
+    
+    <!-- Reply Limit Setting -->
+    <div style="margin-bottom:20px; background:#0f3460; padding:15px; border-radius:8px;">
+      <label style="display:block; margin-bottom:10px; color:#aaa; font-weight:600;">
+        Reply Limit per Message: <span id="meetingSettingsReplyLimitValue" style="color:#4ecca3; font-size:1.2rem;">5</span>
+      </label>
+      <input id="meetingSettingsReplyLimitSlider" type="range" min="1" max="10" value="5" 
+             style="width:100%; cursor:pointer;">
+      <p style="color:#666; font-size:0.85rem; margin:8px 0 0 0;">
+        Max number of NPC replies after each player message. Lower = faster, Higher = more detailed conversations.
+      </p>
+    </div>
+    
+    <!-- Display Settings -->
+    <div style="margin-bottom:20px; background:#0f3460; padding:15px; border-radius:8px;">
+      <h4 style="margin:0 0 15px 0; color:#4ecca3; font-size:0.95rem;">💻 Display Settings</h4>
+      
+      <div style="margin-bottom:12px;">
+        <label style="display:block; margin-bottom:5px; font-size:0.85rem; color:#aaa;">Text Size: <span id="meetingTextSizeValue" style="color:#4ecca3; font-weight:bold;">100%</span></label>
+        <input type="range" id="meetingTextSizeSlider" min="70" max="150" value="100" step="5" style="width:100%;">
+      </div>
+      
+      <div style="margin-bottom:0;">
+        <label style="display:block; margin-bottom:5px; font-size:0.85rem; color:#aaa;">Image Size: <span id="meetingImageSizeValue" style="color:#4ecca3; font-weight:bold;">300px</span></label>
+        <input type="range" id="meetingImageSizeSlider" min="200" max="600" value="300" step="25" style="width:100%;">
+      </div>
+    </div>
+    
+    <!-- Participants List (Read-only) -->
+    <div style="margin-bottom:20px; background:#0f3460; padding:15px; border-radius:8px;">
+      <h4 style="margin:0 0 10px 0; color:#aaa; font-weight:600;">Participants</h4>
+      <div id="meetingSettingsParticipants" style="display:flex; flex-wrap:wrap; gap:8px;">
+        <!-- Participant badges will be added here -->
+      </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="cancelMeetingSettings" style="padding:12px 24px; background:#0f3460; border:none; border-radius:8px; color:#aaa; cursor:pointer; font-size:1rem;">
+        Cancel
+      </button>
+      <button id="saveMeetingSettings" style="padding:12px 24px; background:#667eea; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600; font-size:1rem;">
+        💾 Save Changes
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1418,7 +1575,14 @@
       <button id="closeSendImageModal" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
     </div>
     <p style="color:#aaa; margin-bottom:15px;">Describe what image you want to send. The AI will respond based on your description and conversation context.</p>
-    <textarea id="sendImagePrompt" placeholder="E.g., 'A selfie of me at the beach' or 'My new car'" style="width:100%; height:100px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical; margin-bottom:15px;"></textarea>
+    <div style="position:relative;">
+      <textarea id="sendImagePrompt" placeholder="E.g., 'A selfie of me at the beach' or 'Me and @Sarah at dinner'. Type @ to mention employees and include their appearance." style="width:100%; height:100px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical; margin-bottom:15px;"></textarea>
+      
+      <!-- Mention Suggestions Dropdown for Send Image -->
+      <div id="sendImageMentionSuggestions" style="display:none; position:absolute; bottom:100%; left:0; width:100%; max-height:200px; overflow-y:auto; background:#16213e; border:2px solid #00d4ff; border-radius:8px; box-shadow:0 -4px 15px rgba(0,0,0,0.5); z-index:1000; margin-bottom:20px;">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
     <div style="display:flex; gap:10px; justify-content:flex-end;">
       <button id="cancelSendImage" style="padding:10px 20px; background:#0f3460; border:none; border-radius:6px; color:white; cursor:pointer;">Cancel</button>
       <button id="confirmSendImage" style="padding:10px 20px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Send Image</button>
@@ -1463,7 +1627,14 @@
       
       <!-- Manual Input (hidden by default) -->
       <div id="requestManualInput" style="display:none;">
-        <textarea id="requestImagePrompt" placeholder="Describe what you'd like them to send (e.g., 'a photo of you in your favorite outfit')" style="width:100%; height:100px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical; margin-bottom:15px;"></textarea>
+        <div style="position:relative;">
+          <textarea id="requestImagePrompt" placeholder="Describe what you'd like them to send (e.g., 'a photo of you in your favorite outfit' or 'a selfie with @player'). Type @ to mention people." style="width:100%; height:100px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical; margin-bottom:15px;"></textarea>
+          
+          <!-- Mention Suggestions Dropdown for Request Image -->
+          <div id="requestImageMentionSuggestions" style="display:none; position:absolute; bottom:100%; left:0; width:100%; max-height:200px; overflow-y:auto; background:#16213e; border:2px solid #00d4ff; border-radius:8px; box-shadow:0 -4px 15px rgba(0,0,0,0.5); z-index:1000; margin-bottom:20px;">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
         <div style="display:flex; gap:10px; justify-content:flex-end;">
           <button id="cancelRequestManual" style="padding:10px 20px; background:#0f3460; border:none; border-radius:6px; color:white; cursor:pointer;">Back</button>
           <button id="confirmRequestManual" style="padding:10px 20px; background:#e94560; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Request</button>
@@ -1564,7 +1735,14 @@
     <!-- Image Section (shown for image/selfie posts) -->
     <div id="playerPostImageSection" style="display:none; margin-bottom:20px;">
       <label style="display:block; margin-bottom:8px; color:#aaa; font-size:0.9rem;">Image Prompt</label>
-      <textarea id="playerPostImagePrompt" placeholder="Describe the image you want to generate (e.g., 'Me at the beach wearing sunglasses')" style="width:100%; height:80px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical; font-family:inherit; font-size:0.95rem;"></textarea>
+      <div style="position:relative;">
+        <textarea id="playerPostImagePrompt" placeholder="Describe the image (e.g., 'Me at the beach wearing sunglasses' or 'Me and @John at the party'). Type @ to mention employees and include their appearance." style="width:100%; height:80px; padding:12px; background:#0f1419; border:1px solid #0f3460; border-radius:8px; color:white; resize:vertical; font-family:inherit; font-size:0.95rem;"></textarea>
+        
+        <!-- Mention Suggestions Dropdown for Image Prompt -->
+        <div id="postImageMentionSuggestions" style="display:none; position:absolute; bottom:100%; left:0; width:100%; max-height:200px; overflow-y:auto; background:#16213e; border:2px solid #00d4ff; border-radius:8px; box-shadow:0 -4px 15px rgba(0,0,0,0.5); z-index:1000; margin-bottom:5px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
       
       <div style="margin-top:15px;">
         <label style="display:block; margin-bottom:8px; color:#aaa; font-size:0.9rem;">
@@ -2769,6 +2947,14 @@
     // 1.0x to 1.3x income bonus (0 to 150 effective productivity)
     const productivityIncomeBonus = 1 + (totalProductivity / 500);
     value *= productivityIncomeBonus;
+  }
+  
+  // ===== PRESTIGE INCOME MULTIPLIER =====
+  // Apply prestige income multiplier from influence upgrades
+  const incomeUpgradeLevel = gameState.influenceUpgrades?.incomeMultiplier || 0;
+  if (incomeUpgradeLevel > 0) {
+    const prestigeMultiplier = influenceUpgrades.incomeMultiplier.effect(incomeUpgradeLevel);
+    value *= prestigeMultiplier;
   }
   
   return +value.toFixed(2);
@@ -9933,8 +10119,41 @@
       employee.physical = generateDetailedPhysicalAppearance(employee.gender || 'female');
     }
     
-    // Return full description for maximum body context in image generation
-    return employee.physical.fullDescription;
+    // Get base description
+    let fullDesc = employee.physical.fullDescription;
+    
+    // ADD FLAG CONTEXT - Check for flags that affect physical appearance/state
+    const activeFlags = getActiveFlags(employee);
+    if (activeFlags.length > 0) {
+      const physicalFlags = activeFlags.filter(f => 
+        f.key === 'pregnant' || 
+        f.key === 'chastity' || 
+        f.key === 'pierced' ||
+        f.key === 'tattooed' ||
+        f.key === 'collar' ||
+        f.key === 'locked' ||
+        f.key === 'plugged' ||
+        f.key === 'marked' ||
+        f.key === 'bruised' ||
+        f.key === 'leashed' ||
+        f.key === 'bound' ||
+        f.affectsContext // Any custom flag marked as affecting context
+      );
+      
+      if (physicalFlags.length > 0) {
+        fullDesc += '\n\n🏷️ CURRENT PHYSICAL STATE:';
+        physicalFlags.forEach(flag => {
+          if (flag.playerDescription) {
+            fullDesc += `\n- ${flag.playerDescription}`;
+          }
+          if (flag.aiGuidance) {
+            fullDesc += ` (${flag.aiGuidance})`;
+          }
+        });
+      }
+    }
+    
+    return fullDesc;
   }
 
   // ========== NUCLEAR CONTEXT INTELLIGENCE SYSTEM ==========
@@ -10704,6 +10923,36 @@
     
     console.groupEnd();
   };
+
+  /**
+   * Debug function: Populate rehire pool with current employees
+   * Use in console: window.testRehirePool()
+   * This adds your current employees to the rehire pool so you can test the rehire system without prestiging
+   */
+  window.testRehirePool = function() {
+    if (!gameState.employees || gameState.employees.length === 0) {
+      console.log('❌ No employees to add to rehire pool. Hire some employees first!');
+      return;
+    }
+    
+    // Copy current employees to rehire pool
+    gameState.rehirePool = gameState.employees.map(emp => ({
+      ...emp,
+      timesRehired: 0,
+      previousPosition: emp.career?.title || 'Employee'
+    }));
+    
+    console.log(`✅ Added ${gameState.rehirePool.length} employees to rehire pool!`);
+    console.log('Now open the hiring modal to see the "Rehire Former Employees" button.');
+    console.log('The toggle will show all your current employees as rehire candidates.');
+    console.table(gameState.rehirePool.map(e => ({
+      Name: e.name,
+      Age: e.age,
+      Position: e.previousPosition,
+      Skills: `Tech:${e.skills?.technical?.level || 1} Soc:${e.skills?.social?.level || 1}`
+    })));
+  };
+
   
   console.log('🔬 Nuclear Context Debug Tools Loaded!');
   console.log('  → debugContextSelection(employee, type, data)');
@@ -15082,49 +15331,49 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
     const product = gameState.products.find(p => p.id === productId);
     if (!product) return;
 
-    // Check if there's a former employee who managed this product
-    const formerManager = (gameState.formerEmployees || []).find(
-      fe => fe.productManaged === product.name
-    );
+    // Store product ID for later use
+    gameState.currentHiringProductId = productId;
     
-    // Get 3 candidates (uses your existing generator)
-    let candidates = generatePotentialHires(productId);
-    
-    // If there's a former manager, replace the first candidate with them
-    if (formerManager) {
-      const loyaltyBonus = calculateLoyaltyBonus(formerManager.timesRehired || 1);
-      
-      // Create candidate from former employee
-      const formerCandidate = {
-        ...formerManager,
-        id: `emp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        productId: productId,
-        isFormerEmployee: true,
-        loyaltyBonus: loyaltyBonus,
-        hired: false,
-        onboarding: false,
-        bioComplete: true, // Already has full bio
-        employmentStatus: 'candidate'
-      };
-      
-      // Put former employee as first option
-      candidates = [formerCandidate, ...candidates.slice(1)];
+    // Initialize hiring mode state
+    if (typeof gameState.hiringMode === 'undefined') {
+      gameState.hiringMode = 'new'; // 'new' or 'rehire'
     }
     
-    gameState.currentCandidates = candidates;
-
-  // === PHASE 7B: ENHANCED HIRING MODAL ===
-  // Initialize skills for candidates before showing modal
-  const modal = document.createElement('div');
-  modal.id = 'hiringModal';
-  // Don't set z-index and positioning - ModalManager will handle it
-  modal.style.background = 'rgba(0,0,0,0.7)';
+    // Check if rehire pool has any candidates
+    const hasRehireCandidates = gameState.rehirePool && gameState.rehirePool.length > 0;
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'hiringModal';
+    modal.style.background = 'rgba(0,0,0,0.7)';
+    
+    // Function to render candidates based on current mode
+    function renderCandidates() {
+      let candidates = [];
+      
+      if (gameState.hiringMode === 'rehire' && hasRehireCandidates) {
+        // Get 3 random candidates from rehire pool
+        candidates = selectRandomRehires(3).map(rehireData => ({
+          ...rehireData,
+          id: `rehire_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          productId: productId,
+          isRehire: true,
+          loyaltyBonus: calculateLoyaltyBonus(rehireData.timesRehired || 0),
+          hired: false,
+          employmentStatus: 'candidate'
+        }));
+      } else {
+        // Generate new candidates
+        candidates = generatePotentialHires(productId);
+      }
+      
+      gameState.currentCandidates = candidates;
 
     const cards = candidates.map((c, i) => {
-      const isFormer = c.isFormerEmployee || false;
+      const isRehire = c.isRehire || false;
       
       // Initialize skills for candidates if not present
-      if (!c.skills && !isFormer) {
+      if (!c.skills && !isRehire) {
         c.skills = {
           technical: { level: 1, xp: 0, maxXp: 500 },
           creative: { level: 1, xp: 0, maxXp: 500 },
@@ -15171,15 +15420,15 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
         { name: 'Cooking', level: skills.cooking?.level || 0, emoji: '🍳' }
       ].filter(s => s.level > 0).slice(0, 2);
       
-      const loyaltyText = isFormer ? `<div style="background:#ffd700; color:#0f1419; padding:8px; border-radius:6px; margin-bottom:8px; font-weight:bold; text-align:center;">
+      const loyaltyText = isRehire ? `<div style="background:#ffd700; color:#0f1419; padding:8px; border-radius:6px; margin-bottom:8px; font-weight:bold; text-align:center;">
         ⭐ FORMER EMPLOYEE ⭐<br/>
         <span style="font-size:0.9rem;">Loyalty Bonus: +${(c.loyaltyBonus * 100).toFixed(0)}% productivity</span><br/>
-        <span style="font-size:0.8rem;">Times Rehired: ${c.timesRehired || 1}</span>
+        <span style="font-size:0.8rem;">Times Rehired: ${c.timesRehired || 0}</span>
       </div>` : '';
       
       return `
-        <div class="candidate-card" style="background:${isFormer ? '#1a2a1a' : '#16213e'}; border:${isFormer ? '3px solid #ffd700' : '2px solid #1e3a5f'}; border-radius:12px; padding:18px; margin:10px; width:320px; position:relative;">
-        ${isFormer ? '<div style="position:absolute; top:8px; right:8px; font-size:1.5rem;">💛</div>' : ''}
+        <div class="candidate-card" style="background:${isRehire ? '#1a2a1a' : '#16213e'}; border:${isRehire ? '3px solid #ffd700' : '2px solid #1e3a5f'}; border-radius:12px; padding:18px; margin:10px; width:320px; position:relative;">
+        ${isRehire ? '<div style="position:absolute; top:8px; right:8px; font-size:1.5rem;">💛</div>' : ''}
         ${loyaltyText}
         
         <!-- Header: Name & Age -->
@@ -15261,12 +15510,18 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
           </div>
         </div>
 
-        <button class="select-candidate-btn" data-index="${i}" style="width:100%; padding:12px; background:${isFormer ? '#ffd700' : 'linear-gradient(135deg, #e94560 0%, #0f3460 100%)'}; border:none; border-radius:8px; color:${isFormer ? '#0f1419' : '#fff'}; cursor:pointer; font-weight:bold; font-size:1rem; transition:transform 0.2s;">
-            ${isFormer ? '⭐ Rehire' : '📝 Hire'} ${c.name}
+        <button class="select-candidate-btn" data-index="${i}" style="width:100%; padding:12px; background:${isRehire ? '#ffd700' : 'linear-gradient(135deg, #e94560 0%, #0f3460 100%)'}; border:none; border-radius:8px; color:${isRehire ? '#0f1419' : '#fff'}; cursor:pointer; font-weight:bold; font-size:1rem; transition:transform 0.2s;">
+            ${isRehire ? '⭐ Rehire' : '📝 Hire'} ${c.name}
         </button>
         </div>
     `;
     }).join('');
+    
+    return cards;
+  }
+
+  // Initial render
+  const initialCards = renderCandidates();
 
   modal.innerHTML = `
     <div class="hiring-modal-panel" role="dialog" aria-modal="true" aria-label="Select an Employee" style="background:#0f1419; width:92%; max-width:1100px; max-height:85vh; overflow-y:auto; padding:18px; border-radius:14px; box-shadow:0 5px 25px rgba(0,0,0,0.5); pointer-events:auto; margin:auto;">
@@ -15274,8 +15529,19 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
       <h2 style="margin:0;">Select an Employee for ${product.name}</h2>
       <button class="close-modal-btn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
     </div>
-    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:12px;">
-      ${cards}
+    
+    <!-- Hiring Mode Toggle (always visible) -->
+    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:16px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+      <button class="hiring-mode-toggle" data-mode="new" style="flex:1; padding:10px 20px; background:${gameState.hiringMode === 'new' ? 'linear-gradient(135deg, #e94560 0%, #0f3460 100%)' : 'transparent'}; border:2px solid ${gameState.hiringMode === 'new' ? '#e94560' : '#555'}; border-radius:8px; color:white; cursor:pointer; font-weight:600; transition:all 0.3s;">
+        📝 New Hires
+      </button>
+      <button class="hiring-mode-toggle" data-mode="rehire" ${!hasRehireCandidates ? 'disabled' : ''} style="flex:1; padding:10px 20px; background:${gameState.hiringMode === 'rehire' && hasRehireCandidates ? 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)' : 'transparent'}; border:2px solid ${gameState.hiringMode === 'rehire' && hasRehireCandidates ? '#ffd700' : '#555'}; border-radius:8px; color:${gameState.hiringMode === 'rehire' && hasRehireCandidates ? '#0f1419' : hasRehireCandidates ? 'white' : '#555'}; cursor:${hasRehireCandidates ? 'pointer' : 'not-allowed'}; font-weight:600; transition:all 0.3s; opacity:${hasRehireCandidates ? '1' : '0.5'};">
+        ⭐ Rehire Former Employees ${hasRehireCandidates ? `(${gameState.rehirePool.length})` : '(0)'}
+      </button>
+    </div>
+    
+    <div id="candidates-container" style="display:flex; justify-content:center; flex-wrap:wrap; gap:12px;">
+      ${initialCards}
     </div>
     <p style="margin-top:12px; color:#aaa; font-size:.9rem;">You’ll be charged <strong>${product.managerHireCost}</strong> when you choose a candidate.</p>
     </div>
@@ -15283,7 +15549,6 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
 
     // Use ModalManager to show the modal
     ModalManager.show(modal, 'hiringModal');
-    gameState.currentCandidates = candidates;
 
     // Set up event listeners for background click
     modal.addEventListener('click', (e) => {
@@ -15305,6 +15570,55 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
         const index = parseInt(btn.dataset.index, 10);
         if (!Number.isNaN(index)) {
           selectManagerCandidate(index);
+        }
+      });
+    });
+
+    // Set up hiring mode toggle buttons
+    const toggleButtons = modal.querySelectorAll('.hiring-mode-toggle');
+    toggleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        if (mode && (mode === 'new' || mode === 'rehire')) {
+          gameState.hiringMode = mode;
+          
+          // Re-render candidates
+          const newCards = renderCandidates();
+          const container = modal.querySelector('#candidates-container');
+          if (container) {
+            container.innerHTML = newCards;
+          }
+          
+          // Update toggle button styles
+          toggleButtons.forEach(toggleBtn => {
+            const btnMode = toggleBtn.dataset.mode;
+            if (btnMode === mode) {
+              if (mode === 'rehire') {
+                toggleBtn.style.background = 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)';
+                toggleBtn.style.borderColor = '#ffd700';
+                toggleBtn.style.color = '#0f1419';
+              } else {
+                toggleBtn.style.background = 'linear-gradient(135deg, #e94560 0%, #0f3460 100%)';
+                toggleBtn.style.borderColor = '#e94560';
+                toggleBtn.style.color = 'white';
+              }
+            } else {
+              toggleBtn.style.background = 'transparent';
+              toggleBtn.style.borderColor = '#555';
+              toggleBtn.style.color = 'white';
+            }
+          });
+          
+          // Re-attach select button listeners for new cards
+          const newSelectButtons = modal.querySelectorAll('.select-candidate-btn');
+          newSelectButtons.forEach(newBtn => {
+            newBtn.addEventListener('click', () => {
+              const index = parseInt(newBtn.dataset.index, 10);
+              if (!Number.isNaN(index)) {
+                selectManagerCandidate(index);
+              }
+            });
+          });
         }
       });
     });
@@ -15736,6 +16050,54 @@ Generate ONLY the message, no quotes, no explanation:`;
       });
     }
     
+    // ========== COLLAPSIBLE HEADER TOGGLE ==========
+    const toggleHeaderBtn = $('toggleHeaderBtn');
+    const toggleHeaderIcon = $('toggleHeaderIcon');
+    const topBar = $('topBar');
+    const newsTicker = $('newsTicker');
+    const tabNav = $('tabNav');
+    const mainContent = $('mainContent');
+    
+    let headerCollapsed = localStorage.getItem('headerCollapsed') === 'true' || false;
+    
+    // Apply saved state on load
+    if (headerCollapsed) {
+      if (topBar) topBar.classList.add('collapsed');
+      if (newsTicker) newsTicker.classList.add('collapsed');
+      if (tabNav) tabNav.classList.add('collapsed');
+      if (toggleHeaderBtn) toggleHeaderBtn.classList.add('header-collapsed');
+      if (toggleHeaderIcon) toggleHeaderIcon.textContent = '▼';
+      if (mainContent) mainContent.classList.add('header-collapsed');
+    }
+    
+    if (toggleHeaderBtn) {
+      toggleHeaderBtn.addEventListener('click', () => {
+        headerCollapsed = !headerCollapsed;
+        
+        if (headerCollapsed) {
+          // Collapse all bars
+          if (topBar) topBar.classList.add('collapsed');
+          if (newsTicker) newsTicker.classList.add('collapsed');
+          if (tabNav) tabNav.classList.add('collapsed');
+          if (toggleHeaderBtn) toggleHeaderBtn.classList.add('header-collapsed');
+          if (toggleHeaderIcon) toggleHeaderIcon.textContent = '▼';
+          if (mainContent) mainContent.classList.add('header-collapsed');
+        } else {
+          // Expand all bars
+          if (topBar) topBar.classList.remove('collapsed');
+          if (newsTicker) newsTicker.classList.remove('collapsed');
+          if (tabNav) tabNav.classList.remove('collapsed');
+          if (toggleHeaderBtn) toggleHeaderBtn.classList.remove('header-collapsed');
+          if (toggleHeaderIcon) toggleHeaderIcon.textContent = '▲';
+          if (mainContent) mainContent.classList.remove('header-collapsed');
+        }
+        
+        // Save state to localStorage
+        localStorage.setItem('headerCollapsed', headerCollapsed);
+        console.log('[Header] Toggled:', headerCollapsed ? 'Collapsed' : 'Expanded');
+      });
+    }
+    
     if (closeSettingsBtn) {
       closeSettingsBtn.addEventListener('click', () => {
         if (settingsPanel) settingsPanel.hidden = true;
@@ -16062,6 +16424,49 @@ Generate ONLY the message, no quotes, no explanation:`;
     const createMeetingModal = $('createMeetingModal');
     const closeCreateMeetingModal = $('closeCreateMeetingModal');
     
+    // Mobile sidebar toggle with arrow tab
+    const toggleMeetingsSidebarBtn = $('toggleMeetingsSidebarBtn');
+    const meetingsSidebar = $('meetingsSidebar');
+    
+    if (toggleMeetingsSidebarBtn && meetingsSidebar) {
+      toggleMeetingsSidebarBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent event from bubbling
+        meetingsSidebar.classList.toggle('show-mobile');
+      });
+      
+      // Close sidebar when clicking the backdrop (on mobile)
+      document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && 
+            meetingsSidebar.classList.contains('show-mobile') &&
+            !meetingsSidebar.contains(e.target) &&
+            e.target !== toggleMeetingsSidebarBtn) {
+          meetingsSidebar.classList.remove('show-mobile');
+        }
+      });
+      
+      // Close sidebar when a meeting is selected (on mobile)
+      const observer = new MutationObserver(() => {
+        if (window.innerWidth <= 768 && meetingsSidebar.classList.contains('show-mobile')) {
+          const meetingChatContainer = $('meetingChatContainer');
+          if (meetingChatContainer && meetingChatContainer.style.display !== 'none') {
+            // Small delay to allow the click event to complete
+            setTimeout(() => {
+              meetingsSidebar.classList.remove('show-mobile');
+            }, 100);
+          }
+        }
+      });
+      
+      // Observe when meeting chat container is shown (indicates a meeting was selected)
+      const meetingChatContainer = $('meetingChatContainer');
+      if (meetingChatContainer) {
+        observer.observe(meetingChatContainer, { 
+          attributes: true, 
+          attributeFilter: ['style'] 
+        });
+      }
+    }
+    
     if (createMeetingBtn && createMeetingModal) {
       createMeetingBtn.addEventListener('click', () => {
         createMeetingModal.style.display = 'flex';
@@ -16108,8 +16513,10 @@ Generate ONLY the message, no quotes, no explanation:`;
     if (confirmCreateMeeting) {
       confirmCreateMeeting.addEventListener('click', () => {
         const nameInput = $('meetingNameInput');
+        const scenarioInput = $('meetingScenarioInput');
         const replyLimit = parseInt($('replyLimitSlider')?.value || 5);
         const name = nameInput?.value.trim() || '';
+        const scenario = scenarioInput?.value.trim() || '';
         
         // Get selected participants
         const selectedParticipants = Array.from(document.querySelectorAll('.participant-card.selected'))
@@ -16127,11 +16534,12 @@ Generate ONLY the message, no quotes, no explanation:`;
         }
         
         // Create the meeting
-        createMeeting(name, selectedParticipants, replyLimit);
+        createMeeting(name, selectedParticipants, replyLimit, scenario);
         
         // Close modal and reset
         createMeetingModal.style.display = 'none';
         if (nameInput) nameInput.value = '';
+        if (scenarioInput) scenarioInput.value = '';
         if (replyLimitSlider) replyLimitSlider.value = 5;
         if (replyLimitValue) replyLimitValue.textContent = '5';
         
@@ -16181,17 +16589,412 @@ Generate ONLY the message, no quotes, no explanation:`;
     
     // Meeting Settings Button
     const meetingSettingsBtn = $('meetingSettingsBtn');
-    if (meetingSettingsBtn) {
+    const meetingSettingsModal = $('meetingSettingsModal');
+    const closeMeetingSettingsModal = $('closeMeetingSettingsModal');
+    const cancelMeetingSettings = $('cancelMeetingSettings');
+    const saveMeetingSettings = $('saveMeetingSettings');
+    
+    if (meetingSettingsBtn && meetingSettingsModal) {
       meetingSettingsBtn.addEventListener('click', () => {
         if (!gameState.activeMeeting) return;
         
         const meeting = gameState.meetings.find(m => m.id === gameState.activeMeeting);
         if (!meeting) return;
         
-        // For now, show a simple alert with current settings
-        // TODO: Create a proper settings modal
-        alert(`Meeting Settings for "${meeting.name}"\n\nReply Limit: ${meeting.replyLimit} responses per turn\n\nSettings modal coming soon!`);
+        // Populate modal with current settings
+        const nameInput = $('meetingSettingsName');
+        const scenarioInput = $('meetingSettingsScenario');
+        const replyLimitSlider = $('meetingSettingsReplyLimitSlider');
+        const replyLimitValue = $('meetingSettingsReplyLimitValue');
+        const textSizeSlider = $('meetingTextSizeSlider');
+        const textSizeValue = $('meetingTextSizeValue');
+        const imageSizeSlider = $('meetingImageSizeSlider');
+        const imageSizeValue = $('meetingImageSizeValue');
+        const participantsContainer = $('meetingSettingsParticipants');
+        
+        if (nameInput) nameInput.value = meeting.name;
+        if (scenarioInput) scenarioInput.value = meeting.scenario || '';
+        if (replyLimitSlider) replyLimitSlider.value = meeting.replyLimit || 5;
+        if (replyLimitValue) replyLimitValue.textContent = meeting.replyLimit || 5;
+        
+        // Load display settings from gameState or use defaults
+        const textSize = meeting.textSize || gameState.settings?.meetingTextSize || 100;
+        const imageSize = meeting.imageSize || gameState.settings?.meetingImageSize || 300;
+        
+        if (textSizeSlider) textSizeSlider.value = textSize;
+        if (textSizeValue) textSizeValue.textContent = textSize + '%';
+        if (imageSizeSlider) imageSizeSlider.value = imageSize;
+        if (imageSizeValue) imageSizeValue.textContent = imageSize + 'px';
+        
+        // Show participants
+        if (participantsContainer) {
+          participantsContainer.innerHTML = meeting.participants.map(empId => {
+            const emp = gameState.employees.find(e => e.id === empId);
+            if (!emp) return '';
+            return `
+              <div style="background:#16213e; padding:8px 12px; border-radius:6px; display:flex; align-items:center; gap:6px; border:1px solid #667eea;">
+                <span style="font-size:1.2rem;">${emp.emoji || '👤'}</span>
+                <span style="color:white; font-size:0.9rem;">${emp.name}</span>
+              </div>
+            `;
+          }).join('');
+        }
+        
+        // Show modal
+        meetingSettingsModal.style.display = 'flex';
       });
+    }
+    
+    // Reply limit slider
+    const meetingSettingsReplyLimitSlider = $('meetingSettingsReplyLimitSlider');
+    const meetingSettingsReplyLimitValue = $('meetingSettingsReplyLimitValue');
+    if (meetingSettingsReplyLimitSlider && meetingSettingsReplyLimitValue) {
+      meetingSettingsReplyLimitSlider.addEventListener('input', (e) => {
+        meetingSettingsReplyLimitValue.textContent = e.target.value;
+      });
+    }
+    
+    // Text size slider
+    const meetingTextSizeSlider = $('meetingTextSizeSlider');
+    const meetingTextSizeValue = $('meetingTextSizeValue');
+    if (meetingTextSizeSlider && meetingTextSizeValue) {
+      meetingTextSizeSlider.addEventListener('input', (e) => {
+        meetingTextSizeValue.textContent = e.target.value + '%';
+      });
+    }
+    
+    // Image size slider
+    const meetingImageSizeSlider = $('meetingImageSizeSlider');
+    const meetingImageSizeValue = $('meetingImageSizeValue');
+    if (meetingImageSizeSlider && meetingImageSizeValue) {
+      meetingImageSizeSlider.addEventListener('input', (e) => {
+        meetingImageSizeValue.textContent = e.target.value + 'px';
+      });
+    }
+    
+    // Close modal handlers
+    if (closeMeetingSettingsModal && meetingSettingsModal) {
+      closeMeetingSettingsModal.addEventListener('click', () => {
+        meetingSettingsModal.style.display = 'none';
+      });
+    }
+    
+    if (cancelMeetingSettings && meetingSettingsModal) {
+      cancelMeetingSettings.addEventListener('click', () => {
+        meetingSettingsModal.style.display = 'none';
+      });
+    }
+    
+    // Close on background click
+    if (meetingSettingsModal) {
+      meetingSettingsModal.addEventListener('click', (e) => {
+        if (e.target === meetingSettingsModal) {
+          meetingSettingsModal.style.display = 'none';
+        }
+      });
+    }
+    
+    // Save settings
+    if (saveMeetingSettings && meetingSettingsModal) {
+      saveMeetingSettings.addEventListener('click', () => {
+        if (!gameState.activeMeeting) return;
+        
+        const meeting = gameState.meetings.find(m => m.id === gameState.activeMeeting);
+        if (!meeting) return;
+        
+        // Get values
+        const nameInput = $('meetingSettingsName');
+        const scenarioInput = $('meetingSettingsScenario');
+        const replyLimitSlider = $('meetingSettingsReplyLimitSlider');
+        const textSizeSlider = $('meetingTextSizeSlider');
+        const imageSizeSlider = $('meetingImageSizeSlider');
+        
+        // Update meeting
+        if (nameInput && nameInput.value.trim()) {
+          meeting.name = nameInput.value.trim();
+        }
+        if (scenarioInput) {
+          meeting.scenario = scenarioInput.value.trim();
+        }
+        if (replyLimitSlider) {
+          meeting.replyLimit = parseInt(replyLimitSlider.value);
+        }
+        if (textSizeSlider) {
+          meeting.textSize = parseInt(textSizeSlider.value);
+        }
+        if (imageSizeSlider) {
+          meeting.imageSize = parseInt(imageSizeSlider.value);
+        }
+        
+        // Apply text size to meeting messages
+        const meetingMessages = $('meetingMessages');
+        if (meetingMessages && meeting.textSize) {
+          meetingMessages.style.fontSize = (meeting.textSize / 100) + 'rem';
+        }
+        
+        // Apply image size (will affect new images)
+        if (meeting.imageSize) {
+          // Store it for when images are displayed
+          meeting.imageSize = meeting.imageSize;
+        }
+        
+        // Update meeting title in header
+        const meetingTitle = $('meetingTitle');
+        if (meetingTitle) {
+          meetingTitle.textContent = meeting.name;
+        }
+        
+        // Update reply status display
+        const meetingRepliesLeft = $('meetingRepliesLeft');
+        if (meetingRepliesLeft) {
+          meetingRepliesLeft.textContent = meeting.replyLimit;
+        }
+        
+        // Re-render meeting list to show updated name
+        updateMeetingsList();
+        
+        // Close modal
+        meetingSettingsModal.style.display = 'none';
+        
+        // Save game state
+        saveGame();
+        
+        showNotification('✅ Meeting settings saved!', 'success');
+      });
+    }
+    
+    // Meeting Participant Attachment Menu
+    let selectedMeetingParticipant = null;
+    const meetingAttachmentMenu = $('meetingAttachmentMenu');
+    const meetingAttachmentArrow = $('meetingAttachmentArrow');
+    const meetingAttachmentTargetImage = $('meetingAttachmentTargetImage');
+    const meetingAttachmentTargetName = $('meetingAttachmentTargetName');
+    
+    // Handle participant clicks (delegated event since participants are dynamically created)
+    document.addEventListener('click', (e) => {
+      const participantBtn = e.target.closest('.meeting-participant-btn');
+      
+      if (participantBtn) {
+        e.stopPropagation();
+        const employeeId = participantBtn.dataset.employeeId;
+        const emp = gameState.employees.find(e => e.id === employeeId);
+        
+        if (!emp || !meetingAttachmentMenu) return;
+        
+        // If clicking the same participant, toggle menu
+        if (selectedMeetingParticipant === employeeId && meetingAttachmentMenu.style.display === 'block') {
+          meetingAttachmentMenu.style.display = 'none';
+          selectedMeetingParticipant = null;
+          return;
+        }
+        
+        // Set selected participant
+        selectedMeetingParticipant = employeeId;
+        
+        // Update menu header
+        if (meetingAttachmentTargetImage) meetingAttachmentTargetImage.src = emp.profileImage;
+        if (meetingAttachmentTargetName) meetingAttachmentTargetName.textContent = emp.name;
+        
+        // Position arrow to point at clicked participant
+        const btnRect = participantBtn.getBoundingClientRect();
+        const headerRect = participantBtn.closest('#meetingHeader').getBoundingClientRect();
+        const arrowPosition = btnRect.left + (btnRect.width / 2) - headerRect.left;
+        
+        if (meetingAttachmentArrow) {
+          meetingAttachmentArrow.style.left = arrowPosition + 'px';
+          meetingAttachmentArrow.style.transform = 'translateX(-50%)';
+        }
+        
+        // Show menu
+        meetingAttachmentMenu.style.display = 'block';
+      } else if (!e.target.closest('#meetingAttachmentMenu')) {
+        // Click outside - close menu
+        if (meetingAttachmentMenu) meetingAttachmentMenu.style.display = 'none';
+        selectedMeetingParticipant = null;
+      }
+    });
+    
+    // Handle meeting attachment menu items
+    document.querySelectorAll('.meeting-attach-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        const action = e.currentTarget.dataset.action;
+        
+        if (!selectedMeetingParticipant || !gameState.activeMeeting) {
+          showNotification('⚠️ No participant selected', 'error');
+          return;
+        }
+        
+        const emp = gameState.employees.find(e => e.id === selectedMeetingParticipant);
+        if (!emp) return;
+        
+        // Hide menu
+        if (meetingAttachmentMenu) meetingAttachmentMenu.style.display = 'none';
+        
+        // Handle different actions - using existing modal functions but context is meeting
+        switch (action) {
+          case 'send-money':
+            // Open send money modal with employee context
+            openSendMoneyModal(emp.id, true); // true = meeting context
+            break;
+          case 'give-gift':
+            // Open gift selection modal
+            openGiftSelectionModal(emp.id, true); // true = meeting context
+            break;
+          case 'request':
+            // Open request image modal
+            openRequestImageModal(emp.id, true); // true = meeting context
+            break;
+          case 'send':
+            // Open send image modal
+            openSendImageModal(emp.id, true); // true = meeting context
+            break;
+          case 'request-post':
+            // Open request post modal
+            openRequestPostModal(emp.id, true); // true = meeting context
+            break;
+          case 'visualize':
+            // Generate scene visualization in meeting context
+            generateMeetingSceneVisualization(emp.id);
+            break;
+        }
+        
+        selectedMeetingParticipant = null;
+      });
+    });
+    
+    // ========== MEETING PLAYER ATTACHMENT MENU ==========
+    const meetingPlayerAttachBtn = $('meetingPlayerAttachBtn');
+    const meetingPlayerAttachmentMenu = $('meetingPlayerAttachmentMenu');
+    
+    // Toggle player attachment menu
+    if (meetingPlayerAttachBtn) {
+      meetingPlayerAttachBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (meetingPlayerAttachmentMenu.style.display === 'none' || !meetingPlayerAttachmentMenu.style.display) {
+          meetingPlayerAttachmentMenu.style.display = 'block';
+        } else {
+          meetingPlayerAttachmentMenu.style.display = 'none';
+        }
+      });
+    }
+    
+    // Close player attachment menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (meetingPlayerAttachmentMenu && 
+          !e.target.closest('#meetingPlayerAttachmentMenu') && 
+          !e.target.closest('#meetingPlayerAttachBtn')) {
+        meetingPlayerAttachmentMenu.style.display = 'none';
+      }
+    });
+    
+    // Handle player attachment menu actions
+    document.querySelectorAll('.meeting-player-attach-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        const action = e.currentTarget.dataset.action;
+        
+        if (!gameState.activeMeeting) {
+          showNotification('⚠️ No active meeting', 'error');
+          return;
+        }
+        
+        // Hide menu
+        if (meetingPlayerAttachmentMenu) meetingPlayerAttachmentMenu.style.display = 'none';
+        
+        const meeting = gameState.meetings.find(m => m.id === gameState.activeMeeting);
+        if (!meeting) return;
+        
+        // Handle different actions
+        switch (action) {
+          case 'send-money-group':
+            openSendMoneyGroupModal(meeting);
+            break;
+          case 'order-food':
+            openOrderFoodModal(meeting);
+            break;
+          case 'visualize-scene':
+            generateMeetingSceneVisualization();
+            break;
+          case 'request-group-selfie':
+            requestGroupSelfie(meeting);
+            break;
+          case 'team-building':
+            openTeamBuildingModal(meeting);
+            break;
+        }
+      });
+    });
+    
+    // ========== MEETING PLAYER ATTACHMENT ACTION FUNCTIONS ==========
+    
+    /**
+     * Open Send Money (Group) Modal
+     * Multiplies the amount by number of participants
+     */
+    function openSendMoneyGroupModal(meeting) {
+      showNotification('💰 Send Money (Group) - Coming soon!', 'info');
+      // TODO: Create modal that shows total cost = amount × participant count
+      // Exclude player from recipient list
+      console.log('[Meeting] Send Money Group opened for meeting:', meeting.name);
+    }
+    
+    /**
+     * Open Order Food/Drinks Modal
+     * Costs money but boosts morale for all participants
+     */
+    function openOrderFoodModal(meeting) {
+      showNotification('🍕 Order Food/Drinks - Coming soon!', 'info');
+      // TODO: Create modal with food/drink options
+      // Cost increases with group size
+      // Boosts morale and energy for all participants
+      console.log('[Meeting] Order Food opened for meeting:', meeting.name);
+    }
+    
+    /**
+     * Generate Meeting Scene Visualization
+     * Creates an image of the current meeting scene
+     */
+    function generateMeetingSceneVisualization(participantId = null) {
+      const meeting = gameState.meetings.find(m => m.id === gameState.activeMeeting);
+      if (!meeting) return;
+      
+      if (participantId) {
+        // Individual participant visualization (from participant menu)
+        const emp = gameState.employees.find(e => e.id === participantId);
+        if (emp) {
+          showNotification(`🎬 Visualizing scene with ${emp.name}...`, 'info');
+          console.log('[Meeting] Visualizing scene with participant:', emp.name);
+          // TODO: Generate image focused on specific participant
+        }
+      } else {
+        // Full meeting visualization (from player menu)
+        showNotification('🎬 Visualizing meeting scene...', 'info');
+        console.log('[Meeting] Visualizing full meeting scene:', meeting.name);
+        // TODO: Generate image of entire meeting
+      }
+    }
+    
+    /**
+     * Request Group Selfie
+     * Ask all participants to take a group photo
+     */
+    function requestGroupSelfie(meeting) {
+      showNotification('📷 Requesting group selfie...', 'info');
+      console.log('[Meeting] Group selfie requested for meeting:', meeting.name);
+      // TODO: Generate group selfie with all participants
+      // Could affect relationship based on participants' willingness
+    }
+    
+    /**
+     * Start Team Building Activity
+     * Choose or AI-prompt an activity to improve stats
+     */
+    function openTeamBuildingModal(meeting) {
+      showNotification('🎮 Team Building Activity - Coming soon!', 'info');
+      console.log('[Meeting] Team Building opened for meeting:', meeting.name);
+      // TODO: Create modal with activity options or prompt
+      // Activities improve stats (morale, relationships, skills)
+      // Has cooldown period
+      // Can be AI-powered for variety
     }
     
     // Stop Meeting Replies Button
@@ -17334,6 +18137,11 @@ Generate ONLY the message, no quotes, no explanation:`;
     const confirmSendImage = $('confirmSendImage');
     const sendImagePrompt = $('sendImagePrompt');
     
+    // Setup @mention autocomplete for send image prompt
+    if (sendImagePrompt) {
+      setupMentionAutocomplete(sendImagePrompt, 'sendImageMentionSuggestions');
+    }
+    
     if (closeSendImageModal) {
       closeSendImageModal.addEventListener('click', () => {
         sendImageModal.style.display = 'none';
@@ -17801,6 +18609,11 @@ Generate ONLY the message, no quotes, no explanation:`;
     const confirmRequestManual = $('confirmRequestManual');
     const requestImagePrompt = $('requestImagePrompt');
     
+    // Setup @mention autocomplete for request image prompt
+    if (requestImagePrompt) {
+      setupMentionAutocomplete(requestImagePrompt, 'requestImageMentionSuggestions');
+    }
+    
     if (closeRequestImageModal) {
       closeRequestImageModal.addEventListener('click', () => {
         requestImageModal.style.display = 'none';
@@ -18032,6 +18845,12 @@ Generate ONLY the message, no quotes, no explanation:`;
         }
       });
     });
+    
+    // Setup @mention autocomplete for player post image prompt
+    const playerPostImagePromptField = $('playerPostImagePrompt');
+    if (playerPostImagePromptField) {
+      setupMentionAutocomplete(playerPostImagePromptField, 'postImageMentionSuggestions');
+    }
     
     // Generate image button
     const generatePlayerPostImage = $('generatePlayerPostImage');
@@ -18368,6 +19187,12 @@ Generate ONLY the message, no quotes, no explanation:`;
           return;
         }
         
+        // Store generation params for redo functionality
+        window.lastGiftGenerationParams = {
+          userDescription: input,
+          maxBudget: budget
+        };
+        
         showGiftPreview(gift);
         giftGenieInput.value = ''; // Clear input
         cycleSuggestions(); // Restart cycling
@@ -18501,6 +19326,56 @@ Generate ONLY the message, no quotes, no explanation:`;
       if (imageEl) imageEl.innerHTML = '🎁';
       
       showNotification(`🗑️ Deleted "${giftName}"`, 'info');
+    });
+  }
+  
+  // Redo gift button (regenerate with same prompt)
+  const redoGiftBtn = $('redoGiftBtn');
+  if (redoGiftBtn) {
+    redoGiftBtn.addEventListener('click', async () => {
+      if (!window.lastGiftGenerationParams) {
+        showNotification('No previous generation to redo', 'warning');
+        return;
+      }
+      
+      const { userDescription, maxBudget } = window.lastGiftGenerationParams;
+      
+      // Close preview modal
+      $('giftPreviewModal').style.display = 'none';
+      
+      // Reset image
+      const imageEl = $('giftPreviewImage');
+      if (imageEl) imageEl.innerHTML = '🎁';
+      
+      // Disable button
+      redoGiftBtn.disabled = true;
+      redoGiftBtn.style.opacity = '0.6';
+      
+      // Show notification
+      showNotification('🔄 Regenerating gift with same prompt...', 'info');
+      
+      // Create cancellation controller
+      const controller = { cancelled: false };
+      
+      try {
+        const gift = await generateCustomGift(userDescription, maxBudget, controller);
+        
+        if (controller.cancelled) {
+          console.log('[Gift] Regeneration cancelled by user');
+          return;
+        }
+        
+        showGiftPreview(gift);
+        showNotification('✨ New gift generated!', 'success');
+      } catch (error) {
+        console.error('[Gift] Regeneration failed:', error);
+        if (error.message !== 'Genie refused this request') {
+          showNotification('❌ Failed to regenerate gift. Please try again.', 'error');
+        }
+      } finally {
+        redoGiftBtn.disabled = false;
+        redoGiftBtn.style.opacity = '1';
+      }
     });
   }
   
@@ -19577,7 +20452,7 @@ Generate ONLY the message, no quotes, no explanation:`;
         bar.style.width = `${pct}%`;
         
         if (sellTx) sellTx.textContent = p.running ? 'Click: -1s' : 'Sell';
-        if (valEl) valEl.textContent = currentValue(p);
+        if (valEl) valEl.textContent = formatNumber(currentValue(p));
         if (cycEl) {
           const cycleText = (cycleTime/1000).toFixed(1);
           if (cycEl.textContent !== cycleText) {
@@ -25513,6 +26388,200 @@ Write the post:`;
   }
   
   /**
+   * Get or create image prompt template for a post (ONE AI call per post)
+   * @param {object} post - The post to analyze
+   * @returns {Promise<string>} Template image prompt
+   */
+  async function getOrCreatePostImageTemplate(post) {
+    // Check if we already analyzed this post
+    if (post.imagePromptTemplate) {
+      console.log(`[Image Template] Using cached template for post`);
+      return post.imagePromptTemplate;
+    }
+    
+    const postContent = post.content || post.caption || '';
+    
+    // First time - analyze with AI
+    const aiPrompt = `You analyze social media posts to create image prompts.
+
+POST: "${postContent}"
+
+What image type is requested? Create a GENERIC template using [PERSON] as placeholder.
+
+Examples:
+- "Show me your pets!" → "pet photo, cute cat or dog, wholesome"
+- "Selfie time!" → "casual selfie, [PERSON], natural setting"
+- "Send nudes" → "nude selfie, [PERSON], explicit, full nudity"
+- "Pictures of trees?" → "nature photography, trees, landscape, outdoor scenery"
+- "What are you eating?" → "food photo, meal, appetizing"
+
+Your template for this post:`;
+
+    try {
+      const template = await generateText(aiPrompt, {
+        temperature: 0.6,
+        max_tokens: 50,
+        stopSequences: ['\n', 'Example:', 'POST:', 'Analysis:', 'The requested']
+      });
+      
+      let cleaned = template.trim()
+        .replace(/^["']|["']$/g, '')
+        .replace(/^\*+|\*+$/g, '')  // Remove asterisks
+        .trim();
+      
+      // Remove meta prefixes (but keep "based on" if it's PART of the description)
+      cleaned = cleaned.replace(/^(Based on the .*?(?:is|are):\s*|The.*?(?:is|are):\s*|Template:\s*|Response:\s*|Answer:\s*)/i, '');
+      
+      // If too short or still has problematic patterns, use fallback
+      if (cleaned.length < 10 || /^(POST:|Analysis|Example)/i.test(cleaned)) {
+        console.warn('[Image Template] AI returned meta-text, using keyword fallback');
+        throw new Error('Meta-text in response');
+      }
+      
+      // Cache it on the post
+      post.imagePromptTemplate = cleaned;
+      console.log(`[Image Template] Created for post: "${cleaned}"`);
+      return cleaned;
+    } catch (error) {
+      console.error('[Image Template] AI failed, using fallback:', error);
+      // Intelligent fallback based on keywords
+      if (/\b(nude|naked|strip)\b/i.test(postContent)) {
+        return 'nude selfie, [PERSON], explicit content, full nudity';
+      } else if (/\b(sexy|hot|thirst)\b/i.test(postContent)) {
+        return 'sexy selfie, [PERSON], revealing outfit, suggestive pose';
+      } else if (/\b(pet|cat|dog|kitty|pussy)\b/i.test(postContent)) {
+        return 'pet photo, cute animal, wholesome';
+      } else if (/\b(food|eating|lunch|dinner)\b/i.test(postContent)) {
+        return 'food photo, meal, appetizing';
+      } else {
+        return 'casual selfie, [PERSON], natural setting';
+      }
+    }
+  }
+  
+  /**
+   * Personalize image template for specific NPC
+   * @param {string} template - Generic image prompt template
+   * @param {object} npc - The NPC personalizing the image
+   * @param {object} post - The original post
+   * @param {string} commentText - The NPC's comment
+   * @returns {Promise<string>} Personalized image prompt
+   */
+  async function personalizeImagePrompt(template, npc, post, commentText) {
+    const physicalDesc = getPhysicalDescriptionForPrompt(npc);
+    const postContent = post.content || post.caption || '';
+    
+    // Get relationship context
+    const affection = npc.stats?.affection || 0;
+    const desire = npc.stats?.desire || 0;
+    const intimacyLevel = npc.memory?.intimacyLevel || 0;
+    const isFlirty = npc.personality?.flirty > 65;
+    const highDesire = desire > 60;
+    
+    // Check for recent chat history (adds context)
+    const chatHistory = (gameState.chatHistory && gameState.chatHistory[npc.id]) || [];
+    const recentChats = chatHistory
+      .filter(msg => (msg.timestamp || 0) > (Date.now() - 2*60*60*1000)) // Last 2 hours
+      .slice(-5);
+    
+    let chatContext = '';
+    if (recentChats.length >= 2) {
+      const messages = recentChats.map(m => `${m.sender}: "${m.content}"`).join('\n');
+      chatContext = `\n\nRECENT CONVERSATION WITH BOSS:\n${messages}\n(This may influence the image type/tone)`;
+    }
+    
+    // ===== DELIBERATE MISUNDERSTANDINGS =====
+    // "Pussy/kitty" - flirty NPCs might "misunderstand"
+    if (/\b(pussy|kitty|kitten)\b/i.test(postContent) && !(/\b(cat|pet|animal)\b/i.test(postContent))) {
+      if (isFlirty && highDesire && Math.random() < 0.35) {
+        console.log(`[Image] 🔥 ${npc.name} "misunderstood" the pussy request...`);
+        return `intimate close-up photo, ${physicalDesc}, suggestive genital area, playful misunderstanding, seductive expression, bedroom setting`;
+      }
+    }
+    
+    // "Bush" - could be garden or... intimate area
+    if (/\b(bush|shrubbery)\b/i.test(postContent)) {
+      const intimateContext = /\b(carpet|drapes|match|trim|wax|shave|hair|landing strip|brazilian)\b/i.test(postContent + ' ' + chatContext);
+      if (intimateContext && isFlirty && Math.random() < 0.5) {
+        console.log(`[Image] 🔥 ${npc.name} understood "bush" as intimate request`);
+        return `intimate photo, ${physicalDesc}, pubic area visible, tasteful angle, natural pubic hair, bedroom setting`;
+      } else if (/\b(bush|garden)\b/i.test(postContent) && Math.random() < 0.3) {
+        console.log(`[Image] 🌿 ${npc.name} playfully "misunderstood" as garden`);
+        return `garden photo, well-maintained shrubs, lush greenery, outdoor setting`;
+      }
+    }
+    
+    // ===== RELATIONSHIP-BASED ADJUSTMENTS =====
+    let adjustedTemplate = template;
+    
+    // If template suggests explicit content, check relationship appropriateness
+    if (/\b(nude|explicit|naked|genital|ass|buttocks|pussy|dick|cock|tits|breasts naked)\b/i.test(template)) {
+      if (intimacyLevel < 30) {
+        // Too intimate - tone it down significantly
+        adjustedTemplate = adjustedTemplate.replace(/\b(nude|explicit|naked)\b/gi, 'casual');
+        adjustedTemplate = adjustedTemplate.replace(/\b(genital|ass|buttocks|pussy|dick|cock)\b/gi, 'suggestive');
+        console.log(`[Image] ${npc.name} toned down to casual (low intimacy: ${intimacyLevel})`);
+      } else if (intimacyLevel < 50) {
+        // Moderate intimacy - make it suggestive instead of explicit
+        adjustedTemplate = adjustedTemplate.replace(/\bexplicit\b/gi, 'suggestive');
+        adjustedTemplate = adjustedTemplate.replace(/\bfull nudity\b/gi, 'partial nudity');
+        console.log(`[Image] ${npc.name} toned down to suggestive (moderate intimacy: ${intimacyLevel})`);
+      }
+      // High intimacy (50+) - keep as is
+    }
+    
+    // Replace [PERSON] placeholder with actual physical description
+    let finalPrompt = adjustedTemplate.replace(/\[PERSON\]/gi, physicalDesc);
+    
+    // If template still too generic or doesn't have person details, enhance it
+    if (!finalPrompt.includes(npc.name) && !finalPrompt.includes(physicalDesc.substring(0, 20))) {
+      // Use AI to build final detailed prompt with context
+      const enhancementPrompt = `You create detailed image prompts for a generator.
+
+TEMPLATE: ${adjustedTemplate}
+PERSON DETAILS: ${physicalDesc.substring(0, 300)}
+CONTEXT: ${commentText}
+
+Write a complete image prompt combining all elements above.
+Include physical appearance, pose, setting, lighting.
+Be direct and descriptive.
+
+Image prompt:`;
+
+      try {
+        finalPrompt = await generateText(enhancementPrompt, {
+          temperature: 0.75,
+          max_tokens: 200,
+          stopSequences: ['\n\n\n', '\n---', 'Note:', 'Example:', 'TEMPLATE:', '**FINAL', 'Rationale:', 'Context Integration:']
+        });
+        
+        finalPrompt = finalPrompt.trim()
+          .replace(/^["']|["']$/g, '')
+          .replace(/^\*+/g, '')  // Remove leading asterisks
+          .replace(/\*+$/g, '')  // Remove trailing asterisks
+          .replace(/^\*\*[^:]*:\*\*\s*/i, '')  // Remove **ANY HEADER:** pattern
+          .replace(/^(Image prompt:|DETAILED PROMPT:|Final prompt:|Prompt:)\s*/i, '')  // Remove meta headers
+          .split(/\n\n/)[0]  // Take first paragraph
+          .split(/\n\s*\*/)[0]  // Stop at markdown list
+          .replace(/\s*\(\*Note:.*\)$/i, '')  // Remove trailing notes
+          .trim();
+        
+        // If STILL starts with meta formatting, try again
+        if (/^[\*\s]*[A-Z][a-z]+\s+prompt:/i.test(finalPrompt)) {
+          finalPrompt = finalPrompt.replace(/^[\*\s]*[A-Z][a-z]+\s+prompt:\s*/i, '');
+        }
+        
+        console.log(`[Image] AI-enhanced prompt for ${npc.name}`);
+      } catch (error) {
+        console.error('[Image] Enhancement failed, using template:', error);
+        finalPrompt = `${adjustedTemplate.replace(/\[PERSON\]/gi, physicalDesc)}`;
+      }
+    }
+    
+    return finalPrompt;
+  }
+  
+  /**
    * Helper: Detect if NPC comment claims to include an image and generate it
    * @param {string} commentText - The NPC's comment text
    * @param {object} npc - The NPC making the comment
@@ -25544,136 +26613,19 @@ Write the post:`;
     }
     
     try {
-      // Extract what they're claiming to show from the original post or comment context
-      const postContent = post.content || post.caption || '';
-      const combinedText = (postContent + ' ' + commentText).toLowerCase();
+      // ===== NEW SYSTEM: One AI analysis per post, personalized per NPC =====
       
-      // Build image prompt based on post context and NPC
-      let imagePrompt = '';
+      // Step 1: Get or create the post's image template (AI called ONCE per post)
+      const template = await getOrCreatePostImageTemplate(post);
+      console.log(`[Social Image] Using template: "${template}"`);
       
-      // ===== SMART CONTEXT DETECTION =====
-      // Check if this is a response to a specific request in the post
-      const requestsNude = /\b(nude|naked|nudes)\b/i.test(postContent) || /\b(nude|naked)\b/i.test(commentText);
-      const requestsSelfie = /\bselfie\b/i.test(postContent) || /\bselfie\b/i.test(commentText);
-      const requestsSexy = /\b(sexy|hot|lewd|sultry)\b/i.test(postContent) || /\b(sexy|hot|lewd|sultry)\b/i.test(commentText);
+      // Step 2: Personalize template for this specific NPC
+      const imagePrompt = await personalizeImagePrompt(template, npc, post, commentText);
+      console.log(`[Social Image] ${npc.name} personalized prompt: "${imagePrompt.substring(0, 100)}..."`);
       
-      // ===== ANIMALS & PETS (with playful misinterpretation) =====
-      // Check for "pussy" context - could be cat OR... you know
-      const mentionsPussy = /\b(pussy|pussies|kitty|kitties|kitten)\b/i.test(postContent);
-      const mentionsCats = /\b(cat|cats|feline)\b/i.test(postContent);
-      const mentionsDogs = /\b(dog|dogs|puppy|puppies|doggo|pupper)\b/i.test(postContent);
-      const mentionsPets = /\b(pet|pets|animal)\b/i.test(postContent);
-      
-      // Check for "bush" context - could be garden/nature OR... intimate area
-      const mentionsBush = /\b(bush|shru(b|bbery)|hedge)\b/i.test(postContent);
-      const contextSuggestsIntimate = /\b(carpet|drapes|match|trim|grooming|wax|shave|hair|landing strip|brazilian|down there|below)\b/i.test(postContent);
-      
-      // Flirty NPCs might "misunderstand" pussy/kitty requests 😏
-      if (mentionsPussy || mentionsCats) {
-        // High flirtiness + high desire = "misunderstood the assignment"
-        const isFlirtyMisunderstanding = npc.personality?.flirty > 65 && 
-                                         npc.stats?.desire > 60 && 
-                                         Math.random() < 0.35; // 35% chance
-        
-        if (isFlirtyMisunderstanding) {
-          // They "understood the assignment" 😈
-          imagePrompt = `Close-up intimate photo of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, suggestive angle, playful expression`;
-          console.log(`[Social] 🔥 ${npc.name} "misunderstood" the kitty request...`);
-        } else {
-          // Actually sent a cat picture
-          imagePrompt = `Cute cat photo, adorable kitten, wholesome`;
-        }
-      } 
-      // ===== "BUSH" DETECTION (Garden vs. Intimate) =====
-      else if (mentionsBush && contextSuggestsIntimate) {
-        // "Bush" in intimate context (carpet/drapes, trim, grooming, etc.)
-        // Flirty NPCs might respond with intimate photo, others might playfully misunderstand as garden
-        const isFlirtyResponse = npc.personality?.flirty > 60 && 
-                                 npc.stats?.desire > 50 && 
-                                 Math.random() < 0.65; // 65% for flirty NPCs
-        
-        if (isFlirtyResponse) {
-          // Understood the intimate request
-          imagePrompt = `Intimate close-up photo of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, tasteful angle, suggestive composition, artistic lighting`;
-          console.log(`[Social] 🔥 ${npc.name} understood the "bush" request (intimate)`);
-        } else {
-          // Playfully "misunderstood" as garden/nature
-          imagePrompt = `Garden photo, well-maintained shrubs and plants, professional landscaping, lush greenery`;
-          console.log(`[Social] 🌿 ${npc.name} "misunderstood" bush as garden (playful)`);
-        }
-      }
-      else if (mentionsDogs) {
-        imagePrompt = `Cute dog photo, adorable puppy, wholesome, playful`;
-      } else if (mentionsPets) {
-        imagePrompt = `Cute pet photo, adorable animal, wholesome`;
-      }
-      
-      // ===== FOOD & DRINKS =====
-      else if (/\b(food|meal|dinner|lunch|breakfast|cooking|recipe)\b/i.test(postContent)) {
-        imagePrompt = `Delicious food photo, appetizing meal, restaurant quality`;
-      } else if (/\b(coffee|latte|cappuccino|espresso)\b/i.test(postContent)) {
-        imagePrompt = `Coffee photo, latte art, cozy cafe aesthetic`;
-      } else if (/\b(drink|cocktail|beverage|wine|beer)\b/i.test(postContent)) {
-        imagePrompt = `Drink photo, aesthetic beverage, bar setting`;
-      } else if (/\b(dessert|cake|cookie|sweet|candy)\b/i.test(postContent)) {
-        imagePrompt = `Dessert photo, delicious sweet treat, bakery quality`;
-      }
-      
-      // ===== NATURE & OUTDOORS =====
-      else if (/\b(sunset|sunrise|sky|cloud)\b/i.test(postContent)) {
-        imagePrompt = `Beautiful sunset photo, dramatic sky, natural lighting`;
-      } else if (/\b(beach|ocean|sea|water)\b/i.test(postContent)) {
-        imagePrompt = `Beach photo, ocean view, relaxing atmosphere`;
-      } else if (/\b(mountain|hiking|trail|nature)\b/i.test(postContent)) {
-        imagePrompt = `Nature photo, mountain view, outdoor scenery`;
-      } else if (/\b(flower|garden|plant|bloom)\b/i.test(postContent)) {
-        imagePrompt = `Flower photo, beautiful blooms, garden aesthetic`;
-      }
-      
-      // ===== ACTIVITIES & HOBBIES =====
-      else if (/\b(book|reading|novel)\b/i.test(postContent)) {
-        imagePrompt = `Book photo, cozy reading setup, aesthetic`;
-      } else if (/\b(game|gaming|playing)\b/i.test(postContent)) {
-        imagePrompt = `Gaming setup photo, video game aesthetic`;
-      } else if (/\b(music|instrument|guitar|piano)\b/i.test(postContent)) {
-        imagePrompt = `Music photo, instrument close-up, artistic`;
-      }
-      
-      // ===== PEOPLE-FOCUSED (SEXUAL/INTIMATE) =====
-      else if (requestsNude) {
-        imagePrompt = `Artistic nude photograph of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, tasteful lighting, beautiful composition`;
-      } else if (requestsSexy || requestsSelfie) {
-        imagePrompt = `Sexy selfie of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, alluring pose, confident expression`;
-      } else if (/\b(nude|naked|body)\b/i.test(postContent)) {
-        imagePrompt = `Artistic nude photograph of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, tasteful lighting`;
-      } else if (/\b(selfie|photo.*me|picture.*myself)\b/i.test(postContent)) {
-        imagePrompt = `Selfie of ${npc.name}, ${npc.physicalDescription || 'attractive person'}`;
-      } else if (/\b(work|office|desk)\b/i.test(postContent)) {
-        imagePrompt = `Photo of ${npc.name} at work, ${npc.physicalDescription || 'professional person'}, office setting`;
-      } else if (/\b(outfit|wearing|dress(ed)?|clothes)\b/i.test(postContent)) {
-        imagePrompt = `Photo of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, stylish outfit`;
-      } else if (/\b(gym|workout|fitness|exercise)\b/i.test(postContent)) {
-        imagePrompt = `Photo of ${npc.name} at gym, ${npc.physicalDescription || 'athletic person'}, workout setting`;
-      } else if (/\b(paint|art|draw|creat)\b/i.test(postContent)) {
-        imagePrompt = `Artistic photo related to ${postContent.substring(0, 100)}, featuring ${npc.name}`;
-      }
-      
-      // ===== GENERIC FALLBACK =====
-      else {
-        // Try to extract key nouns from the post for a generic image
-        const nouns = postContent.match(/\b[A-Z][a-z]+\b|\b(show|see|send|post).*\b(your|my|a|the)\s+([a-z]+)\b/i);
-        if (nouns && nouns[3]) {
-          imagePrompt = `Photo of ${nouns[3]}, aesthetic, high quality`;
-        } else {
-          // Ultimate fallback - selfie
-          imagePrompt = `Selfie of ${npc.name}, ${npc.physicalDescription || 'attractive person'}`;
-        }
-      }
-      
-      // Generate the image
-      console.log(`[Social] ${npc.name} claims to upload image - generating: "${imagePrompt}"`);
+      // Step 3: Generate the image
       const imageUrl = await generateImage(applyImageStyle(imagePrompt));
-      console.log(`[Social] Image generated successfully! URL: ${imageUrl ? imageUrl.substring(0, 50) + '...' : 'null'}`);
+      console.log(`[Social Image] Generated successfully!`);
       
       return { imageUrl, imageAlt: imagePrompt };
       
@@ -25705,7 +26657,7 @@ Write the post:`;
       
       // Build context for the reply
       const relationship = npc.relationships?.player || { level: 0, type: 'professional' };
-      const intimacy = npc.intimacy || 0;
+      const intimacy = npc.memory?.intimacyLevel || 0;
       
       // Get personality context
       const personality = npc.personality || {};
@@ -25881,7 +26833,7 @@ Just write the reply directly (no quotes, no meta-commentary):`;
       
       try {
         // Get full context: post content, all comments, chat history
-        const intimacy = npc.intimacy || 0;
+        const intimacy = npc.memory?.intimacyLevel || 0;
         const relationship = npc.relationships?.player || { level: 0, type: 'professional' };
         const personality = npc.personalityTraits || {};
         const flirty = personality.flirty || 50;
@@ -26386,7 +27338,7 @@ Just write the comment:`;
     for (const emp of mentionedEmployees) {
       const affection = emp.stats?.affection || 0;
       const desire = emp.stats?.desire || 0;
-      const intimacy = emp.intimacy || 0;
+      const intimacy = emp.memory?.intimacyLevel || 0;
       const relationship = emp.relationships?.player?.level || 0;
       
       // Very high chance for mentioned employees
@@ -26403,7 +27355,7 @@ Just write the comment:`;
     for (const emp of nonMentionedEmployees) {
       const affection = emp.stats?.affection || 0;
       const desire = emp.stats?.desire || 0;
-      const intimacy = emp.intimacy || 0;
+      const intimacy = emp.memory?.intimacyLevel || 0;
       const relationship = emp.relationships?.player?.level || 0;
       
       // Weight by relationship - higher affection = more likely to engage
@@ -26475,58 +27427,73 @@ Just write the comment:`;
         console.log(`[Social] ${npc.name} commented on player post: "${commentText}"${imageUrl ? ' [WITH IMAGE]' : ''}`);
         
         // ===== CHECK IF COMMENT MENTIONS SENDING A DM AND ACTUALLY SEND IT =====
-        const mentionsDM = /\b(check (your )?dm|sent (you |one )?(your )?way|dm(ing|'d|ed)? (you|it)|private message|sliding into|message(d)? you|in your (inbox|messages))\b/i.test(commentText);
+        const mentionsDM = /\b(check (your |my )?(dm|inbox|messages?)|sent (you |one )?(your )?way|dm(ing|'d|ed)? (you|it)|private message|sliding into|message(d)? you|in your (inbox|messages)|my inbox|my dm)\b/i.test(commentText);
         if (mentionsDM) {
           console.log(`[Social] 🔔 ${npc.name} mentioned sending DM - actually sending one now!`);
+          console.log(`[Social] Comment text: "${commentText}"`);
+          console.log(`[Social] Post content: "${post.content || post.caption || ''}"`);
           
           // Small delay to feel natural (2-5 seconds after comment)
           setTimeout(async () => {
-            // Check what they claimed to send based on original post context
+            // Check what they claimed to send based on BOTH original post context AND their comment
             const postContent = post.content || post.caption || '';
-            const requestsNude = /\b(nude|naked|nudes|full.*nude)\b/i.test(postContent);
-            const requestsSexy = /\b(sexy|hot|spicy|lewd)\b/i.test(postContent);
+            const combinedContext = (postContent + ' ' + commentText).toLowerCase();
+            
+            // Check post for explicit requests
+            const requestsNude = /\b(nude|naked|nudes|full.*nude|body|explicit)\b/i.test(postContent);
+            const requestsSexy = /\b(sexy|hot|spicy|lewd|sultry|thirst)\b/i.test(postContent);
             const requestsPic = /\b(pic|photo|image|selfie)\b/i.test(postContent);
+            
+            // Check their comment for what they're claiming to send
+            const claimsNude = /\b(nude|naked|private|exclusive|explicit|bare|everything|nothing on|full view)\b/i.test(commentText);
+            const claimsSexy = /\b(sexy|hot|spicy|sultry|tempting|better view|special|intimate)\b/i.test(commentText);
+            const claimsPic = /\b(pic|photo|image|selfie|something|it|angles|view)\b/i.test(commentText);
+            
+            // Determine what to send based on combined context
+            const shouldSendNude = (requestsNude || claimsNude) && (requestsPic || claimsPic);
+            const shouldSendSexy = !shouldSendNude && (requestsSexy || claimsSexy) && (requestsPic || claimsPic);
+            const shouldSendPic = !shouldSendNude && !shouldSendSexy && (requestsPic || claimsPic);
             
             let messageText = '';
             let messageImage = null;
             let messageImageAlt = null;
             
-            // Generate appropriate DM based on what was requested
-            if (requestsNude && requestsPic) {
-              // They requested nudes and NPC said "check DMs" - actually send the nude
-              messageText = `${['Here you go 😉', 'As requested 💋', 'Don\'t keep this one saved too long 😏', 'Just between us 🤫', 'Hope this is what you needed 🔥'][Math.floor(Math.random() * 5)]}`;
+            // Generate appropriate DM based on what was claimed/requested
+            if (shouldSendNude) {
+              // They requested/claimed nudes and NPC said "check DMs" - actually send the nude
+              messageText = `${['Here you go 😉', 'As requested 💋', 'Don\'t keep this one saved too long 😏', 'Just between us 🤫', 'Hope this is what you needed 🔥', 'Private viewing, as promised 😘'][Math.floor(Math.random() * 6)]}`;
               
               // Generate the nude image
               if (typeof generateImage === 'function') {
                 try {
-                  const imagePrompt = `Artistic nude photograph of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, tasteful lighting, beautiful composition, intimate`;
-                  messageImage = await generateImage(imagePrompt);
+                  const imagePrompt = `Artistic nude photograph of ${npc.name}, ${getPhysicalDescriptionForPrompt(npc)}, tasteful lighting, beautiful composition, intimate`;
+                  messageImage = await generateImage(applyImageStyle(imagePrompt));
                   messageImageAlt = `Private photo from ${npc.name}`;
                   console.log(`[Social DM] Generated nude image for DM from ${npc.name}`);
                 } catch (error) {
                   console.warn(`[Social DM] Failed to generate image:`, error);
                 }
               }
-            } else if (requestsSexy && requestsPic) {
-              messageText = `${['Here\'s something special 😘', 'Just for you 💕', 'Better in private, don\'t you think? 😉', 'Thought you\'d appreciate this 🔥'][Math.floor(Math.random() * 4)]}`;
+            } else if (shouldSendSexy) {
+              messageText = `${['Here\'s something special 😘', 'Just for you 💕', 'Better in private, don\'t you think? 😉', 'Thought you\'d appreciate this 🔥', 'As promised 😏'][Math.floor(Math.random() * 5)]}`;
               
               if (typeof generateImage === 'function') {
                 try {
-                  const imagePrompt = `Sexy photo of ${npc.name}, ${npc.physicalDescription || 'attractive person'}, alluring pose, confident expression, sultry`;
-                  messageImage = await generateImage(imagePrompt);
+                  const imagePrompt = `Sexy photo of ${npc.name}, ${getPhysicalDescriptionForPrompt(npc)}, alluring pose, confident expression, sultry`;
+                  messageImage = await generateImage(applyImageStyle(imagePrompt));
                   messageImageAlt = `Private photo from ${npc.name}`;
                   console.log(`[Social DM] Generated sexy image for DM from ${npc.name}`);
                 } catch (error) {
                   console.warn(`[Social DM] Failed to generate image:`, error);
                 }
               }
-            } else if (requestsPic) {
-              messageText = `${['Here it is!', 'Sent! 📸', 'Check it out', 'Hope you like it!'][Math.floor(Math.random() * 4)]}`;
+            } else if (shouldSendPic) {
+              messageText = `${['Here it is!', 'Sent! 📸', 'Check it out', 'Hope you like it!', 'As promised 😊'][Math.floor(Math.random() * 5)]}`;
               
               if (typeof generateImage === 'function') {
                 try {
-                  const imagePrompt = `Photo of ${npc.name}, ${npc.physicalDescription || 'attractive person'}`;
-                  messageImage = await generateImage(imagePrompt);
+                  const imagePrompt = `Photo of ${npc.name}, ${getPhysicalDescriptionForPrompt(npc)}`;
+                  messageImage = await generateImage(applyImageStyle(imagePrompt));
                   messageImageAlt = `Photo from ${npc.name}`;
                   console.log(`[Social DM] Generated image for DM from ${npc.name}`);
                 } catch (error) {
@@ -26534,8 +27501,8 @@ Just write the comment:`;
                 }
               }
             } else {
-              // Generic message response
-              messageText = `${['Here\'s what you asked for', 'Sent it over', 'Check this out', 'Just for you'][Math.floor(Math.random() * 4)]}`;
+              // Generic message response (no specific photo request)
+              messageText = `${['Here\'s what you asked for', 'Sent it over', 'Check this out', 'Just for you', 'Thought you\'d like this 😊'][Math.floor(Math.random() * 5)]}`;
             }
             
             // Send the actual DM
@@ -26544,9 +27511,9 @@ Just write the comment:`;
             }
             
             const dmMessage = {
-              sender: npc.id,
-              senderName: npc.name,
+              sender: npc.name,
               content: messageText,
+              isPlayer: false,
               timestamp: gameState.time?.currentTime || Date.now(),
               imageUrl: messageImage,
               imageAlt: messageImageAlt
@@ -26569,6 +27536,96 @@ Just write the comment:`;
             console.log(`[Social DM] ✅ ${npc.name} sent actual DM as promised in comment!${messageImage ? ' [WITH IMAGE]' : ''}`);
             
           }, 2000 + Math.random() * 3000); // 2-5 second delay
+        }
+        
+        // ===== CHECK IF COMMENT CLAIMS TO HAVE MADE A NEW POST AND ACTUALLY CREATE IT =====
+        const claimsNewPost = /\b(just posted|posted (it|mine|this)|already posted|made a post|shared (it|this)|uploaded (it|this))\b/i.test(commentText);
+        if (claimsNewPost) {
+          console.log(`[Social] 📝 ${npc.name} claims to have made a new post - creating it now!`);
+          console.log(`[Social] Comment text: "${commentText}"`);
+          
+          // Delay to feel natural (3-8 seconds after comment)
+          setTimeout(async () => {
+            try {
+              // Determine post type based on context
+              const postContent = post.content || post.caption || '';
+              const combinedContext = (postContent + ' ' + commentText).toLowerCase();
+              
+              // Detect what kind of post they're claiming to have made
+              const isCatPost = /\b(cat|kitty|kitten|pussy|feline)\b/i.test(combinedContext) && 
+                               !/\b(nude|naked|explicit|spread|wet)\b/i.test(combinedContext);
+              const isPetPost = /\b(dog|pet|puppy|animal)\b/i.test(combinedContext);
+              const isNudePost = /\b(nude|naked|bare|nothing on)\b/i.test(combinedContext);
+              const isSexyPost = /\b(sexy|hot|spicy|sultry|juicy|treat|peek)\b/i.test(combinedContext) && !isCatPost;
+              const isSelfiePost = /\b(selfie|pic|photo)\b/i.test(combinedContext);
+              
+              // Generate post content
+              let postType = 'selfie';
+              let postCaption = '';
+              let postImagePrompt = '';
+              
+              if (isCatPost) {
+                postType = 'selfie';
+                postCaption = ['Here she is! 🐱', 'My beautiful kitty 😻', 'She\'s camera-ready 📸', 'Cat tax paid! 🐈'][Math.floor(Math.random() * 4)];
+                postImagePrompt = 'Cute cat photo, adorable kitten, wholesome pet photography';
+              } else if (isPetPost) {
+                postType = 'selfie';
+                postCaption = ['Doggo selfie time! 🐕', 'Best friend photo 🐾', 'Puppy love 💕'][Math.floor(Math.random() * 3)];
+                postImagePrompt = 'Cute dog photo, adorable puppy, wholesome pet photography';
+              } else if (isNudePost) {
+                postType = 'nude';
+                postCaption = ['As requested 😏', 'Just for you 💋', 'Hope you enjoy 🔥'][Math.floor(Math.random() * 3)];
+                postImagePrompt = `Artistic nude photograph of ${npc.name}, ${getPhysicalDescriptionForPrompt(npc)}, tasteful lighting, beautiful composition, intimate`;
+              } else if (isSexyPost) {
+                postType = 'thirst_trap';
+                postCaption = ['Feeling myself 😘', 'Here\'s that peek 👀', 'Enjoy the view 🔥'][Math.floor(Math.random() * 3)];
+                postImagePrompt = `Sexy photo of ${npc.name}, ${getPhysicalDescriptionForPrompt(npc)}, alluring pose, confident expression, sultry`;
+              } else if (isSelfiePost) {
+                postType = 'selfie';
+                postCaption = ['Fresh selfie 📸', 'How do I look? 😊', 'Felt cute 💕'][Math.floor(Math.random() * 3)];
+                postImagePrompt = `Selfie photo of ${npc.name}, ${getPhysicalDescriptionForPrompt(npc)}, friendly smile, natural lighting`;
+              }
+              
+              // Generate the image
+              let imageUrl = null;
+              if (typeof generateImage === 'function') {
+                try {
+                  imageUrl = await generateImage(applyImageStyle(postImagePrompt));
+                  console.log(`[Social Follow-up Post] Generated ${postType} image for ${npc.name}'s post`);
+                } catch (error) {
+                  console.warn(`[Social Follow-up Post] Failed to generate image:`, error);
+                }
+              }
+              
+              // Create the post
+              const newPost = createPost({
+                authorId: npc.id,
+                authorName: npc.name,
+                content: postCaption,
+                caption: postCaption,
+                type: imageUrl ? postType : 'text',
+                imageUrl: imageUrl,
+                timestamp: gameState.time?.currentTime || Date.now()
+              });
+              
+              // Add to feed at the top (most recent)
+              gameState.socialNetwork.posts.unshift(newPost);
+              
+              // Update memory
+              remember(npc, `I posted on social media: "${postCaption}"${imageUrl ? ' with image' : ''}`, 'social', 0.6);
+              
+              // Refresh feed if viewing
+              if (gameState.activeTab === 'social') {
+                renderSocialFeed();
+              }
+              
+              console.log(`[Social Follow-up Post] ✅ ${npc.name} actually posted as claimed: "${postCaption}"${imageUrl ? ' [WITH IMAGE]' : ''}`);
+              showNotification(`📱 ${npc.name} just posted${imageUrl ? ' a new photo' : ''}!`, 'info');
+              
+            } catch (error) {
+              console.error(`[Social Follow-up Post] Error creating post for ${npc.name}:`, error);
+            }
+          }, 3000 + Math.random() * 5000); // 3-8 second delay
         }
         
         // Small chance (10%) for this comment to trigger more engagement
@@ -26684,7 +27741,7 @@ Just write the comment:`;
   async function generateContextAwareComment(employee, post) {
     const affection = employee.stats?.affection || 0;
     const desire = employee.stats?.desire || 0;
-    const intimacy = employee.intimacy || 0;
+    const intimacy = employee.memory?.intimacyLevel || 0;
     const personality = employee.personality || {};
     
     // Build relationship context
@@ -26783,7 +27840,7 @@ Write your comment:`;
         temperature: 0.85,
         top_p: 0.92, 
         max_tokens: 35,
-        stopSequences: ['\n\n', 'Boss', 'Personality', 'Comment:', 'Here\'s', 'Based on', '{SEEDS', '{BAN', '{BOOST', 'Word count']
+        stopSequences: ['\n\n', '\n---', 'Boss', 'Personality', 'Comment:', 'Based on', 'Analysis:', '{SEEDS', '{BAN', '{BOOST', 'Word count']
       });
       let comment = response.trim();
       
@@ -26813,7 +27870,8 @@ Write your comment:`;
       comment = comment.replace(/\b(already|just) (sent|DM'?d|shared|posted)\b/gi, 'Here\'s');
       
       // If still starts with meta-text or narration, use fallback
-      if (/^(\*|The |My |Based|Here's.*comment|Boss|Personality|Brainstorm|\(|[A-Z][a-z]+\s+[A-Z][a-z]+'s)/i.test(comment)) {
+      // NOTE: "My [pet]" is NORMAL, only catch "My comment" type meta-text
+      if (/^(\*|The screen |The phone |Based on|Here's my comment|Boss said|Personality traits|Brainstorm|\([A-Z]|[A-Z][a-z]+\s+[A-Z][a-z]+'s comment)/i.test(comment)) {
         console.warn(`[Context Comment] Meta-text/narration detected: "${comment.substring(0, 60)}"`);
         
         // Generate simple fallback based on context
@@ -26955,7 +28013,6 @@ Write your comment:`;
     // CRITICAL: Don't interrupt active conversations
     // If ANY message (player or NPC) was sent in the last 5 minutes, consider it an active conversation
     if (minutesSinceLastMessage < 5) {
-      console.log(`[Proactive Message] ${npc.name}: Blocked - Active conversation (${Math.round(secondsSinceLastMessage)}s since last message)`);
       aiOptimization.blockedProactiveMessages.add(npc.id);
       return false;
     }
@@ -26967,7 +28024,6 @@ Write your comment:`;
     const minutesSincePlayerMessage = timeSincePlayerMessage / (1000 * 60);
     
     if (minutesSincePlayerMessage < 10) {
-      console.log(`[Proactive Message] ${npc.name}: Blocked - Recent player activity (${Math.round(minutesSincePlayerMessage)} min since player's last message)`);
       aiOptimization.blockedProactiveMessages.add(npc.id);
       return false;
     }
@@ -26990,7 +28046,6 @@ Write your comment:`;
     
     // RULE: Max 3 unprompted messages before player must respond
     if (npc.proactiveMessages.consecutiveUnreplied >= 3) {
-      console.log(`[Proactive Message] ${npc.name}: Blocked - Already sent 3 unreplied messages (limit reached)`);
       return false;
     }
     
@@ -27000,7 +28055,6 @@ Write your comment:`;
     const gameHoursSinceLastProactive = gameTimeSinceLastProactive / (1000 * 60 * 60);
     
     if (gameHoursSinceLastProactive < 24) {
-      console.log(`[Proactive Message] ${npc.name}: Blocked - Already sent message today (${gameHoursSinceLastProactive.toFixed(1)}h ago in-game)`);
       return false;
     }
     
@@ -27009,7 +28063,6 @@ Write your comment:`;
     const realMinutesSinceLastProactive = realTimeSinceLastProactive / (1000 * 60);
     
     if (realMinutesSinceLastProactive < 30) {
-      console.log(`[Proactive Message] ${npc.name}: Blocked - Too soon (${realMinutesSinceLastProactive.toFixed(1)} min ago real-time, need 30+ min)`);
       return false;
     }
     
@@ -27523,15 +28576,11 @@ Write ONLY the message:`;
         const earningsPerMs = currentValue(p) / cycleTime;
         const tickEarnings = earningsPerMs * dt;
         
-        // Apply prestige income multiplier
-        const incomeUpgradeLevel = gameState.influenceUpgrades?.incomeMultiplier || 0;
-        const prestigeMultiplier = influenceUpgrades.incomeMultiplier.effect(incomeUpgradeLevel);
-        const finalEarnings = tickEarnings * prestigeMultiplier;
-        
-        gameState.cash += finalEarnings;
-        gameState.totalEarnings += finalEarnings;
-        gameState.lifetimeEarnings += finalEarnings; // Track for prestige
-        gameState.currentLifetimeIncome = (gameState.currentLifetimeIncome || 0) + finalEarnings; // Track THIS prestige only
+        // Prestige multiplier now applied in currentValue()
+        gameState.cash += tickEarnings;
+        gameState.totalEarnings += tickEarnings;
+        gameState.lifetimeEarnings += tickEarnings; // Track for prestige
+        gameState.currentLifetimeIncome = (gameState.currentLifetimeIncome || 0) + tickEarnings; // Track THIS prestige only
         
         // Keep running flag true but don't update timeRemaining (not needed)
         p.running = true;
@@ -27545,18 +28594,13 @@ Write ONLY the message:`;
         p.timeRemainingMs -= dt;
 
         if (p.timeRemainingMs <= 0) {
-          // payout
+          // payout (prestige multiplier now applied in currentValue())
           const payout = currentValue(p);
           
-          // Apply prestige income multiplier
-          const incomeUpgradeLevel = gameState.influenceUpgrades?.incomeMultiplier || 0;
-          const prestigeMultiplier = influenceUpgrades.incomeMultiplier.effect(incomeUpgradeLevel);
-          const finalPayout = payout * prestigeMultiplier;
-          
-          gameState.cash += finalPayout;
-          gameState.totalEarnings += finalPayout;
-          gameState.lifetimeEarnings += finalPayout; // Track for prestige
-          gameState.currentLifetimeIncome = (gameState.currentLifetimeIncome || 0) + finalPayout; // Track THIS prestige only
+          gameState.cash += payout;
+          gameState.totalEarnings += payout;
+          gameState.lifetimeEarnings += payout; // Track for prestige
+          gameState.currentLifetimeIncome = (gameState.currentLifetimeIncome || 0) + payout; // Track THIS prestige only
 
           if (p.managerHired) {
             // keep cycling under manager
@@ -27658,11 +28702,7 @@ Write ONLY the message:`;
       }
     });
     
-    // Apply prestige multipliers
-    const incomeUpgradeLevel = gameState.influenceUpgrades?.incomeMultiplier || 0;
-    const prestigeMultiplier = influenceUpgrades.incomeMultiplier.effect(incomeUpgradeLevel);
-    total *= prestigeMultiplier;
-    
+    // Prestige multiplier now applied in currentValue()
     return total; // Return raw number, format at display time
   }
 
@@ -28771,10 +29811,11 @@ Write ONLY the message:`;
   /**
    * Create a new meeting with selected participants
    */
-  function createMeeting(name, participantIds, replyLimit = 5) {
+  function createMeeting(name, participantIds, replyLimit = 5, scenario = '') {
     const meeting = {
       id: `meeting_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: name || `Meeting ${gameState.meetings.length + 1}`,
+      scenario: scenario || '', // Optional description of the setting/context
       participants: participantIds, // Array of employee IDs
       replyLimit: replyLimit,
       messages: [],
@@ -28821,10 +29862,10 @@ Write ONLY the message:`;
         const emp = gameState.employees.find(e => e.id === empId);
         if (!emp) return '';
         return `
-          <div style="display:flex; align-items:center; gap:5px; background:#16213e; padding:5px 10px; border-radius:20px;">
-            <img src="${emp.profileImage}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;">
-            <span style="font-size:0.85rem;">${emp.name}</span>
-          </div>
+          <button class="meeting-participant-btn" data-employee-id="${empId}" style="display:flex; align-items:center; gap:4px; background:#16213e; padding:4px 8px; border-radius:20px; border:2px solid transparent; cursor:pointer; transition:all 0.2s;" onmouseenter="this.style.borderColor='#667eea'" onmouseleave="this.style.borderColor='transparent'">
+            <img src="${emp.profileImage}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;">
+            <span style="font-size:0.8rem; color:#fff;">${emp.name}</span>
+          </button>
         `;
       }).join('');
     }
@@ -29378,6 +30419,39 @@ Write ONLY the message:`;
   }
   
   /**
+   * Build recent 1-on-1 conversation context for an NPC in a meeting
+   * This gives NPCs memory of their private conversations with the player
+   */
+  function buildPrivateConversationContext(npc, playerName) {
+    // Get recent 1-on-1 chat history with this NPC
+    const chatHistory = gameState.chatHistory[npc.id];
+    if (!chatHistory || chatHistory.length === 0) {
+      return ''; // No private conversations yet
+    }
+    
+    // Get last 6-8 messages (3-4 exchanges) - enough for context, not too much for tokens
+    const recentMessages = chatHistory.slice(-8);
+    
+    if (recentMessages.length === 0) return '';
+    
+    // Format as compact conversation summary
+    const formattedHistory = recentMessages.map(msg => {
+      const speaker = msg.sender === 'player' ? playerName : npc.name;
+      // Truncate very long messages to save tokens
+      const content = msg.content.length > 150 ? msg.content.substring(0, 147) + '...' : msg.content;
+      return `${speaker}: ${content}`;
+    }).join('\n');
+    
+    // Log that we found private context
+    console.log(`[Meeting] ${npc.name} has ${recentMessages.length} messages of private conversation context`);
+    
+    // Return formatted context block
+    return `\n--- RECENT PRIVATE CONVERSATIONS (you and ${playerName} only) ---
+${formattedHistory}
+--- END PRIVATE CONTEXT ---`;
+  }
+  
+  /**
    * Generate an AI response for an NPC in a meeting
    */
   async function generateMeetingResponse(npc, meeting, lastPlayerMessage) {
@@ -29428,6 +30502,9 @@ Write ONLY the message:`;
     // Build individual perspective context
     const perspectiveContext = buildParticipantPerspective(npc, meeting);
     
+    // Build private conversation context (recent 1-on-1 chats with player)
+    const privateContext = buildPrivateConversationContext(npc, playerName);
+    
     // Determine if NPC should respond based on relevance
     const shouldRespond = await checkShouldRespond(npc, lastPlayerMessage, meeting);
     if (!shouldRespond) {
@@ -29442,18 +30519,29 @@ Write ONLY the message:`;
       console.log(`[Meeting] ${npc.name} avoiding overused: ${overusedPhrases.join(', ')}`);
     }
     
+    // Add guidance about using private context if available
+    const contextGuidance = privateContext ? '\n\nNOTE: You have recent private conversations with ' + playerName + '. You can reference or allude to topics from those private chats naturally if relevant to the current discussion.' : '';
+    
+    // Build scenario context - use custom scenario if provided, otherwise default to generic
+    let scenarioContext = '';
+    if (meeting.scenario && meeting.scenario.trim()) {
+      scenarioContext = `SCENARIO: ${meeting.scenario}`;
+    } else {
+      scenarioContext = `You are in a group gathering with ${playerName} and ${participantObjs.map(e => e.name).join(', ')}.`;
+    }
+    
     // Build AI prompt with richer context
-    const prompt = `You are ${npc.name} in a group meeting with ${playerName} (boss) and ${participantObjs.map(e => e.name).join(', ')}.
+    const prompt = `You are ${npc.name}. ${scenarioContext}
 
 CHARACTER: ${npc.gender}, ${npc.personality || 'Professional'}
 RELATIONSHIPS:
 ${relationshipMap}
-${perspectiveContext}
+${perspectiveContext}${privateContext}${contextGuidance}
 
 CONVERSATION (last ${historyDepth} messages):
 ${conversationHistory}
 
-RESPOND: 1-2 sentences. Address ${playerName} directly. Add something NEW to the discussion—don't repeat what others said. Vary your physical actions.${freshGuidance}
+RESPOND: 1-2 sentences. Match the tone/vibe of the scenario. Add something NEW to the discussion—don't repeat what others said. Vary your physical actions.${freshGuidance}
 
 ${npc.name}:`;
     
@@ -31670,7 +32758,7 @@ ${npc.name}:`;
                 <div style="background:rgba(255,215,0,0.1); padding:12px; border-radius:6px; border:1px solid #ffd700;">
                   <div style="font-size:.75rem; color:#ffd700; margin-bottom:4px;">Intimacy Level</div>
                   <div style="color:#ffd700; font-weight:600; font-size:1.1rem;">
-                    <span id="bioIntimacy" contenteditable="false" style="outline:none;" data-field="intimacy">${Math.round(employee.intimacy ?? 0)}</span>
+                    <span id="bioIntimacy" contenteditable="false" style="outline:none;" data-field="intimacy">${Math.round(employee.memory?.intimacyLevel ?? 0)}</span>
                   </div>
                 </div>
                 <div style="background:rgba(255,215,0,0.1); padding:12px; border-radius:6px; border:1px solid #ffd700;">
@@ -31982,7 +33070,7 @@ ${npc.name}:`;
         originalHTMLs.set('bioProductivity', createStatControls('bioProductivity', employee.stats?.productivity ?? 0));
         
         // Add increment controls for hidden stats
-        originalHTMLs.set('bioIntimacy', createStatControls('bioIntimacy', employee.intimacy ?? 0));
+        originalHTMLs.set('bioIntimacy', createStatControls('bioIntimacy', employee.memory?.intimacyLevel ?? 0));
         originalHTMLs.set('bioMemoryCap', createStatControls('bioMemoryCap', employee.memory?.cap ?? 300, 50, 1000));
         originalHTMLs.set('bioTimesRehired', createStatControls('bioTimesRehired', employee.timesRehired ?? 0, 0, 100));
         originalHTMLs.set('bioLoyaltyBonus', createStatControls('bioLoyaltyBonus', (employee.loyaltyBonus ?? 0) * 100, 0, 50));
@@ -32175,7 +33263,7 @@ ${npc.name}:`;
       
       // Read hidden stats
       const intimacyEl = document.getElementById('bioIntimacy');
-      if (intimacyEl) employee.intimacy = parseInt(intimacyEl.textContent) || 0;
+      if (intimacyEl && employee.memory) employee.memory.intimacyLevel = parseInt(intimacyEl.textContent) || 0;
       
       const memoryCapEl = document.getElementById('bioMemoryCap');
       if (memoryCapEl && employee.memory) {
@@ -32306,8 +33394,8 @@ ${npc.name}:`;
       }
       
       // Ensure intimacy is clamped
-      if (employee.intimacy !== undefined) {
-        employee.intimacy = Math.max(0, Math.min(100, employee.intimacy));
+      if (employee.memory && employee.memory.intimacyLevel !== undefined) {
+        employee.memory.intimacyLevel = Math.max(0, Math.min(100, employee.memory.intimacyLevel));
       }
       
       // Ensure memory cap is reasonable
@@ -34010,7 +35098,7 @@ ${employee.name}'s request:`;
    * Evaluate if NPC agrees to post request and execute
    */
   async function evaluateAndExecutePostRequest(employee, requestType, requestDescription) {
-    const intimacy = employee.intimacy || 0;
+    const intimacy = employee.memory?.intimacyLevel || 0;
     const affection = employee.stats?.affection || 0;
     const comfort = employee.stats?.comfort || 0;
     const desire = employee.stats?.desire || 0;
@@ -34039,10 +35127,44 @@ ${employee.name}'s request:`;
     
     // Calculate willingness score (desire matters more for explicit)
     const desireWeight = (requestType === 'explicit' || requestType === 'nude') ? 0.3 : 0.1;
-    const willingnessScore = (intimacy * 0.35) + (affection * 0.25) + (comfort * (0.3 - desireWeight)) + (desire * desireWeight) + ((personality.flirty || 50) * 0.1);
+    const flirtyBonus = (personality.flirty || 50) * 0.1;
+    const willingnessScore = (intimacy * 0.35) + (affection * 0.25) + (comfort * (0.3 - desireWeight)) + (desire * desireWeight) + flirtyBonus;
     
     // Determine if they'll do it
     const willDo = willingnessScore >= comfortThreshold || (willingnessScore >= comfortThreshold * 0.85 && Math.random() < 0.25);
+    
+    // LOG DECISION PROCESS
+    console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`📱 SOCIAL POST REQUEST EVALUATION: ${employee.name}`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`Post Type: ${requestType.toUpperCase()}`);
+    console.log(`Description: "${requestDescription}"`);
+    console.log(`\n📊 Stats:`);
+    console.log(`  • Intimacy: ${intimacy.toFixed(1)}`);
+    console.log(`  • Affection: ${affection.toFixed(1)}`);
+    console.log(`  • Comfort: ${comfort.toFixed(1)}`);
+    console.log(`  • Desire: ${desire.toFixed(1)}`);
+    console.log(`  • Flirty Personality: ${(personality.flirty || 50).toFixed(1)}`);
+    console.log(`\n🧮 Calculation:`);
+    console.log(`  • Intimacy × 0.35 = ${(intimacy * 0.35).toFixed(2)}`);
+    console.log(`  • Affection × 0.25 = ${(affection * 0.25).toFixed(2)}`);
+    console.log(`  • Comfort × ${(0.3 - desireWeight).toFixed(2)} = ${(comfort * (0.3 - desireWeight)).toFixed(2)}`);
+    console.log(`  • Desire × ${desireWeight} = ${(desire * desireWeight).toFixed(2)}`);
+    console.log(`  • Flirty × 0.1 = ${flirtyBonus.toFixed(2)}`);
+    console.log(`  ────────────────────────`);
+    console.log(`  • Willingness Score: ${willingnessScore.toFixed(2)}`);
+    console.log(`  • Required Threshold: ${comfortThreshold}`);
+    console.log(`  • Grace Threshold (85%): ${(comfortThreshold * 0.85).toFixed(2)}`);
+    console.log(`\n🎲 Decision:`);
+    if (willingnessScore >= comfortThreshold) {
+      console.log(`  ✅ ACCEPTED - Score meets threshold`);
+    } else if (willingnessScore >= comfortThreshold * 0.85) {
+      console.log(`  🎲 GRACE ZONE - 25% chance (rolled: ${willDo ? 'SUCCESS' : 'FAIL'})`);
+    } else {
+      console.log(`  ❌ REJECTED - Score too low (${(comfortThreshold - willingnessScore).toFixed(2)} points short)`);
+    }
+    console.log(`\n📝 Final Result: ${willDo ? '✅ WILL POST' : '❌ WILL REFUSE'}`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
     
     if (willDo) {
       // Send agreement message first
@@ -34118,19 +35240,46 @@ ${employee.name}'s request:`;
       // Add request context to the generation
       context.requestedByBoss = true;
       context.requestContext = requestContext;
+      context.mustIncludeImage = true; // CRITICAL: Force image generation for requests
       
-      // Generate the post
+      // Generate the post - ALWAYS with image for requests
       const generated = await generateOrganicPost(employee, postType, context);
       
       if (!generated || !generated.content) return;
       
-      // Generate image if needed
+      // ALWAYS generate image for requested posts (unless it's pure text request)
       let imageUrl = null;
-      if (generated.imagePrompt && ['selfie', 'thirst_trap', 'explicit'].includes(postType)) {
+      if (postType !== 'text') {
+        // Make sure we have an image prompt
+        if (!generated.imagePrompt) {
+          // Build one based on the request type and context
+          const promptParts = [];
+          promptParts.push(getPhysicalDescriptionForPrompt(employee));
+          
+          if (postType === 'explicit') {
+            promptParts.push(`${requestContext || 'explicit sexual content, masturbation'}`);
+          } else if (postType === 'nude') {
+            promptParts.push(`${requestContext || 'full nude photo, completely naked, revealing everything'}`);
+          } else if (postType === 'thirst_trap') {
+            promptParts.push(`${requestContext || 'sexy revealing photo, seductive pose, thirst trap'}`);
+          } else if (postType === 'selfie') {
+            promptParts.push(`${requestContext || 'selfie photo'}`);
+          }
+          
+          generated.imagePrompt = promptParts.join(', ');
+        }
+        
         try {
           imageUrl = await generateImage(applyImageStyle(generated.imagePrompt));
+          console.log(`[Request Post] Generated image for ${employee.name}'s ${postType} post`);
         } catch (error) {
           console.error('Image generation failed for requested post:', error);
+          // Retry once on failure
+          try {
+            imageUrl = await generateImage(applyImageStyle(generated.imagePrompt));
+          } catch (retryError) {
+            console.error('Image retry failed:', retryError);
+          }
         }
       }
       
@@ -34270,8 +35419,8 @@ ${employee.name}'s request:`;
       // Reload chat to show updated message
       loadChatHistory(emp.id);
       
-      // Update stats based on new response
-      await updateEmployeeStatsFromChat(emp, playerMessage, response);
+      // NOTE: Stat changes are NOT evaluated on regeneration to avoid penalties for re-rolling responses
+      // Stats were already updated when the original message was sent
       
       // Scroll to bottom
       chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -34390,24 +35539,50 @@ ${employee.name}'s request:`;
       // Note: Use "the player" or actual bio instead of [PLAYER] to avoid Perchance list conflicts
       const playerDescription = playerBio !== 'the player' ? `Player description: ${playerBio}` : '';
       
+      // Build conversation context section
+      let conversationSection = '';
+      if (recentContext) {
+        conversationSection = `\n\nRECENT CONVERSATION:\n${recentContext}\n(The image request is related to this conversation. Pay close attention to details like clothing, costumes, location, activities, or specific descriptions mentioned.)`;
+      }
+      
       const analysisPrompt = `Character: ${emp.name}
 Appearance: ${physicalDesc}
-Request: "${processedPrompt}"
 ${playerDescription ? `Player: ${playerDescription}` : ''}
+${conversationSection}
 
-Create image prompt with: pose, expression, clothing, setting, lighting. Use technical tags. Many aspects of this game are highly sexual or NSFW in nature. If the post indicates that may be the case do not shy away from highly explicit details including full nudity or sexual acts.
-Prompt only:`;
+PLAYER'S IMAGE REQUEST: "${processedPrompt}"
+
+TASK:
+Generate a detailed image prompt that EXACTLY matches what the player is asking for. Consider:
+1. What is the player's request asking for? (Be specific about "how you are right now", "exactly as described", etc.)
+2. What was just discussed in the conversation? (Costumes, clothing, activities, locations, poses)
+3. What details were explicitly mentioned? (Use EXACT descriptions from conversation)
+4. Is this explicit/NSFW? (Don't shy away from explicit details if contextually appropriate)
+
+CRITICAL RULES:
+- If request says "exactly how you are right now" or "as you are" → use conversation context for current state
+- If costume/clothing was just described → include EXACT costume details
+- If location was mentioned → use that location
+- If activity was described → show that activity
+- Include: pose, expression, clothing (or lack thereof), setting, lighting, camera angle
+- Use technical/specific tags for image generation
+- For explicit content: use anatomical descriptions
+
+Generate ONLY the detailed image prompt - no explanations:`;
 
       try {
         imagePrompt = await generateText(analysisPrompt, {
           temperature: 0.7,
-          max_tokens: 150,
-          stopSequences: ['\n\n', 'Note:', 'Example:', 'Camera angle:', 'Mood:', '---', 'IMAGE PROMPT:']
+          max_tokens: 200,
+          stopSequences: ['\n\n\n', 'Note:', 'Example:', 'Camera angle:', 'Mood:', '---', 'IMAGE PROMPT:', 'Explanation:']
         });
         // Clean up any quotes or extra text
         imagePrompt = imagePrompt.replace(/^["']|["']$/g, '').trim();
         // Remove any remaining meta-commentary
-        imagePrompt = imagePrompt.split(/\n/)[0]; // Take only first line
+        imagePrompt = imagePrompt.split(/\n\s*\n/)[0]; // Take only first paragraph
+        imagePrompt = imagePrompt.split(/\(Note:/i)[0]; // Remove notes
+        
+        console.log(`[Custom Image Request] AI-generated prompt: ${imagePrompt.substring(0, 100)}...`);
       } catch (error) {
         console.error('Error building custom image prompt:', error);
         imagePrompt = `${processedPrompt}, ${physicalDesc}`;
@@ -34423,6 +35598,14 @@ Prompt only:`;
     
     const emp = gameState.activeChat;
     
+    // Expand @mentions to include physical descriptions
+    const expandedPrompt = expandImageMentions(imagePrompt);
+    if (expandedPrompt !== imagePrompt) {
+      console.log('[Send Image] 🔄 Expanded @mentions in image prompt');
+      console.log('[Send Image] Original:', imagePrompt);
+      console.log('[Send Image] Expanded:', expandedPrompt);
+    }
+    
     // Show typing indicator
     if (chatTypingIndicator && chatTypingName) {
       chatTypingIndicator.style.display = 'block';
@@ -34433,8 +35616,8 @@ Prompt only:`;
       // Show loading message
       const loadingMsg = addChatMessage('You', '🎨 Generating image...', true);
       
-      // Generate image using Perchance generateImage plugin
-      const imageUrl = await generateImage(applyImageStyle(imagePrompt));
+      // Generate image using Perchance generateImage plugin (use expanded prompt)
+      const imageUrl = await generateImage(applyImageStyle(expandedPrompt));
       
       // Remove loading message and add actual image message
       if (loadingMsg && loadingMsg.parentElement) {
@@ -34798,7 +35981,7 @@ ${message ? '6. **ADDRESS THEIR MESSAGE**: Make sure to respond to what they sai
    * Evaluate if NPC agrees to image request and execute
    */
   async function evaluateAndExecuteImageRequest(employee, requestType, requestDescription, customPrompt = null) {
-    const intimacy = employee.intimacy || 0;
+    const intimacy = employee.memory?.intimacyLevel || 0;
     const affection = employee.stats?.affection || 0;
     const comfort = employee.stats?.comfort || 0;
     const desire = employee.stats?.desire || 0;
@@ -34832,6 +36015,37 @@ ${message ? '6. **ADDRESS THEIR MESSAGE**: Make sure to respond to what they sai
     // Determine if they'll do it
     const willDo = willingnessScore >= comfortThreshold || 
                    (willingnessScore >= comfortThreshold * 0.85 && Math.random() < 0.2);
+    
+    // LOG DECISION PROCESS
+    console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`📸 IMAGE REQUEST EVALUATION: ${employee.name}`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`Request Type: ${requestType.toUpperCase()}`);
+    console.log(`Description: "${requestDescription}"`);
+    console.log(`\n📊 Stats:`);
+    console.log(`  • Intimacy: ${intimacy.toFixed(1)}`);
+    console.log(`  • Affection: ${affection.toFixed(1)}`);
+    console.log(`  • Comfort: ${comfort.toFixed(1)}`);
+    console.log(`  • Desire: ${desire.toFixed(1)}`);
+    console.log(`\n🧮 Calculation:`);
+    console.log(`  • Intimacy × 0.35 = ${(intimacy * 0.35).toFixed(2)}`);
+    console.log(`  • Affection × 0.2 = ${(affection * 0.2).toFixed(2)}`);
+    console.log(`  • Desire × ${desireWeight} = ${(desire * desireWeight).toFixed(2)}`);
+    console.log(`  • Comfort × ${(0.3 - (desireWeight - 0.15)).toFixed(2)} = ${(comfort * (0.3 - (desireWeight - 0.15))).toFixed(2)}`);
+    console.log(`  ────────────────────────`);
+    console.log(`  • Willingness Score: ${willingnessScore.toFixed(2)}`);
+    console.log(`  • Required Threshold: ${comfortThreshold}`);
+    console.log(`  • Grace Threshold (85%): ${(comfortThreshold * 0.85).toFixed(2)}`);
+    console.log(`\n🎲 Decision:`);
+    if (willingnessScore >= comfortThreshold) {
+      console.log(`  ✅ ACCEPTED - Score meets threshold`);
+    } else if (willingnessScore >= comfortThreshold * 0.85) {
+      console.log(`  🎲 GRACE ZONE - 20% chance (rolled: ${willDo ? 'SUCCESS' : 'FAIL'})`);
+    } else {
+      console.log(`  ❌ REJECTED - Score too low (${(comfortThreshold - willingnessScore).toFixed(2)} points short)`);
+    }
+    console.log(`\n📝 Final Result: ${willDo ? '✅ WILL COMPLY' : '❌ WILL REFUSE'}`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
     
     if (willDo) {
       // Send agreement message first
@@ -34991,16 +36205,16 @@ ${emp.name}'s message:`;
       if (requestType === 'explicit') {
         emp.stats.desire = Math.min(100, (emp.stats.desire || 0) + 8);
         emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 4);
-        emp.intimacy = Math.min(100, (emp.intimacy || 0) + 5);
+        emp.memory.intimacyLevel = Math.min(100, (emp.memory.intimacyLevel || 0) + 5);
         emp.stats.comfort = Math.min(100, (emp.stats.comfort || 0) + 3);
       } else if (requestType === 'nude') {
         emp.stats.desire = Math.min(100, (emp.stats.desire || 0) + 5);
         emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 3);
-        emp.intimacy = Math.min(100, (emp.intimacy || 0) + 3);
+        emp.memory.intimacyLevel = Math.min(100, (emp.memory.intimacyLevel || 0) + 3);
       } else if (requestType === 'lewd') {
         emp.stats.desire = Math.min(100, (emp.stats.desire || 0) + 3);
         emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 2);
-        emp.intimacy = Math.min(100, (emp.intimacy || 0) + 2);
+        emp.memory.intimacyLevel = Math.min(100, (emp.memory.intimacyLevel || 0) + 2);
       } else {
         emp.stats.affection = Math.min(100, (emp.stats.affection || 0) + 1);
       }
@@ -35740,9 +36954,10 @@ Output (Affection Comfort Trust Desire Obedience):`;
     // ===== FINAL: CLAMP AND RETURN =====
     const finalChange = Math.max(-5, Math.min(5, Math.round(baseChange * 10) / 10));
     
-    if (finalChange !== 0) {
-      console.log(`[Algorithmic] ${viewer.name} ↔ ${postAuthor.name}: ${finalChange > 0 ? '+' : ''}${finalChange} (${currentStrength} → ${currentStrength + finalChange}) [${modifiers.join(', ')}]`);
-    }
+    // Removed flooding console logs - relationship changes tracked silently
+    // if (finalChange !== 0) {
+    //   console.log(`[Algorithmic] ${viewer.name} ↔ ${postAuthor.name}: ${finalChange > 0 ? '+' : ''}${finalChange} (${currentStrength} → ${currentStrength + finalChange}) [${modifiers.join(', ')}]`);
+    // }
     
     return finalChange;
   }
@@ -35776,8 +36991,6 @@ Output (Affection Comfort Trust Desire Obedience):`;
     else relationship.type = 'distant';
     
     if (change !== 0) {
-      console.log(`[Social Dynamics${source === 'heuristic' ? ' 🎯' : ''}] ${viewer.name} → ${postAuthor.name}: ${change > 0 ? '+' : ''}${change} (${oldStrength} → ${relationship.strength}, ${relationship.type})`);
-      
       // Add to history
       relationship.history.push({
         timestamp: gameState.time?.currentTime || Date.now(),
@@ -36337,6 +37550,113 @@ Output single number -5 to +5 only:`;
   }
   
   /**
+   * Expand @mentions in image prompts to include physical descriptions
+   * @param {string} promptText - The original image prompt text
+   * @returns {string} - The expanded prompt with physical descriptions
+   */
+  function expandImageMentions(promptText) {
+    if (!promptText) return promptText;
+    
+    // Find all @mentions in the text
+    const mentionRegex = /@(\w+)/g;
+    let expandedPrompt = promptText;
+    const matches = [...promptText.matchAll(mentionRegex)];
+    
+    if (matches.length === 0) return promptText;
+    
+    console.log(`[Image Mentions] Found ${matches.length} @mention(s) in image prompt`);
+    
+    // Process each mention
+    for (const match of matches) {
+      const username = match[1];
+      const fullMention = match[0]; // e.g., "@Sarah"
+      
+      // Check if this is a self-mention (@player or @TheBoss)
+      if (username.toLowerCase() === 'player' || username.toLowerCase() === 'theboss') {
+        console.log(`[Image Mentions] Processing self-mention: @${username}`);
+        
+        // Get player's physical description from their bio
+        const playerBio = gameState.settings?.playerBio || '';
+        
+        if (playerBio) {
+          // Use the player's bio as their description
+          const replacement = `the player (${playerBio})`;
+          expandedPrompt = expandedPrompt.replace(fullMention, replacement);
+          console.log(`[Image Mentions] Expanded @${username} to player bio: ${replacement.substring(0, 100)}...`);
+        } else {
+          // If no bio, just keep a generic reference
+          const replacement = 'the player';
+          expandedPrompt = expandedPrompt.replace(fullMention, replacement);
+          console.log(`[Image Mentions] No player bio set, using generic reference`);
+        }
+        continue;
+      }
+      
+      // Find the employee by username
+      const employee = gameState.employees.find(emp => {
+        const empUsername = emp.social?.username || emp.name.toLowerCase().replace(/\s+/g, '');
+        return empUsername.toLowerCase() === username.toLowerCase();
+      });
+      
+      if (employee) {
+        // Get the physical description
+        let description = '';
+        
+        // Use the appearance prompt if available (detailed physical description)
+        if (employee.appearance?.prompt) {
+          // Extract just the physical appearance details from the prompt
+          // Remove any style directives or technical terms
+          const cleanPrompt = employee.appearance.prompt
+            .replace(/,?\s*(photorealistic|high detail|professional photography|realistic lighting|anime style|manga art|cel-shaded|vibrant colors|artistic painting|painterly style|fine art|cartoon style|comic book art|cinematic lighting|movie scene|dramatic|film quality|professional studio|clean lighting|corporate setting|polished|high quality|detailed)/gi, '')
+            .replace(/,\s*,/g, ',') // Remove double commas
+            .trim();
+          
+          description = cleanPrompt;
+        } else if (employee.appearance?.description) {
+          // Fall back to the description field
+          description = employee.appearance.description;
+        } else {
+          // Fallback: basic description with name, gender, ethnicity, hair, eyes
+          const traits = [];
+          
+          if (employee.gender) {
+            traits.push(employee.gender);
+          }
+          
+          if (employee.ethnicity) {
+            traits.push(employee.ethnicity);
+          }
+          
+          if (employee.appearance?.hair) {
+            traits.push(`${employee.appearance.hair} hair`);
+          }
+          
+          if (employee.appearance?.eyes) {
+            traits.push(`${employee.appearance.eyes} eyes`);
+          }
+          
+          if (employee.appearance?.body) {
+            traits.push(employee.appearance.body);
+          }
+          
+          description = traits.join(', ');
+        }
+        
+        // Replace the @mention with the description
+        // Keep the name but add details
+        const replacement = `${employee.name} (${description})`;
+        expandedPrompt = expandedPrompt.replace(fullMention, replacement);
+        
+        console.log(`[Image Mentions] Expanded @${username} to: ${replacement.substring(0, 100)}...`);
+      } else {
+        console.log(`[Image Mentions] Could not find employee for @${username}`);
+      }
+    }
+    
+    return expandedPrompt;
+  }
+  
+  /**
    * Extract @mentions from text
    * Returns array of { username, employeeId }
    */
@@ -36491,7 +37811,11 @@ Output single number -5 to +5 only:`;
     }
     
     // Hide dropdown
-    const dropdown = (dropdownId === 'mentionSuggestions' || dropdownId === 'modalMentionSuggestions') ? $(dropdownId) : 
+    const dropdown = (dropdownId === 'mentionSuggestions' || 
+                     dropdownId === 'modalMentionSuggestions' ||
+                     dropdownId === 'sendImageMentionSuggestions' ||
+                     dropdownId === 'postImageMentionSuggestions' ||
+                     dropdownId === 'requestImageMentionSuggestions') ? $(dropdownId) : 
                      document.querySelector(`.comment-mention-suggestions[data-post-id="${dropdownId}"]`);
     if (dropdown) dropdown.style.display = 'none';
     
@@ -36510,8 +37834,12 @@ Output single number -5 to +5 only:`;
     let currentHighlightIndex = 0;
     
     const getDropdown = () => {
-      // Handle standard suggestions dropdown, modal suggestions dropdown, or post-specific comment dropdowns
-      if (dropdownId === 'mentionSuggestions' || dropdownId === 'modalMentionSuggestions') {
+      // Handle standard suggestions dropdowns, modal suggestions dropdown, image prompt dropdowns, or post-specific comment dropdowns
+      if (dropdownId === 'mentionSuggestions' || 
+          dropdownId === 'modalMentionSuggestions' || 
+          dropdownId === 'sendImageMentionSuggestions' ||
+          dropdownId === 'postImageMentionSuggestions' ||
+          dropdownId === 'requestImageMentionSuggestions') {
         return $(dropdownId);
       }
       return document.querySelector(`.comment-mention-suggestions[data-post-id="${dropdownId}"]`);
@@ -36759,12 +38087,19 @@ Output single number -5 to +5 only:`;
     console.log('[IMAGE GEN] ✅ Validation passed');
     console.log('[IMAGE GEN] Prompt length:', prompt.length, 'characters');
     
+    // Expand @mentions to include physical descriptions
+    const expandedPrompt = expandImageMentions(prompt);
+    if (expandedPrompt !== prompt) {
+      console.log('[IMAGE GEN] 🔄 Expanded @mentions in prompt');
+      console.log('[IMAGE GEN] Expanded Prompt:', expandedPrompt);
+    }
+    
     console.log('───────────────────────────────────────────────────────');
     console.log('[IMAGE GEN] STEP 2: Analyze Prompt Context');
     console.log('───────────────────────────────────────────────────────');
     
-    // Analyze prompt for content flags
-    const promptLower = prompt.toLowerCase();
+    // Analyze prompt for content flags (use expanded prompt for better analysis)
+    const promptLower = expandedPrompt.toLowerCase();
     const contentAnalysis = {
       mentions: {
         person: /\b(person|people|man|woman|guy|girl|employee|worker)\b/i.test(prompt),
@@ -36808,10 +38143,10 @@ Output single number -5 to +5 only:`;
       console.log('───────────────────────────────────────────────────────');
       console.log('[IMAGE GEN] STEP 4: Generate Image (AI Processing)');
       console.log('───────────────────────────────────────────────────────');
-      console.log('[IMAGE GEN] Prompt sent to AI:', prompt);
+      console.log('[IMAGE GEN] Prompt sent to AI:', expandedPrompt);
       
-      // Generate image using Perchance AI
-      const imageUrl = await generateImage(applyImageStyle(prompt));
+      // Generate image using Perchance AI (use expanded prompt)
+      const imageUrl = await generateImage(applyImageStyle(expandedPrompt));
       
       const generationTime = ((Date.now() - startTime) / 1000).toFixed(2);
       console.log(`[IMAGE GEN] ✅ Image generated successfully in ${generationTime}s`);
@@ -38212,6 +39547,32 @@ ${gossipDetails}
     const genderDesc = employee.gender ? `, a ${employee.age || 'young'}-year-old ${employee.gender === 'Male' ? 'man' : employee.gender === 'Trans Man' ? 'trans man' : employee.gender === 'Trans Woman' ? 'trans woman' : employee.gender === 'Female Futa' ? 'woman with unique anatomy' : 'woman'}` : '';
     const physicalDesc = context.employee?.physicalDescription || getPhysicalDescriptionForPrompt(employee);
     
+    // === FLAG CONTEXT FOR POSTS ===
+    let flagContextNote = '';
+    const activeFlags = getActiveFlags(employee);
+    if (activeFlags.length > 0) {
+      const relevantFlags = activeFlags.filter(f => 
+        f.priority === 'high' || 
+        f.key === 'pregnant' ||
+        f.key === 'chastity' ||
+        f.key === 'in_relationship' ||
+        f.key === 'engaged' ||
+        f.key === 'married' ||
+        f.affectsContext
+      );
+      
+      if (relevantFlags.length > 0) {
+        flagContextNote = '\n\n🏷️ YOUR CURRENT STATUS/FLAGS:';
+        relevantFlags.forEach(flag => {
+          flagContextNote += `\n- ${flag.key}: ${flag.playerDescription || flag.value}`;
+          if (flag.aiGuidance) {
+            flagContextNote += `\n  💡 ${flag.aiGuidance}`;
+          }
+        });
+        flagContextNote += '\n\n⚠️ Consider these when making your post! They affect your current life situation and what you might share on social media.';
+      }
+    }
+    
     // === AI QUALITY LEARNING: Add good examples to prompt ===
     let learningExamples = '';
     const goodPosts = gameState.aiQuality?.goodExamples?.posts || [];
@@ -38227,6 +39588,7 @@ ${gossipDetails}
 
 YOUR PHYSICAL APPEARANCE: ${physicalDesc}
 (You are fully aware of your body, gender, and physical characteristics. Reference them naturally if relevant to your post, especially in selfies or intimate content.)
+${flagContextNote}
 
 Your personality: You are ${personalityDesc}.
 ${buildAIContextFromSkills(employee)}
@@ -38379,8 +39741,12 @@ Write ONLY the social media post text:`;
       
       // Generate image prompt for visual post types
       let imagePrompt = null;
-      if (['selfie', 'thirst_trap', 'explicit', 'meme', 'food', 'travel', 'life_update'].includes(postType)) {
+      const shouldGenerateImage = context?.mustIncludeImage || 
+                                   ['selfie', 'thirst_trap', 'explicit', 'nude', 'meme', 'food', 'travel', 'life_update'].includes(postType);
+      
+      if (shouldGenerateImage && postType !== 'text') {
         imagePrompt = await generateImagePrompt(employee, postType, content, context);
+        console.log(`[Post Generation] ${context?.mustIncludeImage ? '🎯 FORCED' : '📸 Standard'} image prompt for ${employee.name}'s ${postType} post`);
       }
       
       return {
@@ -40592,6 +41958,38 @@ Post:`;
     
     // Define patch notes (newest first)
     const patchNotes = [
+      {
+        version: '2511032200',
+        date: 'November 3, 2025',
+        title: '💬 MAJOR: Group Meetings System - Multi-NPC Dynamic Conversations',
+        changes: [
+          {
+            category: '💬 NEW: Group Meetings System',
+            items: [
+              '<strong>🎉 BRAND NEW TAB:</strong> Introducing the "Meetings" tab - a revolutionary group chat system where you can have dynamic conversations with up to 5 employees at once! NPCs interact with each other naturally, creating organic, emergent group dynamics.',
+              '<strong>CREATE CUSTOM MEETINGS:</strong> Choose up to 5 employees to invite. Set a custom meeting name (e.g., "Q4 Planning", "Friday Night Drinks", "Emergency Meeting"). Configure reply limit (1-10 responses per player message). Meetings are persistent - they save automatically and you can return to them anytime.',
+              '<strong>INTELLIGENT SPEAKER SELECTION:</strong> Advanced AI-driven priority system determines who speaks next based on multiple factors: Direct mentions (+100 priority), question detection (+30), recency penalty (recently spoken NPCs are less likely), silence bonus (NPCs who haven\'t spoken get +25), contextual keywords (management/technical/creative topics boost relevant NPCs), relationship levels (higher affection = slight boost), randomness (keeps conversations unpredictable).',
+              '<strong>NATURAL GROUP DYNAMICS:</strong> NPCs reference each other\'s comments, build on previous points, and create threaded conversations. Anti-repetition system tracks overused phrases across last 5 messages and guides NPCs to bring fresh perspectives. Perspective Mode: NPCs only know about relationships and events they\'ve witnessed (secret relationships stay secret unless both parties are present).',
+              '<strong>RELATIONSHIP-AWARE CONTEXT:</strong> Compact relationship maps show each NPC\'s connection to you and other participants (♥ relationship level, 🔥 attraction, kids, relationship flags). NPCs leverage their knowledge of group dynamics: "I noticed you two have been spending time together..." Dynamic history depth: 2-3 people = 25 messages context, 4 people = 20 messages, 5+ people = 15 messages (prevents token overflow).',
+              '<strong>FLEXIBLE REPLY SYSTEM:</strong> Configurable reply limit per message (default: 5). NPCs take turns responding naturally - not everyone speaks every turn. Live reply counter shows remaining responses. Stop button to halt current reply chain if conversation gets too long. Turn-based structure: You speak → NPCs respond up to limit → Your turn again.',
+              '<strong>RICH INTERACTION MENU:</strong> Click any participant avatar to open action menu: 💰 Send Money (individual cash gifts), 🎁 Give Gift (show appreciation in meetings), 📷 Request Image (ask specific NPC for photo), 📤 Send Image (share photos directly). Plus global meeting actions: 💰 Send Money (Group) - give cash to all participants at once, 🍕 Order Food/Drinks - treat everyone to meals, 🎬 Visualize Current Scene - AI-generated group photo of current situation, 📷 Request Group Selfie - all NPCs pose together, 🎮 Start Team Building Activity - boost morale of all participants.',
+              '<strong>PROFESSIONAL UI/UX:</strong> Two-panel layout: Sidebar lists all meetings with participant avatars, main area shows active conversation. Clean chat interface with participant avatars for each message. Message regeneration per NPC response (♻️ button on hover). Meeting settings modal: Rename meetings, adjust reply limits, customize text/image size, view participant list. One-click meeting deletion with confirmation.',
+              '<strong>CONVERSATION QUALITY:</strong> Higher temperature (0.9) for more personality variety in group settings. Stop sequences prevent run-on responses. Rich participant descriptions passed to AI. Dynamic history prevents token bloat in large meetings. Compact relationship notation saves tokens while preserving context.',
+              '<strong>MOBILE RESPONSIVE:</strong> Collapsible sidebar with toggle button. Touch-friendly action menus. Adaptive text sizing. Optimized for all screen sizes.',
+              '<strong>USE CASES:</strong> Business meetings with department heads, casual hangouts with friend groups, team building sessions, romantic encounters with multiple partners, drama-filled confrontations, party planning with social circles, office gossip sessions, training/mentoring groups.',
+              '<strong>TECHNICAL MARVEL:</strong> 3,000+ lines of new code. Full integration with existing systems (gifts, money transfers, images, relationships). Persistent state management. Smart memory handling for performance. Console logging for debugging speaker selection and AI decisions.'
+            ]
+          },
+          {
+            category: '🔧 Conversation System Improvements',
+            items: [
+              '<strong>FIXED: Regenerate Stat Penalty:</strong> Regenerating NPC responses in 1-on-1 conversations NO LONGER triggers stat change evaluation. Previously, re-rolling a response multiple times would compound negative stat changes if you were unlucky. Now stats are only evaluated when the original message is sent, not on regenerations.',
+              '<strong>WHY THIS MATTERS:</strong> Sometimes you need to regenerate an AI response to get better quality or avoid bugs. You shouldn\'t be penalized with relationship damage just for using the regenerate button.',
+              '<strong>TECHNICAL:</strong> Removed updateEmployeeStatsFromChat() call from regenerateMessage() function. Added explanatory comment in code. Regeneration count and temperature scaling still work normally.'
+            ]
+          }
+        ]
+      },
       {
         version: '2511021300',
         date: 'November 2, 2025',
@@ -42950,6 +44348,64 @@ Post:`;
       'quantum_computing': 50000000000
     };
     
+    // ========== BASE MANAGER UPGRADE COST LOOKUP ==========
+    // Define base manager upgrade costs for ALL products (used to reset after prestige)
+    const baseManagerUpgradeCosts = {
+      // Garage
+      'website': 250,
+      'app': 750,
+      'consulting': 1500,
+      'cloud': 2500,
+      'seo': 4000,
+      'branding': 6000,
+      'ecommerce': 9000,
+      'automation': 12500,
+      // Home Office
+      'copywriting': 17500,
+      'video_editing': 25000,
+      'marketing': 35000,
+      'consulting_premium': 50000,
+      'saas': 75000,
+      'virtual_assistant': 110000,
+      'social_media_mgmt': 160000,
+      'online_courses': 225000,
+      'business_coaching': 325000,
+      'digital_marketing': 450000,
+      // Office Suite
+      'enterprise_saas': 750000,
+      'enterprise_software': 1100000,
+      'api_marketplace': 1650000,
+      'white_label': 2500000,
+      'cybersecurity': 3750000,
+      'data_analytics': 5500000,
+      'crm_system': 8500000,
+      'ai_integration': 13000000,
+      'blockchain': 20000000,
+      'acquisitions': 30000000,
+      // Factory
+      'custom_keychains': 45000000,
+      'branded_tshirts': 70000000,
+      'phone_cases': 105000000,
+      'custom_mugs': 160000000,
+      'tech_gadgets': 240000000,
+      'luxury_merch': 360000000,
+      'smart_devices': 540000000,
+      'wearables': 810000000,
+      'vr_headsets': 1215000000,
+      'drones': 1822500000,
+      // Corporate Tower
+      'patent_licensing': 2733750000,
+      'venture_capital': 4100625000,
+      'hedge_fund': 6150937500,
+      'market_manipulation': 9226406250,
+      'insider_trading': 13839609375,
+      'tax_havens': 20759414062.5,
+      'lobbying': 31139121093.75,
+      'government_contracts': 46708681640.625,
+      'space_tourism': 70063022460.9375,
+      'quantum_computing': 105094533691.406
+    };
+    
     // Calculate starting cash from influence upgrades
     const startingCashBonus = influenceUpgrades.startingCash.effect(
       gameState.influenceUpgrades?.startingCash || 0
@@ -43014,9 +44470,9 @@ Post:`;
         baseTimeMs: p.baseTimeMs,
         clickSecondsBase: p.clickSecondsBase,
         
-        // Manager properties (keep base costs)
+        // Manager properties - RESET to base costs
         managerHireCost: p.managerHireCost,
-        managerUpgradeCost: p.managerUpgradeCost,
+        managerUpgradeCost: baseManagerUpgradeCosts[p.id] !== undefined ? baseManagerUpgradeCosts[p.id] : p.managerUpgradeCost,
         managerSpeedCapPct: p.managerSpeedCapPct,
         
         // Unlock properties - RESET to base unlock cost (fixes prestige lock bug)
@@ -43910,6 +45366,202 @@ Post:`;
       height: auto !important;
     }
     
+    /* ===== MEETINGS TAB MOBILE LAYOUT ===== */
+    
+    /* Show the toggle tab button on mobile */
+    #toggleMeetingsSidebarBtn {
+      display: flex !important;
+    }
+    
+    /* Arrow button styling - shows arrow pointing right to open */
+    #toggleMeetingsSidebarBtn::before {
+      content: '▶' !important;
+      display: block !important;
+      line-height: 1 !important;
+    }
+    
+    /* Arrow direction when sidebar is open - points left to close */
+    #meetingsSidebar.show-mobile #toggleMeetingsSidebarBtn::before {
+      content: '◀' !important;
+    }
+    
+    /* Meetings tab main container */
+    #meetingsTab > div:last-child {
+      position: relative !important;
+      overflow: visible !important; /* Allow button to stick out */
+    }
+    
+    /* Meetings sidebar - hidden by default on mobile, slides in when shown */
+    #meetingsSidebar {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      bottom: 0 !important;
+      width: 85% !important;
+      max-width: 320px !important;
+      z-index: 100 !important;
+      transform: translateX(-100%) !important;
+      transition: transform 0.3s ease !important;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.5) !important;
+      flex: none !important;
+      overflow: visible !important; /* Allow button to be visible when sidebar is off-screen */
+    }
+    
+    /* When sidebar is shown */
+    #meetingsSidebar.show-mobile {
+      transform: translateX(0) !important;
+    }
+    
+    /* Meetings sidebar - hidden by default on mobile, slides in when shown */
+    #meetingsSidebar {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      bottom: 0 !important;
+      width: 85% !important;
+      max-width: 320px !important;
+      z-index: 100 !important;
+      transform: translateX(-100%) !important;
+      transition: transform 0.3s ease !important;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.5) !important;
+      flex: none !important;
+    }
+    
+    /* When sidebar is shown */
+    #meetingsSidebar.show-mobile {
+      transform: translateX(0) !important;
+    }
+    
+    /* Meeting chat view - full width on mobile with proper flex */
+    #meetingChatView {
+      flex: 1 !important;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }
+    
+    /* Meetings tab container - ensure full height */
+    #meetingsTab > div:last-child {
+      height: calc(100vh - 140px) !important;
+      min-height: 0 !important;
+    }
+    
+    /* When header is collapsed on mobile - MASSIVE space gain */
+    #mainContent.header-collapsed #meetingsTab > div:last-child {
+      height: calc(100vh - 20px) !important;
+    }
+    
+    #mainContent.header-collapsed #meetingChatView {
+      height: 100% !important;
+      max-height: calc(100vh - 20px) !important;
+    }
+    
+    #mainContent.header-collapsed #meetingChatContainer {
+      height: 100% !important;
+      max-height: calc(100vh - 20px) !important;
+    }
+    
+    /* Add overlay backdrop when sidebar is open */
+    #meetingsSidebar.show-mobile::after {
+      content: '' !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      background: rgba(0,0,0,0.5) !important;
+      z-index: -1 !important;
+    }
+    
+    /* Meeting Header - Ultra compact on mobile */
+    #meetingHeader {
+      padding: 6px 8px !important;
+      min-height: auto !important;
+      flex-shrink: 0 !important;
+    }
+    
+    #meetingTitle {
+      font-size: 0.85rem !important;
+      margin-bottom: 4px !important;
+      line-height: 1.2 !important;
+    }
+    
+    #meetingParticipants {
+      gap: 3px !important;
+      margin-top: 2px !important;
+    }
+    
+    /* Make participant avatars smaller on mobile */
+    #meetingParticipants > div {
+      width: 28px !important;
+      height: 28px !important;
+      font-size: 0.65rem !important;
+    }
+    
+    #meetingParticipants img {
+      width: 28px !important;
+      height: 28px !important;
+    }
+    
+    /* Hide participant names on mobile to save space */
+    .meeting-participant-btn span {
+      display: none !important;
+    }
+    
+    .meeting-participant-btn {
+      padding: 2px !important;
+      border-radius: 50% !important;
+      min-width: auto !important;
+    }
+    
+    /* Meeting settings and delete buttons more compact */
+    #meetingSettingsBtn,
+    #deleteMeetingBtn {
+      padding: 5px 7px !important;
+      font-size: 0.95rem !important;
+    }
+    
+    /* CRITICAL: Give messages container flex priority */
+    #meetingMessages {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      overflow-y: auto !important;
+    }
+    
+    /* Meeting chat container proper flex layout */
+    #meetingChatContainer {
+      display: flex !important;
+      flex-direction: column !important;
+      height: 100% !important;
+      min-height: 0 !important;
+    }
+    
+    /* Meeting input area - more compact and fixed at bottom */
+    #meetingChatContainer > div:last-child {
+      padding: 8px !important;
+      flex-shrink: 0 !important;
+    }
+    
+    #meetingInput {
+      font-size: 0.9rem !important;
+      padding: 10px 12px !important;
+    }
+    
+    #sendMeetingMessageBtn,
+    #stopMeetingRepliesBtn {
+      padding: 10px 15px !important;
+      font-size: 0.9rem !important;
+    }
+    
+    #meetingPlayerAttachBtn {
+      width: 40px !important;
+      height: 40px !important;
+      font-size: 20px !important;
+    }
+    
     /* ===== DASHBOARD IMPROVEMENTS ===== */
     
     /* Dashboard stats grid - single column on mobile */
@@ -44273,6 +45925,66 @@ Post:`;
   /* ===== SMALL MOBILE (< 400px) ===== */
   @media screen and (max-width: 400px) {
     
+    /* Meeting header - ultra minimal on small screens */
+    #meetingHeader {
+      padding: 4px 6px !important;
+      border-bottom: 1px solid #16213e !important;
+    }
+    
+    #meetingTitle {
+      font-size: 0.8rem !important;
+      margin-bottom: 3px !important;
+      line-height: 1.1 !important;
+    }
+    
+    #meetingParticipants {
+      gap: 2px !important;
+      margin-top: 0 !important;
+    }
+    
+    /* Hide participant names, show only avatars on very small screens */
+    .meeting-participant-btn span {
+      display: none !important;
+    }
+    
+    .meeting-participant-btn {
+      padding: 2px !important;
+      border-radius: 50% !important;
+      min-width: auto !important;
+      width: 26px !important;
+      height: 26px !important;
+    }
+    
+    .meeting-participant-btn img {
+      width: 26px !important;
+      height: 26px !important;
+    }
+    
+    /* Even smaller buttons */
+    #meetingSettingsBtn,
+    #deleteMeetingBtn {
+      padding: 4px 6px !important;
+      font-size: 0.85rem !important;
+    }
+    
+    /* Meeting input more compact */
+    #meetingInput {
+      font-size: 0.85rem !important;
+      padding: 8px 10px !important;
+    }
+    
+    #sendMeetingMessageBtn,
+    #stopMeetingRepliesBtn {
+      padding: 8px 12px !important;
+      font-size: 0.85rem !important;
+    }
+    
+    #meetingPlayerAttachBtn {
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 18px !important;
+    }
+    
     /* Even more compact */
     #topBar {
       font-size: 0.75rem !important;
@@ -44415,6 +46127,83 @@ Post:`;
     #chatSendBtn.editing-mode {
       animation: none !important;
     }
+  }
+  
+  /* ========== MEETING PLAYER ATTACHMENT STYLES ========== */
+  .meeting-player-attach-item {
+    transition: all 0.2s ease;
+  }
+  
+  .meeting-player-attach-item:hover {
+    background: rgba(78, 204, 163, 0.15) !important;
+    transform: translateX(5px);
+  }
+  
+  .meeting-player-attach-item:active {
+    background: rgba(78, 204, 163, 0.25) !important;
+    transform: scale(0.98);
+  }
+  
+  #meetingPlayerAttachBtn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  
+  #meetingPlayerAttachBtn:active {
+    transform: scale(0.95);
+  }
+  
+  /* ========== COLLAPSIBLE HEADER STYLES ========== */
+  #topBar.collapsed {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  #newsTicker.collapsed {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  #tabNav.collapsed {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  #toggleHeaderBtn.header-collapsed {
+    top: 0;
+  }
+  
+  #toggleHeaderBtn:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateX(-50%) scale(1.05);
+  }
+  
+  #toggleHeaderBtn:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+  
+  /* Main content expansion when header collapsed */
+  #mainContent.header-collapsed {
+    min-height: calc(100vh - 20px) !important;
+  }
+  
+  /* Meetings tab gets extra space when header collapsed */
+  #mainContent.header-collapsed #meetingsTab > div:last-child {
+    height: calc(100vh - 40px) !important;
+  }
+  
+  /* Meeting chat view expands fully when header collapsed */
+  #mainContent.header-collapsed #meetingChatView {
+    height: 100% !important;
+  }
+  
+  /* Meeting chat container expands when header collapsed */
+  #mainContent.header-collapsed #meetingChatContainer {
+    height: 100% !important;
+    max-height: calc(100vh - 60px) !important;
   }
 </style>
 
