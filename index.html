@@ -1232,13 +1232,14 @@
     <div style="margin-bottom:20px;">
       <h3>Data Management</h3>
       <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-        <div style="display:flex; gap:10px;">
-          <button id="saveBtn" style="flex:1; padding:10px; background:#4ecca3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">💾 Save Now</button>
-          <button id="loadBtn" style="flex:1; padding:10px; background:#00d4ff; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">📂 Load Save</button>
+        <button id="openSaveManagerBtn" style="width:100%; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #667eea 100%); border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 15px rgba(0,212,255,0.3); transition:transform 0.2s;">
+          <span style="font-size:1.3rem;">�</span> Save/Load Manager
+        </button>
+        <div style="color:#8899a6; font-size:0.75rem; text-align:center; margin-top:-5px;">
+          Press <span style="background:#0f3460; padding:2px 6px; border-radius:3px; font-weight:600;">F5</span> for Quick Save • 
+          <span style="background:#0f3460; padding:2px 6px; border-radius:3px; font-weight:600;">F9</span> for Quick Load
         </div>
-        <button id="exportBtn" style="width:100%; padding:10px; background:#667eea; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">📤 Export to File</button>
-        <button id="importBtn" style="width:100%; padding:10px; background:#764ba2; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">📥 Import from File</button>
-        <button id="resetBtn" style="width:100%; padding:10px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600;">🗑️ Reset Game</button>
+        <button id="resetBtn" style="width:100%; padding:10px; background:#e94560; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:600; margin-top:5px;">🗑️ Reset Game</button>
       </div>
     </div>
   </div>
@@ -18009,19 +18010,75 @@ Generate ONLY the message, no quotes, no explanation:`;
       });
     });
     
-    // Data management
-    if (saveBtn) saveBtn.addEventListener('click', () => saveGame(true)); // Show toast
-    if (loadBtn) loadBtn.addEventListener('click', loadGame);
-    if (exportBtn) exportBtn.addEventListener('click', exportSave);
+    // Data management - NEW SAVE MANAGER SYSTEM
+    const openSaveManagerBtn = $('openSaveManagerBtn');
+    if (openSaveManagerBtn) {
+      openSaveManagerBtn.addEventListener('click', () => {
+        getSaveManager().show();
+      });
+      
+      // Add hover effect
+      openSaveManagerBtn.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+        this.style.boxShadow = '0 6px 20px rgba(0,212,255,0.5)';
+      });
+      openSaveManagerBtn.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 4px 15px rgba(0,212,255,0.3)';
+      });
+    }
+    
+    // Keep reset button
     if (resetBtn) resetBtn.addEventListener('click', resetGame);
     
-    // Import button
-    const importBtn = $('importBtn');
-    if (importBtn) importBtn.addEventListener('click', importSave);
+    // Global keyboard shortcuts for Save Manager
+    document.addEventListener('keydown', (e) => {
+      // F5 - Quick Save
+      if (e.key === 'F5') {
+        e.preventDefault();
+        const slotName = `quick_${Date.now()}`;
+        saveGameToSlot(slotName, 'quick', true);
+      }
+      
+      // F9 - Quick Load
+      if (e.key === 'F9') {
+        e.preventDefault();
+        listAllSaves().then(allSaves => {
+          const quickSaves = allSaves.filter(s => s.saveType === 'quick');
+          if (quickSaves.length === 0) {
+            showNotification('❌ No quick saves found!', 'error');
+            return;
+          }
+          loadGameFromSlot(quickSaves[0].slotName);
+        });
+      }
+    });
     
-    // File input for import
+    // Legacy import support (hidden file input for old import system)
     const importFileInput = $('importFileInput');
-    if (importFileInput) importFileInput.addEventListener('change', handleImportedFile);
+    if (importFileInput) {
+      importFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const saveData = JSON.parse(ev.target.result);
+            if (!saveData.gameState) {
+              showNotification('❌ Invalid save file!', 'error');
+              return;
+            }
+            importSaveToSlot(saveData);
+          } catch (error) {
+            console.error('[Import] Error:', error);
+            showNotification('❌ Failed to import save!', 'error');
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      });
+    }
     
     // Chat modal
     if (closeChatBtn) {
@@ -45697,10 +45754,970 @@ Post:`;
       showNotification('Failed to save game!');
     }
   }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NEW MULTI-SLOT SAVE SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  /**
+   * Save game to a specific slot
+   * @param {string} slotName - Name of the save slot (e.g., "autosave", "quick_123", "manual_123", "My Save")
+   * @param {string} saveType - Type of save: "auto", "quick", or "manual"
+   * @param {boolean} showToast - Whether to show notification
+   * @returns {Promise<Object>} The saved data object
+   */
+  async function saveGameToSlot(slotName, saveType = 'manual', showToast = true) {
+    if (isResetting) return null;
+    
+    try {
+      // Calculate total playtime (if tracking)
+      const totalPlayTime = gameState.totalPlayTime || 0;
+      
+      // Create save data with metadata
+      const saveData = {
+        version: '250116200000', // Current game version
+        meta: {
+          saveDate: new Date().toISOString(),
+          saveName: slotName,
+          saveType: saveType, // "auto", "quick", "manual"
+          playTime: totalPlayTime,
+          gameDay: gameState.time?.day || 0,
+          gameTime: gameState.time?.currentTime || Date.now(),
+          money: gameState.cash || 0,
+          employees: gameState.employees?.length || 0,
+          prestigeLevel: gameState.prestigeLevel || 0
+        },
+        gameState: gameState
+      };
+      
+      // Save to kv-plugin with slot-specific key
+      await kv.gameSave.set(`fuoc_save_${slotName}`, saveData);
+      
+      console.log(`[SaveManager] Saved to slot: ${slotName} (type: ${saveType})`);
+      
+      if (showToast) {
+        const typeEmoji = saveType === 'auto' ? '💾' : saveType === 'quick' ? '⚡' : '✅';
+        showNotification(`${typeEmoji} Game saved to: ${slotName}`);
+      }
+      
+      return saveData;
+    } catch (error) {
+      console.error(`[SaveManager] Error saving to slot ${slotName}:`, error);
+      if (showToast) showNotification('❌ Failed to save game!', 'error');
+      throw error;
+    }
+  }
+  
+  /**
+   * Load game from a specific slot
+   * @param {string} slotName - Name of the save slot to load
+   * @returns {Promise<boolean>} Success status
+   */
+  async function loadGameFromSlot(slotName) {
+    try {
+      console.log(`[SaveManager] Loading from slot: ${slotName}`);
+      
+      const saveData = await kv.gameSave.get(`fuoc_save_${slotName}`);
+      
+      if (!saveData) {
+        console.warn(`[SaveManager] No save found in slot: ${slotName}`);
+        showNotification(`❌ Save slot "${slotName}" not found!`, 'error');
+        return false;
+      }
+      
+      // Validate save structure
+      if (!saveData.gameState) {
+        console.error(`[SaveManager] Invalid save structure in slot: ${slotName}`);
+        showNotification('❌ Corrupted save file!', 'error');
+        return false;
+      }
+      
+      // Load the gameState (use existing loadSaveData logic)
+      await loadSaveData(saveData.gameState);
+      
+      console.log(`[SaveManager] Successfully loaded from slot: ${slotName}`);
+      showNotification(`✅ Loaded save: ${slotName}`, 'success');
+      
+      return true;
+    } catch (error) {
+      console.error(`[SaveManager] Error loading from slot ${slotName}:`, error);
+      showNotification('❌ Failed to load save!', 'error');
+      return false;
+    }
+  }
+  
+  /**
+   * List all available save slots
+   * @returns {Promise<Array>} Array of save metadata objects
+   */
+  async function listAllSaves() {
+    try {
+      const saves = [];
+      const allKeys = await kv.gameSave.keys();
+      
+      for (const key of allKeys) {
+        // Only process our new save format keys
+        if (key.startsWith('fuoc_save_')) {
+          const slotName = key.replace('fuoc_save_', '');
+          const data = await kv.gameSave.get(key);
+          
+          if (data && data.meta) {
+            saves.push({
+              slotName,
+              ...data.meta,
+              hasGameState: !!data.gameState
+            });
+          }
+        }
+      }
+      
+      // Sort by save date (newest first)
+      saves.sort((a, b) => new Date(b.saveDate) - new Date(a.saveDate));
+      
+      console.log(`[SaveManager] Found ${saves.length} save slots`);
+      return saves;
+    } catch (error) {
+      console.error('[SaveManager] Error listing saves:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Delete a save slot
+   * @param {string} slotName - Name of slot to delete
+   * @returns {Promise<boolean>} Success status
+   */
+  async function deleteSaveSlot(slotName) {
+    try {
+      // Prevent deleting autosave
+      if (slotName === 'autosave') {
+        showNotification('❌ Cannot delete autosave slot!', 'error');
+        return false;
+      }
+      
+      const key = `fuoc_save_${slotName}`;
+      await kv.gameSave.delete(key);
+      
+      console.log(`[SaveManager] Deleted slot: ${slotName}`);
+      showNotification(`🗑️ Deleted save: ${slotName}`);
+      return true;
+    } catch (error) {
+      console.error(`[SaveManager] Error deleting slot ${slotName}:`, error);
+      showNotification('❌ Failed to delete save!', 'error');
+      return false;
+    }
+  }
+  
+  /**
+   * Rename a save slot
+   * @param {string} oldName - Current slot name
+   * @param {string} newName - New slot name
+   * @returns {Promise<boolean>} Success status
+   */
+  async function renameSaveSlot(oldName, newName) {
+    try {
+      // Prevent renaming autosave or to autosave
+      if (oldName === 'autosave' || newName === 'autosave') {
+        showNotification('❌ Cannot rename autosave slot!', 'error');
+        return false;
+      }
+      
+      // Prevent renaming to existing slot
+      const existingKeys = await kv.gameSave.keys();
+      if (existingKeys.includes(`fuoc_save_${newName}`)) {
+        showNotification('❌ Save name already exists!', 'error');
+        return false;
+      }
+      
+      // Load old save
+      const saveData = await kv.gameSave.get(`fuoc_save_${oldName}`);
+      if (!saveData) {
+        showNotification('❌ Original save not found!', 'error');
+        return false;
+      }
+      
+      // Update metadata
+      saveData.meta.saveName = newName;
+      
+      // Save with new name
+      await kv.gameSave.set(`fuoc_save_${newName}`, saveData);
+      
+      // Delete old save
+      await kv.gameSave.delete(`fuoc_save_${oldName}`);
+      
+      console.log(`[SaveManager] Renamed slot: ${oldName} → ${newName}`);
+      showNotification(`✏️ Renamed save to: ${newName}`);
+      return true;
+    } catch (error) {
+      console.error(`[SaveManager] Error renaming slot ${oldName}:`, error);
+      showNotification('❌ Failed to rename save!', 'error');
+      return false;
+    }
+  }
+  
+  /**
+   * Export a specific save slot to JSON file
+   * @param {string} slotName - Name of slot to export
+   */
+  async function exportSaveSlot(slotName) {
+    try {
+      const saveData = await kv.gameSave.get(`fuoc_save_${slotName}`);
+      
+      if (!saveData) {
+        showNotification(`❌ Save slot "${slotName}" not found!`, 'error');
+        return;
+      }
+      
+      const jsonString = JSON.stringify(saveData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Generate filename
+      const dateStr = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      const filename = `FUOC-${slotName}-${dateStr}.json`;
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      URL.revokeObjectURL(url);
+      console.log(`[SaveManager] Exported slot: ${slotName}`);
+      showNotification(`📤 Exported: ${filename}`, 'success');
+    } catch (error) {
+      console.error(`[SaveManager] Error exporting slot ${slotName}:`, error);
+      showNotification('❌ Failed to export save!', 'error');
+    }
+  }
+  
+  /**
+   * Import save from JSON file into a new slot
+   * @param {Object} saveData - Parsed save data
+   * @param {string} targetSlotName - Optional custom slot name
+   * @returns {Promise<boolean>} Success status
+   */
+  async function importSaveToSlot(saveData, targetSlotName = null) {
+    try {
+      // Validate structure
+      if (!saveData.gameState) {
+        throw new Error('Invalid save file structure');
+      }
+      
+      // Generate slot name if not provided
+      const slotName = targetSlotName || `imported_${Date.now()}`;
+      
+      // Ensure it doesn't overwrite existing
+      const existingKeys = await kv.gameSave.keys();
+      if (existingKeys.includes(`fuoc_save_${slotName}`)) {
+        throw new Error('Target slot already exists');
+      }
+      
+      // Update metadata to mark as imported
+      if (!saveData.meta) {
+        saveData.meta = {};
+      }
+      saveData.meta.saveName = slotName;
+      saveData.meta.saveType = 'manual';
+      saveData.meta.importedAt = new Date().toISOString();
+      
+      // Save to new slot
+      await kv.gameSave.set(`fuoc_save_${slotName}`, saveData);
+      
+      console.log(`[SaveManager] Imported to slot: ${slotName}`);
+      showNotification(`📥 Imported save: ${slotName}`, 'success');
+      return true;
+    } catch (error) {
+      console.error('[SaveManager] Error importing save:', error);
+      showNotification(`❌ Import failed: ${error.message}`, 'error');
+      return false;
+    }
+  }
+  
+  /**
+   * Migrate legacy single-save to new multi-slot system
+   * This runs once on first load to preserve existing saves
+   */
+  async function migrateLegacySave() {
+    try {
+      // Check if old "gameState" key exists
+      const legacySave = await kv.gameSave.get("gameState");
+      
+      if (!legacySave) {
+        console.log('[SaveManager] No legacy save to migrate');
+        return;
+      }
+      
+      console.log('[SaveManager] Found legacy save, migrating...');
+      
+      // Create migration save with metadata
+      const migrationData = {
+        version: '250116200000',
+        meta: {
+          saveDate: new Date().toISOString(),
+          saveName: 'migrated_legacy',
+          saveType: 'manual',
+          playTime: 0,
+          gameDay: legacySave.time?.day || 0,
+          money: legacySave.cash || 0,
+          employees: legacySave.employees?.length || 0,
+          prestigeLevel: legacySave.prestigeLevel || 0,
+          migratedFrom: 'legacy_single_save'
+        },
+        gameState: legacySave
+      };
+      
+      // Save to new format
+      await kv.gameSave.set('fuoc_save_migrated_legacy', migrationData);
+      
+      // Also create an autosave from it
+      await kv.gameSave.set('fuoc_save_autosave', {
+        ...migrationData,
+        meta: {
+          ...migrationData.meta,
+          saveName: 'autosave',
+          saveType: 'auto'
+        }
+      });
+      
+      console.log('[SaveManager] ✅ Legacy save migrated successfully');
+      showNotification('✅ Save migrated to new system!', 'success');
+      
+      // Keep the old save for now (don't delete for safety)
+      // Users can manually delete it later if they want
+      
+      return true;
+    } catch (error) {
+      console.error('[SaveManager] Migration error:', error);
+      return false;
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // END NEW MULTI-SLOT SAVE SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SAVE MANAGER UI CLASS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  /**
+   * SaveManager - Modal UI for managing save slots
+   */
+  class SaveManager {
+    constructor() {
+      this.view = {
+        tab: 'manual',        // 'manual' or 'auto'
+        sortKey: 'savedAt',   // Column to sort by
+        sortDir: 'desc',      // 'asc' or 'desc'
+        query: '',            // Search filter
+        selectedId: null      // Currently selected save
+      };
+      this.modal = null;
+      this.editingNameId = null;
+    }
+    
+    /**
+     * Show the save manager modal
+     */
+    async show() {
+      // Create modal if it doesn't exist
+      if (!this.modal) {
+        this.modal = this.buildHTML();
+        document.body.appendChild(this.modal);
+        this.attachEventListeners();
+      }
+      
+      // Render the save list
+      await this.render();
+      
+      // Show modal
+      this.modal.style.display = 'flex';
+    }
+    
+    /**
+     * Hide the save manager modal
+     */
+    hide() {
+      if (this.modal) {
+        this.modal.style.display = 'none';
+      }
+    }
+    
+    /**
+     * Build the HTML structure
+     */
+    buildHTML() {
+      const modal = document.createElement('div');
+      modal.className = 'save-manager-modal';
+      modal.innerHTML = `
+        <div class="save-manager-container">
+          
+          <!-- Header -->
+          <div class="save-manager-header">
+            <div class="save-manager-title">
+              <div class="save-manager-logo">💾</div>
+              <div>
+                <h2>Save Manager</h2>
+                <div class="save-manager-subtitle">Manage your game saves • Quick Save (F5) • Quick Load (F9)</div>
+              </div>
+            </div>
+            <button class="save-manager-close" id="sm-close">✕</button>
+          </div>
+
+          <!-- Actions -->
+          <div class="save-manager-actions">
+            <button class="sm-btn accent" id="sm-continue">▶ Continue</button>
+            <button class="sm-btn success" id="sm-quick-save">⏺ Quick Save</button>
+            <button class="sm-btn primary" id="sm-quick-load">⏮ Quick Load</button>
+            <button class="sm-btn" id="sm-export-all">📤 Export</button>
+            <button class="sm-btn" id="sm-import">📥 Import</button>
+            <input type="file" id="sm-import-file" accept=".json" style="display: none;">
+          </div>
+
+          <!-- Toolbar -->
+          <div class="save-manager-toolbar">
+            <div class="save-tab-group">
+              <button class="save-tab active" id="sm-tab-manual">Manual Saves</button>
+              <button class="save-tab" id="sm-tab-auto">Autosaves & Quick Saves</button>
+            </div>
+            <div class="save-search-box">
+              <span class="save-search-icon">🔍</span>
+              <input type="text" id="sm-search" placeholder="Search saves..." />
+            </div>
+          </div>
+
+          <!-- Save List -->
+          <div class="save-list-container">
+            <table class="save-table">
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="name">Name <span class="sort-arrow">▾</span></th>
+                  <th class="sortable" data-sort="day">Day</th>
+                  <th class="sortable" data-sort="savedAt">Saved At <span class="sort-arrow">▾</span></th>
+                  <th>Money</th>
+                  <th>Employees</th>
+                  <th class="sortable" data-sort="playTime">Playtime</th>
+                  <th style="width: 250px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="sm-tbody">
+                <!-- Populated by render() -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Footer -->
+          <div class="save-manager-footer">
+            <div class="save-footer-hint">
+              <span>Tips:</span>
+              <span><span class="kbd">F5</span> Quick Save</span>
+              <span><span class="kbd">F9</span> Quick Load</span>
+              <span><span class="kbd">Esc</span> Close</span>
+            </div>
+            <div class="save-count" id="sm-count">
+              Loading saves...
+            </div>
+          </div>
+          
+        </div>
+      `;
+      
+      return modal;
+    }
+    
+    /**
+     * Attach event listeners
+     */
+    attachEventListeners() {
+      const modal = this.modal;
+      
+      // Close button
+      modal.querySelector('#sm-close').addEventListener('click', () => this.hide());
+      
+      // Click outside to close
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.hide();
+      });
+      
+      // ESC key to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+          this.hide();
+        }
+      });
+      
+      // Continue button
+      modal.querySelector('#sm-continue').addEventListener('click', () => this.handleContinue());
+      
+      // Quick Save button
+      modal.querySelector('#sm-quick-save').addEventListener('click', () => this.handleQuickSave());
+      
+      // Quick Load button
+      modal.querySelector('#sm-quick-load').addEventListener('click', () => this.handleQuickLoad());
+      
+      // Export button
+      modal.querySelector('#sm-export-all').addEventListener('click', () => this.handleExportSelected());
+      
+      // Import button & file input
+      const importBtn = modal.querySelector('#sm-import');
+      const fileInput = modal.querySelector('#sm-import-file');
+      importBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => this.handleImport(e));
+      
+      // Tab switching
+      modal.querySelector('#sm-tab-manual').addEventListener('click', () => this.switchTab('manual'));
+      modal.querySelector('#sm-tab-auto').addEventListener('click', () => this.switchTab('auto'));
+      
+      // Search input
+      modal.querySelector('#sm-search').addEventListener('input', (e) => {
+        this.view.query = e.target.value.toLowerCase();
+        this.render();
+      });
+      
+      // Sortable headers
+      modal.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          const sortKey = th.dataset.sort;
+          if (this.view.sortKey === sortKey) {
+            this.view.sortDir = this.view.sortDir === 'asc' ? 'desc' : 'asc';
+          } else {
+            this.view.sortKey = sortKey;
+            this.view.sortDir = 'desc';
+          }
+          this.render();
+        });
+      });
+    }
+    
+    /**
+     * Switch between manual and auto tabs
+     */
+    async switchTab(tab) {
+      this.view.tab = tab;
+      
+      // Update tab buttons
+      const manual = this.modal.querySelector('#sm-tab-manual');
+      const auto = this.modal.querySelector('#sm-tab-auto');
+      
+      if (tab === 'manual') {
+        manual.classList.add('active');
+        auto.classList.remove('active');
+      } else {
+        auto.classList.add('active');
+        manual.classList.remove('active');
+      }
+      
+      await this.render();
+    }
+    
+    /**
+     * Render the save list
+     */
+    async render() {
+      const tbody = this.modal.querySelector('#sm-tbody');
+      const countEl = this.modal.querySelector('#sm-count');
+      
+      // Get all saves
+      const allSaves = await listAllSaves();
+      
+      // Filter by tab
+      let filtered = allSaves.filter(s => {
+        if (this.view.tab === 'manual') {
+          return s.saveType === 'manual';
+        } else {
+          return s.saveType === 'auto' || s.saveType === 'quick';
+        }
+      });
+      
+      // Filter by search query
+      if (this.view.query) {
+        filtered = filtered.filter(s => {
+          const searchStr = `${s.saveName}`.toLowerCase();
+          return searchStr.includes(this.view.query);
+        });
+      }
+      
+      // Sort
+      filtered.sort((a, b) => {
+        let aVal, bVal;
+        switch (this.view.sortKey) {
+          case 'name':
+            aVal = a.saveName.toLowerCase();
+            bVal = b.saveName.toLowerCase();
+            break;
+          case 'day':
+            aVal = a.gameDay || 0;
+            bVal = b.gameDay || 0;
+            break;
+          case 'savedAt':
+            aVal = new Date(a.saveDate).getTime();
+            bVal = new Date(b.saveDate).getTime();
+            break;
+          case 'playTime':
+            aVal = a.playTime || 0;
+            bVal = b.playTime || 0;
+            break;
+          default:
+            aVal = 0;
+            bVal = 0;
+        }
+        
+        const dir = this.view.sortDir === 'asc' ? 1 : -1;
+        if (aVal > bVal) return dir;
+        if (aVal < bVal) return -dir;
+        return 0;
+      });
+      
+      // Update count
+      const manualCount = allSaves.filter(s => s.saveType === 'manual').length;
+      const autoCount = allSaves.filter(s => s.saveType === 'auto').length;
+      const quickCount = allSaves.filter(s => s.saveType === 'quick').length;
+      countEl.textContent = `${manualCount} manual • ${autoCount} auto • ${quickCount} quick • showing ${filtered.length}`;
+      
+      // Build rows
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 60px 20px; color: #8899a6;">
+              <div class="empty-state">
+                <div class="empty-state-icon">💾</div>
+                <h3>No saves found</h3>
+                <p>${this.view.tab === 'manual' ? 'Create a new save to get started!' : 'Autosaves will appear here automatically.'}</p>
+              </div>
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = filtered.map(save => this.buildRowHTML(save)).join('');
+      }
+      
+      // Add "Create New Save" row for manual tab
+      if (this.view.tab === 'manual') {
+        const createRow = document.createElement('tr');
+        createRow.className = 'create-row';
+        createRow.id = 'sm-create-row';
+        createRow.innerHTML = `
+          <td colspan="7">
+            <span class="create-save-link">
+              <span>+</span>
+              <span>Create New Save</span>
+            </span>
+          </td>
+        `;
+        tbody.appendChild(createRow);
+        
+        createRow.addEventListener('click', () => this.handleCreateSave());
+      }
+      
+      // Attach row event listeners
+      this.attachRowListeners();
+      
+      // Update sort arrows
+      this.updateSortArrows();
+    }
+    
+    /**
+     * Build HTML for a save row
+     */
+    buildRowHTML(save) {
+      const date = new Date(save.saveDate);
+      const formattedDate = date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+      
+      const money = formatCash(save.money || 0);
+      const playtime = this.formatPlaytime(save.playTime || 0);
+      const isSelected = this.view.selectedId === save.slotName;
+      
+      return `
+        <tr data-slot="${save.slotName}" ${isSelected ? 'class="selected"' : ''}>
+          <td>
+            <div class="save-name-cell">
+              <input 
+                type="text" 
+                class="save-name-input" 
+                value="${save.saveName}" 
+                data-slot="${save.slotName}"
+                data-original="${save.saveName}"
+                ${save.saveType === 'auto' ? 'readonly' : ''}
+              />
+              <span class="save-tag ${save.saveType}">${save.saveType}</span>
+            </div>
+          </td>
+          <td class="meta">Day ${save.gameDay || 0}</td>
+          <td class="meta">${formattedDate}</td>
+          <td>${money}</td>
+          <td>${save.employees || 0}</td>
+          <td class="meta">${playtime}</td>
+          <td>
+            <div class="save-row-actions">
+              <button class="save-action-btn load" data-action="load" data-slot="${save.slotName}">Load</button>
+              <button class="save-action-btn export" data-action="export" data-slot="${save.slotName}">Export</button>
+              ${save.saveType !== 'auto' ? `<button class="save-action-btn delete" data-action="delete" data-slot="${save.slotName}">✕</button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+    
+    /**
+     * Attach event listeners to row elements
+     */
+    attachRowListeners() {
+      const tbody = this.modal.querySelector('#sm-tbody');
+      
+      // Row action buttons
+      tbody.querySelectorAll('.save-action-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const action = e.target.dataset.action;
+          const slotName = e.target.dataset.slot;
+          
+          if (action === 'load') {
+            this.handleLoad(slotName);
+          } else if (action === 'export') {
+            this.handleExport(slotName);
+          } else if (action === 'delete') {
+            this.handleDelete(slotName);
+          }
+        });
+      });
+      
+      // Name input editing
+      tbody.querySelectorAll('.save-name-input').forEach(input => {
+        // Select all text on focus
+        input.addEventListener('focus', (e) => {
+          e.target.select();
+          this.editingNameId = e.target.dataset.slot;
+        });
+        
+        // Save on blur
+        input.addEventListener('blur', (e) => {
+          this.handleRename(e);
+        });
+        
+        // Save on Enter key
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.target.blur();
+          } else if (e.key === 'Escape') {
+            e.target.value = e.target.dataset.original;
+            e.target.blur();
+          }
+        });
+      });
+      
+      // Row selection
+      tbody.querySelectorAll('tr[data-slot]').forEach(row => {
+        row.addEventListener('click', (e) => {
+          // Don't select if clicking on input or button
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+          
+          this.view.selectedId = row.dataset.slot;
+          this.render();
+        });
+      });
+    }
+    
+    /**
+     * Update sort arrow indicators
+     */
+    updateSortArrows() {
+      const headers = this.modal.querySelectorAll('th.sortable');
+      headers.forEach(th => {
+        const arrow = th.querySelector('.sort-arrow');
+        if (!arrow) return;
+        
+        if (th.dataset.sort === this.view.sortKey) {
+          arrow.textContent = this.view.sortDir === 'asc' ? '▴' : '▾';
+          arrow.style.opacity = '1';
+        } else {
+          arrow.textContent = '▾';
+          arrow.style.opacity = '0.5';
+        }
+      });
+    }
+    
+    /**
+     * Format playtime in hours/minutes
+     */
+    formatPlaytime(ms) {
+      const hours = Math.floor(ms / 3600000);
+      const minutes = Math.floor((ms % 3600000) / 60000);
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+      } else {
+        return `${minutes}m`;
+      }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // EVENT HANDLERS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    async handleContinue() {
+      const allSaves = await listAllSaves();
+      if (allSaves.length === 0) {
+        showNotification('❌ No saves found!', 'error');
+        return;
+      }
+      
+      // Load most recent save
+      const latest = allSaves[0];
+      await loadGameFromSlot(latest.slotName);
+      this.hide();
+    }
+    
+    async handleQuickSave() {
+      const slotName = `quick_${Date.now()}`;
+      await saveGameToSlot(slotName, 'quick', true);
+      await this.render();
+    }
+    
+    async handleQuickLoad() {
+      const allSaves = await listAllSaves();
+      const quickSaves = allSaves.filter(s => s.saveType === 'quick');
+      
+      if (quickSaves.length === 0) {
+        showNotification('❌ No quick saves found!', 'error');
+        return;
+      }
+      
+      // Load most recent quick save
+      await loadGameFromSlot(quickSaves[0].slotName);
+      this.hide();
+    }
+    
+    async handleCreateSave() {
+      const slotName = `manual_${Date.now()}`;
+      await saveGameToSlot(slotName, 'manual', true);
+      await this.render();
+    }
+    
+    async handleLoad(slotName) {
+      await loadGameFromSlot(slotName);
+      this.hide();
+    }
+    
+    async handleExport(slotName) {
+      await exportSaveSlot(slotName);
+    }
+    
+    async handleExportSelected() {
+      if (!this.view.selectedId) {
+        showNotification('❌ No save selected!', 'error');
+        return;
+      }
+      await exportSaveSlot(this.view.selectedId);
+    }
+    
+    async handleDelete(slotName) {
+      if (!confirm(`⚠️ Delete save "${slotName}"?\n\nThis cannot be undone!`)) {
+        return;
+      }
+      
+      await deleteSaveSlot(slotName);
+      await this.render();
+    }
+    
+    async handleRename(event) {
+      const input = event.target;
+      const oldName = input.dataset.slot;
+      const newName = input.value.trim();
+      
+      // Don't rename if unchanged or empty
+      if (newName === oldName || newName === '' || newName === input.dataset.original) {
+        input.value = input.dataset.original;
+        this.editingNameId = null;
+        return;
+      }
+      
+      // Rename the save
+      const success = await renameSaveSlot(oldName, newName);
+      
+      if (success) {
+        // Update selected ID if it was the renamed save
+        if (this.view.selectedId === oldName) {
+          this.view.selectedId = newName;
+        }
+        await this.render();
+      } else {
+        // Revert on failure
+        input.value = input.dataset.original;
+      }
+      
+      this.editingNameId = null;
+    }
+    
+    async handleImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const contents = e.target.result;
+          const saveData = JSON.parse(contents);
+          
+          // Validate
+          if (!saveData.gameState) {
+            showNotification('❌ Invalid save file format!', 'error');
+            return;
+          }
+          
+          // Show confirmation
+          const saveName = saveData.meta?.saveName || 'imported';
+          const saveDate = saveData.meta?.saveDate ? new Date(saveData.meta.saveDate).toLocaleString() : 'Unknown';
+          const saveMoney = saveData.gameState.cash ? formatCash(saveData.gameState.cash) : 'Unknown';
+          
+          if (!confirm(`📥 Import save "${saveName}"?\n\n💰 ${saveMoney}\n📅 ${saveDate}\n\n⚠️ This will create a new save slot.`)) {
+            return;
+          }
+          
+          // Import to new slot
+          await importSaveToSlot(saveData);
+          await this.render();
+          
+        } catch (error) {
+          console.error('[SaveManager] Import error:', error);
+          showNotification('❌ Failed to import save!', 'error');
+        }
+      };
+      
+      reader.readAsText(file);
+      
+      // Clear file input
+      event.target.value = '';
+    }
+  }
+  
+  // Create global SaveManager instance
+  let saveManagerInstance = null;
+  
+  function getSaveManager() {
+    if (!saveManagerInstance) {
+      saveManagerInstance = new SaveManager();
+    }
+    return saveManagerInstance;
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // END SAVE MANAGER UI CLASS
+  // ═══════════════════════════════════════════════════════════════════════════
 
   // Load game using kv-plugin
   async function loadGame() {
     try {
+      // MIGRATION: Check for legacy save format and migrate if needed
+      await migrateLegacySave();
+      
       const savedState = await kv.gameSave.get("gameState");
       if (savedState) {
         const parsed = savedState;
@@ -47101,7 +48118,10 @@ Post:`;
     }
     
     if (gameState.settings.autosave) {
-      autosaveIntervalId = setInterval(() => saveGame(false), 5000); // every 5s, no toast
+      // Use new slot-based autosave system
+      autosaveIntervalId = setInterval(async () => {
+        await saveGameToSlot('autosave', 'auto', false); // Save to autosave slot, no toast
+      }, 5000); // every 5s
     }
   }
   
@@ -48687,6 +49707,512 @@ Post:`;
     height: 100% !important;
     max-height: calc(100vh - 60px) !important;
   }
+  
+  /* ═══════════════════════════════════════════════════════════════════════════ */
+  /* SAVE MANAGER STYLES */
+  /* ═══════════════════════════════════════════════════════════════════════════ */
+  
+  .save-manager-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .save-manager-container {
+    width: 100%;
+    max-width: 1200px;
+    max-height: 90vh;
+    background: rgba(15, 20, 25, 0.98);
+    border: 1px solid #1c2738;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  .save-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px;
+    border-bottom: 1px solid #1c2738;
+    background: linear-gradient(180deg, #16213e 0%, #0e1522 100%);
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .save-manager-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .save-manager-logo {
+    font-size: 2rem;
+  }
+  
+  .save-manager-title h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #00d4ff;
+  }
+  
+  .save-manager-subtitle {
+    color: #8899a6;
+    font-size: 0.9rem;
+    margin-top: 4px;
+  }
+  
+  .save-manager-close {
+    background: transparent;
+    border: none;
+    color: #8899a6;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+  
+  .save-manager-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e8f0f7;
+  }
+  
+  .save-manager-actions {
+    padding: 16px 28px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #1c2738;
+    background: #0e1522;
+  }
+  
+  .sm-btn {
+    padding: 10px 16px;
+    border: 1px solid #1c2738;
+    background: linear-gradient(180deg, #142035, #0e1623);
+    color: #e8f0f7;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .sm-btn:hover {
+    background: linear-gradient(180deg, #1a2d4a, #142035);
+    border-color: #00d4ff;
+    transform: translateY(-1px);
+  }
+  
+  .sm-btn.accent {
+    background: linear-gradient(180deg, #0bbbd1, #0aa1b5);
+    color: #001318;
+    font-weight: 700;
+  }
+  
+  .sm-btn.accent:hover {
+    background: linear-gradient(180deg, #0dd1e9, #0bbbd1);
+  }
+  
+  .sm-btn.success {
+    background: linear-gradient(180deg, #20d2a0, #10b37f);
+    color: #05231b;
+    font-weight: 700;
+  }
+  
+  .sm-btn.success:hover {
+    background: linear-gradient(180deg, #30e2b0, #20d2a0);
+  }
+  
+  .sm-btn.primary {
+    background: linear-gradient(180deg, #667eea, #5865d6);
+    color: white;
+    font-weight: 700;
+  }
+  
+  .sm-btn.primary:hover {
+    background: linear-gradient(180deg, #7889f4, #667eea);
+  }
+  
+  .save-manager-toolbar {
+    padding: 16px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid #1c2738;
+    background: #0e1522;
+  }
+  
+  .save-tab-group {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .save-tab {
+    padding: 10px 20px;
+    background: #101a2a;
+    border: 1px solid #1c2738;
+    border-radius: 8px;
+    color: #8899a6;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  
+  .save-tab:hover {
+    background: #142035;
+    border-color: #00d4ff;
+  }
+  
+  .save-tab.active {
+    background: linear-gradient(135deg, #00d4ff, #0bbbd1);
+    border-color: #00d4ff;
+    color: #001318;
+  }
+  
+  .save-search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #101a2a;
+    border: 1px solid #1c2738;
+    border-radius: 8px;
+    padding: 8px 14px;
+    flex: 1;
+    max-width: 400px;
+  }
+  
+  .save-search-icon {
+    font-size: 1.2rem;
+  }
+  
+  .save-search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #e8f0f7;
+    font-size: 0.95rem;
+    outline: none;
+  }
+  
+  .save-search-box input::placeholder {
+    color: #8899a6;
+  }
+  
+  .save-list-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 28px 20px 28px;
+    background: #0f1522;
+  }
+  
+  .save-list-container::-webkit-scrollbar {
+    width: 12px;
+  }
+  
+  .save-list-container::-webkit-scrollbar-track {
+    background: #0e1522;
+  }
+  
+  .save-list-container::-webkit-scrollbar-thumb {
+    background: #1c2738;
+    border-radius: 6px;
+  }
+  
+  .save-list-container::-webkit-scrollbar-thumb:hover {
+    background: #2d3e5a;
+  }
+  
+  .save-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 20px;
+  }
+  
+  .save-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #0e1522;
+  }
+  
+  .save-table th {
+    padding: 14px 16px;
+    text-align: left;
+    color: #8899a6;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #1c2738;
+    background: #0e1522;
+  }
+  
+  .save-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s;
+  }
+  
+  .save-table th.sortable:hover {
+    color: #00d4ff;
+  }
+  
+  .sort-arrow {
+    margin-left: 4px;
+    opacity: 0.5;
+  }
+  
+  .save-table tbody tr {
+    border-bottom: 1px solid #1c2738;
+    transition: background 0.2s;
+  }
+  
+  .save-table tbody tr:hover {
+    background: rgba(61, 214, 237, 0.05);
+  }
+  
+  .save-table tbody tr.selected {
+    outline: 2px solid #3dd6ed;
+    background: rgba(61, 214, 237, 0.08);
+  }
+  
+  .save-table td {
+    padding: 16px;
+    color: #e8f0f7;
+    font-size: 0.95rem;
+  }
+  
+  .save-table td.meta {
+    color: #8899a6;
+    font-size: 0.9rem;
+  }
+  
+  .save-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .save-name-input {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #e8f0f7;
+    font-size: 0.95rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex: 1;
+    max-width: 250px;
+  }
+  
+  .save-name-input:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #1c2738;
+  }
+  
+  .save-name-input:focus {
+    outline: none;
+    background: #101a2a;
+    border-color: #00d4ff;
+  }
+  
+  .save-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid #1c2738;
+    background: #101a2a;
+    color: #bcd2e6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .save-tag.auto {
+    background: #0e1c2e;
+    border-color: #1f2b46;
+    color: #b9c9ff;
+  }
+  
+  .save-tag.quick {
+    background: #0e2e1c;
+    border-color: #1f462b;
+    color: #b9ffc9;
+  }
+  
+  .save-row-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .save-action-btn {
+    padding: 6px 12px;
+    border: 1px solid #1c2738;
+    background: #142035;
+    color: #e8f0f7;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  
+  .save-action-btn:hover {
+    background: #1a2d4a;
+    border-color: #00d4ff;
+  }
+  
+  .save-action-btn.load {
+    background: linear-gradient(135deg, #667eea, #5865d6);
+    border-color: #667eea;
+    color: white;
+  }
+  
+  .save-action-btn.load:hover {
+    background: linear-gradient(135deg, #7889f4, #667eea);
+  }
+  
+  .save-action-btn.export {
+    background: #0e1c2e;
+    border-color: #1f2b46;
+    color: #b9c9ff;
+  }
+  
+  .save-action-btn.export:hover {
+    background: #142a46;
+    border-color: #3d5a9e;
+  }
+  
+  .save-action-btn.delete {
+    background: #2e0e1c;
+    border-color: #461f2b;
+    color: #ffb9c9;
+  }
+  
+  .save-action-btn.delete:hover {
+    background: #46142a;
+    border-color: #9e3d5a;
+  }
+  
+  .create-row {
+    background: rgba(0, 212, 255, 0.03);
+  }
+  
+  .create-save-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    cursor: pointer;
+    color: #00d4ff;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  
+  .create-save-link:hover {
+    color: #3dd6ed;
+    background: rgba(0, 212, 255, 0.08);
+  }
+  
+  .create-save-link span:first-child {
+    font-size: 1.5rem;
+  }
+  
+  .save-manager-footer {
+    padding: 16px 28px;
+    border-top: 1px solid #1c2738;
+    background: #0e1522;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 0 0 16px 16px;
+  }
+  
+  .save-footer-hint {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    color: #8899a6;
+    font-size: 0.85rem;
+  }
+  
+  .save-footer-hint span:first-child {
+    color: #00d4ff;
+    font-weight: 700;
+  }
+  
+  .kbd {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #16213e;
+    border: 1px solid #1c2738;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #00d4ff;
+  }
+  
+  .save-count {
+    color: #8899a6;
+    font-size: 0.9rem;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8899a6;
+  }
+  
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+  }
+  
+  .empty-state h3 {
+    color: #e8f0f7;
+    margin-bottom: 10px;
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════════════════ */
+  /* END SAVE MANAGER STYLES */
+  /* ═══════════════════════════════════════════════════════════════════════════ */
 </style>
+
 
 
