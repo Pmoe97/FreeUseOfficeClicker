@@ -18102,10 +18102,18 @@ Generate ONLY the message, no quotes, no explanation:`;
     const clearChatBtn = $('clearChatBtn');
     if (clearChatBtn) {
       clearChatBtn.addEventListener('click', () => {
-        if (!gameState.activeChat) return;
+        // PLAYER FEEDBACK FIX: Properly handle activeChat as ID or object
+        const activeChatId = gameState.activeChat?.id || gameState.activeChat;
+        if (!activeChatId) {
+          console.warn('[Clear Chat] No active chat');
+          return;
+        }
         
-        const employee = gameState.employees.find(e => e.id === gameState.activeChat);
-        if (!employee) return;
+        const employee = gameState.employees.find(e => e.id === activeChatId);
+        if (!employee) {
+          console.warn('[Clear Chat] Employee not found:', activeChatId);
+          return;
+        }
         
         // Confirm before clearing
         if (!confirm(`Clear chat history with ${employee.name}?\n\nThis will archive the conversation but remove it from view. Context will be preserved for AI.`)) {
@@ -18113,7 +18121,7 @@ Generate ONLY the message, no quotes, no explanation:`;
         }
         
         // Archive current chat history
-        const currentHistory = gameState.chatHistory[gameState.activeChat] || [];
+        const currentHistory = gameState.chatHistory[activeChatId] || [];
         if (currentHistory.length > 0) {
           // Initialize archive if it doesn't exist
           if (!employee.conversationArchive) {
@@ -18133,12 +18141,15 @@ Generate ONLY the message, no quotes, no explanation:`;
           }
           
           // Clear visible chat
-          gameState.chatHistory[gameState.activeChat] = [];
+          gameState.chatHistory[activeChatId] = [];
           
           // Update display
           renderChatMessages();
           
+          console.log(`[Clear Chat] Cleared and archived chat with ${employee.name}`);
           showNotification(`Chat with ${employee.name} cleared and archived.`);
+        } else {
+          showNotification(`No messages to clear with ${employee.name}.`);
         }
       });
     }
@@ -25846,6 +25857,20 @@ Write the post:`;
     console.log('[Algorithm] Starting with', posts.length, 'posts');
     console.log('[Algorithm] Settings:', algo);
     
+    // ========== STEP 0: FILTER OUT FIRED EMPLOYEES ==========
+    // PLAYER FEEDBACK FIX: Remove posts from employees who are no longer employed
+    const currentEmployeeIds = gameState.employees.map(e => e.id);
+    const beforeFiredFilter = posts.length;
+    posts = posts.filter(p => {
+      // Keep player posts
+      if (p.authorId === 'player' || p.isPlayerPost) return true;
+      // Keep system posts
+      if (p.authorId === 'system') return true;
+      // Only keep posts from current employees
+      return currentEmployeeIds.includes(p.authorId);
+    });
+    console.log(`[Algorithm] Filtered out ${beforeFiredFilter - posts.length} posts from fired employees`);
+    
     // ========== STEP 1: CONTENT RATING FILTER ==========
     const rating = algo.contentRating || 'all';
     if (rating === 'sfw') {
@@ -29581,9 +29606,10 @@ Write your comment:`;
     }
     
     // MONEY REQUEST: Special handling - only if no unanswered request exists
-    // And at least 24 game hours since last money request
+    // REDUCED FREQUENCY: Now requires 7 game days (168 hours) instead of 1 day
     const gameTimeSinceLastMoneyRequest = gameTime - npc.proactiveMessages.lastMoneyRequestTime;
     const gameHoursSinceLastMoneyRequest = gameTimeSinceLastMoneyRequest / (1000 * 60 * 60);
+    const gameDaysSinceLastMoneyRequest = gameHoursSinceLastMoneyRequest / 24;
     
     // Initialize financial tracking if needed
     if (!npc.bankBalance) npc.bankBalance = 0;
@@ -29592,25 +29618,29 @@ Write your comment:`;
     }
     
     // Calculate if they need money
-    const isLowOnCash = npc.bankBalance < (npc.spendingRate * 7);
-    const isBroke = npc.bankBalance < (npc.spendingRate * 2);
+    const isLowOnCash = npc.bankBalance < (npc.spendingRate * 14); // 2 weeks
+    const isBroke = npc.bankBalance < (npc.spendingRate * 7); // 1 week
     
-    if (!npc.proactiveMessages.hasUnrepliedMoneyRequest && gameHoursSinceLastMoneyRequest >= 24) {
-      // Money requests SIGNIFICANTLY MORE LIKELY for proactive messages
-      // Target: ~15% of all proactive messages should be money requests
-      // Base weight increased to compete with other message types
-      let moneyWeight = 8; // Base weight (up from 3) - now competitive with casual chat
+    // PLAYER FEEDBACK FIX: Money requests much less frequent now
+    // Base requirement: 7 game days between requests (was 1 day)
+    // Emergency requests (broke): 3 game days minimum
+    const minDaysRequired = isBroke ? 3 : 7;
+    
+    if (!npc.proactiveMessages.hasUnrepliedMoneyRequest && gameDaysSinceLastMoneyRequest >= minDaysRequired) {
+      // SIGNIFICANTLY REDUCED WEIGHTS - money requests should be rare
+      // Target: ~3-5% of all proactive messages (was 15%)
+      let moneyWeight = 2; // Base weight (reduced from 8) - now rare
       
-      // Increase weight significantly if they need money
-      if (isBroke) moneyWeight = 20; // VERY high priority if broke (highest weight possible)
-      else if (isLowOnCash) moneyWeight = 14; // High priority if low on cash
+      // Increase weight moderately if they actually need money
+      if (isBroke) moneyWeight = 8; // High priority if broke (reduced from 20)
+      else if (isLowOnCash) moneyWeight = 5; // Moderate priority if low on cash (reduced from 14)
       
-      // Money requests more likely if affection/trust is moderate-high
-      if (affection > 40 && trust > 40) {
+      // Money requests only with high affection/trust
+      if (affection > 50 && trust > 50) {
         reasons.push({ reason: 'money_request', weight: moneyWeight, context: 'money' });
-      } else if (affection > 20) {
-        // Even with lower trust, broke NPCs might still ask (but lower weight)
-        reasons.push({ reason: 'money_request', weight: Math.max(4, moneyWeight - 4), context: 'money' });
+      } else if (affection > 40 && isBroke) {
+        // Even with lower trust, broke NPCs might still ask (but much lower weight)
+        reasons.push({ reason: 'money_request', weight: Math.max(2, moneyWeight - 3), context: 'money' });
       }
     }
     
@@ -32447,6 +32477,15 @@ ${perspectiveContext}${privateContext}${contextGuidance}
 
 CONVERSATION (last ${historyDepth} messages):
 ${conversationHistory}
+
+CONTENT SAFETY RULES:
+- NO references to suicide, self-harm, or death
+- NO references to terminal illness, hospices, or medical trauma
+- NO exploitation of vulnerable people (sick, dying, imprisoned, etc.)
+- NO extreme violence, gore, or morbid content
+- NO illegal activities (murder, terrorism, child exploitation, etc.)
+- Keep suggestions ethical, legal, and reasonable
+- If topic is dark/morbid, redirect to something constructive
 
 RESPOND: 1-2 sentences. Match the tone/vibe of the scenario. Add something NEW to the discussion—don't repeat what others said. Vary your physical actions.${freshGuidance}
 
@@ -36816,13 +36855,21 @@ ${emp.name}'s response:`;
     
     // Check if this looks like a post request - if so, skip (handled by detectPostRequest)
     const looksLikePostRequest = postKeywords.test(playerMessage) || socialKeywords.test(playerMessage);
-    if (looksLikePostRequest) return;
+    if (looksLikePostRequest) {
+      console.log('[Image Detection] Skipping - looks like post request');
+      return;
+    }
     
     // Check if player message looks like an image request
     const looksLikeImageRequest = imageKeywords.test(playerMessage) && 
                                   (meKeywords.test(playerMessage) || contentKeywords.test(playerMessage));
     
-    if (!looksLikeImageRequest) return;
+    if (!looksLikeImageRequest) {
+      console.log('[Image Detection] No image request detected');
+      return;
+    }
+    
+    console.log('[Image Detection] Image request detected in:', playerMessage.substring(0, 60));
     
     // Determine requested image type (prioritize explicit)
     let requestedType = 'casual';
@@ -36841,18 +36888,29 @@ ${emp.name}'s response:`;
       requestedType = 'casual';
     }
     
-    // IMPROVED: Better agreement detection (also catches hesitant agreement)
-    const strongAgree = /\b(okay|sure|alright|fine|here|sending|sent|check.*this|for.*you)\b/i.test(npcResponse);
-    const noRefusal = !/\b(don't|not|can't|won't|shouldn't|uncomfortable|not.*ready|too.*much|inappropriate)\b/i.test(npcResponse);
+    console.log('[Image Detection] Requested type:', requestedType);
+    
+    // PLAYER FEEDBACK FIX: Better agreement detection - catch when NPC describes sending image
+    const strongAgree = /\b(okay|sure|alright|fine|here|sending|sent|check.*this|for.*you|attaching|attached)\b/i.test(npcResponse);
+    const describingSending = /\b(send|sent|sending|here.*is|this.*is|look.*at|check.*out)\b/i.test(npcResponse);
+    const imageDescribed = /\b(picture|photo|selfie|image|pic|snap)\b/i.test(npcResponse);
+    const noRefusal = !/\b(don't|not|can't|won't|shouldn't|uncomfortable|not.*ready|too.*much|inappropriate|no)\b/i.test(npcResponse);
     const hesitantAgree = /\b(i.*guess|fine|okay.*okay|alright.*alright)\b/i.test(npcResponse);
     
-    const agreedInResponse = (strongAgree && noRefusal) || hesitantAgree;
+    // Consider it agreed if they described sending/showing an image
+    const agreedInResponse = ((strongAgree || describingSending) && noRefusal) || 
+                            (describingSending && imageDescribed && noRefusal) ||
+                            hesitantAgree;
     
     if (agreedInResponse) {
+      console.log('[Image Detection] ✅ NPC agreed to send image:', employee.name);
       // NPC agreed! Generate and send the image
       setTimeout(async () => {
         await generateAndSendRequestedImage(employee, requestedType, requestContent);
       }, 2000 + Math.random() * 4000); // 2-6 seconds delay
+    } else {
+      console.log('[Image Detection] ❌ NPC did not agree to send image');
+      console.log('[Image Detection] Response:', npcResponse.substring(0, 100));
     }
   }
   
