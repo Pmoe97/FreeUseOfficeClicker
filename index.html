@@ -44291,6 +44291,121 @@ Post:`;
     // Define patch notes (newest first)
     const patchNotes = [
       {
+        version: '2511122010',
+        date: 'November 12, 2025',
+        title: '💾 MAJOR: Multi-Slot Save Manager + 🐛 Critical Player Feedback Fixes',
+        changes: [
+          {
+            category: '💾 NEW: Advanced Multi-Slot Save System',
+            items: [
+              '<strong>🎉 BRAND NEW SAVE MANAGER:</strong> Complete overhaul of the save system inspired by modern RPGs! Replace simple save/load buttons with a full-featured modal interface for managing multiple save slots.',
+              '<strong>💾 MULTI-SLOT ARCHITECTURE:</strong> Create unlimited named saves - no more overwriting your only save! Save types: Manual Saves (your named saves), Quick Saves (F5 shortcut), Autosaves (automatic every 5 seconds).',
+              '<strong>⌨️ KEYBOARD SHORTCUTS:</strong> Press F5 anywhere for instant Quick Save, F9 for Quick Load (loads most recent quick save), Esc to close Save Manager.',
+              '<strong>🎨 BEAUTIFUL MODAL INTERFACE:</strong> Tab-based view (Manual / Auto & Quick), sortable table (Name, Day, Saved At, Playtime), search/filter by save name, inline editing (double-click to rename), row selection and highlights.',
+              '<strong>📊 RICH METADATA TRACKING:</strong> Every save stores: Save date/time, custom save name, save type (auto/quick/manual), total playtime, current game day, money amount, employee count, prestige level.',
+              '<strong>✨ POWERFUL FEATURES:</strong>',
+              '<strong>• Create New Save:</strong> "+ Create New Save" button in manual tab',
+              '<strong>• Rename Saves:</strong> Double-click any save name to edit inline',
+              '<strong>• Delete Saves:</strong> Click ✕ button with confirmation (autosave protected)',
+              '<strong>• Export/Import:</strong> Download individual saves as JSON files, import saves from backup files',
+              '<strong>• Load Saves:</strong> Click "Load" button or double-click save row',
+              '<strong>• Continue:</strong> Quick "Continue" button loads most recent save',
+              '<strong>• Sort & Filter:</strong> Click column headers to sort, search box for filtering',
+              '<strong>🔒 SAFETY FEATURES:</strong> Autosave slot cannot be deleted or renamed, confirmation dialogs before deleting saves, duplicate name checking prevents overwrites, corrupted save validation before loading, automatic migration from legacy format.',
+              '<strong>📱 SETTINGS PANEL UPDATE:</strong> Replaced 4 individual buttons (Save, Load, Export, Import) with single "💾 Save/Load Manager" button, added keyboard shortcut hints (F5/F9), clean gradient styling with hover effects.',
+              '<strong>🔄 AUTOMATIC MIGRATION:</strong> Old single-save format automatically converts to new system on first load, creates "migrated_legacy" save with all your progress, preserves original save for safety, completely transparent to users.',
+              '<strong>🎨 VISUAL DESIGN:</strong> Dark blue theme matching FUOC style (#16213e), cyan accents (#00d4ff), save type badges (blue=auto, green=quick, default=manual), smooth animations and transitions, custom scrollbar styling, empty state messages.',
+              '<strong>💾 STORAGE FORMAT:</strong> Slot naming: fuoc_save_autosave, fuoc_save_quick_123, fuoc_save_My_Adventure. Backward compatible with old saveGame() function. Uses existing kv-plugin for persistence.',
+              '<strong>📝 CONSOLE LOGGING:</strong> All operations log with [SaveManager] prefix, shows save/load/delete/rename/export/import actions, emoji indicators for different operation types.',
+              '<strong>📚 DOCUMENTATION:</strong> Created 3 comprehensive docs: SAVE_SYSTEM_DOCUMENTATION.md (full reference), SAVE_MANAGER_IMPLEMENTATION_PLAN.md (technical guide), SAVE_SYSTEM_UPGRADE_COMPLETE.md (completion summary).',
+              '<strong>📊 CODE STATS:</strong> ~1,600 lines of new code added, 9 new backend functions, ~690 line SaveManager UI class, ~508 lines of CSS styling, zero compilation errors.',
+              '<strong>✅ BENEFITS:</strong> Never lose progress from overwriting saves, experiment with different game paths, backup important milestones, quick save before risky decisions, organize saves with meaningful names, modern professional UX.'
+            ]
+          },
+          {
+            category: '💰 CRITICAL FIX: Money Request Frequency',
+            items: [
+              '<strong>PLAYER FEEDBACK:</strong> "Love how everyone of my employees keeps asking me for ridiculous amounts of money." - Players felt constantly pestered by money requests.',
+              '<strong>PROBLEM:</strong> NPCs requesting money every 24 game hours (1 day), ~15% of ALL proactive messages were money requests, felt like constant spam.',
+              '<strong>SOLUTION - DRASTICALLY REDUCED:</strong>',
+              '<strong>⏰ Cooldown increased:</strong> 24 hours → 168 hours (7 game days)',
+              '<strong>⏰ Emergency requests:</strong> 72 hours minimum (3 days) even when broke',
+              '<strong>📊 Target frequency:</strong> 15% → 3-5% of proactive messages',
+              '<strong>📉 Weight reductions:</strong> Base: 8→2 (75% cut), Broke: 20→8 (60% cut), Low cash: 14→5 (64% cut)',
+              '<strong>🎯 Stricter requirements:</strong> Now requires affection > 50 AND trust > 50 (was 40/40)',
+              '<strong>💰 Updated thresholds:</strong> Low on cash: 7→14 days spending, Broke: 2→7 days spending',
+              '<strong>RESULT:</strong> Money requests are now rare, meaningful events that only happen when NPCs genuinely need help. No more constant financial nagging!'
+            ]
+          },
+          {
+            category: '👻 CRITICAL FIX: Fired Employees in Social Feed',
+            items: [
+              '<strong>PLAYER FEEDBACK:</strong> "Some characters i fired keep talking in socials not sure how to fix that" - Ex-employees haunting the social feed.',
+              '<strong>PROBLEM:</strong> Social feed showed posts from ALL employees ever hired, fired/terminated employees continued posting, no filter to remove ex-employees.',
+              '<strong>SOLUTION:</strong> Added Step 0 to filterAndSortPosts() that filters out fired employees BEFORE all other filters, checks current employee roster and only shows posts from active employees, preserves player and system posts.',
+              '<strong>📊 LOGGING:</strong> Console shows how many posts were filtered out from ex-employees.',
+              '<strong>RESULT:</strong> Social feed now only shows posts from current employees. Ex-employees no longer haunt your feed!'
+            ]
+          },
+          {
+            category: '☠️ CRITICAL FIX: PR Meeting Extreme Content',
+            items: [
+              '<strong>PLAYER FEEDBACK:</strong> "Just held a PR meeting, after roughly 10 suggestions made by the AI, they suggested we tattoo our company logo onto terminal ill patients morphine ridden skin, and to have suicide notes with our logo live sent on tv." - AI generating horrifying, morbid PR suggestions.',
+              '<strong>PROBLEM:</strong> No content safety filters in meeting responses, AI could generate morbid/extreme/illegal suggestions, no boundaries on what NPCs could suggest.',
+              '<strong>SOLUTION - COMPREHENSIVE CONTENT SAFETY:</strong> Added safety rules to all meeting prompts:',
+              '<strong>❌ BLOCKS:</strong> Suicide, self-harm, death references, terminal illness/hospices/medical trauma, exploitation of vulnerable people (sick/dying/imprisoned), extreme violence/gore/morbid content, illegal activities (murder/terrorism/exploitation)',
+              '<strong>✅ ENFORCES:</strong> Ethical, legal, reasonable suggestions, constructive redirection if topic gets dark',
+              '<strong>RESULT:</strong> NPCs now stay within appropriate boundaries during meetings. No more horrifying PR disasters!'
+            ]
+          },
+          {
+            category: '🗑️ BUG FIX: Clear Chat Button',
+            items: [
+              '<strong>PLAYER FEEDBACK:</strong> "The \'clear\' button in chat doesn\'t work" - Button failing silently.',
+              '<strong>PROBLEM:</strong> gameState.activeChat could be either ID (string) or object, code assumed it was always an ID, failed silently when activeChat was an object.',
+              '<strong>SOLUTION:</strong> Added flexible handling: const activeChatId = gameState.activeChat?.id || gameState.activeChat, better validation checks, enhanced console logging for debugging, improved user feedback.',
+              '<strong>RESULT:</strong> Clear button now works reliably regardless of activeChat format!'
+            ]
+          },
+          {
+            category: '📸 BUG FIX: Chat Images Not Generating',
+            items: [
+              '<strong>PLAYER FEEDBACK:</strong> "In chats its describing an image but not sending an image" - NPCs saying "Here\'s a picture" without generating it.',
+              '<strong>PROBLEM:</strong> Agreement detection too strict, missed cases where NPC described sending without using specific keywords.',
+              '<strong>SOLUTION - IMPROVED DETECTION:</strong>',
+              '<strong>• Added keywords:</strong> "attaching", "attached" to strong agreement',
+              '<strong>• Added describingSending check:</strong> "send", "sent", "sending", "here is", "this is", "look at", "check out"',
+              '<strong>• Added imageDescribed check:</strong> NPC mentions "picture", "photo", "selfie", "image"',
+              '<strong>• Combined logic:</strong> Agrees if describing sending + mentioning image + no refusal',
+              '<strong>• Enhanced logging:</strong> Shows when image detected, type requested, whether NPC agreed, response snippet',
+              '<strong>RESULT:</strong> NPCs now actually send images when they say they will. More reliable image generation!'
+            ]
+          },
+          {
+            category: '✅ Scene Visualization Verification',
+            items: [
+              '<strong>PLAYER FEEDBACK:</strong> "scene visualization stopped using the character description" - Concern about missing character details.',
+              '<strong>STATUS:</strong> Already working correctly! visualizeCurrentScene() calls getPhysicalDescriptionForPrompt(emp) which includes full physical appearance, active flags (pregnant, chastity, pierced, etc.), and passes description to AI.',
+              '<strong>VERIFIED:</strong> Feature is implemented and functional - no changes needed.'
+            ]
+          },
+          {
+            category: '📊 Update Summary',
+            items: [
+              '<strong>FILES MODIFIED:</strong> 1 (index.html)',
+              '<strong>TOTAL NEW CODE:</strong> ~1,750 lines (1,600 save system + 150 fixes)',
+              '<strong>BALANCE CHANGES:</strong> 1 major (money request frequency)',
+              '<strong>SAFETY FEATURES:</strong> 1 new (meeting content filters)',
+              '<strong>BUG FIXES:</strong> 3 critical (fired employees, clear button, image detection)',
+              '<strong>MAJOR FEATURES:</strong> 1 (complete save manager overhaul)',
+              '<strong>DOCUMENTATION:</strong> 4 new files (save system docs + feedback fixes)',
+              '<strong>COMPILATION:</strong> ✅ No errors',
+              '<strong>GIT COMMITS:</strong> 2 (dc5ae84 save system, 9e418d0 feedback fixes)'
+            ]
+          }
+        ]
+      },
+      {
         version: '2511051900',
         date: 'November 5, 2025',
         title: '🐛 Critical Bug Fixes - Chat, Posts, Selfies & Rehire System',
