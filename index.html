@@ -16755,13 +16755,27 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
             </div>
             <div>
               <label style="display:block; color:#ffd700; font-size:0.8rem; margin-bottom:4px;">Race/Species</label>
-              <select id="confirmRace" style="width:100%; padding:8px; background:#0f1419; border:1px solid #555; border-radius:4px; color:white;">
-                <option value="human" ${(data.race || 'human') === 'human' ? 'selected' : ''}>Human</option>
-                <option value="elf" ${data.race === 'elf' ? 'selected' : ''}>Elf</option>
-                <option value="catgirl" ${data.race === 'catgirl' ? 'selected' : ''}>Catgirl</option>
-                <option value="succubus" ${data.race === 'succubus' ? 'selected' : ''}>Succubus</option>
-                <option value="demon" ${data.race === 'demon' ? 'selected' : ''}>Demon</option>
-              </select>
+              <input type="text" id="confirmRace" list="raceOptions" value="${data.race || 'human'}" placeholder="Type or select a race" style="width:100%; padding:8px; background:#0f1419; border:1px solid #555; border-radius:4px; color:white; box-sizing:border-box;">
+              <datalist id="raceOptions">
+                <option value="human">Human</option>
+                <option value="elf">Elf</option>
+                <option value="catgirl">Catgirl</option>
+                <option value="catboy">Catboy</option>
+                <option value="foxgirl">Foxgirl</option>
+                <option value="succubus">Succubus</option>
+                <option value="demon">Demon</option>
+                <option value="orc">Orc</option>
+                <option value="goblin">Goblin</option>
+                <option value="dwarf">Dwarf</option>
+                <option value="tiefling">Tiefling</option>
+                <option value="vampire">Vampire</option>
+                <option value="werewolf">Werewolf</option>
+                <option value="angel">Angel</option>
+                <option value="dragon">Dragonborn</option>
+                <option value="slime">Slime</option>
+                <option value="robot">Robot/Android</option>
+                <option value="alien">Alien</option>
+              </datalist>
             </div>
           </div>
           
@@ -16829,6 +16843,10 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
                 <div>
                   <label style="display:block; color:#aaa; font-size:0.75rem; margin-bottom:2px;">Fashion Style</label>
                   <input type="text" id="confirmFashion" value="${data.physical?.fashion || ''}" placeholder="e.g. business professional, casual" style="width:100%; padding:6px; background:#0f1419; border:1px solid #555; border-radius:4px; color:white; font-size:0.85rem; box-sizing:border-box;">
+                </div>
+                <div>
+                  <label style="display:block; color:#aaa; font-size:0.75rem; margin-bottom:2px;">Accessories</label>
+                  <input type="text" id="confirmAccessories" value="${data.physical?.accessories || ''}" placeholder="e.g. glasses, earrings, none" style="width:100%; padding:6px; background:#0f1419; border:1px solid #555; border-radius:4px; color:white; font-size:0.85rem; box-sizing:border-box;">
                 </div>
                 <div style="grid-column: span 2;">
                   <label style="display:block; color:#aaa; font-size:0.75rem; margin-bottom:2px;">Notable Features</label>
@@ -16998,7 +17016,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
       
       // Collect current form values for prompt
       const gender = modal.querySelector('#confirmGender')?.value || data.gender || 'female';
-      const race = modal.querySelector('#confirmRace')?.value || 'human';
+      const race = modal.querySelector('#confirmRace')?.value?.trim() || 'human';
       const age = modal.querySelector('#confirmAge')?.value || data.age || 25;
       const hairColor = modal.querySelector('#confirmHairColor')?.value?.trim() || data.physical?.hairColor || 'brown';
       const hairStyle = modal.querySelector('#confirmHairStyle')?.value?.trim() || data.physical?.hairStyle || 'medium length';
@@ -17019,8 +17037,15 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
       if (professional > 70 && flirty < 50) expression = 'professional';
       if (confidence > 70 && flirty > 70) expression = 'confident, seductive';
       
+      // Get accessories if specified
+      const accessories = modal.querySelector('#confirmAccessories')?.value?.trim() || '';
+      const accessoriesPrompt = accessories && accessories.toLowerCase() !== 'none' ? `, wearing ${accessories}` : ', no glasses, no accessories';
+      
       // Build the prompt
-      const prompt = `portrait photo of a ${age} year old ${gender} ${race}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone} skin, ${bodyShape} body type, ${heightBuild}, ${expression} expression, professional headshot, office background, high quality, detailed face`;
+      const basePrompt = `portrait photo of a ${age} year old ${gender} ${race}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone} skin, ${bodyShape} body type, ${heightBuild}, ${expression} expression${accessoriesPrompt}, professional headshot, office background, high quality, detailed face`;
+      
+      // Apply the global image style setting
+      const prompt = applyImageStyle(basePrompt);
       
       btn.disabled = true;
       btn.innerHTML = '<span style="display:inline-block; animation:rotate 1.5s linear infinite;">⏳</span> Generating...';
@@ -17065,7 +17090,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
           name: modal.querySelector('#confirmName')?.value?.trim() || data.name,
           age: parseInt(modal.querySelector('#confirmAge')?.value) || data.age,
           gender: modal.querySelector('#confirmGender')?.value || data.gender,
-          race: modal.querySelector('#confirmRace')?.value || 'human',
+          race: modal.querySelector('#confirmRace')?.value?.trim() || 'human',
           bio: modal.querySelector('#confirmBio')?.value?.trim() || data.bio,
           personalityTraits: (modal.querySelector('#confirmTraits')?.value || '').split(',').map(t => t.trim()).filter(Boolean),
           hobbies: (modal.querySelector('#confirmHobbies')?.value || '').split(',').map(t => t.trim()).filter(Boolean),
@@ -17087,6 +17112,7 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
             breastSize: modal.querySelector('#confirmBreastSize')?.value?.trim() || data.physical?.breastSize,
             buttSize: modal.querySelector('#confirmButtSize')?.value?.trim() || data.physical?.buttSize,
             fashion: modal.querySelector('#confirmFashion')?.value?.trim() || data.physical?.fashion,
+            accessories: modal.querySelector('#confirmAccessories')?.value?.trim() || data.physical?.accessories,
             notableFeatures: modal.querySelector('#confirmNotableFeatures')?.value?.trim() || data.physical?.notableFeatures,
             genitalType: modal.querySelector('#confirmGenitalType')?.value || data.physical?.genitalType,
             genitalSize: modal.querySelector('#confirmGenitalSize')?.value?.trim() || data.physical?.genitalSize,
@@ -17540,7 +17566,14 @@ Return ONLY a JSON object with the COMPLETE profile (including existing data):
       if (data.physical.hairLength) employee.physical.hair = { ...employee.physical.hair, length: data.physical.hairLength };
       if (data.physical.eyeColor) employee.physical.eyes = { ...employee.physical.eyes, color: data.physical.eyeColor };
       if (data.physical.eyeShape) employee.physical.eyes = { ...employee.physical.eyes, shape: data.physical.eyeShape };
-      if (data.physical.skinTone) employee.physical.skinTone = data.physical.skinTone;
+      if (data.physical.skinTone) {
+        employee.physical.skinTone = data.physical.skinTone;
+        // Also update the nested skin object
+        if (employee.physical.skin) {
+          employee.physical.skin.tone = data.physical.skinTone;
+          employee.physical.skin.full = `${employee.physical.skin.texture || 'smooth'} ${data.physical.skinTone} skin`;
+        }
+      }
       if (data.physical.bodyShape) employee.physical.bodyShape = data.physical.bodyShape;
       if (data.physical.heightBuild) employee.physical.heightBuild = data.physical.heightBuild;
       if (data.physical.breastSize) {
@@ -17552,6 +17585,7 @@ Return ONLY a JSON object with the COMPLETE profile (including existing data):
         if (employee.physical.body) employee.physical.body.buttSize = data.physical.buttSize;
       }
       if (data.physical.fashion) employee.physical.fashion = data.physical.fashion;
+      if (data.physical.accessories) employee.physical.accessories = data.physical.accessories;
       if (data.physical.notableFeatures) employee.physical.notableFeatures = data.physical.notableFeatures;
       // Handle genital customization
       if (data.physical.genitalType || data.physical.genitalSize || data.physical.genitalCharacteristics) {
