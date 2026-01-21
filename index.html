@@ -17805,121 +17805,257 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
     // ============================================
     startTensionGame(gameArea, config) {
       const difficulty = config.difficulty || 'medium';
-      const sweetSpots = { easy: [60, 85], medium: [70, 85], hard: [78, 88] };
-      const speeds = { easy: 15, medium: 20, hard: 28 };
       
-      const [sweetMin, sweetMax] = sweetSpots[difficulty];
-      const fillSpeed = speeds[difficulty];
+      // Multi-round configuration
+      const roundConfigs = {
+        easy: { 
+          totalRounds: 4, 
+          allowedMisses: 2, 
+          startSweetSpot: [55, 85], // Wide zone to start
+          endSweetSpot: [65, 80],   // Narrower at the end
+          fillSpeed: 12,
+          sweetSpotShift: 10        // How much it can shift between rounds
+        },
+        medium: { 
+          totalRounds: 5, 
+          allowedMisses: 2, 
+          startSweetSpot: [60, 85],
+          endSweetSpot: [70, 82],
+          fillSpeed: 16,
+          sweetSpotShift: 15
+        },
+        hard: { 
+          totalRounds: 6, 
+          allowedMisses: 1, 
+          startSweetSpot: [65, 85],
+          endSweetSpot: [75, 85],
+          fillSpeed: 22,
+          sweetSpotShift: 20
+        }
+      };
       
+      const cfg = roundConfigs[difficulty];
+      
+      // Game state
+      let currentRound = 1;
+      let hits = 0;
+      let misses = 0;
       let tension = 0;
       let isHolding = false;
       let gameActive = true;
       let hasStarted = false;
+      let roundActive = true;
       
-      gameArea.innerHTML = `
-        <div style="margin-bottom: 15px;">
-          <div style="color: #ffd700; font-size: 1rem;">Hold to build tension... release in the sweet spot!</div>
-        </div>
+      // Calculate current sweet spot (shifts and shrinks each round)
+      const getSweetSpot = (round) => {
+        const progress = (round - 1) / Math.max(1, cfg.totalRounds - 1);
         
-        <!-- Tension meter -->
-        <div style="
-          position: relative;
-          width: 60px;
-          height: 200px;
-          background: linear-gradient(180deg, 
-            #f72585 0%, #f72585 ${100 - sweetMax}%,
-            #4ecca3 ${100 - sweetMax}%, #4ecca3 ${100 - sweetMin}%,
-            #ffd700 ${100 - sweetMin}%, #ffd700 100%
-          );
-          border-radius: 30px;
-          border: 3px solid #333;
-          margin: 0 auto;
-          overflow: hidden;
-        ">
-          <!-- Fill level -->
-          <div id="tensionFill" style="
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 0%;
-            background: rgba(0,0,0,0.7);
-            transition: height 0.05s;
-          "></div>
+        // Interpolate between start and end spot sizes
+        const minBase = cfg.startSweetSpot[0] + (cfg.endSweetSpot[0] - cfg.startSweetSpot[0]) * progress;
+        const maxBase = cfg.startSweetSpot[1] + (cfg.endSweetSpot[1] - cfg.startSweetSpot[1]) * progress;
+        
+        // Add random shift (increases with rounds)
+        const shiftAmount = (Math.random() - 0.5) * cfg.sweetSpotShift * progress;
+        let min = Math.max(20, Math.min(75, minBase + shiftAmount));
+        let max = Math.max(min + 8, Math.min(95, maxBase + shiftAmount));
+        
+        return [Math.round(min), Math.round(max)];
+      };
+      
+      let [sweetMin, sweetMax] = getSweetSpot(1);
+      
+      const renderGame = () => {
+        const zoneSize = sweetMax - sweetMin;
+        const hitIcons = Array(cfg.totalRounds).fill('○').map((_, i) => {
+          if (i < hits) return '<span style="color:#4ecca3;">●</span>';
+          if (i < hits + misses) return '<span style="color:#f72585;">✕</span>';
+          return '<span style="color:#555;">○</span>';
+        }).join(' ');
+        
+        gameArea.innerHTML = `
+          <div style="margin-bottom: 10px;">
+            <div style="color: #ffd700; font-size: 1rem; margin-bottom: 5px;">
+              Hold to build tension... release in the green zone!
+            </div>
+            <div style="font-size: 0.9rem; color: #a0aec0;">
+              Round <span style="color:#fff; font-weight:bold;">${currentRound}</span> of ${cfg.totalRounds}
+              <span style="margin-left: 15px;">Misses allowed: <span style="color:${cfg.allowedMisses - misses > 0 ? '#4ecca3' : '#f72585'}; font-weight:bold;">${cfg.allowedMisses - misses}</span></span>
+            </div>
+          </div>
           
-          <!-- Sweet spot indicator -->
+          <!-- Progress indicator -->
+          <div style="margin-bottom: 15px; font-size: 1.3rem; letter-spacing: 4px;">
+            ${hitIcons}
+          </div>
+          
+          <!-- Tension meter with animated sweet spot -->
           <div style="
-            position: absolute;
-            left: -20px;
-            bottom: ${sweetMin}%;
-            height: ${sweetMax - sweetMin}%;
-            width: 10px;
-            background: #4ecca3;
-            border-radius: 5px;
-          "></div>
-          <div style="
-            position: absolute;
-            right: -20px;
-            bottom: ${sweetMin}%;
-            height: ${sweetMax - sweetMin}%;
-            width: 10px;
-            background: #4ecca3;
-            border-radius: 5px;
-          "></div>
-        </div>
+            position: relative;
+            width: 70px;
+            height: 220px;
+            background: linear-gradient(180deg, 
+              #f72585 0%, #f72585 ${100 - sweetMax}%,
+              #4ecca3 ${100 - sweetMax}%, #4ecca3 ${100 - sweetMin}%,
+              #f9a825 ${100 - sweetMin}%, #f9a825 100%
+            );
+            border-radius: 35px;
+            border: 4px solid #333;
+            margin: 0 auto;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(78, 204, 163, 0.3);
+            transition: background 0.5s ease;
+          ">
+            <!-- Fill level (inverted - fills from bottom) -->
+            <div id="tensionFill" style="
+              position: absolute;
+              bottom: 0;
+              width: 100%;
+              height: 0%;
+              background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(100,100,100,0.8) 100%);
+              transition: height 0.03s linear;
+            "></div>
+            
+            <!-- Current position marker -->
+            <div id="tensionMarker" style="
+              position: absolute;
+              left: 50%;
+              transform: translateX(-50%);
+              bottom: 0%;
+              width: 50px;
+              height: 6px;
+              background: #fff;
+              border-radius: 3px;
+              box-shadow: 0 0 10px #fff, 0 0 20px #fff;
+              transition: bottom 0.03s linear;
+            "></div>
+            
+            <!-- Sweet spot bracket indicators -->
+            <div style="
+              position: absolute;
+              left: -25px;
+              bottom: ${sweetMin}%;
+              height: ${zoneSize}%;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              align-items: center;
+            ">
+              <div style="width:20px; height:3px; background:#4ecca3; border-radius:2px;"></div>
+              <div style="font-size:0.7rem; color:#4ecca3; writing-mode:vertical-rl; transform:rotate(180deg);">ZONE</div>
+              <div style="width:20px; height:3px; background:#4ecca3; border-radius:2px;"></div>
+            </div>
+            <div style="
+              position: absolute;
+              right: -25px;
+              bottom: ${sweetMin}%;
+              height: ${zoneSize}%;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              align-items: center;
+            ">
+              <div style="width:20px; height:3px; background:#4ecca3; border-radius:2px;"></div>
+              <div style="font-size:0.7rem; color:#4ecca3; writing-mode:vertical-rl;">${zoneSize}%</div>
+              <div style="width:20px; height:3px; background:#4ecca3; border-radius:2px;"></div>
+            </div>
+          </div>
+          
+          <!-- Tension value -->
+          <div style="margin-top: 12px; font-size: 1.8rem; color: #fff; font-weight: bold;">
+            <span id="tensionValue">0</span>%
+          </div>
+          
+          <!-- Hold button -->
+          <button id="tensionBtn" style="
+            margin-top: 15px;
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #9d4edd 0%, #7b2cbf 100%);
+            border: 5px solid #fff;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(157,78,221,0.5);
+            touch-action: manipulation;
+            transition: transform 0.1s, box-shadow 0.1s;
+          ">
+            ${roundActive ? 'HOLD' : 'WAIT...'}
+          </button>
+          
+          <div style="margin-top: 10px; font-size: 0.8rem; color: #666;">
+            ${difficulty === 'hard' ? '⚠️ Hard: Zone shifts more!' : 'Tap/click and hold, release in green'}
+          </div>
+        `;
         
-        <!-- Tension value -->
-        <div style="margin-top: 15px; font-size: 2rem; color: #fff; font-weight: bold;">
-          <span id="tensionValue">0</span>%
-        </div>
-        
-        <!-- Hold button -->
-        <button id="tensionBtn" style="
-          margin-top: 20px;
-          width: 160px; height: 160px;
-          border-radius: 50%;
-          background: linear-gradient(145deg, #9d4edd 0%, #7b2cbf 100%);
-          border: 5px solid #fff;
-          color: #fff;
-          font-size: 1.3rem;
-          font-weight: bold;
-          cursor: pointer;
-          box-shadow: 0 0 30px rgba(157,78,221,0.5);
-          touch-action: manipulation;
-          transition: transform 0.1s, box-shadow 0.1s;
-        ">
-          HOLD
-        </button>
-      `;
-      
-      const fill = document.getElementById('tensionFill');
-      const valueEl = document.getElementById('tensionValue');
-      const btn = document.getElementById('tensionBtn');
+        // Re-bind event handlers
+        const btn = document.getElementById('tensionBtn');
+        if (btn && roundActive) {
+          btn.onmousedown = startHold;
+          btn.onmouseup = release;
+          btn.onmouseleave = () => { if (isHolding) release(); };
+          btn.ontouchstart = (e) => { e.preventDefault(); startHold(); };
+          btn.ontouchend = release;
+        }
+      };
       
       const updateDisplay = () => {
-        fill.style.height = (100 - tension) + '%';
+        const fill = document.getElementById('tensionFill');
+        const marker = document.getElementById('tensionMarker');
+        const valueEl = document.getElementById('tensionValue');
+        
+        if (!fill || !valueEl || !marker) return;
+        
+        fill.style.height = tension + '%';
+        marker.style.bottom = tension + '%';
         valueEl.textContent = Math.round(tension);
         
         // Color change based on zone
         if (tension >= sweetMin && tension <= sweetMax) {
           valueEl.style.color = '#4ecca3';
+          valueEl.style.textShadow = '0 0 10px #4ecca3';
+          marker.style.background = '#4ecca3';
         } else if (tension > sweetMax) {
           valueEl.style.color = '#f72585';
+          valueEl.style.textShadow = '0 0 10px #f72585';
+          marker.style.background = '#f72585';
         } else {
-          valueEl.style.color = '#ffd700';
+          valueEl.style.color = '#f9a825';
+          valueEl.style.textShadow = 'none';
+          marker.style.background = '#fff';
         }
       };
       
       const gameLoop = () => {
         if (!gameActive) return;
         
-        if (isHolding) {
-          tension = Math.min(100, tension + (fillSpeed / 60));
+        if (isHolding && roundActive) {
+          tension = Math.min(100, tension + (cfg.fillSpeed / 60));
           updateDisplay();
           
-          // Auto-fail if maxed out
+          // Auto-fail this round if maxed out
           if (tension >= 100) {
-            gameActive = false;
-            this.showGameResult('failure', 10);
+            roundActive = false;
+            isHolding = false;
+            misses++;
+            
+            const btn = document.getElementById('tensionBtn');
+            if (btn) {
+              btn.textContent = '💥';
+              btn.style.background = 'linear-gradient(145deg, #f72585 0%, #b5179e 100%)';
+            }
+            
+            setTimeout(() => {
+              if (misses > cfg.allowedMisses) {
+                // Game over - too many misses
+                gameActive = false;
+                const finalScore = Math.round((hits / cfg.totalRounds) * 50);
+                this.showGameResult('failure', finalScore);
+              } else {
+                // Next round
+                nextRound();
+              }
+            }, 800);
             return;
           }
         }
@@ -17928,50 +18064,105 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
       };
       
       const startHold = () => {
-        if (!gameActive) return;
+        if (!gameActive || !roundActive) return;
         isHolding = true;
         hasStarted = true;
-        btn.textContent = '...';
-        btn.style.transform = 'scale(0.95)';
-        btn.style.boxShadow = '0 0 50px rgba(157,78,221,0.8)';
+        
+        const btn = document.getElementById('tensionBtn');
+        if (btn) {
+          btn.textContent = '...';
+          btn.style.transform = 'scale(0.95)';
+          btn.style.boxShadow = '0 0 50px rgba(157,78,221,0.8)';
+        }
       };
       
       const release = () => {
-        if (!gameActive || !hasStarted) return;
+        if (!gameActive || !hasStarted || !roundActive) return;
         isHolding = false;
-        gameActive = false;
+        roundActive = false;
         
-        btn.textContent = '✓';
-        btn.style.transform = 'scale(1)';
+        const btn = document.getElementById('tensionBtn');
         
-        // Calculate result
-        let result, score;
-        if (tension >= sweetMin && tension <= sweetMax) {
-          // Perfect zone
-          const zoneCenter = (sweetMin + sweetMax) / 2;
-          const distFromCenter = Math.abs(tension - zoneCenter);
-          const zoneSize = (sweetMax - sweetMin) / 2;
-          score = Math.round(85 + (1 - distFromCenter / zoneSize) * 15);
-          result = score >= 95 ? 'perfect' : 'success';
-        } else if (tension < sweetMin) {
-          // Too early
-          score = Math.round((tension / sweetMin) * 50);
-          result = score >= 25 ? 'partial' : 'failure';
+        // Check if in sweet spot
+        const inZone = tension >= sweetMin && tension <= sweetMax;
+        
+        if (inZone) {
+          hits++;
+          if (btn) {
+            btn.textContent = '✓';
+            btn.style.background = 'linear-gradient(145deg, #4ecca3 0%, #2ecc71 100%)';
+          }
         } else {
-          // Too late (overshot)
-          score = Math.round(50 - (tension - sweetMax));
-          result = score >= 25 ? 'partial' : 'failure';
+          misses++;
+          if (btn) {
+            btn.textContent = '✗';
+            btn.style.background = 'linear-gradient(145deg, #f72585 0%, #b5179e 100%)';
+          }
         }
         
-        setTimeout(() => this.showGameResult(result, Math.max(0, score)), 300);
+        btn.style.transform = 'scale(1)';
+        
+        // Check game end conditions
+        setTimeout(() => {
+          if (misses > cfg.allowedMisses) {
+            // Game over - too many misses
+            gameActive = false;
+            const finalScore = Math.round((hits / cfg.totalRounds) * 50);
+            this.showGameResult('failure', finalScore);
+          } else if (currentRound >= cfg.totalRounds) {
+            // All rounds complete!
+            gameActive = false;
+            const hitRate = hits / cfg.totalRounds;
+            let result, score;
+            
+            if (hitRate === 1) {
+              result = 'perfect';
+              score = 100;
+            } else if (hitRate >= 0.8) {
+              result = 'success';
+              score = Math.round(75 + hitRate * 20);
+            } else if (hitRate >= 0.5) {
+              result = 'partial';
+              score = Math.round(40 + hitRate * 30);
+            } else {
+              result = 'failure';
+              score = Math.round(hitRate * 40);
+            }
+            
+            this.showGameResult(result, score);
+          } else {
+            // Next round
+            nextRound();
+          }
+        }, 600);
       };
       
-      btn.onmousedown = startHold;
-      btn.onmouseup = release;
-      btn.onmouseleave = () => { if (isHolding) release(); };
-      btn.ontouchstart = (e) => { e.preventDefault(); startHold(); };
-      btn.ontouchend = release;
+      const nextRound = () => {
+        currentRound++;
+        tension = 0;
+        hasStarted = false;
+        roundActive = true;
+        
+        // Get new sweet spot for this round (shifts and shrinks)
+        [sweetMin, sweetMax] = getSweetSpot(currentRound);
+        
+        // Re-render with new sweet spot
+        renderGame();
+        
+        // Brief highlight of new zone
+        const valueEl = document.getElementById('tensionValue');
+        if (valueEl) {
+          valueEl.innerHTML = `<span style="font-size:0.8rem; color:#4ecca3;">Zone: ${sweetMin}-${sweetMax}%</span>`;
+          setTimeout(() => {
+            if (document.getElementById('tensionValue')) {
+              document.getElementById('tensionValue').textContent = '0';
+            }
+          }, 1000);
+        }
+      };
       
+      // Initial render
+      renderGame();
       gameLoop();
       
       this.activeGame.cleanup = () => {
