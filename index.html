@@ -43,6 +43,7 @@
   <button class="tab-btn" data-tab="payroll" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">💰 Payroll</button>
   <button class="tab-btn" data-tab="hr" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">📋 HR</button>
   <button class="tab-btn" data-tab="invest" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">📈 Invest</button>
+  <button class="tab-btn" data-tab="story" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer; position:relative;">📖 Story<span id="storyNotificationDot" style="display:none; position:absolute; top:8px; right:8px; width:8px; height:8px; background:#e94560; border-radius:50%; animation:storyPulse 2s infinite;"></span></button>
   <button class="tab-btn" data-tab="ceocorner" style="padding:15px 20px; background:transparent; border:none; color:white; cursor:pointer;">👑 CEO Corner</button>
 </div>
 
@@ -1390,6 +1391,191 @@
       
       <div id="influenceUpgradesContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px;">
         <!-- Upgrades will be dynamically populated here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Story Tab -->
+  <div id="storyTab" class="tab-content" hidden>
+    <div style="margin-bottom:25px;">
+      <!-- Act Progress Banner -->
+      <div id="actProgressBanner" style="background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius:15px; padding:25px; margin-bottom:20px; border:2px solid #667eea; position:relative; overflow:hidden;">
+        <div style="position:absolute; top:0; left:0; right:0; bottom:0; background:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"40\" fill=\"none\" stroke=\"rgba(102,126,234,0.1)\" stroke-width=\"1\"/></svg>'); opacity:0.3;"></div>
+        <div style="position:relative; z-index:1;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+            <div>
+              <div style="color:#667eea; font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:5px;">Current Chapter</div>
+              <h2 id="currentActTitle" style="margin:0; color:#fff; font-size:1.8rem; text-shadow:0 2px 10px rgba(102,126,234,0.5);">ACT I: GARAGE DREAMS</h2>
+              <p id="currentActDescription" style="color:#8899a6; margin:10px 0 0 0; font-size:0.95rem; max-width:600px; line-height:1.5;">Every empire starts somewhere. Yours begins in a cramped garage with nothing but ambition and a dream.</p>
+            </div>
+            <div style="text-align:center; min-width:150px;">
+              <div id="actProgressCircle" style="width:100px; height:100px; margin:0 auto; position:relative;">
+                <svg viewBox="0 0 36 36" style="transform:rotate(-90deg);">
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#0f3460" stroke-width="3"/>
+                  <path id="actProgressPath" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="url(#storyGradient)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round"/>
+                  <defs>
+                    <linearGradient id="storyGradient">
+                      <stop offset="0%" stop-color="#667eea"/>
+                      <stop offset="100%" stop-color="#764ba2"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center;">
+                  <div id="actProgressPercent" style="font-size:1.5rem; font-weight:700; color:#fff;">0%</div>
+                </div>
+              </div>
+              <div style="color:#8899a6; font-size:0.8rem; margin-top:8px;">Chapter Progress</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Story Overview Cards -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:15px; margin-bottom:25px;">
+        <!-- Active Quest Card -->
+        <div style="background:#16213e; border-radius:12px; padding:20px; border-left:4px solid #ffd700;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <div style="font-size:1.5rem;">🎯</div>
+            <h3 style="margin:0; color:#ffd700; font-size:1.1rem;">Active Quest</h3>
+          </div>
+          <div id="activeQuestContent">
+            <div style="color:#8899a6; font-style:italic; font-size:0.9rem;">No active quest. Progress through the story to unlock quests.</div>
+          </div>
+        </div>
+        
+        <!-- Story Stats Card -->
+        <div style="background:#16213e; border-radius:12px; padding:20px; border-left:4px solid #e94560;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <div style="font-size:1.5rem;">📊</div>
+            <h3 style="margin:0; color:#e94560; font-size:1.1rem;">Your Journey</h3>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div style="text-align:center; padding:10px; background:#0f3460; border-radius:8px;">
+              <div id="storyChoicesMade" style="font-size:1.5rem; font-weight:700; color:#fff;">0</div>
+              <div style="font-size:0.75rem; color:#8899a6;">Choices Made</div>
+            </div>
+            <div style="text-align:center; padding:10px; background:#0f3460; border-radius:8px;">
+              <div id="storyMoralAlignment" style="font-size:1.5rem; font-weight:700; color:#4ecca3;">⚖️</div>
+              <div style="font-size:0.75rem; color:#8899a6;">Alignment</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Key Characters Card -->
+        <div style="background:#16213e; border-radius:12px; padding:20px; border-left:4px solid #00d4ff;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <div style="font-size:1.5rem;">👥</div>
+            <h3 style="margin:0; color:#00d4ff; font-size:1.1rem;">Key Characters</h3>
+          </div>
+          <div id="keyCharactersContent" style="max-height:120px; overflow-y:auto;">
+            <div style="color:#8899a6; font-style:italic; font-size:0.9rem;">Characters you meet will appear here.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Story Content Grid -->
+    <div style="display:grid; grid-template-columns:1fr 350px; gap:20px;">
+      <!-- Left: Story Journal -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+          <h3 style="margin:0; color:#fff; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:1.3rem;">📜</span> Chronicle
+          </h3>
+          <div style="display:flex; gap:8px;">
+            <button onclick="filterJournal('all')" class="journal-filter-btn active" data-filter="all" style="padding:6px 12px; background:#0f3460; border:1px solid #667eea; border-radius:6px; color:#667eea; cursor:pointer; font-size:0.8rem;">All</button>
+            <button onclick="filterJournal('spine')" class="journal-filter-btn" data-filter="spine" style="padding:6px 12px; background:#0f3460; border:1px solid #444; border-radius:6px; color:#888; cursor:pointer; font-size:0.8rem;">Major</button>
+            <button onclick="filterJournal('rib')" class="journal-filter-btn" data-filter="rib" style="padding:6px 12px; background:#0f3460; border:1px solid #444; border-radius:6px; color:#888; cursor:pointer; font-size:0.8rem;">Events</button>
+          </div>
+        </div>
+        <div id="storyJournal" style="background:#16213e; border-radius:12px; padding:20px; min-height:400px; max-height:600px; overflow-y:auto;">
+          <!-- Journal entries will be populated here -->
+          <div id="journalEmpty" style="text-align:center; padding:60px 20px;">
+            <div style="font-size:4rem; margin-bottom:20px; opacity:0.3;">📖</div>
+            <h4 style="color:#fff; margin:0 0 10px 0;">Your Story Begins...</h4>
+            <p style="color:#8899a6; margin:0; font-size:0.9rem; line-height:1.5;">Every legend has a beginning. Hire your first employee to start writing yours.</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right: Timeline & Factions -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <!-- Act Timeline -->
+        <div style="background:#16213e; border-radius:12px; padding:20px;">
+          <h4 style="margin:0 0 15px 0; color:#fff; display:flex; align-items:center; gap:8px;">
+            <span>🗺️</span> Story Timeline
+          </h4>
+          <div id="actTimeline" style="position:relative; padding-left:20px;">
+            <div style="position:absolute; left:8px; top:5px; bottom:5px; width:2px; background:linear-gradient(to bottom, #667eea, #764ba2, #444);"></div>
+            
+            <!-- Act 1 -->
+            <div class="timeline-act active" data-act="1" style="position:relative; margin-bottom:20px; cursor:pointer;" onclick="showActDetails(1)">
+              <div style="position:absolute; left:-16px; top:2px; width:16px; height:16px; background:#667eea; border-radius:50%; border:3px solid #16213e; box-shadow:0 0 10px rgba(102,126,234,0.5);"></div>
+              <div style="padding-left:15px;">
+                <div style="color:#667eea; font-weight:600; font-size:0.9rem;">ACT I</div>
+                <div style="color:#fff; font-size:0.85rem;">Garage Dreams</div>
+              </div>
+            </div>
+            
+            <!-- Act 2 -->
+            <div class="timeline-act locked" data-act="2" style="position:relative; margin-bottom:20px; opacity:0.5;">
+              <div style="position:absolute; left:-16px; top:2px; width:16px; height:16px; background:#444; border-radius:50%; border:3px solid #16213e;"></div>
+              <div style="padding-left:15px;">
+                <div style="color:#888; font-weight:600; font-size:0.9rem;">ACT II</div>
+                <div style="color:#666; font-size:0.85rem;">Corporate Climber</div>
+              </div>
+            </div>
+            
+            <!-- Act 3 -->
+            <div class="timeline-act locked" data-act="3" style="position:relative; margin-bottom:20px; opacity:0.5;">
+              <div style="position:absolute; left:-16px; top:2px; width:16px; height:16px; background:#444; border-radius:50%; border:3px solid #16213e;"></div>
+              <div style="padding-left:15px;">
+                <div style="color:#888; font-weight:600; font-size:0.9rem;">ACT III</div>
+                <div style="color:#666; font-size:0.85rem;">Empire Builder</div>
+              </div>
+            </div>
+            
+            <!-- Act 4 -->
+            <div class="timeline-act locked" data-act="4" style="position:relative; margin-bottom:20px; opacity:0.5;">
+              <div style="position:absolute; left:-16px; top:2px; width:16px; height:16px; background:#444; border-radius:50%; border:3px solid #16213e;"></div>
+              <div style="padding-left:15px;">
+                <div style="color:#888; font-weight:600; font-size:0.9rem;">ACT IV</div>
+                <div style="color:#666; font-size:0.85rem;">Shadows & Secrets</div>
+              </div>
+            </div>
+            
+            <!-- Act 5 -->
+            <div class="timeline-act locked" data-act="5" style="position:relative; opacity:0.5;">
+              <div style="position:absolute; left:-16px; top:2px; width:16px; height:16px; background:#444; border-radius:50%; border:3px solid #16213e;"></div>
+              <div style="padding-left:15px;">
+                <div style="color:#888; font-weight:600; font-size:0.9rem;">ACT V</div>
+                <div style="color:#666; font-size:0.85rem;">The Reckoning</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Factions -->
+        <div style="background:#16213e; border-radius:12px; padding:20px;">
+          <h4 style="margin:0 0 15px 0; color:#fff; display:flex; align-items:center; gap:8px;">
+            <span>⚔️</span> Factions
+          </h4>
+          <div id="factionsList">
+            <div style="text-align:center; color:#8899a6; font-style:italic; font-size:0.85rem; padding:20px;">
+              Factions emerge as your empire grows...
+            </div>
+          </div>
+        </div>
+        
+        <!-- Memories (Timeline persistence) -->
+        <div id="memoriesSection" style="background:#16213e; border-radius:12px; padding:20px; display:none;">
+          <h4 style="margin:0 0 15px 0; color:#fff; display:flex; align-items:center; gap:8px;">
+            <span>🌀</span> Echoes of Other Timelines
+          </h4>
+          <div id="timelineMemories">
+            <!-- Populated after prestige -->
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -8344,7 +8530,95 @@
     },
     
     // Name tracking for uniqueness
-    usedEmployeeNames: new Set()
+    usedEmployeeNames: new Set(),
+    
+    // ========== 📖 STORY ENGINE STATE ==========
+    // The narrative system that transforms your business journey into an epic tale
+    story: {
+      // Core story state
+      currentAct: 1,
+      actProgress: 0, // 0-100 progress within current act
+      totalStoryProgress: 0, // Overall story completion percentage
+      
+      // Active narrative threads
+      activeSpineEvent: null, // Current major story beat being played
+      activeRibEvents: [], // Minor emergent events
+      pendingEvents: [], // Events waiting to be shown
+      
+      // Player's narrative identity
+      moralScore: 50, // 0=Dark, 50=Neutral, 100=Light
+      charismaScore: 50, // Affects dialogue options
+      ruthlessnessScore: 0, // Tracks ruthless decisions
+      
+      // Choice tracking for endings
+      choicesMade: 0,
+      choiceHistory: [], // { eventId, choiceId, timestamp, actNumber }
+      
+      // Key narrative flags (persist through acts)
+      narrativeFlags: {
+        firstHireComplete: false,
+        firstBossDefeated: false,
+        firstPrestigeComplete: false,
+        victoriaIntroduced: false,
+        victoriaDefeated: false,
+        victoriaRecruited: false,
+        betrayalDetected: false,
+        darkPathStarted: false,
+        whistleblowerChosen: null, // 'expose', 'bury', 'investigate', 'leverage'
+        innerCircleFormed: false,
+        secretsRevealed: 0 // Count of major secrets discovered
+      },
+      
+      // Character relationships for story
+      keyCharacters: [], // { id, name, role, introduced, relationship, arc }
+      antagonists: [], // Major villains introduced
+      allies: [], // Trusted companions
+      
+      // Faction system
+      factions: {
+        loyalists: { members: [], strength: 0, events: [] },
+        opportunists: { members: [], strength: 0, events: [] },
+        reformers: { members: [], strength: 0, events: [] },
+        underground: { members: [], strength: 0, events: [] }
+      },
+      
+      // Story journal - chronicles your journey
+      journal: [], // { id, title, content, type, actNumber, timestamp, memorable }
+      
+      // Timeline memories (persist through prestige)
+      persistentMemories: [], // { timeline, keyEvents, ending, timestamp }
+      currentTimeline: 1,
+      
+      // Act-specific data
+      actData: {
+        1: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] },
+        2: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] },
+        3: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] },
+        4: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] },
+        5: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] }
+      },
+      
+      // Emergent narrative tracking
+      emergentNarratives: {
+        activeArcs: [], // Character arcs in progress
+        completedArcs: [],
+        pendingMilestones: [] // Relationship milestones waiting to trigger
+      },
+      
+      // Story generation tracking (prevents repetition)
+      recentThemes: [],
+      recentEmotions: [],
+      generatedEventCount: 0,
+      lastStoryCheck: 0,
+      
+      // Settings
+      settings: {
+        storyEnabled: true,
+        autoShowEvents: true,
+        dramaticPauses: true, // Typewriter effect for story text
+        showSubtleHints: true // Foreshadowing in UI
+      }
+    }
   };
 
   // ============================================
@@ -12917,6 +13191,1589 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
       }
     }
   }
+
+  // ================================================================================
+  // 📖 STORY ENGINE - The Narrative Heart of Your Corporate Empire
+  // ================================================================================
+  // "Every empire has a story. Yours is being written with every choice you make."
+  // ================================================================================
+
+  const StoryEngine = {
+    // ============================================
+    // STORY CONFIGURATION
+    // ============================================
+    
+    ACT_CONFIG: {
+      1: {
+        name: 'GARAGE DREAMS',
+        title: 'ACT I: GARAGE DREAMS',
+        description: 'Every empire starts somewhere. Yours begins in a cramped garage with nothing but ambition and a dream.',
+        tone: 'hopeful, underdog, learning',
+        themes: ['humble beginnings', 'first victories', 'building trust'],
+        triggerConditions: { cash: 0, employees: 0, locations: [] },
+        spineEvents: ['prologue', 'first_hire', 'first_crisis', 'garage_boss']
+      },
+      2: {
+        name: 'CORPORATE CLIMBER',
+        title: 'ACT II: CORPORATE CLIMBER',
+        description: 'Success breeds ambition. But ambition breeds enemies. Someone is watching your rise... and they don\'t like what they see.',
+        tone: 'ambitious, competitive, moral choices',
+        themes: ['growing pains', 'office politics', 'first rival'],
+        triggerConditions: { cash: 15000, employees: 3, locations: ['home_office'] },
+        spineEvents: ['expansion_decision', 'the_whistleblower', 'victoria_intro', 'inner_circle']
+      },
+      3: {
+        name: 'EMPIRE BUILDER',
+        title: 'ACT III: EMPIRE BUILDER',
+        description: 'You\'ve built something real. But empires attract vultures, and the bigger you grow, the more you have to lose.',
+        tone: 'powerful, consequential, hubris',
+        themes: ['power corrupts', 'loyalty tested', 'hard choices'],
+        triggerConditions: { cash: 500000, employees: 10, locations: ['office_suite'] },
+        spineEvents: ['factory_incident', 'the_consortium', 'betrayal_arc', 'point_of_no_return']
+      },
+      4: {
+        name: 'SHADOWS & SECRETS',
+        title: 'ACT IV: SHADOWS & SECRETS',
+        description: 'Behind every fortune lies a darker truth. How deep are you willing to go?',
+        tone: 'dark, mature, consequences',
+        themes: ['hidden worlds', 'moral gray', 'transformation'],
+        triggerConditions: { cash: 5000000000, employees: 20, locations: ['creative_studio'], prestiges: 1 },
+        spineEvents: ['hidden_world', 'price_of_entry', 'family_secrets', 'judgment_day']
+      },
+      5: {
+        name: 'THE RECKONING',
+        title: 'ACT V: THE RECKONING',
+        description: 'All paths lead here. What kind of legacy will you leave? What kind of person have you become?',
+        tone: 'climactic, cosmic, transcendent',
+        themes: ['legacy', 'ultimate power', 'final choice'],
+        triggerConditions: { cash: 500000000000, employees: 35, locations: ['private_club'], prestiges: 2 },
+        spineEvents: ['velvet_invitation', 'ultimate_choice', 'endings']
+      }
+    },
+    
+    // Moral alignment descriptions
+    ALIGNMENTS: {
+      0: { name: 'Ruthless Tyrant', emoji: '👿', color: '#8b0000' },
+      25: { name: 'Pragmatic Shark', emoji: '🦈', color: '#e94560' },
+      50: { name: 'Balanced Leader', emoji: '⚖️', color: '#ffd700' },
+      75: { name: 'Ethical Pioneer', emoji: '🌟', color: '#4ecca3' },
+      100: { name: 'Benevolent Visionary', emoji: '👼', color: '#00d4ff' }
+    },
+    
+    // ============================================
+    // CORE ENGINE METHODS
+    // ============================================
+    
+    /**
+     * Initialize story state for a new game or load
+     */
+    initialize() {
+      if (!gameState.story) {
+        gameState.story = this.getDefaultStoryState();
+      }
+      
+      // Ensure all story fields exist (for save compatibility)
+      const defaults = this.getDefaultStoryState();
+      for (const key of Object.keys(defaults)) {
+        if (gameState.story[key] === undefined) {
+          gameState.story[key] = defaults[key];
+        }
+      }
+      
+      // Mark Act 1 as started if not already
+      if (!gameState.story.actData[1].startedAt) {
+        gameState.story.actData[1].startedAt = Date.now();
+      }
+      
+      console.log('[StoryEngine] Initialized. Current Act:', gameState.story.currentAct);
+      
+      // Check if prologue should trigger (new game with no spine events yet)
+      const prologueTriggered = gameState.story.actData[1].spineEventsTriggered.includes('prologue');
+      if (!prologueTriggered && gameState.story.choicesMade === 0) {
+        // Delay prologue slightly to let game fully load
+        setTimeout(() => {
+          if (gameState.story.settings.storyEnabled) {
+            this.triggerSpineEvent('prologue');
+          }
+        }, 2000);
+      }
+    },
+    
+    getDefaultStoryState() {
+      return {
+        currentAct: 1,
+        actProgress: 0,
+        totalStoryProgress: 0,
+        activeSpineEvent: null,
+        activeRibEvents: [],
+        pendingEvents: [],
+        moralScore: 50,
+        charismaScore: 50,
+        ruthlessnessScore: 0,
+        choicesMade: 0,
+        choiceHistory: [],
+        narrativeFlags: {
+          firstHireComplete: false,
+          firstBossDefeated: false,
+          firstPrestigeComplete: false,
+          victoriaIntroduced: false,
+          victoriaDefeated: false,
+          victoriaRecruited: false,
+          betrayalDetected: false,
+          darkPathStarted: false,
+          whistleblowerChosen: null,
+          innerCircleFormed: false,
+          secretsRevealed: 0
+        },
+        keyCharacters: [],
+        antagonists: [],
+        allies: [],
+        factions: {
+          loyalists: { members: [], strength: 0, events: [] },
+          opportunists: { members: [], strength: 0, events: [] },
+          reformers: { members: [], strength: 0, events: [] },
+          underground: { members: [], strength: 0, events: [] }
+        },
+        journal: [],
+        persistentMemories: [],
+        currentTimeline: 1,
+        actData: {
+          1: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] },
+          2: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] },
+          3: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] },
+          4: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] },
+          5: { startedAt: null, completedAt: null, spineEventsTriggered: [], majorChoices: [] }
+        },
+        emergentNarratives: {
+          activeArcs: [],
+          completedArcs: [],
+          pendingMilestones: []
+        },
+        recentThemes: [],
+        recentEmotions: [],
+        generatedEventCount: 0,
+        lastStoryCheck: 0,
+        settings: {
+          storyEnabled: true,
+          autoShowEvents: true,
+          dramaticPauses: true,
+          showSubtleHints: true
+        }
+      };
+    },
+    
+    /**
+     * Main story tick - called regularly to check for story events
+     */
+    tick() {
+      if (!gameState.story?.settings?.storyEnabled) return;
+      
+      const now = Date.now();
+      
+      // Only check every 30 seconds to prevent spam
+      if (now - (gameState.story.lastStoryCheck || 0) < 30000) return;
+      gameState.story.lastStoryCheck = now;
+      
+      // Check for act progression
+      this.checkActProgression();
+      
+      // Check for spine events that should trigger
+      this.checkSpineEventTriggers();
+      
+      // Check for emergent narrative opportunities
+      this.checkEmergentNarratives();
+      
+      // Update faction standings
+      this.updateFactions();
+      
+      // Update UI
+      this.updateStoryUI();
+    },
+    
+    /**
+     * Check if player should advance to next act
+     */
+    checkActProgression() {
+      const currentAct = gameState.story.currentAct;
+      if (currentAct >= 5) return; // Already at max act
+      
+      const nextAct = currentAct + 1;
+      const config = this.ACT_CONFIG[nextAct];
+      if (!config) return;
+      
+      const conditions = config.triggerConditions;
+      let canProgress = true;
+      
+      // Check cash requirement
+      if (conditions.cash && gameState.cash < conditions.cash) {
+        canProgress = false;
+      }
+      
+      // Check employee count
+      const employeeCount = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active').length;
+      if (conditions.employees && employeeCount < conditions.employees) {
+        canProgress = false;
+      }
+      
+      // Check location requirements
+      if (conditions.locations) {
+        for (const locId of conditions.locations) {
+          const loc = gameState.locations.find(l => l.id === locId);
+          if (!loc || !loc.owned) {
+            canProgress = false;
+            break;
+          }
+        }
+      }
+      
+      // Check prestige requirements
+      if (conditions.prestiges && gameState.prestigeLevel < conditions.prestiges) {
+        canProgress = false;
+      }
+      
+      // Calculate progress within current act
+      this.calculateActProgress(currentAct);
+      
+      if (canProgress) {
+        this.advanceToAct(nextAct);
+      }
+    },
+    
+    /**
+     * Calculate progress percentage within current act
+     */
+    calculateActProgress(actNumber) {
+      const config = this.ACT_CONFIG[actNumber];
+      const nextConfig = this.ACT_CONFIG[actNumber + 1];
+      
+      if (!nextConfig) {
+        // Final act - progress based on spine events completed
+        const spineEvents = gameState.story.actData[actNumber].spineEventsTriggered;
+        const totalSpine = config.spineEvents.length;
+        gameState.story.actProgress = Math.min(100, Math.round((spineEvents.length / totalSpine) * 100));
+        return;
+      }
+      
+      const conditions = nextConfig.triggerConditions;
+      let progressFactors = [];
+      
+      // Cash progress
+      if (conditions.cash) {
+        const cashProgress = Math.min(1, gameState.cash / conditions.cash);
+        progressFactors.push(cashProgress);
+      }
+      
+      // Employee progress
+      if (conditions.employees) {
+        const empCount = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active').length;
+        const empProgress = Math.min(1, empCount / conditions.employees);
+        progressFactors.push(empProgress);
+      }
+      
+      // Location progress
+      if (conditions.locations && conditions.locations.length > 0) {
+        const ownedCount = conditions.locations.filter(locId => {
+          const loc = gameState.locations.find(l => l.id === locId);
+          return loc && loc.owned;
+        }).length;
+        const locProgress = ownedCount / conditions.locations.length;
+        progressFactors.push(locProgress);
+      }
+      
+      // Spine event progress
+      const spineEvents = gameState.story.actData[actNumber].spineEventsTriggered;
+      const totalSpine = config.spineEvents.length;
+      if (totalSpine > 0) {
+        progressFactors.push(spineEvents.length / totalSpine);
+      }
+      
+      // Average all factors
+      const avgProgress = progressFactors.length > 0 
+        ? progressFactors.reduce((a, b) => a + b, 0) / progressFactors.length 
+        : 0;
+      
+      gameState.story.actProgress = Math.round(avgProgress * 100);
+    },
+    
+    /**
+     * Advance to a new act
+     */
+    advanceToAct(actNumber) {
+      const prevAct = gameState.story.currentAct;
+      
+      // Mark previous act as complete
+      if (gameState.story.actData[prevAct]) {
+        gameState.story.actData[prevAct].completedAt = Date.now();
+      }
+      
+      // Advance to new act
+      gameState.story.currentAct = actNumber;
+      gameState.story.actProgress = 0;
+      
+      // Mark new act as started
+      if (gameState.story.actData[actNumber]) {
+        gameState.story.actData[actNumber].startedAt = Date.now();
+      }
+      
+      console.log(`[StoryEngine] ✨ Advanced to Act ${actNumber}: ${this.ACT_CONFIG[actNumber].name}`);
+      
+      // Generate act transition event
+      this.generateActTransitionEvent(prevAct, actNumber);
+      
+      // Add to journal
+      this.addJournalEntry({
+        title: `Chapter ${actNumber}: ${this.ACT_CONFIG[actNumber].name}`,
+        content: this.ACT_CONFIG[actNumber].description,
+        type: 'act_transition',
+        memorable: true
+      });
+      
+      // Update UI
+      this.updateStoryUI();
+      this.showStoryNotification();
+    },
+    
+    /**
+     * Check for spine events that should trigger
+     */
+    checkSpineEventTriggers() {
+      const act = gameState.story.currentAct;
+      const config = this.ACT_CONFIG[act];
+      if (!config) return;
+      
+      const triggered = gameState.story.actData[act].spineEventsTriggered;
+      
+      for (const eventKey of config.spineEvents) {
+        // Skip if already triggered
+        if (triggered.includes(eventKey)) continue;
+        
+        // Check if this event should trigger
+        if (this.shouldTriggerSpineEvent(eventKey)) {
+          this.triggerSpineEvent(eventKey);
+          break; // Only trigger one at a time
+        }
+      }
+    },
+    
+    /**
+     * Determine if a spine event should trigger
+     */
+    shouldTriggerSpineEvent(eventKey) {
+      const flags = gameState.story.narrativeFlags;
+      const employeeCount = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active').length;
+      
+      switch (eventKey) {
+        // Act 1 Events
+        case 'prologue':
+          return true; // Always trigger first
+          
+        case 'first_hire':
+          return employeeCount >= 1 && !flags.firstHireComplete;
+          
+        case 'first_crisis':
+          return employeeCount >= 2 && gameState.cash < 500 && gameState.story.actData[1].spineEventsTriggered.includes('first_hire');
+          
+        case 'garage_boss':
+          return gameState.cash >= 5000 && flags.firstHireComplete;
+          
+        // Act 2 Events
+        case 'expansion_decision':
+          const homeOffice = gameState.locations.find(l => l.id === 'home_office');
+          return homeOffice && homeOffice.owned;
+          
+        case 'victoria_intro':
+          return gameState.story.actData[2].spineEventsTriggered.includes('expansion_decision') && 
+                 !flags.victoriaIntroduced;
+          
+        case 'the_whistleblower':
+          return employeeCount >= 5 && flags.victoriaIntroduced;
+          
+        case 'inner_circle':
+          const highRelEmployees = gameState.employees.filter(e => 
+            e.hired && e.employmentStatus === 'active' && 
+            ((e.stats?.affection || 0) + (e.stats?.trust || 0)) > 140
+          ).length;
+          return highRelEmployees >= 3 && !flags.innerCircleFormed;
+          
+        // Act 3 Events
+        case 'factory_incident':
+          const factory = gameState.locations.find(l => l.id === 'factory');
+          return factory && factory.owned;
+          
+        case 'the_consortium':
+          return gameState.story.actData[3].spineEventsTriggered.includes('factory_incident');
+          
+        case 'betrayal_arc':
+          // Check for employees with low trust in high positions
+          const betrayalCandidates = gameState.employees.filter(e => 
+            e.hired && e.employmentStatus === 'active' &&
+            (e.stats?.trust || 50) < 40 && 
+            (e.career?.level || 0) >= 3
+          );
+          return betrayalCandidates.length > 0 && !flags.betrayalDetected;
+          
+        case 'point_of_no_return':
+          return gameState.story.actData[3].spineEventsTriggered.length >= 3;
+          
+        // Act 4+ events require more complex conditions
+        default:
+          return false;
+      }
+    },
+    
+    /**
+     * Trigger a spine event
+     */
+    async triggerSpineEvent(eventKey) {
+      console.log(`[StoryEngine] 🎭 Triggering spine event: ${eventKey}`);
+      
+      const act = gameState.story.currentAct;
+      
+      // Mark as triggered
+      if (!gameState.story.actData[act].spineEventsTriggered.includes(eventKey)) {
+        gameState.story.actData[act].spineEventsTriggered.push(eventKey);
+      }
+      
+      // Generate the event content
+      const event = await this.generateSpineEventContent(eventKey);
+      
+      if (event) {
+        gameState.story.activeSpineEvent = event;
+        
+        // Show the event modal
+        if (gameState.story.settings.autoShowEvents) {
+          this.showStoryEventModal(event);
+        } else {
+          gameState.story.pendingEvents.push(event);
+          this.showStoryNotification();
+        }
+      }
+      
+      saveGame();
+    },
+    
+    /**
+     * Generate spine event content using AI
+     */
+    async generateSpineEventContent(eventKey) {
+      const act = gameState.story.currentAct;
+      const config = this.ACT_CONFIG[act];
+      
+      // Get key employees for context
+      const activeEmployees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active');
+      const keyEmployees = activeEmployees.slice(0, 5).map(e => ({
+        name: e.name,
+        role: e.career?.title || 'Employee',
+        trust: e.stats?.trust || 50,
+        affection: e.stats?.affection || 50
+      }));
+      
+      // Event-specific templates
+      const eventTemplates = this.getEventTemplate(eventKey);
+      
+      // Try AI generation, fall back to template
+      let event = null;
+      
+      try {
+        if (typeof queuedGenerateText === 'function' && eventTemplates.allowAI) {
+          event = await this.generateEventWithAI(eventKey, config, keyEmployees, eventTemplates);
+        }
+      } catch (err) {
+        console.warn('[StoryEngine] AI generation failed, using template:', err);
+      }
+      
+      // Fall back to template if AI failed
+      if (!event) {
+        event = this.createEventFromTemplate(eventKey, eventTemplates, keyEmployees);
+      }
+      
+      // Add common fields
+      event.id = `spine_${eventKey}_${Date.now()}`;
+      event.eventKey = eventKey;
+      event.actNumber = act;
+      event.timestamp = Date.now();
+      event.type = 'spine';
+      
+      return event;
+    },
+    
+    /**
+     * Get template for a spine event
+     */
+    getEventTemplate(eventKey) {
+      const templates = {
+        // ACT 1 EVENTS
+        prologue: {
+          title: '🌅 A New Beginning',
+          cinematicText: `The garage door creaks open, letting in a sliver of morning light. This cramped space—cluttered with old boxes and forgotten dreams—is about to become the birthplace of something extraordinary.
+
+You take a deep breath. No fancy office. No investors. No safety net. Just you, a laptop, and an idea that keeps you awake at night.
+
+*"Everyone starts somewhere,"* you think, fingers hovering over the keyboard. *"Let's see where this goes."*
+
+The world doesn't know your name yet. But it will.`,
+          choices: [
+            { id: 'ambitious', text: '💫 "I\'m going to build an empire."', alignment: 'ambitious', consequence: 'Your ambition burns bright. +Charisma, but you may push too hard.' },
+            { id: 'humble', text: '🙏 "One step at a time. Stay humble."', alignment: 'lawful', consequence: 'Patience and humility will serve you well. +Trust with future employees.' },
+            { id: 'hungry', text: '🔥 "Whatever it takes. No excuses."', alignment: 'ruthless', consequence: 'Your determination is unshakeable. But at what cost?' }
+          ],
+          imagePrompt: 'A cramped garage workspace at dawn, morning light streaming through dusty windows, a single laptop glowing on a makeshift desk, boxes stacked in corners, hopeful atmosphere, cinematic lighting, the beginning of a journey',
+          allowAI: true,
+          setFlags: [],
+          followUpEvent: 'first_hire'
+        },
+        
+        first_hire: {
+          title: '🤝 The First Believer',
+          cinematicText: `They stand in your garage, looking around at the "office" with an expression you can't quite read. Is it doubt? Amusement? Or... is that hope?
+
+"So this is it, huh?" they say, taking in the folding table, the extension cords, the motivational poster you stuck on the wall (slightly crooked, you notice now).
+
+You open your mouth to apologize, to explain, to promise that this is temporary—
+
+But they smile. Actually smile.
+
+"I've worked in glass towers with people who had no soul. At least here..." they gesture at your modest setup, "...there's something real. Something that could actually matter."
+
+Your first employee. Your first believer.
+
+This changes everything.`,
+          cinematicTextAI: `Generate an emotional scene where the player's first employee arrives at the humble garage office. Include:
+- Their reaction to the modest workspace
+- A moment where they see potential instead of poverty
+- The weight of this moment - the first person to believe in your dream
+- End with hope and determination`,
+          choices: [
+            { id: 'partner', text: '🤝 "We\'re partners in this. Equals."', alignment: 'light', consequence: 'They beam. This person will remember you treated them as an equal from day one.' },
+            { id: 'professional', text: '💼 "Welcome aboard. Let\'s get to work."', alignment: 'neutral', consequence: 'Professional and focused. Sets clear expectations from the start.' },
+            { id: 'honest', text: '😅 "I\'ll be honest—I have no idea what I\'m doing."', alignment: 'humble', consequence: 'Your vulnerability builds trust. They appreciate your honesty.' },
+            { id: 'promise', text: '🌟 "Stick with me. I\'ll make us both rich."', alignment: 'ambitious', consequence: 'Bold promise. Now you have to deliver.' }
+          ],
+          imagePrompt: 'A job interview in a garage startup, new employee looking around a humble workspace with a slight smile, morning light, folding table desk, motivational poster on wall, hopeful atmosphere, realistic, emotional moment',
+          allowAI: true,
+          setFlags: ['firstHireComplete'],
+          effectOnEmployee: true
+        },
+        
+        first_crisis: {
+          title: '⚠️ Sink or Swim',
+          cinematicText: `The numbers don't lie. They never do.
+
+You stare at your bank balance, then at the stack of bills, then back at the balance. Even with creative accounting, there's no way to make this work. You're about to miss your first payment.
+
+Your employee looks up from their laptop. "Everything okay, boss?"
+
+*No,* you want to say. *We might be done before we even started.*
+
+But something in you refuses to give up. Not yet. Not like this.
+
+This is the moment. The one that separates the dreamers from the builders. What are you willing to do to survive?`,
+          choices: [
+            { id: 'hustle', text: '💪 Double down. Work twice as hard.', alignment: 'determined', consequence: 'You work around the clock. Exhausting, but you might pull through.' },
+            { id: 'pivot', text: '🔄 Pivot. Find a new angle.', alignment: 'adaptive', consequence: 'Flexibility is strength. You find an unexpected opportunity.' },
+            { id: 'risk', text: '🎲 Take a big risk for a big reward.', alignment: 'risky', consequence: 'High stakes, high reward. This could make or break you.' },
+            { id: 'help', text: '🤲 Ask for help. Swallow your pride.', alignment: 'humble', consequence: 'Reaching out takes courage. You might be surprised who believes in you.' }
+          ],
+          imagePrompt: 'A stressed entrepreneur in a garage office looking at bills and a laptop with concerning numbers, dim lighting, late night, scattered papers, empty coffee cups, tense atmosphere but with determination in their eyes',
+          allowAI: true,
+          setFlags: []
+        },
+        
+        garage_boss: {
+          title: '🦹 The Gatekeeper',
+          cinematicText: `Word travels fast in the business world. Too fast.
+
+You've heard the rumors—someone's been watching your little operation. Someone who doesn't like newcomers on their turf. Someone who thinks they can crush you before you even get started.
+
+And now they're here. Standing in the doorway of your garage like they own the place. Designer suit. Predator's smile. Eyes that have seen a thousand startups rise and fall.
+
+"Cute setup," they say, voice dripping with condescension. "Very... *scrappy*."
+
+They step closer. "Let me make this simple. This neighborhood? These clients? They're mine. Have been for years. You can walk away now with your dignity intact..."
+
+They lean in close. "...or I can teach you why that's a mistake."
+
+Your first real challenge. Your first real enemy.
+
+What do you do?`,
+          choices: [
+            { id: 'fight', text: '⚔️ "Bring it. I\'m not going anywhere."', alignment: 'defiant', consequence: 'You stare them down. This means war—but you\'ll fight for what\'s yours.' },
+            { id: 'negotiate', text: '🤝 "Let\'s talk. Maybe we can both win."', alignment: 'diplomatic', consequence: 'Looking for common ground. Risky, but could avoid a costly battle.' },
+            { id: 'outsmart', text: '🧠 "Go ahead. Underestimate me."', alignment: 'cunning', consequence: 'Let them think they\'ve won. Then strike when they least expect it.' },
+            { id: 'comply', text: '😔 "Fine. What do you want?"', alignment: 'submissive', consequence: 'Bowing to pressure now may haunt you later. But you survive another day.' }
+          ],
+          imagePrompt: 'A tense confrontation in a garage office, an intimidating business person in an expensive suit confronting the protagonist, dramatic lighting, power dynamics, David vs Goliath scene, corporate thriller atmosphere',
+          allowAI: true,
+          setFlags: [],
+          triggersBossFight: true
+        },
+        
+        // ACT 2 EVENTS
+        expansion_decision: {
+          title: '🏢 Growing Pains',
+          cinematicText: `The garage has become too small. Literally.
+
+Your team trips over each other. Clients raise eyebrows at the "unconventional" workspace. Your biggest monitor is balanced on a stack of old textbooks.
+
+But moving means risk. Real rent. Real commitment. Real consequences if things go wrong.
+
+Your most trusted employee catches you staring at office listings. "What're you thinking, boss?"
+
+You look around at the garage—at every coffee stain, every late night, every small victory etched into these walls.
+
+"I'm thinking," you say slowly, "that it's time to level up."
+
+But how?`,
+          choices: [
+            { id: 'big', text: '🏢 "Go big. Get the nicest office we can afford."', alignment: 'ambitious', consequence: 'First impressions matter. But can you fill those shoes?' },
+            { id: 'smart', text: '📊 "Stay lean. Grow into our space."', alignment: 'pragmatic', consequence: 'Sustainable growth. Less flashy, but less risky.' },
+            { id: 'hybrid', text: '💡 "Remote-first. Spend on talent, not real estate."', alignment: 'innovative', consequence: 'Modern approach. Your team gains flexibility, but loses togetherness.' },
+            { id: 'wait', text: '⏳ "Not yet. We\'re not ready."', alignment: 'cautious', consequence: 'Playing it safe. Sometimes the best move is no move. But will opportunity wait?' }
+          ],
+          imagePrompt: 'A crowded but successful garage startup overflowing with equipment and happy employees, contrasted with an empty modern office space visible through a window or brochure, crossroads moment, decision time',
+          allowAI: true,
+          setFlags: []
+        },
+        
+        victoria_intro: {
+          title: '👠 The Shadow Steps Forward',
+          cinematicText: `You've heard the name whispered in board rooms and feared in break rooms. Victoria Steele. The woman who turned a small consulting firm into a corporate empire—and crushed anyone who got in her way.
+
+Now she's standing in your new office, uninvited, looking at you like a cat studying a particularly interesting mouse.
+
+"I've been watching you," she says, circling your desk slowly. "You've got potential. Raw, unpolished potential."
+
+She picks up a framed photo from your desk, examines it, sets it down with a dismissive flick.
+
+"You remind me of someone. Me, actually. Twenty years ago. Before I learned that this world has no room for idealists."
+
+She stops in front of you, and for a moment, you see something almost like respect in her eyes.
+
+"Here's the deal. I could destroy you. Easily. But that would be boring." She smiles—a sharp, dangerous thing. "Instead, I'm going to give you a choice. Join me... or become my greatest project."
+
+"Which will it be?"`,
+          choices: [
+            { id: 'defy', text: '🔥 "I\'m not anyone\'s project. Bring it."', alignment: 'defiant', consequence: 'You\'ve made a powerful enemy. But you\'ve also earned her attention.' },
+            { id: 'intrigue', text: '🤔 "Tell me more about this... partnership."', alignment: 'calculating', consequence: 'Keep your enemies close. Very close. But can you trust her?' },
+            { id: 'dismiss', text: '👋 "I don\'t have time for games. Door\'s that way."', alignment: 'independent', consequence: 'She laughs. Actually laughs. This isn\'t over.' },
+            { id: 'admire', text: '😏 "I\'ve heard about you. Impressive resume."', alignment: 'charismatic', consequence: 'Flattery might get you everywhere. Or nowhere. With Victoria, it\'s hard to tell.' }
+          ],
+          imagePrompt: 'A powerful intimidating businesswoman in designer clothing standing in a modern office, confident predatory stance, expensive jewelry, sharp intelligent eyes, office with city skyline behind, corporate thriller atmosphere, dramatic lighting',
+          allowAI: true,
+          setFlags: ['victoriaIntroduced'],
+          introducesCharacter: 'victoria_steele'
+        },
+        
+        the_whistleblower: {
+          title: '⚖️ The Weight of Truth',
+          cinematicText: `The manila folder sits on your desk like a bomb.
+
+Sarah—your most meticulous employee—found it. Financial inconsistencies. Falsified records. The kind of evidence that could bring down people far more powerful than you.
+
+And now she's in your office, looking at you with eyes that are equal parts scared and determined.
+
+"I don't know how deep this goes," she whispers, glancing at the door. "But if this is real... people need to know."
+
+You pick up the folder. The papers inside are damning. Careers would end. Empires would crumble. Maybe even yours, if you're implicated by association.
+
+"What we do with this," Sarah says quietly, "says everything about who we are."
+
+She's right. This moment will define you.
+
+What do you do with the truth?`,
+          choices: [
+            { id: 'expose', text: '📢 "Go public. The truth matters more than anything."', alignment: 'lawful', consequence: 'Reputation boost, but major political fallout. You\'ve made dangerous enemies. Sarah\'s trust soars.' },
+            { id: 'bury', text: '🔒 "Bury it. This isn\'t our fight."', alignment: 'dark', consequence: 'Business continues, but Sarah loses trust. Some secrets have a way of surfacing.' },
+            { id: 'investigate', text: '🔍 "Investigate privately. We need the full picture."', alignment: 'neutral', consequence: 'A careful approach. More information, more control—but more time for things to go wrong.' },
+            { id: 'leverage', text: '💰 "This is leverage. Information is power."', alignment: 'ruthless', consequence: 'Blackmail material. Very profitable, very dangerous. Sarah may never forgive you.' }
+          ],
+          imagePrompt: 'A tense office scene, a worried female employee showing documents to her boss, manila folder with papers, concerned expressions, modern office with blinds partially closed, dramatic shadows, corporate thriller atmosphere',
+          allowAI: true,
+          setFlags: [],
+          affectsFlag: 'whistleblowerChosen'
+        }
+      };
+      
+      return templates[eventKey] || {
+        title: '📜 Untold Chapter',
+        cinematicText: 'A new chapter of your story unfolds...',
+        choices: [
+          { id: 'continue', text: 'Continue...', alignment: 'neutral', consequence: 'The story continues.' }
+        ],
+        allowAI: true
+      };
+    },
+    
+    /**
+     * Generate event using AI (enhanced version of template)
+     */
+    async generateEventWithAI(eventKey, actConfig, keyEmployees, template) {
+      if (!template.allowAI || typeof queuedGenerateText !== 'function') {
+        return null;
+      }
+      
+      const flags = gameState.story.narrativeFlags;
+      
+      const prompt = `You are the MASTER STORYTELLER for an office management game. Your writing should be:
+- Emotionally resonant and engaging
+- Cinematic with vivid imagery
+- Appropriate to the tone: ${actConfig.tone}
+- Grounded in the player's actual employees and situation
+
+CURRENT STATE:
+- Act: ${actConfig.name}
+- Company Cash: ${formatCash(gameState.cash)}
+- Employees: ${keyEmployees.map(e => `${e.name} (${e.role}, trust:${e.trust}, affection:${e.affection})`).join(', ')}
+- Moral Score: ${gameState.story.moralScore}/100
+- Story Flags: ${JSON.stringify(flags)}
+
+EVENT: "${eventKey}"
+BASE TEMPLATE TITLE: "${template.title}"
+TEMPLATE MOOD/THEMES: ${template.cinematicTextAI || template.cinematicText.substring(0, 200)}
+
+Generate a personalized version of this story moment that:
+1. References actual employee names if relevant
+2. Reflects the player's moral alignment so far
+3. Adds unique details that make this feel fresh
+4. Maintains emotional impact
+
+RESPOND IN STRICT JSON (no markdown):
+{
+  "title": "Event title with emoji",
+  "cinematicText": "2-4 paragraphs of evocative narrative text. Use *italics* for internal thoughts. Be vivid and emotional.",
+  "choices": [
+    {"id": "choice_a", "text": "Choice text with emoji", "alignment": "lawful/chaotic/light/dark/neutral/ambitious", "consequence": "Brief hint at consequences"}
+  ],
+  "imagePrompt": "Detailed visual description for image generation"
+}`;
+
+      try {
+        const response = await queuedGenerateText(prompt, {}, `Story Event: ${eventKey}`);
+        
+        // Parse response
+        let jsonStr = response;
+        const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) {
+          jsonStr = jsonMatch[1].trim();
+        } else {
+          const objMatch = response.match(/\{[\s\S]*\}/);
+          if (objMatch) jsonStr = objMatch[0];
+        }
+        
+        const parsed = JSON.parse(jsonStr);
+        
+        // Validate and merge with template
+        return {
+          ...template,
+          ...parsed,
+          choices: parsed.choices || template.choices
+        };
+      } catch (err) {
+        console.warn('[StoryEngine] AI parsing failed:', err);
+        return null;
+      }
+    },
+    
+    /**
+     * Create event from template (fallback)
+     */
+    createEventFromTemplate(eventKey, template, keyEmployees) {
+      // Replace any placeholders with actual employee names
+      let cinematicText = template.cinematicText;
+      
+      if (keyEmployees.length > 0 && cinematicText.includes('{employee}')) {
+        cinematicText = cinematicText.replace(/{employee}/g, keyEmployees[0].name);
+      }
+      
+      return {
+        title: template.title,
+        cinematicText: cinematicText,
+        choices: template.choices,
+        imagePrompt: template.imagePrompt,
+        setFlags: template.setFlags || [],
+        affectsFlag: template.affectsFlag
+      };
+    },
+    
+    /**
+     * Check for emergent narrative opportunities
+     */
+    checkEmergentNarratives() {
+      // This would check for things like:
+      // - Relationship milestones
+      // - Faction conflicts
+      // - Character arc triggers
+      // For now, simplified version
+      
+      const employees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active');
+      
+      // Check for loyalty confessions (high combined stats)
+      for (const emp of employees) {
+        const totalStats = (emp.stats?.trust || 0) + (emp.stats?.affection || 0) + (emp.stats?.friendship || 0);
+        const hasConfessed = hasFlag && hasFlag(emp, 'loyalty_confessed');
+        
+        if (totalStats > 250 && !hasConfessed) {
+          // Queue an emergent loyalty event
+          if (!gameState.story.emergentNarratives.pendingMilestones.find(m => m.employeeId === emp.id && m.type === 'loyalty')) {
+            gameState.story.emergentNarratives.pendingMilestones.push({
+              employeeId: emp.id,
+              employeeName: emp.name,
+              type: 'loyalty',
+              triggered: false
+            });
+          }
+        }
+      }
+    },
+    
+    /**
+     * Update faction standings based on employee states
+     */
+    updateFactions() {
+      const employees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active');
+      
+      // Reset faction members
+      for (const faction of Object.keys(gameState.story.factions)) {
+        gameState.story.factions[faction].members = [];
+      }
+      
+      // Assign employees to factions based on their stats and flags
+      for (const emp of employees) {
+        const trust = emp.stats?.trust || 50;
+        const affection = emp.stats?.affection || 50;
+        const productivity = emp.stats?.productivity || 50;
+        
+        let faction = 'opportunists'; // Default
+        
+        // High trust + high affection = loyalist
+        if (trust > 70 && affection > 60) {
+          faction = 'loyalists';
+        }
+        // High productivity but low trust = opportunist
+        else if (productivity > 70 && trust < 40) {
+          faction = 'opportunists';
+        }
+        // Check for reformer flags
+        else if (hasFlag && (hasFlag(emp, 'questions_ethics') || hasFlag(emp, 'idealist'))) {
+          faction = 'reformers';
+        }
+        // Dark location employees tend toward underground
+        else if (['private_club', 'velvet_room', 'inner_sanctum'].includes(emp.locationId)) {
+          faction = 'underground';
+        }
+        
+        gameState.story.factions[faction].members.push(emp.id);
+      }
+      
+      // Calculate faction strengths
+      for (const faction of Object.keys(gameState.story.factions)) {
+        gameState.story.factions[faction].strength = gameState.story.factions[faction].members.length;
+      }
+    },
+    
+    // ============================================
+    // STORY UI METHODS
+    // ============================================
+    
+    /**
+     * Show the cinematic story event modal
+     */
+    showStoryEventModal(event) {
+      // Remove any existing modal
+      const existing = document.getElementById('storyEventModal');
+      if (existing) existing.remove();
+      
+      const modal = document.createElement('div');
+      modal.id = 'storyEventModal';
+      modal.className = 'story-modal-overlay';
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.95); z-index: 100001;
+        display: flex; justify-content: center; align-items: center;
+        animation: storyFadeIn 0.8s ease-out;
+        padding: 20px; box-sizing: border-box;
+      `;
+      
+      // Build character section if applicable
+      let charactersHtml = '';
+      if (event.characters && event.characters.length > 0) {
+        charactersHtml = `
+          <div style="display:flex; justify-content:center; gap:20px; margin:20px 0;">
+            ${event.characters.map(c => `
+              <div style="text-align:center;">
+                <div style="width:60px; height:60px; background:#0f3460; border-radius:50%; border:2px solid #667eea; margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">👤</div>
+                <div style="color:#fff; font-size:0.85rem; font-weight:600;">${c.name}</div>
+                <div style="color:#8899a6; font-size:0.75rem;">${c.role || ''}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+      
+      // Build choices HTML
+      const choicesHtml = event.choices.map(choice => {
+        const alignmentColors = {
+          lawful: '#4ecca3', light: '#00d4ff', neutral: '#ffd700',
+          dark: '#e94560', ruthless: '#8b0000', ambitious: '#f093fb',
+          defiant: '#ff6b6b', humble: '#a0c4ff', charismatic: '#ffd700',
+          calculating: '#9d4edd', pragmatic: '#06d6a0', cautious: '#8899a6',
+          independent: '#ff9f1c', determined: '#ff6b6b', adaptive: '#4cc9f0',
+          risky: '#f72585', submissive: '#b8b8d1', diplomatic: '#06d6a0',
+          cunning: '#9d4edd', innovative: '#00d4ff'
+        };
+        const color = alignmentColors[choice.alignment] || '#667eea';
+        
+        return `
+          <button class="story-choice-btn" onclick="StoryEngine.resolveChoice('${event.id}', '${choice.id}')"
+                  style="width:100%; padding:18px 20px; margin:8px 0; 
+                         background:linear-gradient(135deg, rgba(15,52,96,0.9) 0%, rgba(22,33,62,0.9) 100%);
+                         border:2px solid ${color}; border-radius:12px; 
+                         color:#fff; cursor:pointer; text-align:left;
+                         transition:all 0.3s ease; position:relative; overflow:hidden;">
+            <div style="position:relative; z-index:1;">
+              <div style="font-size:1rem; font-weight:600; margin-bottom:6px;">${choice.text}</div>
+              <div style="font-size:0.8rem; color:${color}; opacity:0.9; font-style:italic;">${choice.consequence}</div>
+            </div>
+            <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(90deg, ${color}22 0%, transparent 100%); opacity:0; transition:opacity 0.3s;" class="choice-hover-bg"></div>
+          </button>
+        `;
+      }).join('');
+      
+      modal.innerHTML = `
+        <div class="story-modal-content" style="
+          background:linear-gradient(180deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%);
+          border-radius:20px; max-width:700px; width:100%; max-height:90vh;
+          overflow-y:auto; border:2px solid #667eea;
+          box-shadow:0 0 100px rgba(102,126,234,0.3), 0 0 40px rgba(102,126,234,0.2);
+          animation:storySlideUp 0.6s ease-out;
+        ">
+          <!-- Top bar with act indicator -->
+          <div style="padding:15px 25px; background:linear-gradient(90deg, #667eea22 0%, transparent 50%, #764ba222 100%); border-bottom:1px solid #667eea33;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="color:#667eea; font-size:0.8rem; text-transform:uppercase; letter-spacing:2px;">ACT ${event.actNumber || gameState.story.currentAct}</span>
+                <span style="color:#444;">•</span>
+                <span style="color:#8899a6; font-size:0.8rem;">${this.ACT_CONFIG[event.actNumber || gameState.story.currentAct]?.name || ''}</span>
+              </div>
+              <div style="color:#ffd700; font-size:0.8rem;">📖 ${event.type === 'spine' ? 'Major Story Event' : 'Event'}</div>
+            </div>
+          </div>
+          
+          <!-- Title -->
+          <div style="padding:25px 30px 15px; text-align:center;">
+            <h1 style="margin:0; font-size:2rem; color:#fff; text-shadow:0 2px 20px rgba(102,126,234,0.5); letter-spacing:1px;">${event.title}</h1>
+          </div>
+          
+          ${charactersHtml}
+          
+          <!-- Cinematic text -->
+          <div id="storyTextContainer" style="padding:10px 30px 25px;">
+            <div id="storyText" style="color:#d1d5db; font-size:1.05rem; line-height:1.8; white-space:pre-wrap; font-family:Georgia, serif;">
+              ${gameState.story.settings.dramaticPauses ? '' : event.cinematicText}
+            </div>
+          </div>
+          
+          <!-- Choices -->
+          <div id="storyChoicesContainer" style="padding:0 30px 30px; ${gameState.story.settings.dramaticPauses ? 'opacity:0;' : ''}">
+            ${choicesHtml}
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Add hover effects
+      modal.querySelectorAll('.story-choice-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+          btn.style.transform = 'translateX(5px)';
+          btn.querySelector('.choice-hover-bg').style.opacity = '1';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.transform = 'translateX(0)';
+          btn.querySelector('.choice-hover-bg').style.opacity = '0';
+        });
+      });
+      
+      // Typewriter effect if enabled
+      if (gameState.story.settings.dramaticPauses) {
+        this.typewriterEffect(event.cinematicText, 'storyText', () => {
+          const choicesContainer = document.getElementById('storyChoicesContainer');
+          if (choicesContainer) {
+            choicesContainer.style.transition = 'opacity 0.5s ease';
+            choicesContainer.style.opacity = '1';
+          }
+        });
+      }
+    },
+    
+    /**
+     * Typewriter effect for dramatic text reveal
+     */
+    typewriterEffect(text, elementId, onComplete) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      
+      // Parse text for formatting
+      const formattedText = text.replace(/\*([^*]+)\*/g, '<em style="color:#a0aec0;">$1</em>');
+      
+      let index = 0;
+      const speed = 15; // ms per character
+      
+      function type() {
+        if (index < formattedText.length) {
+          // Handle HTML tags
+          if (formattedText[index] === '<') {
+            const tagEnd = formattedText.indexOf('>', index);
+            if (tagEnd !== -1) {
+              element.innerHTML += formattedText.substring(index, tagEnd + 1);
+              index = tagEnd + 1;
+            }
+          } else {
+            element.innerHTML += formattedText[index];
+            index++;
+          }
+          setTimeout(type, speed);
+        } else {
+          if (onComplete) onComplete();
+        }
+      }
+      
+      // Add skip functionality
+      const skipHandler = () => {
+        element.innerHTML = formattedText;
+        document.removeEventListener('click', skipHandler);
+        if (onComplete) onComplete();
+      };
+      
+      // Allow skip after 1 second
+      setTimeout(() => {
+        document.addEventListener('click', skipHandler, { once: true });
+      }, 1000);
+      
+      type();
+    },
+    
+    /**
+     * Resolve a player's choice in a story event
+     */
+    resolveChoice(eventId, choiceId) {
+      const event = gameState.story.activeSpineEvent;
+      if (!event || event.id !== eventId) return;
+      
+      const choice = event.choices.find(c => c.id === choiceId);
+      if (!choice) return;
+      
+      console.log(`[StoryEngine] Player chose: ${choiceId} (${choice.alignment})`);
+      
+      // Record the choice
+      gameState.story.choicesMade++;
+      gameState.story.choiceHistory.push({
+        eventId,
+        eventKey: event.eventKey,
+        choiceId,
+        alignment: choice.alignment,
+        timestamp: Date.now(),
+        actNumber: event.actNumber
+      });
+      
+      // Apply alignment effects
+      this.applyAlignmentEffect(choice.alignment);
+      
+      // Set any flags from the event
+      if (event.setFlags) {
+        for (const flag of event.setFlags) {
+          gameState.story.narrativeFlags[flag] = true;
+        }
+      }
+      
+      // Handle special flag effects
+      if (event.affectsFlag) {
+        gameState.story.narrativeFlags[event.affectsFlag] = choiceId;
+      }
+      
+      // Add to journal
+      this.addJournalEntry({
+        title: event.title,
+        content: `You chose: "${choice.text}"\n\n${choice.consequence}`,
+        type: 'choice',
+        memorable: event.type === 'spine'
+      });
+      
+      // Clear active event
+      gameState.story.activeSpineEvent = null;
+      
+      // Close modal
+      const modal = document.getElementById('storyEventModal');
+      if (modal) {
+        modal.style.animation = 'storyFadeOut 0.5s ease-out';
+        setTimeout(() => modal.remove(), 500);
+      }
+      
+      // Show consequence
+      setTimeout(() => {
+        this.showConsequenceToast(choice);
+      }, 600);
+      
+      // Update UI
+      this.updateStoryUI();
+      
+      saveGame();
+    },
+    
+    /**
+     * Apply moral alignment effects from a choice
+     */
+    applyAlignmentEffect(alignment) {
+      const effects = {
+        lawful: { moral: 3, charisma: 1, ruthless: -1 },
+        light: { moral: 5, charisma: 2, ruthless: -2 },
+        neutral: { moral: 0, charisma: 0, ruthless: 0 },
+        dark: { moral: -5, charisma: -1, ruthless: 3 },
+        ruthless: { moral: -8, charisma: -2, ruthless: 5 },
+        ambitious: { moral: -1, charisma: 3, ruthless: 1 },
+        defiant: { moral: 2, charisma: 2, ruthless: 0 },
+        humble: { moral: 4, charisma: 0, ruthless: -2 },
+        charismatic: { moral: 0, charisma: 4, ruthless: 0 },
+        calculating: { moral: -2, charisma: 1, ruthless: 2 },
+        pragmatic: { moral: 0, charisma: 1, ruthless: 0 },
+        cautious: { moral: 1, charisma: -1, ruthless: -1 },
+        independent: { moral: 1, charisma: 2, ruthless: 0 },
+        determined: { moral: 1, charisma: 2, ruthless: 1 },
+        adaptive: { moral: 0, charisma: 2, ruthless: 0 },
+        risky: { moral: -1, charisma: 1, ruthless: 2 },
+        submissive: { moral: -1, charisma: -2, ruthless: -2 },
+        diplomatic: { moral: 2, charisma: 3, ruthless: -1 },
+        cunning: { moral: -2, charisma: 2, ruthless: 2 },
+        innovative: { moral: 1, charisma: 2, ruthless: 0 }
+      };
+      
+      const effect = effects[alignment] || effects.neutral;
+      
+      gameState.story.moralScore = Math.max(0, Math.min(100, gameState.story.moralScore + effect.moral));
+      gameState.story.charismaScore = Math.max(0, Math.min(100, gameState.story.charismaScore + effect.charisma));
+      gameState.story.ruthlessnessScore = Math.max(0, Math.min(100, gameState.story.ruthlessnessScore + effect.ruthless));
+    },
+    
+    /**
+     * Show consequence toast notification
+     */
+    showConsequenceToast(choice) {
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+        border: 2px solid #667eea; border-radius: 12px;
+        padding: 15px 25px; max-width: 400px;
+        z-index: 100002; animation: storySlideUp 0.5s ease-out;
+        box-shadow: 0 10px 40px rgba(102,126,234,0.3);
+      `;
+      
+      toast.innerHTML = `
+        <div style="color:#667eea; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Consequence</div>
+        <div style="color:#fff; font-size:0.95rem; line-height:1.5;">${choice.consequence}</div>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'storyFadeOut 0.5s ease-out';
+        setTimeout(() => toast.remove(), 500);
+      }, 4000);
+    },
+    
+    /**
+     * Add an entry to the story journal
+     */
+    addJournalEntry(entry) {
+      const journalEntry = {
+        id: `journal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: entry.title,
+        content: entry.content,
+        type: entry.type || 'event', // spine, rib, choice, act_transition
+        actNumber: entry.actNumber || gameState.story.currentAct,
+        timestamp: Date.now(),
+        memorable: entry.memorable || false
+      };
+      
+      gameState.story.journal.unshift(journalEntry);
+      
+      // Keep journal manageable (last 100 entries)
+      if (gameState.story.journal.length > 100) {
+        gameState.story.journal = gameState.story.journal.slice(0, 100);
+      }
+      
+      // Update UI
+      this.updateJournalUI();
+    },
+    
+    /**
+     * Update the Story tab UI
+     */
+    updateStoryUI() {
+      if (!gameState.story) return;
+      
+      const act = gameState.story.currentAct;
+      const config = this.ACT_CONFIG[act];
+      
+      // Update act title and description
+      const titleEl = document.getElementById('currentActTitle');
+      const descEl = document.getElementById('currentActDescription');
+      if (titleEl) titleEl.textContent = config.title;
+      if (descEl) descEl.textContent = config.description;
+      
+      // Update progress circle
+      const progressPath = document.getElementById('actProgressPath');
+      const progressPercent = document.getElementById('actProgressPercent');
+      if (progressPath && progressPercent) {
+        const progress = gameState.story.actProgress;
+        progressPath.setAttribute('stroke-dasharray', `${progress}, 100`);
+        progressPercent.textContent = `${progress}%`;
+      }
+      
+      // Update stats
+      const choicesMadeEl = document.getElementById('storyChoicesMade');
+      const alignmentEl = document.getElementById('storyMoralAlignment');
+      
+      if (choicesMadeEl) choicesMadeEl.textContent = gameState.story.choicesMade;
+      if (alignmentEl) {
+        const alignment = this.getAlignmentInfo(gameState.story.moralScore);
+        alignmentEl.textContent = alignment.emoji;
+        alignmentEl.title = alignment.name;
+        alignmentEl.style.color = alignment.color;
+      }
+      
+      // Update timeline
+      this.updateTimelineUI();
+      
+      // Update factions
+      this.updateFactionsUI();
+      
+      // Update journal
+      this.updateJournalUI();
+    },
+    
+    /**
+     * Get alignment info for a moral score
+     */
+    getAlignmentInfo(score) {
+      const thresholds = [0, 25, 50, 75, 100];
+      for (let i = thresholds.length - 1; i >= 0; i--) {
+        if (score >= thresholds[i]) {
+          return this.ALIGNMENTS[thresholds[i]];
+        }
+      }
+      return this.ALIGNMENTS[0];
+    },
+    
+    /**
+     * Update timeline UI
+     */
+    updateTimelineUI() {
+      const act = gameState.story.currentAct;
+      
+      document.querySelectorAll('.timeline-act').forEach(el => {
+        const elAct = parseInt(el.dataset.act);
+        el.classList.remove('active', 'completed', 'locked');
+        
+        if (elAct < act) {
+          el.classList.add('completed');
+          el.style.opacity = '0.7';
+          el.querySelector('div[style*="position:absolute"]').style.background = '#4ecca3';
+        } else if (elAct === act) {
+          el.classList.add('active');
+          el.style.opacity = '1';
+          el.querySelector('div[style*="position:absolute"]').style.background = '#667eea';
+          el.querySelector('div[style*="position:absolute"]').style.boxShadow = '0 0 10px rgba(102,126,234,0.5)';
+        } else {
+          el.classList.add('locked');
+          el.style.opacity = '0.5';
+        }
+      });
+    },
+    
+    /**
+     * Update factions UI
+     */
+    updateFactionsUI() {
+      const factionsEl = document.getElementById('factionsList');
+      if (!factionsEl) return;
+      
+      const totalEmployees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active').length;
+      
+      if (totalEmployees < 5) {
+        factionsEl.innerHTML = `
+          <div style="text-align:center; color:#8899a6; font-style:italic; font-size:0.85rem; padding:20px;">
+            Factions emerge as your empire grows...
+          </div>
+        `;
+        return;
+      }
+      
+      const factionInfo = {
+        loyalists: { name: 'Loyalists', emoji: '👑', color: '#ffd700', desc: 'Devoted to you completely' },
+        opportunists: { name: 'Opportunists', emoji: '💰', color: '#4ecca3', desc: 'Following the money' },
+        reformers: { name: 'Reformers', emoji: '⚖️', color: '#00d4ff', desc: 'Want change and ethics' },
+        underground: { name: 'Underground', emoji: '🌙', color: '#9d4edd', desc: 'Embrace the shadows' }
+      };
+      
+      let html = '';
+      for (const [key, info] of Object.entries(factionInfo)) {
+        const faction = gameState.story.factions[key];
+        const memberCount = faction.members.length;
+        const percentage = totalEmployees > 0 ? Math.round((memberCount / totalEmployees) * 100) : 0;
+        
+        if (memberCount > 0) {
+          html += `
+            <div style="margin-bottom:12px; padding:12px; background:#0f3460; border-radius:8px; border-left:3px solid ${info.color};">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:1.2rem;">${info.emoji}</span>
+                  <span style="color:${info.color}; font-weight:600;">${info.name}</span>
+                </div>
+                <span style="color:#fff; font-weight:600;">${memberCount}</span>
+              </div>
+              <div style="color:#8899a6; font-size:0.75rem; margin-bottom:6px;">${info.desc}</div>
+              <div style="height:4px; background:#1a1a2e; border-radius:2px; overflow:hidden;">
+                <div style="height:100%; width:${percentage}%; background:${info.color}; transition:width 0.3s;"></div>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      factionsEl.innerHTML = html || `
+        <div style="text-align:center; color:#8899a6; font-style:italic; font-size:0.85rem; padding:20px;">
+          No clear factions have emerged yet.
+        </div>
+      `;
+    },
+    
+    /**
+     * Update journal UI
+     */
+    updateJournalUI() {
+      const journalEl = document.getElementById('storyJournal');
+      const emptyEl = document.getElementById('journalEmpty');
+      
+      if (!journalEl) return;
+      
+      const entries = gameState.story.journal;
+      
+      if (entries.length === 0) {
+        if (emptyEl) emptyEl.style.display = 'block';
+        return;
+      }
+      
+      if (emptyEl) emptyEl.style.display = 'none';
+      
+      const entryIcons = {
+        spine: '⭐',
+        rib: '📜',
+        choice: '🎯',
+        act_transition: '🏛️',
+        event: '📋'
+      };
+      
+      let html = entries.slice(0, 30).map(entry => {
+        const icon = entryIcons[entry.type] || '📋';
+        const date = new Date(entry.timestamp);
+        const timeStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        return `
+          <div class="journal-entry" data-type="${entry.type}" style="
+            margin-bottom:15px; padding:15px; 
+            background:${entry.memorable ? 'linear-gradient(135deg, #1a2744 0%, #0f1419 100%)' : '#0f1419'}; 
+            border-radius:10px; 
+            border-left:3px solid ${entry.memorable ? '#ffd700' : '#333'};
+            ${entry.memorable ? 'box-shadow:0 2px 10px rgba(255,215,0,0.1);' : ''}
+          ">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.2rem;">${icon}</span>
+                <span style="color:#fff; font-weight:600; font-size:0.95rem;">${entry.title}</span>
+              </div>
+              <span style="color:#666; font-size:0.75rem;">Act ${entry.actNumber} • ${timeStr}</span>
+            </div>
+            <div style="color:#8899a6; font-size:0.85rem; line-height:1.5; white-space:pre-wrap;">${entry.content.substring(0, 200)}${entry.content.length > 200 ? '...' : ''}</div>
+          </div>
+        `;
+      }).join('');
+      
+      // Only update if journal container exists in view
+      const existingEntries = journalEl.querySelectorAll('.journal-entry');
+      if (existingEntries.length !== entries.slice(0, 30).length) {
+        journalEl.innerHTML = html;
+      }
+    },
+    
+    /**
+     * Show notification dot on story tab
+     */
+    showStoryNotification() {
+      const dot = document.getElementById('storyNotificationDot');
+      if (dot) {
+        dot.style.display = 'block';
+      }
+    },
+    
+    /**
+     * Hide story notification
+     */
+    hideStoryNotification() {
+      const dot = document.getElementById('storyNotificationDot');
+      if (dot) {
+        dot.style.display = 'none';
+      }
+    },
+    
+    /**
+     * Generate act transition event
+     */
+    generateActTransitionEvent(prevAct, newAct) {
+      const config = this.ACT_CONFIG[newAct];
+      
+      const event = {
+        id: `act_transition_${newAct}_${Date.now()}`,
+        title: `✨ ${config.title}`,
+        cinematicText: `A new chapter begins...\n\n${config.description}\n\nThe tone shifts: ${config.tone}.\n\nNew themes emerge: ${config.themes.join(', ')}.`,
+        choices: [
+          { id: 'ready', text: '🚀 "I\'m ready for what comes next."', alignment: 'determined', consequence: 'Your resolve strengthens.' }
+        ],
+        actNumber: newAct,
+        type: 'act_transition'
+      };
+      
+      this.showStoryEventModal(event);
+    }
+  };
+
+  // ============================================
+  // STORY ENGINE HOOKS - Connect to game events
+  // ============================================
+  
+  // Add to global scope for easy access
+  window.StoryEngine = StoryEngine;
+  
+  // Hook: Called when an employee is hired
+  function onStoryEmployeeHired(employee) {
+    if (!gameState.story?.settings?.storyEnabled) return;
+    
+    const employeeCount = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active').length;
+    
+    // First hire triggers special event
+    if (employeeCount === 1 && !gameState.story.narrativeFlags.firstHireComplete) {
+      StoryEngine.triggerSpineEvent('first_hire');
+    }
+    
+    // Add to key characters if significant
+    if (employeeCount <= 5) {
+      if (!gameState.story.keyCharacters.find(c => c.id === employee.id)) {
+        gameState.story.keyCharacters.push({
+          id: employee.id,
+          name: employee.name,
+          role: 'Early Believer',
+          introduced: Date.now(),
+          relationship: 'employee'
+        });
+      }
+    }
+  }
+  
+  // Hook: Called when a boss is defeated
+  function onStoryBossDefeated(bossId, recruited) {
+    if (!gameState.story?.settings?.storyEnabled) return;
+    
+    if (!gameState.story.narrativeFlags.firstBossDefeated) {
+      gameState.story.narrativeFlags.firstBossDefeated = true;
+      
+      StoryEngine.addJournalEntry({
+        title: '⚔️ First Victory',
+        content: 'You\'ve defeated your first major adversary. The business world is taking notice.',
+        type: 'event',
+        memorable: true
+      });
+    }
+    
+    // Track Victoria specifically
+    if (bossId === 'victoria_steele' || bossId === 'office_suite') {
+      gameState.story.narrativeFlags.victoriaDefeated = true;
+      if (recruited) {
+        gameState.story.narrativeFlags.victoriaRecruited = true;
+      }
+    }
+  }
+  
+  // Hook: Called on prestige
+  function onStoryPrestige(prestigeLevel) {
+    if (!gameState.story?.settings?.storyEnabled) return;
+    
+    // Save current timeline memory
+    gameState.story.persistentMemories.push({
+      timeline: gameState.story.currentTimeline,
+      keyEvents: gameState.story.journal.filter(j => j.memorable),
+      ending: StoryEngine.getAlignmentInfo(gameState.story.moralScore).name,
+      moralScore: gameState.story.moralScore,
+      timestamp: Date.now()
+    });
+    
+    // Increment timeline
+    gameState.story.currentTimeline++;
+    
+    // Reset story state but keep persistent data
+    const persistentMemories = gameState.story.persistentMemories;
+    const currentTimeline = gameState.story.currentTimeline;
+    
+    gameState.story = StoryEngine.getDefaultStoryState();
+    gameState.story.persistentMemories = persistentMemories;
+    gameState.story.currentTimeline = currentTimeline;
+    gameState.story.narrativeFlags.firstPrestigeComplete = true;
+    
+    // Show memories section
+    const memoriesSection = document.getElementById('memoriesSection');
+    if (memoriesSection) {
+      memoriesSection.style.display = 'block';
+    }
+    
+    StoryEngine.addJournalEntry({
+      title: '🌀 New Timeline',
+      content: `Timeline ${currentTimeline} begins. Echoes of past choices ripple through time...`,
+      type: 'act_transition',
+      memorable: true
+    });
+  }
+  
+  // Filter journal entries
+  window.filterJournal = function(filter) {
+    document.querySelectorAll('.journal-filter-btn').forEach(btn => {
+      btn.classList.remove('active');
+      btn.style.borderColor = '#444';
+      btn.style.color = '#888';
+    });
+    
+    const activeBtn = document.querySelector(`.journal-filter-btn[data-filter="${filter}"]`);
+    if (activeBtn) {
+      activeBtn.classList.add('active');
+      activeBtn.style.borderColor = '#667eea';
+      activeBtn.style.color = '#667eea';
+    }
+    
+    document.querySelectorAll('.journal-entry').forEach(entry => {
+      if (filter === 'all') {
+        entry.style.display = 'block';
+      } else {
+        entry.style.display = entry.dataset.type === filter ? 'block' : 'none';
+      }
+    });
+  };
+  
+  // Show act details
+  window.showActDetails = function(actNumber) {
+    const config = StoryEngine.ACT_CONFIG[actNumber];
+    if (!config) return;
+    
+    // Could show a modal with act details
+    console.log(`[Story] Act ${actNumber}: ${config.name}`);
+  };
 
   // ========== DYNAMIC AI-GENERATED COMPANY EVENTS SYSTEM ==========
   
@@ -24161,6 +26018,24 @@ Reply naturally as ${emp.name} (dialogue and actions - use *asterisks* for physi
           }).catch(err => console.warn('[Boss System] Failed to pre-generate boss:', err));
         }
       }
+      
+      // ========== STORY ENGINE INITIALIZATION ==========
+      // Initialize the narrative story system
+      if (typeof StoryEngine !== 'undefined' && StoryEngine.initialize) {
+        try {
+          StoryEngine.initialize();
+          console.log('[Story System] Initialized - Current Act:', gameState.story?.currentAct || 1);
+          
+          // Update story UI on load
+          setTimeout(() => {
+            if (StoryEngine.updateStoryUI) {
+              StoryEngine.updateStoryUI();
+            }
+          }, 500);
+        } catch (err) {
+          console.warn('[Story System] Initialization error:', err);
+        }
+      }
     } catch (error) {
       console.error('Error initializing game:', error);
       showNotification('Failed to initialize game. Please refresh the page.');
@@ -29845,6 +31720,15 @@ Generate ONLY the message, no quotes, no explanation:`;
         if (gameState.activeTab === 'dashboard') {
           refreshDashboardSections();
         }
+        
+        // ========== STORY SYSTEM HOOK: Employee Hired ==========
+        if (typeof onStoryEmployeeHired === 'function') {
+          try {
+            onStoryEmployeeHired(candidate);
+          } catch (err) {
+            console.warn('[Story] Employee hire hook error:', err);
+          }
+        }
 
     } catch (error) {
         console.error('Onboarding error:', error);
@@ -34968,6 +36852,13 @@ Post:`;
         break;
       case 'ceocorner':
         // CEO Corner doesn't need updates, just display the chat
+        break;
+      case 'story':
+        // Update Story tab UI and clear notification
+        if (typeof StoryEngine !== 'undefined' && StoryEngine.updateStoryUI) {
+          StoryEngine.updateStoryUI();
+          StoryEngine.hideStoryNotification();
+        }
         break;
     }
   }
@@ -51743,6 +53634,16 @@ ${npc.name}'s message:`;
     //   checkForPromotions();
     // }
 
+    // ========== STORY ENGINE TICK ==========
+    // Check for story events and progression (runs internally rate-limited)
+    if (typeof StoryEngine !== 'undefined' && StoryEngine.tick) {
+      try {
+        StoryEngine.tick();
+      } catch (err) {
+        console.warn('[StoryEngine] Tick error:', err);
+      }
+    }
+
     // UI refresh (lightweight progress updates recommended)
     updateUI();
   }
@@ -53250,6 +55151,15 @@ ${npc.name}'s message:`;
       grade,
       cashReward
     };
+    
+    // ========== STORY SYSTEM HOOK: Boss Defeated ==========
+    if (typeof onStoryBossDefeated === 'function') {
+      try {
+        onStoryBossDefeated(boss.id, false); // false = not recruited yet
+      } catch (err) {
+        console.warn('[Story] Boss defeat hook error:', err);
+      }
+    }
   }
   
   /**
@@ -53440,6 +55350,15 @@ ${npc.name}'s message:`;
     }
     
     showNotification(`${boss.character.firstName} has joined your company!`);
+    
+    // ========== STORY SYSTEM HOOK: Boss Recruited ==========
+    if (typeof onStoryBossDefeated === 'function') {
+      try {
+        onStoryBossDefeated(boss.id, true); // true = recruited
+      } catch (err) {
+        console.warn('[Story] Boss recruit hook error:', err);
+      }
+    }
     
     // Close modals
     closeBossVictoryModal();
@@ -75152,6 +77071,15 @@ Post:`;
     const giftNote = giftCount > 0 ? ` 🎁 ${giftCount} gifts preserved!` : '';
     showNotification(`✨ Prestiged! Gained ${influenceGain} Influence Points!${giftNote}`, 5000);
     
+    // ========== STORY SYSTEM HOOK: Prestige ==========
+    if (typeof onStoryPrestige === 'function') {
+      try {
+        onStoryPrestige(preservedPrestigeLevel);
+      } catch (err) {
+        console.warn('[Story] Prestige hook error:', err);
+      }
+    }
+    
     // Switch to dashboard tab and force full refresh
     switchTab('dashboard');
     
@@ -78968,5 +80896,172 @@ Post:`;
   
   /* ═══════════════════════════════════════════════════════════════════════════ */
   /* END BOSS FIGHT - MOBILE RESPONSIVE STYLES */
+  /* ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* ═══════════════════════════════════════════════════════════════════════════ */
+  /* STORY SYSTEM - CINEMATIC MODAL STYLES */
+  /* ═══════════════════════════════════════════════════════════════════════════ */
+  
+  @keyframes storyFadeIn {
+    from { 
+      opacity: 0; 
+    }
+    to { 
+      opacity: 1; 
+    }
+  }
+  
+  @keyframes storyFadeOut {
+    from { 
+      opacity: 1; 
+    }
+    to { 
+      opacity: 0; 
+    }
+  }
+  
+  @keyframes storySlideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes storyScan {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: 0% 100%;
+    }
+  }
+  
+  @keyframes storyPulse {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+      opacity: 0.8;
+      box-shadow: 0 0 40px rgba(102, 126, 234, 0.6);
+    }
+  }
+  
+  @keyframes storyTypewriter {
+    from {
+      border-right-color: transparent;
+    }
+    to {
+      border-right-color: #667eea;
+    }
+  }
+  
+  .story-modal-overlay {
+    backdrop-filter: blur(5px);
+  }
+  
+  .story-choice-btn:hover {
+    transform: translateX(5px);
+  }
+  
+  .story-choice-btn:active {
+    transform: translateX(2px);
+  }
+  
+  /* Story tab specific styles */
+  .story-timeline-act {
+    transition: all 0.3s ease;
+  }
+  
+  .story-timeline-act:hover {
+    transform: scale(1.05);
+  }
+  
+  .story-timeline-act.completed .act-indicator {
+    background: #4ecca3 !important;
+    border-color: #4ecca3 !important;
+  }
+  
+  .story-timeline-act.active .act-indicator {
+    animation: storyPulse 2s ease-in-out infinite;
+  }
+  
+  .story-timeline-act.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  
+  .journal-entry {
+    transition: all 0.3s ease;
+  }
+  
+  .journal-entry:hover {
+    transform: translateX(3px);
+    border-left-color: #667eea !important;
+  }
+  
+  .journal-entry[data-type="spine"] {
+    border-left-color: #ffd700 !important;
+  }
+  
+  .journal-entry[data-type="spine"]:hover {
+    box-shadow: 0 2px 15px rgba(255, 215, 0, 0.2);
+  }
+  
+  /* Faction bars animation */
+  .faction-strength-bar {
+    transition: width 0.5s ease;
+  }
+  
+  /* Act progress circle animation */
+  .act-progress-circle path {
+    transition: stroke-dasharray 0.5s ease;
+  }
+  
+  /* Notification dot pulse */
+  #storyNotificationDot {
+    animation: storyPulse 1.5s ease-in-out infinite;
+  }
+  
+  /* Story tab panel grid */
+  #storyTab .story-panel {
+    background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 15px;
+    transition: all 0.3s ease;
+  }
+  
+  #storyTab .story-panel:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+  }
+  
+  /* Mobile responsive for story elements */
+  @media (max-width: 768px) {
+    .story-modal-content {
+      max-width: 95vw !important;
+      max-height: 95vh !important;
+    }
+    
+    .story-choice-btn {
+      padding: 14px 16px !important;
+    }
+    
+    #storyText {
+      font-size: 0.95rem !important;
+    }
+    
+    #storyTab .story-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+  
+  /* ═══════════════════════════════════════════════════════════════════════════ */
+  /* END STORY SYSTEM STYLES */
   /* ═══════════════════════════════════════════════════════════════════════════ */
 </style>
