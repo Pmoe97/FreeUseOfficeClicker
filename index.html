@@ -1847,8 +1847,8 @@
       <div style="display:flex; gap:8px; align-items:center;">
         <button id="convertToGroupBtn" style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none; padding:8px 12px; border-radius:5px; color:white; cursor:pointer; font-size:0.75rem; transition:all 0.2s;" onmouseenter="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 10px rgba(102,126,234,0.4)';" onmouseleave="this.style.transform='scale(1)'; this.style.boxShadow='none';" title="Start a group chat with this person and others">👥 Group</button>
         <button id="chatSettingsBtn" style="background:#0f3460; border:none; padding:8px 12px; border-radius:5px; color:#aaa; cursor:pointer; font-size:1rem; transition:all 0.2s;" onmouseenter="this.style.background='#16213e'; this.style.color='#4ecca3'" onmouseleave="this.style.background='#0f3460'; this.style.color='#aaa'" title="Chat Display Settings">⚙️</button>
-        <button id="clearChatBtn" style="background:#0f3460; border:none; padding:8px 12px; border-radius:5px; color:#aaa; cursor:pointer; font-size:0.8rem; transition:all 0.2s;" onmouseenter="this.style.background='#16213e'; this.style.color='#e94560'" onmouseleave="this.style.background='#0f3460'; this.style.color='#aaa'">🗑️ Clear</button>
-        <button id="closeChatBtn" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+        <button id="closeChatBtn" style="background:#e94560; border:none; padding:8px 12px; border-radius:5px; color:white; font-size:1.2rem; cursor:pointer; transition:all 0.2s;" onmouseenter="this.style.background='#ff6b9d'" onmouseleave="this.style.background='#e94560'" title="Close Chat">✕</button>
+        <button id="clearChatBtn" style="background:#0f3460; border:none; padding:8px 12px; border-radius:5px; color:#aaa; cursor:pointer; font-size:0.8rem; transition:all 0.2s;" onmouseenter="this.style.background='#16213e'; this.style.color='#e94560'" onmouseleave="this.style.background='#0f3460'; this.style.color='#aaa'">🗑️</button>
       </div>
     </div>
     
@@ -2483,7 +2483,7 @@
     <div id="bossImageArea" style="position:relative; width:100%; aspect-ratio:4/3; max-height:35vh; margin:0 auto 8px; border-radius:10px; overflow:hidden; background:#0a0a0a; border:2px solid #e94560; box-shadow:0 0 20px rgba(233,69,96,0.3);">
       <!-- Boss Image -->
       <div id="bossImagePlaceholder" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#444; font-size:3rem; z-index:1;">👤</div>
-      <img id="bossImage" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; z-index:2;">
+      <img id="bossImage" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:none; z-index:2;">
       
       <!-- Attack Indicator Overlay - ENHANCED for visibility -->
       <div id="attackIndicatorOverlay" style="position:absolute; inset:0; display:none; z-index:10; pointer-events:none;">
@@ -2600,15 +2600,15 @@
     </div>
     
     <!-- Special & Flee Row -->
-    <div style="display:flex; gap:5px; margin-bottom:6px;">
+    <div style="display:grid; grid-template-columns:2fr 1fr; gap:5px; margin-bottom:6px;">
       <!-- Special Attack Button -->
-      <button id="specialBtn" onclick="bossCombatAction('special')" disabled style="flex:2; padding:8px; background:linear-gradient(135deg, #444 0%, #333 100%); border:none; border-radius:8px; color:#888; font-size:0.8rem; font-weight:bold; cursor:not-allowed; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:5px; touch-action:manipulation;">
+      <button id="specialBtn" onclick="bossCombatAction('special')" disabled style="padding:8px; background:linear-gradient(135deg, #444 0%, #333 100%); border:none; border-radius:8px; color:#888; font-size:0.8rem; font-weight:bold; cursor:not-allowed; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:5px; touch-action:manipulation;">
         <span style="font-size:1rem;">✨</span>
         <span>SPECIAL \[SPACE\]</span>
       </button>
       
       <!-- Flee Button -->
-      <button id="fleeBtn" onclick="bossCombatAction('flee')" style="flex:1; padding:8px; background:linear-gradient(135deg, #666 0%, #444 100%); border:none; border-radius:8px; color:white; font-size:0.8rem; font-weight:bold; cursor:pointer; transition:all 0.15s; touch-action:manipulation;">
+      <button id="fleeBtn" onclick="bossCombatAction('flee')" style="padding:8px; background:linear-gradient(135deg, #666 0%, #444 100%); border:none; border-radius:8px; color:white; font-size:0.8rem; font-weight:bold; cursor:pointer; transition:all 0.15s; touch-action:manipulation;">
         🏃 Flee
       </button>
     </div>
@@ -4640,7 +4640,9 @@
         // Apply manager's skill bonuses (management skill enhances their effectiveness)
         let effectivenessMultiplier = 1.0;
         if (manager.skills?.management) {
-          const managementLevel = manager.skills.management.level || 1;
+          // Handle both formats: { level: 3 } or just the number 3 (boss employees)
+          const skillData = manager.skills.management;
+          const managementLevel = (typeof skillData === 'number' ? skillData : (skillData.level || 0)) || 1;
           effectivenessMultiplier = 1 + (managementLevel * 0.02); // +2% per management skill level
         }
         
@@ -4735,14 +4737,14 @@
     if (manager) {
       // Productivity Impact: 0.85x to 1.0x (at 0 to 100 productivity)
       // Low productivity = slower cycles, high productivity = baseline speed
-      const productivity = manager.productivity || 50; // Default 50 if not set
+      const productivity = manager.stats?.productivity || 50; // Default 50 if not set
       const productivityMultiplier = 0.85 + (productivity * 0.15 / 100); // 0.85 at 0, 1.0 at 100
       multiplier /= productivityMultiplier; // DIVIDE to make high productivity = faster
       
       // Trust Impact: 0.85x to 1.15x (at 0 to 100 trust)
       // Low trust = hesitant/inefficient, high trust = empowered/faster
       // Baseline at 70 trust, bonus above 70
-      const trust = manager.trust || 50; // Default 50 if not set
+      const trust = manager.stats?.trust || 50; // Default 50 if not set
       const trustMultiplier = trust <= 70 
         ? 0.85 + (trust * 0.15 / 70)           // 0.85 at 0 → 1.0 at 70
         : 1.0 + ((trust - 70) * 0.15 / 30);    // 1.0 at 70 → 1.15 at 100
@@ -4751,7 +4753,7 @@
       // Obedience Impact: Affects consistency (reliability)
       // Low obedience = occasional delays, high obedience = perfectly consistent
       // This is a subtle effect (0.92x to 1.0x)
-      const obedience = manager.obedience || 50;
+      const obedience = manager.stats?.obedience || 50;
       const obedienceMultiplier = 0.92 + (obedience / 1250); // 0.92 at 0, 1.0 at 100
       multiplier /= obedienceMultiplier; // DIVIDE to make high obedience = faster
     }
@@ -9206,6 +9208,9 @@
     const pools = bossVariationPools;
     const theme = archetype.appearanceTheme;
     
+    // CRITICAL: Explicitly set gender for boss (defaults to female, can be overridden by archetype)
+    const gender = archetype.gender || 'female';
+    
     // Body
     const bodyType = pickRandom(pools.bodies.types);
     const height = pickRandom(pools.bodies.heights);
@@ -9273,7 +9278,8 @@
         recruited: {
           description: `Smart casual version of ${outfitStyle}, more relaxed, genuine small smile, softer expression`
         }
-      }
+      },
+      gender: gender  // CRITICAL: Include gender in appearance for employee creation
     };
   }
   
@@ -15351,12 +15357,12 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
   }
   
   /**
-   * Generate social posts when bonuses are distributed
+   * Generate AI-powered social posts when bonuses are distributed
    * @param {Array} employees - List of employees who received bonuses
    * @param {number} amountPerEmployee - Amount each employee received
    * @param {string} bonusType - 'payday_bonus' or 'bonus_pool'
    */
-  function generateBonusSocialPosts(employees, amountPerEmployee, bonusType = 'bonus_pool') {
+  async function generateBonusSocialPosts(employees, amountPerEmployee, bonusType = 'bonus_pool') {
     if (!employees || employees.length === 0) return;
     
     // Pick 1-3 random employees to post (more posts for bigger bonuses)
@@ -15364,73 +15370,243 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
     const shuffled = [...employees].sort(() => Math.random() - 0.5);
     const posters = shuffled.slice(0, Math.min(numPosters, employees.length));
     
-    // Different post templates based on bonus size and type
-    const smallBonusTemplates = [
-      "Nice little bonus today! 💸 Thanks @TheBoss!",
-      "Surprise bonus hit different 😊💰",
-      "Extra cash in the account? Don't mind if I do! 🙌",
-      "Love when payday comes with a little extra 💵✨",
-      "Bonus day = treat yourself day 🛍️"
-    ];
+    // Determine bonus tier for context
+    const bonusTier = amountPerEmployee >= 5000 ? 'huge' : amountPerEmployee >= 1000 ? 'nice' : 'small';
+    const bonusTypeDesc = bonusType === 'payday_bonus' ? 'payday bonus with their salary' : 'company bonus pool distribution';
     
-    const mediumBonusTemplates = [
-      "That bonus though!! 💰🎉 @TheBoss really coming through!",
-      "Just got a NICE bonus! Dinner's on me tonight 🍽️💸",
-      "When your boss actually appreciates you 😭💕 Thanks @TheBoss!",
-      "Bonus season is the best season 🤑🎊",
-      "Finally! That vacation fund is looking healthier 🏖️💰",
-      "This is why I love working here! 💼❤️ Thank you @TheBoss!"
-    ];
-    
-    const largeBonusTemplates = [
-      "EXCUSE ME?? This bonus is INSANE!! 🤯💰💰 @TheBoss you're amazing!!",
-      "Just checked my account and... WOW!! Best boss EVER!! 😱🎉💸",
-      "I literally screamed when I saw this bonus 😭😭❤️ @TheBoss I could cry!!",
-      "This bonus is life-changing!! Thank you SO much @TheBoss!! 🙏💕💰",
-      "POV: Your boss just made your whole month 🥹💸✨ @TheBoss",
-      "I don't deserve this but I'll TAKE IT!! 🎊💰🎊 Thank you @TheBoss!!",
-      "Someone pinch me because this bonus can't be real 😱💵💵"
-    ];
-    
-    const templates = amountPerEmployee >= 5000 ? largeBonusTemplates 
-                    : amountPerEmployee >= 1000 ? mediumBonusTemplates 
-                    : smallBonusTemplates;
-    
-    // Create posts for selected employees with slight delays
-    posters.forEach((emp, index) => {
-      setTimeout(() => {
-        const template = templates[Math.floor(Math.random() * templates.length)];
-        
-        // Sometimes add the amount to the post
-        let content = template;
-        if (Math.random() < 0.3 && amountPerEmployee >= 1000) {
-          const amountStr = formatNumber(amountPerEmployee);
-          const addons = [
-            ` ($${amountStr}!!)`,
-            ` That's $${amountStr}!!`,
-            ` $${amountStr} bonus day!`
-          ];
-          content += addons[Math.floor(Math.random() * addons.length)];
+    // Generate posts for each selected employee
+    for (let index = 0; index < posters.length; index++) {
+      const emp = posters[index];
+      
+      // Stagger post generation
+      setTimeout(async () => {
+        try {
+          const result = await generateAIBonusPost(emp, amountPerEmployee, bonusTier, bonusTypeDesc);
+          
+          if (result) {
+            const post = {
+              authorId: emp.id,
+              authorName: emp.name,
+              type: 'appreciation',
+              content: result.content,
+              timestamp: gameState.time.currentTime + (index * 30000),
+              likes: [],
+              comments: [],
+              mentions: result.mentionsBoss ? ['TheBoss'] : [],
+              mood: 'excited',
+              tags: ['bonus', 'grateful', 'worklife'],
+              imageUrl: result.imageUrl || null,
+              imagePrompt: result.imagePrompt || null
+            };
+            
+            createSocialPost(post);
+            console.log(`[Social] ${emp.name} posted AI-generated bonus reaction${result.imageUrl ? ' with image' : ''}`);
+          }
+        } catch (err) {
+          console.error(`[Social] Failed to generate bonus post for ${emp.name}:`, err);
+          // Fallback to simple post on AI failure
+          createSocialPost({
+            authorId: emp.id,
+            authorName: emp.name,
+            type: 'appreciation',
+            content: `Just got a bonus! Thanks @TheBoss! 💰`,
+            timestamp: gameState.time.currentTime + (index * 30000),
+            likes: [],
+            comments: [],
+            mentions: ['TheBoss'],
+            mood: 'excited',
+            tags: ['bonus', 'grateful', 'worklife']
+          });
         }
-        
-        createSocialPost({
-          authorId: emp.id,
-          authorName: emp.name,
-          type: 'appreciation',
-          content: content,
-          timestamp: gameState.time.currentTime + (index * 30000), // Stagger by 30 seconds each
-          likes: [],
-          comments: [],
-          mentions: ['TheBoss'],
-          mood: 'excited',
-          tags: ['bonus', 'grateful', 'worklife']
-        });
-        
-        console.log(`[Social] ${emp.name} posted about their bonus`);
-      }, index * 500); // Small delay to stagger posts
-    });
+      }, index * 1000); // Stagger by 1 second for AI generation time
+    }
   }
   
+  /**
+   * Generate AI-powered bonus reaction post for an employee
+   */
+  async function generateAIBonusPost(employee, bonusAmount, bonusTier, bonusTypeDesc) {
+    const personality = employee.personality || {};
+    const social = employee.social || {};
+    const affection = employee.stats?.affection || 50;
+    const intimacy = employee.intimacy || 0;
+    
+    // Build personality description
+    const personalityDesc = [
+      personalityToText(personality.outgoing || 50, 'outgoing'),
+      personalityToText(personality.professional || 50, 'professional'),
+      personalityToText(personality.flirty || 50, 'flirty'),
+      personalityToText(personality.confidence || 50, 'confident')
+    ].join(', ');
+    
+    // Decide variation type - what kind of post this will be
+    const variationRoll = Math.random();
+    let postVariation, imageType;
+    
+    if (variationRoll < 0.25) {
+      // 25% - Just text reaction, no image
+      postVariation = 'text_only';
+      imageType = null;
+    } else if (variationRoll < 0.45) {
+      // 20% - Plans for the money (shopping, vacation, treating self, saving)
+      postVariation = 'spending_plans';
+      imageType = Math.random() < 0.4 ? 'wishlist' : null;
+    } else if (variationRoll < 0.60) {
+      // 15% - Selfie with excited expression
+      postVariation = 'selfie_reaction';
+      imageType = 'selfie';
+    } else if (variationRoll < 0.75) {
+      // 15% - Celebrating (food/drinks treat)
+      postVariation = 'celebration';
+      imageType = Math.random() < 0.5 ? 'celebration' : null;
+    } else if (variationRoll < 0.85) {
+      // 10% - Grateful/emotional reaction
+      postVariation = 'grateful';
+      imageType = null;
+    } else if (variationRoll < 0.92 && personality.flirty > 50 && affection > 60) {
+      // 7% - Flirty/suggestive if personality fits (promising something to boss)
+      postVariation = 'flirty_thanks';
+      imageType = Math.random() < 0.5 ? 'flirty_selfie' : null;
+    } else {
+      // 8% - Random creative (meme-style, chaotic energy, unique take)
+      postVariation = 'creative';
+      imageType = null;
+    }
+    
+    // Build variation-specific instructions
+    const variationInstructions = {
+      text_only: `Write a spontaneous reaction to getting a ${bonusTier} bonus. Be authentic - excited, grateful, surprised, whatever fits your personality. Could thank the boss, brag a little, or just express your feelings. 1-2 sentences.`,
+      
+      spending_plans: `Write about what you're going to do with your ${bonusTier} bonus! Ideas: treating yourself to something specific, finally buying that thing you wanted, vacation fund, savings goals, splurging on food/drinks, shopping spree, paying off something. Be specific and personal! 1-2 sentences. Examples: "This bonus is going straight to that bag I've been eyeing 👜💸", "Vacation fund just got a serious boost ✈️🏖️", "Sushi for dinner because I DESERVE IT 🍣💰"`,
+      
+      selfie_reaction: `Write a SHORT caption for an excited selfie you're taking because you just got a ${bonusTier} bonus! Show your personality - could be smug, giddy, grateful, or just vibing. 5-15 words max. Examples: "Bonus face activated 💰😏", "When the direct deposit hits 😍💸", "This is my grateful face ✨", "Secure the bag, literally 💅💰"`,
+      
+      celebration: `Write about how you're celebrating your ${bonusTier} bonus! Treating yourself to food, drinks, or something fun. Be specific! 1-2 sentences. Examples: "Bonus means fancy coffee all week ☕✨", "Taking myself out to dinner because I'm worth it 🍝💕", "This calls for champagne 🥂💰", "Ordered dessert AND an appetizer, feeling rich 🎉"`,
+      
+      grateful: `Write a genuinely grateful post about receiving a ${bonusTier} bonus. Could be emotional, appreciative, or touching. Maybe mention what it means to you personally. 1-2 sentences. ${affection > 70 ? 'You have a great relationship with your boss, so feel free to express genuine warmth.' : ''} Examples: "Not gonna lie, I teared up a little 🥹💕", "This job really does appreciate us and it shows 😭❤️", "Feeling so valued right now, thank you @TheBoss 🙏"`,
+      
+      flirty_thanks: `Write a playful, flirty thank you for your ${bonusTier} bonus. You have a close relationship with @TheBoss so you can be a bit suggestive or teasing about how you'll "thank them properly" later 😏. Keep it fun and cheeky! 1-2 sentences. Examples: "Might have to thank @TheBoss properly later 😏💋", "@TheBoss spoiling me again... might have to return the favor 💕🔥", "Best boss ever, I'll make it up to you 😘"`,
+      
+      creative: `Write a unique, creative reaction to getting a ${bonusTier} bonus. Could be: meme-style humor, chaotic energy, unexpected angle, or just a really creative take. Be original! 1-2 sentences. Examples: "Plot twist: I'm still broke but slightly less broke 💀💸", "My bank account seeing a positive number: 👁️👄👁️", "Me pretending I won't spend this immediately 🤡💰", "Capitalism is bad but these vibes? Immaculate ✨"`,
+    };
+    
+    // Determine if should mention boss based on variation and relationship
+    const shouldMentionBoss = postVariation === 'flirty_thanks' || 
+                              postVariation === 'grateful' ||
+                              Math.random() < (0.4 + (affection / 200)); // 40-90% chance based on affection
+    
+    const bossInstruction = shouldMentionBoss 
+      ? `\n💡 Mention @TheBoss in your post to thank them or reference them!` 
+      : `\n💡 You can mention @TheBoss or keep the post general - your choice!`;
+    
+    // Physical description for selfie posts
+    const physicalDesc = getPhysicalDescriptionForPrompt(employee);
+    
+    const prompt = `You are ${employee.name}, a ${employee.age || 25}-year-old ${employee.gender === 'Male' ? 'man' : 'woman'} posting on social media.
+
+YOUR APPEARANCE: ${physicalDesc}
+
+Your personality: ${personalityDesc}
+Content style: ${social.contentStyle === 'casual' ? 'casual, uses slang' : 'balanced, friendly'}
+Your affection toward your boss: ${affection}/100 ${affection > 70 ? '(you really like them!)' : affection > 50 ? '(good relationship)' : '(professional)'}
+${intimacy > 30 ? `Your intimacy level with boss: ${intimacy}/100 (you have a close/flirty relationship)` : ''}
+
+💰 SITUATION: You just received a ${bonusTier.toUpperCase()} bonus of $${formatNumber(bonusAmount)} from your job (${bonusTypeDesc})!
+
+${variationInstructions[postVariation]}${bossInstruction}
+
+RULES:
+- Write ONLY the post text, nothing else
+- Be authentic to YOUR personality
+- 1-2 emojis max
+- NO hashtags
+- NO meta-commentary or explanations
+- Sound like a real person on social media
+
+Write ONLY the post:`;
+
+    try {
+      // Check if AI is available
+      if (typeof generateText !== 'function') {
+        throw new Error('AI not available');
+      }
+      
+      let content = await queuedGenerateText(prompt, {
+        temperature: 0.95,
+        max_tokens: 100,
+        stopSequences: ['\n\n', '---', 'Rating:', '(Note:']
+      }, `Generating bonus reaction post for ${employee.name}`);
+      
+      // Extract and clean content
+      content = extractText(content);
+      content = content.replace(/\{[A-Z]+:[^}]*\}\s*/g, ''); // Remove Perchance tokens
+      content = content.replace(/^\*\*[^*]+\*\*\s*/g, ''); // Remove bold headers
+      content = content.split(/\n\s*\(/)[0]; // Remove notes
+      content = content.trim();
+      
+      // Auto-convert boss mentions
+      content = content.replace(/\b(the\s+)?([Mm]y\s+)?([Oo]ur\s+)?[Bb]oss\b/g, '@TheBoss');
+      content = content.replace(/@@TheBoss/g, '@TheBoss');
+      content = content.replace(/@[Bb]oss\b/g, '@TheBoss');
+      
+      // Clean with learning if available
+      if (typeof cleanWithLearning === 'function') {
+        content = cleanWithLearning(content);
+      }
+      
+      // Check if post mentions boss
+      const mentionsBoss = content.includes('@TheBoss');
+      
+      // Generate image if this variation calls for it
+      let imageUrl = null;
+      let imagePrompt = null;
+      
+      if (imageType && typeof queuedGenerateImage === 'function') {
+        try {
+          imagePrompt = await generateBonusPostImagePrompt(employee, imageType, content, bonusAmount);
+          if (imagePrompt) {
+            imageUrl = await queuedGenerateImage(applyImageStyle(imagePrompt), `Bonus post image for ${employee.name}`);
+          }
+        } catch (imgErr) {
+          console.warn(`[Social] Image generation failed for bonus post:`, imgErr);
+          // Continue without image
+        }
+      }
+      
+      return {
+        content,
+        mentionsBoss,
+        imageUrl,
+        imagePrompt
+      };
+      
+    } catch (error) {
+      console.error('[AI] Bonus post generation failed:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Generate image prompt for bonus post
+   */
+  async function generateBonusPostImagePrompt(employee, imageType, postContent, bonusAmount) {
+    const physicalDesc = getPhysicalDescriptionForPrompt(employee);
+    const personality = employee.personality || {};
+    
+    // Base prompt components
+    const basePrompts = {
+      selfie: `Selfie photo of ${physicalDesc}, looking excited and happy, maybe holding phone up for selfie, genuine smile or excited expression, natural lighting, social media selfie style`,
+      
+      flirty_selfie: `Flirtatious selfie of ${physicalDesc}, playful confident expression, maybe winking or biting lip slightly, ${personality.flirty > 70 ? 'revealing outfit showing cleavage' : 'cute outfit'}, bedroom eyes, social media thirst trap style`,
+      
+      wishlist: `Photo of ${postContent.includes('bag') ? 'a luxury handbag' : postContent.includes('shoe') ? 'designer shoes' : postContent.includes('vacation') || postContent.includes('trip') ? 'a beautiful beach resort' : postContent.includes('food') || postContent.includes('dinner') || postContent.includes('sushi') ? 'an elegant restaurant meal' : 'shopping bags and luxury items'}, aesthetic product photography, aspirational wishlist style`,
+      
+      celebration: `${physicalDesc} celebrating, ${postContent.includes('coffee') ? 'holding a fancy coffee drink' : postContent.includes('champagne') || postContent.includes('wine') ? 'toasting with champagne glass' : postContent.includes('dinner') || postContent.includes('food') ? 'at a nice restaurant with food' : 'celebrating with a drink or treat'}, happy expression, warm lighting, lifestyle photography`
+    };
+    
+    return basePrompts[imageType] || null;
+  }
+
   /**
    * Check if player can chat with employee (availability based on time/relationship)
    */
@@ -18484,7 +18660,9 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
   function getSkillBonus(employee, skillName) {
     if (!employee.skills || !employee.skills[skillName]) return 0;
     
-    const level = employee.skills[skillName].level;
+    // Handle both formats: { level: 3 } or just the number 3 (boss employees)
+    const skillData = employee.skills[skillName];
+    const level = typeof skillData === 'number' ? skillData : (skillData.level || 0);
     return level * 5; // +5% per level
   }
   
@@ -18496,8 +18674,10 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
     
     let highest = { name: 'none', level: 0 };
     for (const [name, skill] of Object.entries(employee.skills)) {
-      if (skill.level > highest.level) {
-        highest = { name, level: skill.level };
+      // Handle both formats: { level: 3 } or just the number 3 (boss employees)
+      const level = typeof skill === 'number' ? skill : (skill.level || 0);
+      if (level > highest.level) {
+        highest = { name, level };
       }
     }
     
@@ -38947,9 +39127,12 @@ Write the post:`;
           // Show top skills (Phase 3)
           if (!e.skills) return '';
           
-          // Get top 3 skills by level
+          // Get top 3 skills by level - handle both formats: { level: 3 } or just number 3 (boss employees)
           const topSkills = Object.entries(e.skills)
-            .map(([name, skill]) => ({ name, ...skill }))
+            .map(([name, skill]) => ({ 
+              name, 
+              level: typeof skill === 'number' ? skill : (skill?.level || 0)
+            }))
             .sort((a, b) => b.level - a.level)
             .slice(0, 3);
           
@@ -40213,7 +40396,7 @@ Pre-text:`;
       
       const lastMessage = group.messages[group.messages.length - 1];
       const preview = lastMessage 
-        ? (lastMessage.isSystem ? lastMessage.content : `${lastMessage.sender.split(' ')[0]}: ${lastMessage.content}`)
+        ? (lastMessage.isSystem ? lastMessage.content : `${(lastMessage.sender || 'Unknown').split(' ')[0]}: ${lastMessage.content || ''}`)
         : 'No messages yet';
       
       // Create overlapping avatar display
@@ -42517,6 +42700,17 @@ Scenario context (1-2 sentences, specific and evocative):`;
     saveGame(false);
     updateUI();
     showNotification(`💰 Sent $${formatCash(totalAmount)} to ${targets.length} ${targets.length === 1 ? 'person' : 'people'}!`, 2000);
+  }
+  
+  /**
+   * Helper function to get relationship value for group chat features
+   * Returns the average relationship score (0-100) with the player
+   * @param {Object} emp - Employee object
+   * @returns {number} Relationship value 0-100
+   */
+  function getRelationshipValue(emp) {
+    if (!emp) return 0;
+    return calculateAverageRelationship(emp);
   }
   
   async function generateGroupMoneyReaction(group, emp, amount, message) {
@@ -53259,6 +53453,7 @@ ${npc.name}'s message:`;
   
   /**
    * Claim boss bounty (cash reward only)
+   * Boss is added to rehire pool so they can be recruited later
    */
   function claimBossBounty() {
     if (!bossFightState?.victoryData) return;
@@ -53269,18 +53464,87 @@ ${npc.name}'s message:`;
     // Mark as defeated
     gameState.bossFights.defeated.push(boss.id);
     
-    // Award cash
-    gameState.cash += reward;
+    // Award cash - ensure reward is a valid number
+    const validReward = (typeof reward === 'number' && !isNaN(reward)) ? reward : 0;
+    gameState.cash = (gameState.cash || 0) + validReward;
+    
+    // Add boss to rehire pool so they can be hired later
+    // This allows players who chose bounty to still recruit the boss later
+    if (!gameState.rehirePool) gameState.rehirePool = [];
+    
+    const bossRehireData = {
+      id: `boss_${boss.id}_rehire`,
+      originalRehireId: `boss_${boss.id}_rehire`,
+      name: `${boss.character.firstName} ${boss.character.lastName}`,
+      age: boss.character.age || 30,
+      gender: boss.appearance?.gender || 'female',
+      previousLevel: boss.recruitment?.corporateLadderSlot || 2,
+      previousTitle: boss.recruitment?.employeeStats?.role || 'Executive',
+      
+      // Stats
+      stats: {
+        productivity: boss.recruitment?.employeeStats?.productivity || 80,
+        affection: 40,
+        comfort: 50,
+        trust: 60,
+        friendship: 40
+      },
+      skills: boss.recruitment?.employeeStats?.skills || {},
+      
+      // Personality & appearance
+      personality: {
+        confidence: 70 + Math.floor(Math.random() * 25),
+        outgoing: 40 + Math.floor(Math.random() * 40),
+        flirty: 20 + Math.floor(Math.random() * 50),
+        professional: 50 + Math.floor(Math.random() * 40)
+      },
+      physical: {
+        bodyType: boss.appearance?.body?.type || 'athletic',
+        height: boss.appearance?.body?.height || 'average',
+        hairColor: boss.appearance?.hair?.color || 'dark',
+        hairStyle: boss.appearance?.hair?.style || 'styled',
+        eyeColor: boss.appearance?.eyes?.color || 'brown',
+        skinTone: boss.appearance?.skin || 'fair'
+      },
+      personalityTraits: boss.character?.personality?.traits || ['determined', 'strong'],
+      hobbies: boss.character?.personality?.likes?.slice(0, 3) || ['competition', 'leadership'],
+      kinks: [],
+      
+      // Profile
+      profileImage: getBossImage(boss.id, 'recruited') || getBossImage(boss.id, 'portrait'),
+      bio: boss.character.backstory || `A former rival boss who can be recruited to your team.`,
+      
+      // Boss flags
+      wasFormerBoss: true,
+      originalBossId: boss.id,
+      passiveBonus: boss.recruitment?.passiveBonus,
+      activeAbility: boss.recruitment?.activeAbility,
+      
+      // Rehire bonus
+      rehireBonus: 0.15, // 15% productivity bonus on rehire
+      timesRehired: 0,
+      
+      // Memory
+      memory: [],
+      chatHistory: []
+    };
+    
+    // Only add if not already in pool
+    if (!gameState.rehirePool.find(r => r.originalBossId === boss.id)) {
+      gameState.rehirePool.push(bossRehireData);
+      console.log(`[Boss Bounty] Added ${bossRehireData.name} to rehire pool for later recruitment`);
+    }
     
     // Unlock location
     unlockBossLocation();
     
-    showNotification(`Claimed $${formatNumber(reward)} bounty!`);
+    showNotification(`Claimed $${formatNumber(validReward)} bounty! ${boss.character.firstName} can be hired later from the rehire pool.`, 'success', 5000);
     
     // Close modals
     closeBossVictoryModal();
     
-    // Refresh UI
+    // Save and refresh UI
+    saveGame();
     updateUI();
   }
   
@@ -53342,6 +53606,25 @@ ${npc.name}'s message:`;
   }
   
   /**
+   * Normalize skills from boss format { skillName: level } to standard { skillName: { level, xp } }
+   */
+  function normalizeSkillsFormat(skills) {
+    if (!skills) return {};
+    
+    const normalized = {};
+    for (const [skillName, skillData] of Object.entries(skills)) {
+      if (typeof skillData === 'number') {
+        // Boss format: convert number to object
+        normalized[skillName] = { level: skillData, xp: 0 };
+      } else if (typeof skillData === 'object' && skillData !== null) {
+        // Already in standard format
+        normalized[skillName] = { level: skillData.level || 0, xp: skillData.xp || 0 };
+      }
+    }
+    return normalized;
+  }
+  
+  /**
    * Create employee from defeated boss
    */
   function createEmployeeFromBoss(boss) {
@@ -53376,8 +53659,12 @@ ${npc.name}'s message:`;
     // Extract personality traits for human-readable display
     const personalityTraits = char.personality?.traits || ['determined', 'strong'];
     
-    // Build stats object
+    // Get productivity from recruitment data (bosses typically have high productivity)
+    const bossProductivity = recruit.employeeStats?.productivity || 80;
+    
+    // Build stats object - MUST include productivity for income calculations!
     const stats = {
+      productivity: bossProductivity,  // CRITICAL: Required for product income calculations
       affection: 40 + Math.floor(Math.random() * 20),
       comfort: 50 + Math.floor(Math.random() * 20),
       trust: 60,
@@ -53452,8 +53739,8 @@ ${npc.name}'s message:`;
       kinks: [], // Can be populated later through gameplay
       trait: personalityTraits[0] || 'Determined',
       
-      // Skills
-      skills: recruit.employeeStats.skills,
+      // Skills - normalize to standard format { skillName: { level: X, xp: 0 } }
+      skills: normalizeSkillsFormat(recruit.employeeStats.skills),
       
       // Unique bonuses
       passiveBonus: recruit.passiveBonus,
@@ -69516,6 +69803,41 @@ Post:`;
     // Define patch notes (newest first)
     const patchNotes = [
       {
+        version: '202601201700',
+        date: 'January 20, 2026',
+        title: '🐛 BUG FIXES & STABILITY',
+        changes: [
+          {
+            category: '📱 Mobile UI Fixes',
+            items: [
+              '• <strong>Boss Portrait Fix:</strong> Boss fight portrait no longer cuts off on mobile devices',
+              '• <strong>Special Button Position:</strong> Special attack button now properly aligned in boss fight UI',
+              '• <strong>Search Bar Fix:</strong> Groups search bar no longer disappears when tapped on small screens',
+              '• <strong>Chat Button Swap:</strong> Close (✕) and Clear buttons swapped in chat header for better mobile UX'
+            ]
+          },
+          {
+            category: '💥 Crash Fixes',
+            items: [
+              '• <strong>Groups Crash Fixed:</strong> Fixed TypeError crash when viewing groups with messages from unknown senders',
+              '• <strong>NaN Cash Bug Fixed:</strong> Fixed $NaN display after unlocking locations and hiring bosses',
+              '  - Root cause: Manager stats (productivity/trust/obedience) were being accessed incorrectly'
+            ]
+          },
+          {
+            category: '⚙️ System Fixes',
+            items: [
+              '• <strong>Boss Bounty Rehire:</strong> Bosses are now added to the rehire pool when claiming bounty reward',
+              '  - Previously, choosing bounty meant losing the boss forever',
+              '• <strong>Prestige Employee Reassign:</strong> Fixed inability to reassign employees after prestige reset',
+              '  - Corporate pyramid structure now properly initialized on prestige',
+              '• <strong>Boss Gender Display:</strong> Fixed recruited bosses displaying wrong gender in chat',
+              '  - Gender now properly tracked through boss generation and recruitment'
+            ]
+          }
+        ]
+      },
+      {
         version: '202601171430',
         date: 'January 17, 2026',
         title: '⚔️ BOSS FIGHT SYSTEM OVERHAUL',
@@ -74675,6 +74997,42 @@ Post:`;
         levels: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] },
         executiveRoles: { COO: null, CFO: null }
       },
+      // CRITICAL: Reset corporatePyramid to fresh structure (enables employee assignment after prestige)
+      corporatePyramid: {
+        ceo: {
+          positionId: 'ceo',
+          title: 'CEO',
+          level: 7,
+          employeeId: 'player',
+          subordinates: [],
+          isPlayer: true
+        },
+        secretaryPosition: {
+          positionId: 'secretary',
+          title: 'Executive Secretary',
+          level: 6.5,
+          employeeId: null,
+          reportsTo: 'ceo',
+          subordinates: []
+        },
+        positions: {
+          6: [{ positionId: 'senior_exec', title: 'Senior Executive', level: 6, employeeId: null, reportsTo: 'ceo', subordinates: [], span: 2 }],
+          5: [
+            { positionId: 'cfo', title: 'Chief Financial Officer', level: 5, employeeId: null, reportsTo: 'senior_exec', subordinates: [], span: 2 },
+            { positionId: 'coo', title: 'Chief Operating Officer', level: 5, employeeId: null, reportsTo: 'senior_exec', subordinates: [], span: 2 }
+          ],
+          4: [
+            { positionId: 'branch_mgr_1', title: 'Branch Manager 1', level: 4, employeeId: null, reportsTo: 'cfo', subordinates: [], locationsManaged: [], span: 3 },
+            { positionId: 'branch_mgr_2', title: 'Branch Manager 2', level: 4, employeeId: null, reportsTo: 'cfo', subordinates: [], locationsManaged: [], span: 3 },
+            { positionId: 'branch_mgr_3', title: 'Branch Manager 3', level: 4, employeeId: null, reportsTo: 'coo', subordinates: [], locationsManaged: [], span: 2 },
+            { positionId: 'branch_mgr_4', title: 'Branch Manager 4', level: 4, employeeId: null, reportsTo: 'coo', subordinates: [], locationsManaged: [], span: 1 }
+          ],
+          3: [],
+          2: [],
+          1: []
+        },
+        promotionCosts: { 1: 500, 2: 2000, 3: 10000, 4: 50000, 5: 150000, 6: 500000, 7: 0 }
+      },
       rehirePool: preservedRehirePool, // Preserved rehire candidates
       currentHiringCandidates: {
         newHires: [],
@@ -74772,6 +75130,12 @@ Post:`;
     // Replace gameState with fresh state
     Object.keys(gameState).forEach(key => delete gameState[key]);
     Object.assign(gameState, freshState);
+    
+    // CRITICAL: Initialize corporate pyramid positions for the starting location
+    // This ensures employee assignment works correctly after prestige
+    if (typeof initializeHierarchicalPyramid === 'function') {
+      initializeHierarchicalPyramid();
+    }
     
     // Close modal
     const modal = document.getElementById('prestigeModal');
@@ -78190,12 +78554,14 @@ Post:`;
       height: calc(100vh - 160px);
     }
     
+    /* On small mobile, sidebar should still be full-height when visible */
     #groupsSidebar {
-      max-height: 120px;
+      max-height: none !important;
+      height: 100% !important;
     }
     
     #groupsSidebar.collapsed {
-      max-height: 0;
+      display: none !important;
     }
     
     .group-item {
