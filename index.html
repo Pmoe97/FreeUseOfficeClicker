@@ -1400,7 +1400,6 @@
     <div style="margin-bottom:25px;">
       <!-- Act Progress Banner -->
       <div id="actProgressBanner" style="background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius:15px; padding:25px; margin-bottom:20px; border:2px solid #667eea; position:relative; overflow:hidden;">
-        <div style="position:absolute; top:0; left:0; right:0; bottom:0; background:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"40\" fill=\"none\" stroke=\"rgba(102,126,234,0.1)\" stroke-width=\"1\"/></svg>'); opacity:0.3;"></div>
         <div style="position:relative; z-index:1;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
             <div>
@@ -1447,16 +1446,34 @@
         <div style="background:#16213e; border-radius:12px; padding:20px; border-left:4px solid #e94560;">
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
             <div style="font-size:1.5rem;">📊</div>
-            <h3 style="margin:0; color:#e94560; font-size:1.1rem;">Your Journey</h3>
+            <h3 style="margin:0; color:#e94560; font-size:1.1rem;">Your Deeds Define You</h3>
           </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div style="text-align:center; padding:10px; background:#0f3460; border-radius:8px;">
-              <div id="storyChoicesMade" style="font-size:1.5rem; font-weight:700; color:#fff;">0</div>
-              <div style="font-size:0.75rem; color:#8899a6;">Choices Made</div>
+          <div id="actionStatsContainer" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- This shows your recent actions and their impact -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+              <div style="text-align:center; padding:10px; background:#0f3460; border-radius:8px;">
+                <div id="storyTotalActions" style="font-size:1.3rem; font-weight:700; color:#fff;">0</div>
+                <div style="font-size:0.7rem; color:#8899a6;">Actions Taken</div>
+              </div>
+              <div style="text-align:center; padding:10px; background:#0f3460; border-radius:8px;">
+                <div id="storyMoralAlignment" style="font-size:1.1rem; font-weight:700; color:#4ecca3;">⚖️</div>
+                <div style="font-size:0.7rem; color:#8899a6;">Alignment</div>
+              </div>
             </div>
-            <div style="text-align:center; padding:10px; background:#0f3460; border-radius:8px;">
-              <div id="storyMoralAlignment" style="font-size:1.5rem; font-weight:700; color:#4ecca3;">⚖️</div>
-              <div style="font-size:0.75rem; color:#8899a6;">Alignment</div>
+            <!-- Action impact bars -->
+            <div style="font-size:0.75rem; color:#8899a6; margin-top:5px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span>👼 Benevolent</span>
+                <span>Ruthless 👿</span>
+              </div>
+              <div style="background:#333; border-radius:4px; height:8px; overflow:hidden; position:relative;">
+                <div id="moralAlignmentBar" style="position:absolute; left:50%; top:0; width:4px; height:100%; background:#fff; transform:translateX(-50%); transition:left 0.5s ease;"></div>
+                <div style="background:linear-gradient(90deg, #4ecca3 0%, #ffd700 50%, #e94560 100%); height:100%; opacity:0.3;"></div>
+              </div>
+            </div>
+            <!-- Recent action summary -->
+            <div id="recentActionsSummary" style="font-size:0.8rem; color:#aaa; margin-top:10px; padding-top:10px; border-top:1px solid #333;">
+              <span style="color:#667eea;">Latest:</span> <span id="latestActionText">Awaiting your first action...</span>
             </div>
           </div>
         </div>
@@ -13261,6 +13278,543 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
     },
     
     // ============================================
+    // ACTION WEIGHTS - How gameplay affects your story
+    // ============================================
+    // Positive = benevolent/ethical, Negative = ruthless/exploitative
+    ACTION_WEIGHTS: {
+      // Hiring & Firing
+      hired_employee: { moral: 2, desc: 'gave someone a chance' },
+      fired_employee_fairly: { moral: -3, desc: 'let someone go' },
+      fired_employee_cruelly: { moral: -10, desc: 'fired someone harshly' },
+      rehired_former_employee: { moral: 5, desc: 'gave someone a second chance' },
+      
+      // Treatment & Care
+      gave_gift: { moral: 3, desc: 'showed appreciation' },
+      gave_expensive_gift: { moral: 5, desc: 'gave a generous gift' },
+      ignored_low_comfort: { moral: -2, desc: 'ignored an uncomfortable employee' },
+      ignored_low_trust: { moral: -1, desc: 'let trust erode' },
+      helped_struggling_employee: { moral: 4, desc: 'supported someone in need' },
+      
+      // Promotions & Pay
+      promoted_employee: { moral: 2, desc: 'recognized good work' },
+      demoted_employee: { moral: -4, desc: 'demoted someone' },
+      raised_salary: { moral: 3, desc: 'increased pay' },
+      cut_salary: { moral: -5, desc: 'cut someone\'s pay' },
+      fair_promotion: { moral: 3, desc: 'promoted based on merit' },
+      unfair_promotion: { moral: -4, desc: 'promoted a favorite unfairly' },
+      
+      // Relationship Events
+      romantic_advance_welcome: { moral: 0, desc: 'pursued mutual attraction' },
+      romantic_advance_unwelcome: { moral: -8, desc: 'made unwanted advances' },
+      respected_boundaries: { moral: 3, desc: 'respected someone\'s boundaries' },
+      
+      // Business Ethics
+      exploited_worker: { moral: -6, desc: 'pushed someone too hard' },
+      overworked_team: { moral: -3, desc: 'demanded excessive hours' },
+      work_life_balance: { moral: 4, desc: 'respected work-life balance' },
+      
+      // Boss Fights
+      defeated_boss: { moral: 0, desc: 'defeated a rival' },
+      recruited_boss: { moral: 2, desc: 'turned a rival into an ally' },
+      showed_mercy: { moral: 5, desc: 'showed mercy to a defeated foe' },
+      showed_no_mercy: { moral: -5, desc: 'crushed an enemy completely' },
+      
+      // Special Events
+      protected_whistleblower: { moral: 8, desc: 'protected someone speaking truth' },
+      silenced_whistleblower: { moral: -10, desc: 'silenced dissent' },
+      shared_profits: { moral: 6, desc: 'shared success with the team' },
+      hoarded_profits: { moral: -4, desc: 'kept all the rewards' }
+    },
+    
+    // ============================================
+    // ACTION TRACKING - Your story is written by your deeds
+    // ============================================
+    
+    /**
+     * Track a gameplay action and update narrative state
+     * This is the CORE of emergent storytelling - every action matters
+     */
+    trackAction(actionType, context = {}) {
+      if (!gameState.story?.settings?.storyEnabled) return;
+      
+      const weight = this.ACTION_WEIGHTS[actionType];
+      if (!weight) {
+        console.warn(`[StoryEngine] Unknown action type: ${actionType}`);
+        return;
+      }
+      
+      // Initialize action log if needed
+      if (!gameState.story.actionLog) {
+        gameState.story.actionLog = [];
+      }
+      
+      // Create action record
+      const action = {
+        type: actionType,
+        timestamp: Date.now(),
+        gameTime: gameState.time?.currentTime || Date.now(),
+        context: context, // Employee involved, amount, etc.
+        moralImpact: weight.moral,
+        description: weight.desc
+      };
+      
+      // Add to action log (keep last 100 actions)
+      gameState.story.actionLog.unshift(action);
+      if (gameState.story.actionLog.length > 100) {
+        gameState.story.actionLog = gameState.story.actionLog.slice(0, 100);
+      }
+      
+      // Apply moral impact
+      const oldMoral = gameState.story.moralScore;
+      gameState.story.moralScore = Math.max(0, Math.min(100, gameState.story.moralScore + weight.moral));
+      
+      // Track cumulative stats
+      if (!gameState.story.actionStats) {
+        gameState.story.actionStats = {
+          totalActions: 0,
+          positiveActions: 0,
+          negativeActions: 0,
+          employeesFired: 0,
+          employeesHired: 0,
+          giftsGiven: 0,
+          promotionsGiven: 0,
+          demotionsGiven: 0
+        };
+      }
+      
+      gameState.story.actionStats.totalActions++;
+      if (weight.moral > 0) gameState.story.actionStats.positiveActions++;
+      if (weight.moral < 0) gameState.story.actionStats.negativeActions++;
+      
+      // Track specific action types
+      if (actionType.includes('fired')) gameState.story.actionStats.employeesFired++;
+      if (actionType.includes('hired')) gameState.story.actionStats.employeesHired++;
+      if (actionType.includes('gift')) gameState.story.actionStats.giftsGiven++;
+      if (actionType.includes('promoted')) gameState.story.actionStats.promotionsGiven++;
+      if (actionType.includes('demoted')) gameState.story.actionStats.demotionsGiven++;
+      
+      // Log significant moral shifts
+      if (Math.abs(weight.moral) >= 5) {
+        const alignment = this.getAlignmentInfo(gameState.story.moralScore);
+        console.log(`[StoryEngine] 📊 Significant action: ${weight.desc} (${weight.moral > 0 ? '+' : ''}${weight.moral}) → Now: ${alignment.name}`);
+      }
+      
+      // Check for narrative consequences
+      this.checkActionConsequences(action);
+      
+      // Check if this triggers an emergent story event
+      this.checkEmergentTriggers(action);
+    },
+    
+    /**
+     * Check if an action has immediate narrative consequences
+     */
+    checkActionConsequences(action) {
+      const stats = gameState.story.actionStats;
+      const context = action.context || {};
+      
+      // Firing spree detection
+      if (action.type.includes('fired')) {
+        const recentFirings = gameState.story.actionLog.filter(a => 
+          a.type.includes('fired') && 
+          Date.now() - a.timestamp < 300000 // Last 5 minutes
+        ).length;
+        
+        if (recentFirings >= 3 && !gameState.story.narrativeFlags.firing_spree_detected) {
+          gameState.story.narrativeFlags.firing_spree_detected = true;
+          this.addJournalEntry({
+            title: '😰 Whispers in the Office',
+            content: `Three people gone in rapid succession. The remaining employees exchange nervous glances. No one feels safe anymore.`,
+            type: 'consequence',
+            memorable: true
+          });
+        }
+      }
+      
+      // Generosity detection
+      if (action.type.includes('gift')) {
+        if (stats.giftsGiven >= 10 && !gameState.story.narrativeFlags.generous_boss) {
+          gameState.story.narrativeFlags.generous_boss = true;
+          this.addJournalEntry({
+            title: '💝 A Reputation Forms',
+            content: `Word spreads: you\'re the kind of boss who notices. Who appreciates. The little things add up to loyalty.`,
+            type: 'consequence',
+            memorable: true
+          });
+        }
+      }
+      
+      // Track employee-specific treatment
+      if (context.employeeId) {
+        if (!gameState.story.employeeTreatment) {
+          gameState.story.employeeTreatment = {};
+        }
+        if (!gameState.story.employeeTreatment[context.employeeId]) {
+          gameState.story.employeeTreatment[context.employeeId] = {
+            positiveActions: 0,
+            negativeActions: 0,
+            history: []
+          };
+        }
+        
+        const treatment = gameState.story.employeeTreatment[context.employeeId];
+        if (action.moralImpact > 0) treatment.positiveActions++;
+        if (action.moralImpact < 0) treatment.negativeActions++;
+        treatment.history.push({
+          type: action.type,
+          timestamp: action.timestamp,
+          impact: action.moralImpact
+        });
+      }
+    },
+    
+    /**
+     * Check if conditions are met for emergent story events
+     */
+    checkEmergentTriggers(action) {
+      const stats = gameState.story.actionStats;
+      const moral = gameState.story.moralScore;
+      const employees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active');
+      
+      // Tyranny threshold - too many negative actions
+      if (moral < 20 && stats.negativeActions > 10 && !gameState.story.narrativeFlags.tyranny_warning) {
+        gameState.story.narrativeFlags.tyranny_warning = true;
+        this.triggerEmergentEvent('tyranny_brewing');
+        return; // Only one event at a time
+      }
+      
+      // Beloved leader - consistent positive actions
+      if (moral > 80 && stats.positiveActions > 15 && !gameState.story.narrativeFlags.beloved_leader) {
+        gameState.story.narrativeFlags.beloved_leader = true;
+        this.triggerEmergentEvent('beloved_leader');
+        return;
+      }
+      
+      // Promotion jealousy - triggered after 3+ promotions if any employee has low trust
+      if (action.type === 'promoted_employee') {
+        const hasJealousEmployee = employees.some(e => (e.stats?.trust || 50) < 40 && e.career?.level < 3);
+        if (stats.promotionsGiven >= 3 && hasJealousEmployee && !gameState.story.narrativeFlags.promotion_jealousy_shown) {
+          gameState.story.narrativeFlags.promotion_jealousy_shown = true;
+          setTimeout(() => this.triggerEmergentEvent('promotion_jealousy'), 3000); // Delayed for drama
+          return;
+        }
+      }
+      
+      // Favoritism accusation - triggered after giving 5+ gifts to same person
+      if (action.type.includes('gift') && action.context?.employeeName) {
+        const giftActions = (gameState.story.actionLog || []).filter(a => 
+          a.type.includes('gift') && a.context?.employeeName === action.context.employeeName
+        );
+        if (giftActions.length >= 5 && !gameState.story.narrativeFlags.favoritism_accusation_shown) {
+          gameState.story.narrativeFlags.favoritism_accusation_shown = true;
+          setTimeout(() => this.triggerEmergentEvent('favoritism_accusation'), 5000);
+          return;
+        }
+      }
+      
+      // Rising star - triggered when any employee hits 90+ productivity
+      if (employees.length >= 3) {
+        const star = employees.find(e => (e.stats?.productivity || 0) >= 90);
+        if (star && !gameState.story.narrativeFlags.rising_star_shown) {
+          // 20% chance to trigger when conditions are met
+          if (Math.random() < 0.2) {
+            gameState.story.narrativeFlags.rising_star_shown = true;
+            this.triggerEmergentEvent('rising_star');
+            return;
+          }
+        }
+      }
+      
+      // Betrayal setup - mistreated employee with high level
+      if (action.type.includes('fired') || action.type.includes('demoted')) {
+        const context = action.context || {};
+        if (context.employeeLevel >= 3 && context.employeeTrust < 40) {
+          gameState.story.pendingBetrayal = {
+            employeeId: context.employeeId,
+            employeeName: context.employeeName,
+            reason: action.type,
+            timestamp: Date.now()
+          };
+        }
+      }
+    },
+    
+    /**
+     * Trigger an emergent story event based on gameplay
+     */
+    async triggerEmergentEvent(eventType) {
+      console.log(`[StoryEngine] 🌟 Emergent event triggered: ${eventType}`);
+      
+      const event = await this.generateEmergentEvent(eventType);
+      if (event) {
+        gameState.story.activeSpineEvent = event;
+        this.showStoryEventModal(event);
+        saveGame();
+      }
+    },
+    
+    /**
+     * Generate an emergent event based on actual game state
+     */
+    async generateEmergentEvent(eventType) {
+      const stats = gameState.story.actionStats;
+      const moral = gameState.story.moralScore;
+      const alignment = this.getAlignmentInfo(moral);
+      const recentActions = (gameState.story.actionLog || []).slice(0, 10);
+      
+      // Get employee context
+      const employees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active');
+      const mostTrusted = employees.sort((a, b) => (b.stats?.trust || 0) - (a.stats?.trust || 0))[0];
+      const leastTrusted = employees.sort((a, b) => (a.stats?.trust || 0) - (b.stats?.trust || 0))[0];
+      
+      const eventTemplates = {
+        tyranny_brewing: {
+          title: '⚠️ Unrest',
+          generateContent: () => {
+            const firedCount = stats.employeesFired || 0;
+            const recentVictims = recentActions.filter(a => a.type.includes('fired')).map(a => a.context?.employeeName).filter(Boolean);
+            
+            return {
+              cinematicText: `The atmosphere has changed. You can feel it in the silence when you walk through the office. In the way conversations stop mid-sentence.
+
+${firedCount > 0 ? `${firedCount} people have been let go. ` : ''}${recentVictims.length > 0 ? `Names like ${recentVictims.slice(0, 2).join(' and ')} are whispered in break rooms.` : ''}
+
+${leastTrusted ? `${leastTrusted.name} watches you with barely concealed hostility.` : 'Eyes follow you everywhere.'}
+
+They\'re afraid. But fear turns to resentment. And resentment...
+
+*Something is brewing. Your next move matters.*`,
+              choices: [
+                { 
+                  id: 'address', 
+                  text: '📢 Call a meeting. Clear the air.', 
+                  consequence: 'You decide to face this head-on.',
+                  gameplayEffect: { type: 'boost_all_trust', amount: 5 }
+                },
+                { 
+                  id: 'bonus', 
+                  text: '💰 Surprise bonuses for everyone.', 
+                  consequence: 'Money talks. Maybe it can drown out the whispers.',
+                  gameplayEffect: { type: 'spend_cash', amount: 5000, boostMorale: true }
+                },
+                { 
+                  id: 'ignore', 
+                  text: '🤷 They\'ll get over it.', 
+                  consequence: 'Some things fester when left alone.',
+                  gameplayEffect: { type: 'decrease_all_trust', amount: 3 }
+                },
+                { 
+                  id: 'double_down', 
+                  text: '👊 Fire anyone who complains.', 
+                  consequence: 'Rule through fear. It\'s worked for others.',
+                  gameplayEffect: { type: 'mark_complainers', triggerFearMode: true }
+                }
+              ]
+            };
+          }
+        },
+        
+        beloved_leader: {
+          title: '💖 Something Beautiful',
+          generateContent: () => {
+            const giftsGiven = stats.giftsGiven || 0;
+            const promotions = stats.promotionsGiven || 0;
+            
+            return {
+              cinematicText: `${mostTrusted ? mostTrusted.name + ' finds you' : 'An employee finds you'} after hours, holding something behind their back.
+
+"We, um... we all chipped in." They reveal a card, signed by everyone. And a gift—nothing expensive, but clearly chosen with care.
+
+"You didn\'t have to be kind to us. But you were. ${giftsGiven > 0 ? `The gifts. ` : ''}${promotions > 0 ? `The promotions that actually made sense. ` : ''}The way you actually *listen*."
+
+They look embarrassed but determined. "We just wanted you to know: we\'d follow you anywhere."
+
+*Your kindness has built something rare: genuine loyalty.*`,
+              choices: [
+                { 
+                  id: 'humble', 
+                  text: '🙏 "You all built this together. Thank you."', 
+                  consequence: 'Humility strengthens the bond.',
+                  gameplayEffect: { type: 'boost_all_trust', amount: 10 }
+                },
+                { 
+                  id: 'promise', 
+                  text: '🌟 "This is just the beginning. We\'re going to do great things."', 
+                  consequence: 'Your vision inspires them further.',
+                  gameplayEffect: { type: 'boost_all_productivity', amount: 5 }
+                },
+                { 
+                  id: 'party', 
+                  text: '🎉 "Let\'s celebrate! Dinner\'s on me!"', 
+                  consequence: 'The team bonds over good food and laughter.',
+                  gameplayEffect: { type: 'spend_cash', amount: 2000, boostAffection: true }
+                }
+              ]
+            };
+          }
+        },
+        
+        // New: Promotion jealousy event
+        promotion_jealousy: {
+          title: '💔 Green-Eyed Monster',
+          generateContent: () => {
+            const recentPromotions = recentActions.filter(a => a.type === 'promoted_employee');
+            const promoted = recentPromotions[0]?.context?.employeeName || 'someone';
+            const jealousOne = employees.find(e => e.name !== promoted && (e.stats?.trust || 50) < 50);
+            
+            return {
+              cinematicText: `${jealousOne ? jealousOne.name : 'An employee'} corners you in the hallway. Their voice is tight with barely-controlled emotion.
+
+"${promoted} got promoted. Again." They laugh, but there's no humor in it. "I've been here longer. I work just as hard. What does ${promoted} have that I don't?"
+
+Their eyes search your face for an answer. For validation. For *something*.
+
+*Jealousy is a poison. How you handle this will echo through the office.*`,
+              choices: [
+                { 
+                  id: 'validate', 
+                  text: '💬 "Your time is coming. I see your work."', 
+                  consequence: 'Empty promises or genuine recognition?',
+                  gameplayEffect: { type: 'boost_employee', employeeId: jealousOne?.id, stat: 'trust', amount: 15 }
+                },
+                { 
+                  id: 'opportunity', 
+                  text: '📋 "Actually, there\'s an opening I\'ve been considering you for..."', 
+                  consequence: 'You dangle a carrot. Now you\'ll have to deliver.',
+                  gameplayEffect: { type: 'unlock_ability', ability: 'pending_promotion_promise' }
+                },
+                { 
+                  id: 'honest', 
+                  text: '📊 "Let\'s look at the metrics together."', 
+                  consequence: 'Honesty can heal or wound. The data will decide.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: jealousOne?.id, stat: 'trust', amount: 5 }
+                },
+                { 
+                  id: 'dismiss', 
+                  text: '🚪 "This isn\'t the time or place."', 
+                  consequence: 'You shut them down. The conversation, at least.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: jealousOne?.id, stat: 'trust', amount: -10 }
+                }
+              ]
+            };
+          }
+        },
+        
+        // New: Gift favoritism called out
+        favoritism_accusation: {
+          title: '⚖️ The Accusation',
+          generateContent: () => {
+            // Find who received most gifts
+            const giftActions = (gameState.story.actionLog || []).filter(a => a.type.includes('gift'));
+            const giftCounts = {};
+            giftActions.forEach(a => {
+              const name = a.context?.employeeName;
+              if (name) giftCounts[name] = (giftCounts[name] || 0) + 1;
+            });
+            const mostGifted = Object.entries(giftCounts).sort((a, b) => b[1] - a[1])[0];
+            const favoriteName = mostGifted ? mostGifted[0] : 'someone';
+            const favoriteCount = mostGifted ? mostGifted[1] : 'several';
+            
+            return {
+              cinematicText: `The email arrives anonymously, but the sentiment is clear:
+
+*"Everyone sees it. ${favoriteName} gets ${favoriteCount} gifts while the rest of us get nothing. Is this company based on merit or favoritism? Are we employees or are we just... extras?"*
+
+The message has been forwarded. People are reading it. Some are nodding along. Others are watching to see what you'll do.
+
+*A private matter has become very public. Your response will define the culture.*`,
+              choices: [
+                { 
+                  id: 'transparency', 
+                  text: '📧 Send a company-wide email explaining your gift philosophy.', 
+                  consequence: 'Sunlight is the best disinfectant. Or is it?',
+                  gameplayEffect: { type: 'boost_all_trust', amount: 3 }
+                },
+                { 
+                  id: 'equal_gifts', 
+                  text: '🎁 "Everyone gets something this month. On me."', 
+                  consequence: 'Equality through generosity. Your wallet feels it.',
+                  gameplayEffect: { type: 'spend_cash', amount: employees.length * 200, boostMorale: true }
+                },
+                { 
+                  id: 'private', 
+                  text: '🔒 Try to identify and address the sender privately.', 
+                  consequence: 'Some fires need to be put out quietly.',
+                  gameplayEffect: { type: 'decrease_all_trust', amount: -2 }
+                },
+                { 
+                  id: 'ignore_email', 
+                  text: '🗑️ Ignore it. Anonymous complaints don\'t deserve responses.', 
+                  consequence: 'Silence can be interpreted many ways.',
+                  gameplayEffect: { type: 'decrease_all_trust', amount: 5 }
+                }
+              ]
+            };
+          }
+        },
+        
+        // New: Rising star event
+        rising_star: {
+          title: '⭐ The Prodigy',
+          generateContent: () => {
+            // Find employee with highest productivity
+            const star = employees.sort((a, b) => (b.stats?.productivity || 0) - (a.stats?.productivity || 0))[0];
+            
+            return {
+              cinematicText: `${star ? star.name : 'One of your employees'} has been producing exceptional work. Numbers that don't lie. Innovation that catches your eye.
+
+Word reaches you: a competitor has noticed too. They're circling. Making quiet inquiries. A headhunter's business card was spotted on ${star ? star.name + "'s" : 'their'} desk.
+
+*You built something valuable here. Someone wants to take it.*`,
+              choices: [
+                { 
+                  id: 'counter_offer', 
+                  text: '💰 Make a preemptive counter-offer. Match whatever they\'re thinking.', 
+                  consequence: 'Money can buy loyalty. For a while.',
+                  gameplayEffect: { type: 'spend_cash', amount: 10000, boostAffection: true }
+                },
+                { 
+                  id: 'vision', 
+                  text: '🗣️ "Let me show you where this company is going. And your role in it."', 
+                  consequence: 'You share your vision. They see themselves in the future.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: star?.id, stat: 'trust', amount: 20 }
+                },
+                { 
+                  id: 'freedom', 
+                  text: '🔓 "If you want to explore other opportunities, I won\'t stop you."', 
+                  consequence: 'Respect breeds respect. Or goodbye.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: star?.id, stat: 'affection', amount: 10 }
+                },
+                { 
+                  id: 'guilt', 
+                  text: '😢 "After everything we\'ve built together? Really?"', 
+                  consequence: 'Guilt is a weapon. Use it carefully.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: star?.id, stat: 'trust', amount: -5 }
+                }
+              ]
+            };
+          }
+        }
+      };
+      
+      const template = eventTemplates[eventType];
+      if (!template) return null;
+      
+      const content = template.generateContent();
+      
+      return {
+        id: `emergent_${eventType}_${Date.now()}`,
+        eventKey: eventType,
+        title: template.title,
+        cinematicText: content.cinematicText,
+        choices: content.choices,
+        actNumber: gameState.story.currentAct,
+        type: 'emergent',
+        timestamp: Date.now()
+      };
+    },
+    
+    // ============================================
     // CORE ENGINE METHODS
     // ============================================
     
@@ -13287,15 +13841,32 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
       
       console.log('[StoryEngine] Initialized. Current Act:', gameState.story.currentAct);
       
-      // Check if prologue should trigger (new game with no spine events yet)
-      const prologueTriggered = gameState.story.actData[1].spineEventsTriggered.includes('prologue');
-      if (!prologueTriggered && gameState.story.choicesMade === 0) {
-        // Delay prologue slightly to let game fully load
+      // Check for incomplete events (user reloaded mid-event)
+      if (gameState.story.activeSpineEvent) {
+        console.log('[StoryEngine] Found incomplete event, re-showing:', gameState.story.activeSpineEvent.eventKey);
+        // Re-show the event after a short delay
         setTimeout(() => {
-          if (gameState.story.settings.storyEnabled) {
-            this.triggerSpineEvent('prologue');
+          if (gameState.story.settings.storyEnabled && gameState.story.activeSpineEvent) {
+            this.showStoryEventModal(gameState.story.activeSpineEvent);
           }
-        }, 2000);
+        }, 1500);
+      }
+      // Check for pending events that weren't shown
+      else if (gameState.story.pendingEvents && gameState.story.pendingEvents.length > 0) {
+        console.log('[StoryEngine] Found pending events:', gameState.story.pendingEvents.length);
+        this.showStoryNotification();
+      }
+      // Check if prologue should trigger (new game with no spine events yet)
+      else {
+        const prologueTriggered = gameState.story.actData[1].spineEventsTriggered.includes('prologue');
+        if (!prologueTriggered && gameState.story.choicesMade === 0) {
+          // Delay prologue slightly to let game fully load
+          setTimeout(() => {
+            if (gameState.story.settings.storyEnabled) {
+              this.triggerSpineEvent('prologue');
+            }
+          }, 2000);
+        }
       }
     },
     
@@ -13639,6 +14210,16 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
       
       if (event) {
         gameState.story.activeSpineEvent = event;
+        
+        // Log to journal immediately (will be updated when choice is made)
+        this.addJournalEntry({
+          title: event.title,
+          content: event.cinematicText.substring(0, 300) + (event.cinematicText.length > 300 ? '...' : ''),
+          type: 'spine',
+          eventKey: eventKey,
+          memorable: true,
+          pending: true // Mark as pending choice
+        });
         
         // Show the event modal
         if (gameState.story.settings.autoShowEvents) {
@@ -14291,13 +14872,21 @@ RESPOND IN STRICT JSON (no markdown):
         gameState.story.narrativeFlags[event.affectsFlag] = choiceId;
       }
       
-      // Add to journal
-      this.addJournalEntry({
-        title: event.title,
-        content: `You chose: "${choice.text}"\n\n${choice.consequence}`,
-        type: 'choice',
-        memorable: event.type === 'spine'
-      });
+      // Update existing journal entry (marked as pending) with choice made
+      const pendingEntry = gameState.story.journal.find(j => j.eventKey === event.eventKey && j.pending);
+      if (pendingEntry) {
+        pendingEntry.content = `${event.cinematicText.substring(0, 200)}...\n\n✨ You chose: "${choice.text}"\n\n${choice.consequence}`;
+        pendingEntry.pending = false;
+        pendingEntry.choiceMade = choice.text;
+      } else {
+        // Fallback: add new entry if pending wasn't found
+        this.addJournalEntry({
+          title: event.title,
+          content: `You chose: "${choice.text}"\n\n${choice.consequence}`,
+          type: 'choice',
+          memorable: event.type === 'spine'
+        });
+      }
       
       // Clear active event
       gameState.story.activeSpineEvent = null;
@@ -14309,6 +14898,11 @@ RESPOND IN STRICT JSON (no markdown):
         setTimeout(() => modal.remove(), 500);
       }
       
+      // Execute gameplay effects if this is an emergent event with real consequences
+      if (choice.gameplayEffect) {
+        this.executeGameplayEffect(choice.gameplayEffect);
+      }
+      
       // Show consequence
       setTimeout(() => {
         this.showConsequenceToast(choice);
@@ -14318,6 +14912,114 @@ RESPOND IN STRICT JSON (no markdown):
       this.updateStoryUI();
       
       saveGame();
+    },
+    
+    /**
+     * Execute real gameplay effects from story choices
+     * This is what makes choices MATTER - they change the actual game
+     */
+    executeGameplayEffect(effect) {
+      if (!effect || !effect.type) return;
+      
+      console.log(`[StoryEngine] 🎮 Executing gameplay effect: ${effect.type}`);
+      
+      const employees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active');
+      
+      switch(effect.type) {
+        case 'boost_all_trust':
+          employees.forEach(emp => {
+            if (emp.stats) {
+              emp.stats.trust = Math.min(100, (emp.stats.trust || 50) + effect.amount);
+            }
+          });
+          showNotification(`Trust improved across the team (+${effect.amount})`, 'success');
+          break;
+          
+        case 'decrease_all_trust':
+          employees.forEach(emp => {
+            if (emp.stats) {
+              emp.stats.trust = Math.max(0, (emp.stats.trust || 50) - effect.amount);
+            }
+          });
+          showNotification(`Team trust declined (-${effect.amount})`, 'warning');
+          break;
+          
+        case 'boost_all_productivity':
+          employees.forEach(emp => {
+            if (emp.stats) {
+              emp.stats.productivity = Math.min(100, (emp.stats.productivity || 70) + effect.amount);
+            }
+          });
+          showNotification(`Team productivity improved (+${effect.amount}%)`, 'success');
+          break;
+          
+        case 'spend_cash':
+          if (gameState.cash >= effect.amount) {
+            gameState.cash -= effect.amount;
+            if (effect.boostMorale) {
+              employees.forEach(emp => {
+                if (emp.stats) {
+                  emp.stats.comfort = Math.min(100, (emp.stats.comfort || 60) + 15);
+                  emp.stats.trust = Math.min(100, (emp.stats.trust || 50) + 8);
+                }
+              });
+              showNotification(`Spent $${effect.amount.toLocaleString()} - Team morale boosted!`, 'success');
+            }
+            if (effect.boostAffection) {
+              employees.forEach(emp => {
+                if (emp.stats) {
+                  emp.stats.affection = Math.min(100, (emp.stats.affection || 20) + 10);
+                }
+              });
+              showNotification(`Spent $${effect.amount.toLocaleString()} - Team bonds strengthened!`, 'success');
+            }
+          } else {
+            showNotification(`Couldn't afford $${effect.amount.toLocaleString()} - promise noted but not fulfilled`, 'warning');
+            this.trackAction('broke_promise', { type: effect.type, amount: effect.amount });
+          }
+          break;
+          
+        case 'mark_complainers':
+          // Flag any employees with low trust for potential "consequences"
+          employees.filter(e => e.stats?.trust < 40).forEach(emp => {
+            if (!emp.narrativeFlags) emp.narrativeFlags = {};
+            emp.narrativeFlags.marked_complainer = true;
+          });
+          if (effect.triggerFearMode) {
+            gameState.story.narrativeFlags.fear_mode = true;
+            this.addJournalEntry({
+              title: '☠️ Rule of Fear',
+              content: 'You\'ve chosen to lead through intimidation. Dissent will be punished. Some will submit. Others will remember.',
+              type: 'consequence',
+              memorable: true
+            });
+          }
+          break;
+          
+        case 'boost_employee':
+          // Boost a specific employee if identified
+          if (effect.employeeId) {
+            const emp = gameState.employees.find(e => e.id === effect.employeeId);
+            if (emp && emp.stats) {
+              if (effect.stat && effect.amount) {
+                emp.stats[effect.stat] = Math.min(100, (emp.stats[effect.stat] || 50) + effect.amount);
+              }
+            }
+          }
+          break;
+          
+        case 'unlock_ability':
+          // Unlock special abilities/options
+          if (!gameState.story.unlockedAbilities) gameState.story.unlockedAbilities = [];
+          if (!gameState.story.unlockedAbilities.includes(effect.ability)) {
+            gameState.story.unlockedAbilities.push(effect.ability);
+            showNotification(`New ability unlocked: ${effect.ability}`, 'success');
+          }
+          break;
+          
+        default:
+          console.warn(`[StoryEngine] Unknown gameplay effect type: ${effect.type}`);
+      }
     },
     
     /**
@@ -14430,17 +15132,17 @@ RESPOND IN STRICT JSON (no markdown):
         progressPercent.textContent = `${progress}%`;
       }
       
-      // Update stats
-      const choicesMadeEl = document.getElementById('storyChoicesMade');
+      // Update alignment display
       const alignmentEl = document.getElementById('storyMoralAlignment');
-      
-      if (choicesMadeEl) choicesMadeEl.textContent = gameState.story.choicesMade;
       if (alignmentEl) {
         const alignment = this.getAlignmentInfo(gameState.story.moralScore);
         alignmentEl.textContent = alignment.emoji;
         alignmentEl.title = alignment.name;
         alignmentEl.style.color = alignment.color;
       }
+      
+      // Update action stats display
+      this.updateActionStatsUI();
       
       // Update timeline
       this.updateTimelineUI();
@@ -14450,6 +15152,34 @@ RESPOND IN STRICT JSON (no markdown):
       
       // Update journal
       this.updateJournalUI();
+    },
+    
+    /**
+     * Update the action stats display in the Story tab
+     */
+    updateActionStatsUI() {
+      const stats = gameState.story.actionStats || { totalActions: 0 };
+      
+      // Total actions
+      const totalActionsEl = document.getElementById('storyTotalActions');
+      if (totalActionsEl) totalActionsEl.textContent = stats.totalActions || 0;
+      
+      // Moral alignment bar position (0 = left/benevolent, 100 = right/ruthless)
+      const moralBar = document.getElementById('moralAlignmentBar');
+      if (moralBar) {
+        // Invert moral score: high moral = left (benevolent), low moral = right (ruthless)
+        const barPosition = 100 - gameState.story.moralScore;
+        moralBar.style.left = `${barPosition}%`;
+      }
+      
+      // Latest action text
+      const latestActionEl = document.getElementById('latestActionText');
+      if (latestActionEl && gameState.story.actionLog?.length > 0) {
+        const latest = gameState.story.actionLog[0];
+        const icon = latest.moralImpact > 0 ? '✨' : (latest.moralImpact < 0 ? '⚡' : '📋');
+        latestActionEl.innerHTML = `${icon} You ${latest.description}`;
+        latestActionEl.style.color = latest.moralImpact > 0 ? '#4ecca3' : (latest.moralImpact < 0 ? '#e94560' : '#aaa');
+      }
     },
     
     /**
@@ -14472,21 +15202,32 @@ RESPOND IN STRICT JSON (no markdown):
       const act = gameState.story.currentAct;
       
       document.querySelectorAll('.timeline-act').forEach(el => {
+        if (!el) return;
+        
         const elAct = parseInt(el.dataset.act);
         el.classList.remove('active', 'completed', 'locked');
+        
+        // Find the indicator dot (first positioned absolute div)
+        const indicator = el.querySelector('div[style*="position:absolute"]');
         
         if (elAct < act) {
           el.classList.add('completed');
           el.style.opacity = '0.7';
-          el.querySelector('div[style*="position:absolute"]').style.background = '#4ecca3';
+          if (indicator) indicator.style.background = '#4ecca3';
         } else if (elAct === act) {
           el.classList.add('active');
           el.style.opacity = '1';
-          el.querySelector('div[style*="position:absolute"]').style.background = '#667eea';
-          el.querySelector('div[style*="position:absolute"]').style.boxShadow = '0 0 10px rgba(102,126,234,0.5)';
+          if (indicator) {
+            indicator.style.background = '#667eea';
+            indicator.style.boxShadow = '0 0 10px rgba(102,126,234,0.5)';
+          }
         } else {
           el.classList.add('locked');
           el.style.opacity = '0.5';
+          if (indicator) {
+            indicator.style.background = '#444';
+            indicator.style.boxShadow = 'none';
+          }
         }
       });
     },
@@ -14578,32 +15319,44 @@ RESPOND IN STRICT JSON (no markdown):
         const icon = entryIcons[entry.type] || '📋';
         const date = new Date(entry.timestamp);
         const timeStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const isPending = entry.pending && gameState.story.activeSpineEvent;
+        
+        // Show continue button for pending events
+        const pendingBtn = isPending ? `
+          <button onclick="StoryEngine.showStoryEventModal(gameState.story.activeSpineEvent)" style="
+            margin-top:10px; padding:8px 16px; 
+            background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border:none; border-radius:6px; color:#fff; cursor:pointer;
+            font-size:0.85rem; font-weight:600;
+          ">▶️ Continue Event</button>
+        ` : '';
+        
+        const pendingLabel = isPending ? `<span style="color:#ffd700; font-size:0.75rem; margin-left:8px;">⏳ Awaiting Choice</span>` : '';
         
         return `
-          <div class="journal-entry" data-type="${entry.type}" style="
+          <div class="journal-entry" data-type="${entry.type}" data-eventkey="${entry.eventKey || ''}" style="
             margin-bottom:15px; padding:15px; 
             background:${entry.memorable ? 'linear-gradient(135deg, #1a2744 0%, #0f1419 100%)' : '#0f1419'}; 
             border-radius:10px; 
-            border-left:3px solid ${entry.memorable ? '#ffd700' : '#333'};
-            ${entry.memorable ? 'box-shadow:0 2px 10px rgba(255,215,0,0.1);' : ''}
+            border-left:3px solid ${isPending ? '#ffd700' : (entry.memorable ? '#ffd700' : '#333')};
+            ${entry.memorable || isPending ? 'box-shadow:0 2px 10px rgba(255,215,0,0.1);' : ''}
           ">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-              <div style="display:flex; align-items:center; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 <span style="font-size:1.2rem;">${icon}</span>
                 <span style="color:#fff; font-weight:600; font-size:0.95rem;">${entry.title}</span>
+                ${pendingLabel}
               </div>
               <span style="color:#666; font-size:0.75rem;">Act ${entry.actNumber} • ${timeStr}</span>
             </div>
             <div style="color:#8899a6; font-size:0.85rem; line-height:1.5; white-space:pre-wrap;">${entry.content.substring(0, 200)}${entry.content.length > 200 ? '...' : ''}</div>
+            ${pendingBtn}
           </div>
         `;
       }).join('');
       
-      // Only update if journal container exists in view
-      const existingEntries = journalEl.querySelectorAll('.journal-entry');
-      if (existingEntries.length !== entries.slice(0, 30).length) {
-        journalEl.innerHTML = html;
-      }
+      // Always update to reflect pending status changes
+      journalEl.innerHTML = html;
     },
     
     /**
@@ -14654,11 +15407,111 @@ RESPOND IN STRICT JSON (no markdown):
   // Add to global scope for easy access
   window.StoryEngine = StoryEngine;
   
+  /**
+   * Periodic story evaluation - checks for emergent narrative opportunities
+   * Called every 60 seconds by the game loop
+   */
+  function storyPeriodicTick() {
+    if (!gameState.story?.settings?.storyEnabled) return;
+    if (gameState.story.activeSpineEvent) return; // Don't interrupt active events
+    
+    const employees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active');
+    if (employees.length < 1) return;
+    
+    const stats = gameState.story.actionStats || {};
+    const moral = gameState.story.moralScore;
+    
+    // Check for low comfort employees being ignored
+    const lowComfortEmployee = employees.find(e => (e.stats?.comfort || 60) < 30);
+    if (lowComfortEmployee) {
+      // Check if we've recently tracked this
+      const recentComfortWarning = (gameState.story.actionLog || []).find(a => 
+        a.type === 'ignored_low_comfort' && 
+        a.context?.employeeId === lowComfortEmployee.id &&
+        Date.now() - a.timestamp < 600000 // Last 10 minutes
+      );
+      
+      if (!recentComfortWarning) {
+        StoryEngine.trackAction('ignored_low_comfort', {
+          employeeId: lowComfortEmployee.id,
+          employeeName: lowComfortEmployee.name,
+          comfortLevel: lowComfortEmployee.stats?.comfort || 30
+        });
+      }
+    }
+    
+    // Check for low trust employees
+    const lowTrustEmployee = employees.find(e => (e.stats?.trust || 50) < 25);
+    if (lowTrustEmployee) {
+      const recentTrustWarning = (gameState.story.actionLog || []).find(a => 
+        a.type === 'ignored_low_trust' && 
+        a.context?.employeeId === lowTrustEmployee.id &&
+        Date.now() - a.timestamp < 600000
+      );
+      
+      if (!recentTrustWarning) {
+        StoryEngine.trackAction('ignored_low_trust', {
+          employeeId: lowTrustEmployee.id,
+          employeeName: lowTrustEmployee.name,
+          trustLevel: lowTrustEmployee.stats?.trust || 25
+        });
+      }
+    }
+    
+    // Update story UI periodically
+    StoryEngine.updateStoryUI();
+    
+    // Small chance to trigger random emergent event based on conditions
+    if (Math.random() < 0.05 && employees.length >= 3) { // 5% chance per tick
+      // Check various conditions for emergent events
+      const avgTrust = employees.reduce((sum, e) => sum + (e.stats?.trust || 50), 0) / employees.length;
+      const avgProductivity = employees.reduce((sum, e) => sum + (e.stats?.productivity || 70), 0) / employees.length;
+      
+      // High performing team celebration
+      if (avgProductivity > 85 && !gameState.story.narrativeFlags.high_performance_noted) {
+        if (Math.random() < 0.3) {
+          gameState.story.narrativeFlags.high_performance_noted = true;
+          StoryEngine.addJournalEntry({
+            title: '🚀 Peak Performance',
+            content: `Your team is operating at exceptional levels. Average productivity: ${avgProductivity.toFixed(0)}%. They move with purpose and precision. This is what success looks like.`,
+            type: 'consequence',
+            memorable: true
+          });
+        }
+      }
+      
+      // Low trust warning
+      if (avgTrust < 35 && !gameState.story.narrativeFlags.trust_crisis_noted) {
+        if (Math.random() < 0.3) {
+          gameState.story.narrativeFlags.trust_crisis_noted = true;
+          StoryEngine.addJournalEntry({
+            title: '🥶 Cold Shoulders',
+            content: `The office feels different. Conversations stop when you enter rooms. Eye contact is avoided. Trust is fragile - once broken, it's hard to rebuild.`,
+            type: 'consequence',
+            memorable: true
+          });
+        }
+      }
+    }
+  }
+  
+  // Start periodic story tick (every 60 seconds)
+  setInterval(storyPeriodicTick, 60000);
+  
   // Hook: Called when an employee is hired
   function onStoryEmployeeHired(employee) {
     if (!gameState.story?.settings?.storyEnabled) return;
     
     const employeeCount = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active').length;
+    
+    // === TRACK HIRING ACTION ===
+    const isRehire = employee.firedDate || employee.employmentStatus === 'alumni';
+    StoryEngine.trackAction(isRehire ? 'rehired_former_employee' : 'hired_employee', {
+      employeeId: employee.id,
+      employeeName: employee.name,
+      totalEmployees: employeeCount,
+      isRehire: isRehire
+    });
     
     // First hire triggers special event
     if (employeeCount === 1 && !gameState.story.narrativeFlags.firstHireComplete) {
@@ -14682,6 +15535,20 @@ RESPOND IN STRICT JSON (no markdown):
   // Hook: Called when a boss is defeated
   function onStoryBossDefeated(bossId, recruited) {
     if (!gameState.story?.settings?.storyEnabled) return;
+    
+    // === TRACK BOSS DEFEAT ACTION ===
+    StoryEngine.trackAction('defeated_boss', {
+      bossId: bossId,
+      recruited: recruited
+    });
+    
+    // Track mercy/ruthlessness based on recruitment choice
+    if (recruited) {
+      StoryEngine.trackAction('recruited_boss', { bossId: bossId });
+      StoryEngine.trackAction('showed_mercy', { bossId: bossId });
+    } else {
+      StoryEngine.trackAction('showed_no_mercy', { bossId: bossId });
+    }
     
     if (!gameState.story.narrativeFlags.firstBossDefeated) {
       gameState.story.narrativeFlags.firstBossDefeated = true;
@@ -23070,6 +23937,19 @@ Reply as ${employee.name} (dialogue and actions):`;
         employee.stats[stat] = Math.max(0, Math.min(100, employee.stats[stat] + value));
       }
     });
+    
+    // === STORY: Track gift action ===
+    if (typeof StoryEngine !== 'undefined' && StoryEngine.trackAction) {
+      const isExpensive = gift.price > 1000;
+      StoryEngine.trackAction(isExpensive ? 'gave_expensive_gift' : 'gave_gift', {
+        employeeId: employee.id,
+        employeeName: employee.name,
+        giftName: gift.name,
+        giftPrice: gift.price,
+        category: gift.category,
+        reaction: reactionTone
+      });
+    }
     
     // Track gift in history
     employee.giftPreferences.recentGifts.push({
@@ -38709,6 +39589,20 @@ Post:`;
   }
   
   /**
+   * Get employee's current level in the hierarchy
+   * @param {string} employeeId - Employee ID
+   * @returns {number} Level (1-7) or 0 if not found
+   */
+  function getEmployeeLevel(employeeId) {
+    const position = getEmployeePosition(employeeId);
+    if (position) {
+      return Math.floor(position.level);
+    }
+    const employee = gameState.employees.find(e => e.id === employeeId);
+    return employee?.career?.level || 1;
+  }
+  
+  /**
    * Get all subordinates of a position (direct reports)
    * @param {string} positionId - Position ID
    * @returns {array} Array of employee objects who report to this position
@@ -39039,6 +39933,30 @@ Post:`;
     console.log(`╔════════════════════════════════════════╗`);
     console.log(`║  ${employee.name} → ${position.title}`);
     console.log(`╚════════════════════════════════════════╝\n`);
+    
+    // === STORY: Track promotion/demotion/transfer ===
+    if (typeof StoryEngine !== 'undefined' && StoryEngine.trackAction) {
+      const positionLevel = Math.floor(position.level);
+      if (oldLevel < positionLevel) {
+        // This was a promotion
+        StoryEngine.trackAction('promoted_employee', {
+          employeeId: employee.id,
+          employeeName: employee.name,
+          fromLevel: oldLevel,
+          toLevel: positionLevel,
+          newTitle: position.title
+        });
+      } else if (oldLevel > positionLevel) {
+        // This was a demotion
+        StoryEngine.trackAction('demoted_employee', {
+          employeeId: employee.id,
+          employeeName: employee.name,
+          fromLevel: oldLevel,
+          toLevel: positionLevel,
+          newTitle: position.title
+        });
+      }
+    }
     
     return { 
       success: true, 
@@ -55890,6 +56808,11 @@ ${npc.name}'s message:`;
         break;
       case 'fire':
         if (await showConfirm(`Are you sure you want to fire ${employee.name}?`, 'Fire Employee', { type: 'danger', confirmText: 'Fire' })) {
+          // Track this for story BEFORE removing them
+          const employeeLevel = getEmployeeLevel(employee.id);
+          const employeeTrust = employee.stats?.trust || 50;
+          const employeeAffection = employee.stats?.affection || 0;
+          
           // Remove from corporate pyramid position
           const position = getEmployeePosition(employee.id);
           if (position) {
@@ -55916,6 +56839,19 @@ ${npc.name}'s message:`;
           employee.employmentStatus = 'alumni';
           employee.firedDate = Date.now();
           employee.productManaged = null;
+          
+          // === STORY: Track firing action ===
+          if (typeof StoryEngine !== 'undefined' && StoryEngine.trackAction) {
+            // Determine severity based on how the employee was treated
+            const wasCruel = employeeTrust < 30 || employeeAffection > 50; // Fired someone scared/attached
+            StoryEngine.trackAction(wasCruel ? 'fired_employee_cruelly' : 'fired_employee_fairly', {
+              employeeId: employee.id,
+              employeeName: employee.name,
+              employeeLevel: employeeLevel,
+              employeeTrust: employeeTrust,
+              employeeAffection: employeeAffection
+            });
+          }
           
           // Log fire event
           logCompanyEvent({

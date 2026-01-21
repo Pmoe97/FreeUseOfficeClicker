@@ -5,43 +5,67 @@
 
 ## 📋 Executive Summary
 
-This document outlines a comprehensive **AI-Driven Story System** that transforms the existing clicker/management game into a narrative-rich experience with:
+This document outlines a comprehensive **Emergent Action-Based Story System** that transforms the existing clicker/management game into a narrative-rich experience with:
 
-- A **"Flexible Spine"** story structure that adapts to player choices
-- **Self-Evaluating AI Systems** that ensure quality and coherence
-- **Emergent Narratives** from NPC interactions (leveraging the existing GossipEngine™)
-- **Integration with ALL existing mechanics** (boss fights, prestige, relationships, locations, etc.)
-- **High Replayability** through procedurally-influenced story beats
+- **Your Actions ARE The Story** - No pop quiz choices; your gameplay decisions shape the narrative
+- **Moral Tracking From Deeds** - Firing, hiring, gifts, promotions all affect your story alignment
+- **Emergent Narrative Events** - Story moments that REACT to what you've done
+- **GossipEngine Integration** - Employee relationships drive plot conflict
+- **Self-Evaluating AI** - Quality-checked narrative that references your actual game state
 
 ---
 
 ## 🎯 Core Design Philosophy
 
-### The Flexible Spine
-The story isn't a linear railroad—it's a **spine with ribs**:
+### Actions, Not Multiple Choice
+The old approach: "Pop up a scenario → Present 4 personality quiz options → Track alignment"
+The new approach: **Your gameplay IS your story. Fire people cruelly? The office fears you. Give generous gifts? Loyalty grows.**
 
 ```
-THE SPINE (Fixed narrative anchors):
-┌─────────────────────────────────────────────────────────────┐
-│ ACT 1: GARAGE DREAMS       → ACT 2: CORPORATE CLIMBER      │
-│ ACT 3: EMPIRE BUILDER      → ACT 4: SHADOWS & SECRETS      │
-│ ACT 5: THE RECKONING       → EPILOGUE: LEGACY              │
-└─────────────────────────────────────────────────────────────┘
-
-THE RIBS (Procedural story beats that branch from the spine):
-- Character arcs that trigger based on relationship stats
-- Faction storylines that emerge based on player choices
-- Random "catalyst events" that create drama
-- Personal quests from NPCs based on their flags/traits
+OLD: "A rival offers you a deal. Do you:
+     A) Accept honorably  B) Betray them  C) Negotiate  D) Walk away"
+     
+NEW: "You've fired 3 people this week. The remaining employees exchange 
+     nervous glances when you walk past. ${leastTrustedEmployee.name} 
+     has been updating their resume..."
+     
+     → The PLAYER already made the choice by firing people.
+     → The STORY reflects what they did.
+     → The CHOICES now are gameplay: apologize (costs money), double down (lose trust), etc.
 ```
 
-### Self-Evaluation Systems
-Every AI-generated story element passes through a **Quality Gauntlet**:
+### The Action Tracking System
+Every significant gameplay action is tracked with moral weight:
 
-1. **Coherence Check**: Does this contradict established facts?
-2. **Tone Validation**: Does this match the current act's mood?
-3. **Impact Assessment**: Will the player care about this?
-4. **Repetition Filter**: Have we told this story beat recently?
+| Action | Moral Impact | Description |
+|--------|-------------|-------------|
+| `hired_employee` | +2 | gave someone a chance |
+| `fired_employee_cruelly` | -10 | fired someone harshly |
+| `gave_gift` | +3 | showed appreciation |
+| `gave_expensive_gift` | +5 | gave a generous gift |
+| `promoted_employee` | +2 | recognized good work |
+| `demoted_employee` | -4 | demoted someone |
+| `ignored_low_comfort` | -2 | ignored an uncomfortable employee |
+| `defeated_boss` | 0 | defeated a rival |
+| `showed_mercy` | +5 | spared a defeated foe |
+| `showed_no_mercy` | -5 | crushed an enemy completely |
+
+### Emergent Event Triggers
+Story events trigger based on CONDITIONS you created through play:
+
+```javascript
+// Tyranny threshold - too many negative actions
+if (moral < 20 && stats.negativeActions > 10) → trigger 'tyranny_brewing'
+
+// Beloved leader - consistent positive actions  
+if (moral > 80 && stats.positiveActions > 15) → trigger 'beloved_leader'
+
+// Promotion jealousy - triggered after promotions if anyone has low trust
+if (stats.promotionsGiven >= 3 && hasJealousEmployee) → trigger 'promotion_jealousy'
+
+// Favoritism accusation - triggered after gifting same person 5+ times
+if (giftsSameEmployee >= 5) → trigger 'favoritism_accusation'
+```
 
 ---
 
