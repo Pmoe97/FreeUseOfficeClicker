@@ -15451,18 +15451,33 @@ RESPOND IN STRICT JSON (no markdown):
           ">${minigameIcon} Skill Check</span>
         ` : '';
         
+        // Check if this choice has a cost (for minor events)
+        const hasCost = choice.cost && choice.cost > 0;
+        const canAfford = !hasCost || gameState.cash >= choice.cost;
+        const costLabel = hasCost ? `
+          <span style="
+            display: inline-flex; align-items: center; gap: 4px;
+            background: ${canAfford ? 'rgba(255,107,157,0.2)' : 'rgba(255,0,0,0.2)'};
+            padding: 3px 8px; border-radius: 12px;
+            font-size: 0.7rem; color: ${canAfford ? '#ff6b9d' : '#ff4444'};
+            margin-left: 8px;
+          ">💰 ${typeof formatCash === 'function' ? formatCash(choice.cost) : '$' + choice.cost.toLocaleString()}</span>
+        ` : '';
+        
         return `
           <button class="story-choice-btn" onclick="StoryEngine.resolveChoice('${event.id}', '${choice.id}')"
                   style="width:100%; padding:18px 20px; margin:8px 0; 
                          background:linear-gradient(135deg, rgba(15,52,96,0.9) 0%, rgba(22,33,62,0.9) 100%);
-                         border:2px solid ${color}; border-radius:12px; 
-                         color:#fff; cursor:pointer; text-align:left;
-                         transition:all 0.3s ease; position:relative; overflow:hidden;">
+                         border:2px solid ${canAfford ? color : '#444'}; border-radius:12px; 
+                         color:${canAfford ? '#fff' : '#666'}; cursor:${canAfford ? 'pointer' : 'not-allowed'}; text-align:left;
+                         transition:all 0.3s ease; position:relative; overflow:hidden;
+                         ${!canAfford ? 'opacity:0.6;' : ''}"
+                  ${!canAfford ? 'disabled' : ''}>
             <div style="position:relative; z-index:1;">
               <div style="font-size:1rem; font-weight:600; margin-bottom:6px; display:flex; align-items:center; flex-wrap:wrap;">
-                ${choice.text}${minigameLabel}
+                ${choice.text}${minigameLabel}${costLabel}
               </div>
-              <div style="font-size:0.8rem; color:${color}; opacity:0.9; font-style:italic;">${choice.consequence}</div>
+              <div style="font-size:0.8rem; color:${canAfford ? color : '#555'}; opacity:0.9; font-style:italic;">${choice.consequence || ''}</div>
             </div>
             <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(90deg, ${color}22 0%, transparent 100%); opacity:0; transition:opacity 0.3s;" class="choice-hover-bg"></div>
           </button>
@@ -15485,7 +15500,7 @@ RESPOND IN STRICT JSON (no markdown):
                 <span style="color:#444;">•</span>
                 <span style="color:#8899a6; font-size:0.8rem;">${this.ACT_CONFIG[event.actNumber || gameState.story.currentAct]?.name || ''}</span>
               </div>
-              <div style="color:#ffd700; font-size:0.8rem;">📖 ${event.type === 'spine' ? 'Major Story Event' : 'Event'}</div>
+              <div style="color:#ffd700; font-size:0.8rem;">📖 ${event.type === 'spine' ? 'Major Story Event' : event.type === 'minor' ? 'Minor Event' : 'Event'}</div>
             </div>
           </div>
           
@@ -15672,6 +15687,20 @@ RESPOND IN STRICT JSON (no markdown):
     finalizeChoice(event, choice) {
       console.log(`[StoryEngine] Player chose: ${choice.id} (${choice.alignment})`);
       
+      // Handle minor events specially if they have costs
+      if (event.type === 'minor' && choice.cost > 0) {
+        if (gameState.cash < choice.cost) {
+          if (typeof showNotification === 'function') {
+            showNotification('❌ Not enough cash!', 'error');
+          }
+          return;
+        }
+        gameState.cash -= choice.cost;
+        if (typeof showNotification === 'function') {
+          showNotification(`💰 Spent ${formatCash ? formatCash(choice.cost) : '$' + choice.cost.toLocaleString()}`, 'info');
+        }
+      }
+      
       // Record the choice
       gameState.story.choicesMade++;
       gameState.story.choiceHistory.push({
@@ -15703,16 +15732,39 @@ RESPOND IN STRICT JSON (no markdown):
       const pendingEntry = gameState.story.journal.find(j => j.eventKey === event.eventKey && j.pending);
       if (pendingEntry) {
         const mgNote = choice.minigameResult ? ` [${choice.minigameResult.result.toUpperCase()}]` : '';
-        pendingEntry.content = `${event.cinematicText.substring(0, 200)}...\n\n✨ You chose: "${choice.text}"${mgNote}\n\n${choice.consequence}`;
+        pendingEntry.content = `${event.cinematicText.substring(0, 200)}...\n\n✨ You chose: "${choice.text}"${mgNote}\n\n${choice.consequence || ''}`;
         pendingEntry.pending = false;
         pendingEntry.choiceMade = choice.text;
       } else {
         // Fallback: add new entry if pending wasn't found
         this.addJournalEntry({
           title: event.title,
-          content: `You chose: "${choice.text}"\n\n${choice.consequence}`,
-          type: 'choice',
+          content: `You chose: "${choice.text}"\n\n${choice.consequence || ''}`,
+          type: event.type === 'minor' ? 'minor' : 'choice',
           memorable: event.type === 'spine'
+        });
+      }
+      
+      // If this was a minor event, move it to minor events history
+      if (event.type === 'minor') {
+        const minorState = this.initializeMinorEvents();
+        const eventIdx = minorState.queue.findIndex(e => e.id === event.id);
+        if (eventIdx !== -1) {
+          event.resolved = true;
+          event.chosenOption = choice.id;
+          event.outcomeText = choice.consequence;
+          minorState.history.unshift(event);
+          minorState.queue.splice(eventIdx, 1);
+          if (minorState.history.length > 30) {
+            minorState.history.pop();
+          }
+        }
+        
+        // Track the action for narrative
+        this.trackAction(`minor_event_${event.category || 'general'}`, {
+          eventTitle: event.title,
+          choiceId: choice.id,
+          alignment: choice.alignment
         });
       }
       
@@ -16309,6 +16361,505 @@ RESPOND IN STRICT JSON (no markdown):
       };
       
       this.showStoryEventModal(event);
+    },
+    
+    // ============================================
+    // MINOR EVENTS SYSTEM - AI-Generated Random Events
+    // These are lightweight, procedural events that add flavor
+    // without being major narrative moments
+    // ============================================
+    
+    MINOR_EVENT_CATEGORIES: [
+      'office incident', 'interpersonal drama', 'business opportunity', 
+      'employee personal issue', 'tech/IT problem', 'HR situation',
+      'celebration', 'crisis', 'romantic situation', 'mysterious occurrence'
+    ],
+    
+    MINOR_EVENT_TONES: ['serious', 'humorous', 'dramatic', 'heartwarming', 'spicy', 'mysterious', 'urgent'],
+    
+    /**
+     * Initialize minor events state
+     */
+    initializeMinorEvents() {
+      if (!gameState.story.minorEvents) {
+        gameState.story.minorEvents = {
+          queue: [],                    // Pending minor events
+          generating: false,            // Currently generating?
+          history: [],                  // Past minor events
+          nextGenerationTime: Date.now() + 120000, // 2 min grace period
+          generationCooldown: 5 * 60 * 1000,       // 5 minutes between events
+          lastNotificationTime: 0
+        };
+      }
+      return gameState.story.minorEvents;
+    },
+    
+    /**
+     * Check if we should generate a minor event
+     * Called from the main game tick
+     */
+    checkMinorEvents() {
+      if (!gameState.story?.settings?.storyEnabled) return;
+      if (gameState.story.activeSpineEvent) return; // Don't interrupt active events
+      
+      const minorState = this.initializeMinorEvents();
+      
+      // Grace period - don't fire on new saves
+      const employeeCount = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active').length;
+      if (gameState.cash < 30000 || employeeCount < 5) return;
+      
+      // Check if game has been running for at least 5 in-game days
+      const gameStartTime = gameState.time?.startTime || gameState.time?.currentTime || Date.now();
+      const currentTime = gameState.time?.currentTime || Date.now();
+      const timePlayed = currentTime - gameStartTime;
+      const fiveDaysMs = 5 * 24 * 60 * 60 * 1000 / (gameState.time?.gameSpeed || 1);
+      if (timePlayed < fiveDaysMs) return;
+      
+      // Max 3 queued events at a time
+      if (minorState.queue.length >= 3) return;
+      
+      // Check generation cooldown
+      if (Date.now() < minorState.nextGenerationTime) return;
+      
+      // Don't generate if already generating
+      if (minorState.generating) return;
+      
+      // Roll for event (scaling with company size)
+      const scaledChance = Math.min(0.40, 0.15 + (employeeCount * 0.01));
+      if (Math.random() > scaledChance) {
+        minorState.nextGenerationTime = Date.now() + 60000; // Check again in 1 minute
+        return;
+      }
+      
+      // Trigger generation (async, non-blocking)
+      this.generateMinorEvent().catch(e => {
+        console.error('[StoryEngine] Minor event generation failed:', e);
+        minorState.generating = false;
+      });
+    },
+    
+    /**
+     * Build context for AI minor event generation
+     */
+    buildMinorEventContext() {
+      const activeEmployees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active');
+      const minorState = this.initializeMinorEvents();
+      const recentEvents = minorState.history.slice(0, 5);
+      
+      // Pick 2-4 random employees to potentially involve
+      const shuffled = [...activeEmployees].sort(() => Math.random() - 0.5);
+      const featuredEmployees = shuffled.slice(0, Math.min(4, activeEmployees.length));
+      
+      // Build employee profiles for context
+      const employeeProfiles = featuredEmployees.map(emp => {
+        const traits = [];
+        if ((emp.stats?.affection || 50) > 70) traits.push('very affectionate');
+        if ((emp.stats?.trust || 50) < 30) traits.push('distrustful');
+        if ((emp.stats?.productivity || 50) > 80) traits.push('high performer');
+        if ((emp.stats?.comfort || 50) < 30) traits.push('uncomfortable at work');
+        if (emp.career?.level >= 4) traits.push('senior employee');
+        if (emp.inRelationshipWithPlayer) traits.push('in relationship with boss');
+        
+        return {
+          id: emp.id,
+          name: emp.name,
+          role: emp.career?.title || 'Employee',
+          personality: emp.personality || 'professional',
+          traits: traits,
+          backstory: emp.backstory ? emp.backstory.substring(0, 150) : null
+        };
+      });
+      
+      // Company state summary
+      const moral = gameState.story.moralScore || 50;
+      const alignment = this.getAlignmentInfo(moral);
+      
+      const companyState = {
+        cash: gameState.cash,
+        cashFormatted: typeof formatCash === 'function' ? formatCash(gameState.cash) : `$${gameState.cash.toLocaleString()}`,
+        employeeCount: activeEmployees.length,
+        isStruggling: gameState.cash < 10000,
+        isThriving: gameState.cash > 500000,
+        bossAlignment: alignment.name,
+        recentEventTypes: recentEvents.map(e => e.category).filter(Boolean)
+      };
+      
+      // Pick random category and tone for variety
+      const category = this.MINOR_EVENT_CATEGORIES[Math.floor(Math.random() * this.MINOR_EVENT_CATEGORIES.length)];
+      const tone = this.MINOR_EVENT_TONES[Math.floor(Math.random() * this.MINOR_EVENT_TONES.length)];
+      
+      // Allow spicy content if adult mode enabled
+      const allowSpicy = this.isAdultContentEnabled();
+      
+      return {
+        employees: employeeProfiles,
+        company: companyState,
+        suggestedCategory: category,
+        suggestedTone: tone,
+        allowSpicy: allowSpicy,
+        recentEvents: recentEvents.map(e => e.title).slice(0, 3)
+      };
+    },
+    
+    /**
+     * Generate a minor event using AI
+     */
+    async generateMinorEvent() {
+      const minorState = this.initializeMinorEvents();
+      
+      if (minorState.generating || minorState.queue.length >= 3) return null;
+      
+      // Check grace period
+      const employeeCount = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active').length;
+      if (gameState.cash < 30000 || employeeCount < 5) return null;
+      
+      minorState.generating = true;
+      
+      try {
+        const context = this.buildMinorEventContext();
+        
+        if (context.employees.length === 0) {
+          minorState.generating = false;
+          return null;
+        }
+        
+        // Build AI prompt
+        const eventPrompt = `You are creating a minor company event for an office management game. These are small, flavor events - not major plot points.
+
+COMPANY STATE:
+- Cash: ${context.company.cashFormatted}
+- Employees: ${context.company.employeeCount}
+- Boss's reputation: ${context.company.bossAlignment}
+- Status: ${context.company.isStruggling ? 'Struggling financially' : context.company.isThriving ? 'Very successful' : 'Stable'}
+
+FEATURED EMPLOYEES (use 1-2 of these):
+${context.employees.map(e => `- ${e.name} (${e.role}${e.traits.length > 0 ? ', ' + e.traits.join(', ') : ''})`).join('\n')}
+
+AVOID REPEATING THESE RECENT EVENTS: ${context.recentEvents.length > 0 ? context.recentEvents.join(', ') : 'None yet'}
+
+CREATE A MINOR EVENT:
+- Category hint: ${context.suggestedCategory}
+- Tone hint: ${context.suggestedTone}
+${context.allowSpicy ? '- Can include mild romantic/flirty elements if appropriate' : '- Keep it workplace appropriate'}
+- Keep it brief and punchy
+- 2-3 choices with different costs/outcomes
+
+RESPOND IN EXACT JSON:
+{
+  "title": "Short catchy title with emoji (max 40 chars)",
+  "description": "1-2 vivid sentences. Reference specific employees by name.",
+  "category": "one of: incident, interpersonal, business, personal, tech, celebration, crisis, romantic, mystery",
+  "tone": "one of: serious, humorous, dramatic, heartwarming, spicy, mysterious, urgent",
+  "involvedEmployeeNames": ["name1"],
+  "choices": [
+    {"id": "a", "text": "Option text", "costPercent": 0, "alignment": "neutral"},
+    {"id": "b", "text": "Second option", "costPercent": 0.02, "alignment": "light"},
+    {"id": "c", "text": "Third option", "costPercent": 0, "alignment": "dark"}
+  ]
+}
+
+costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/ambitious/cautious.`;
+        
+        // Call AI to generate the event
+        const eventResponse = await (typeof queuedGenerateText === 'function' 
+          ? queuedGenerateText(eventPrompt) 
+          : Promise.resolve(null));
+        
+        if (!eventResponse) {
+          minorState.generating = false;
+          return null;
+        }
+        
+        // Parse the AI response
+        let eventData;
+        try {
+          let jsonStr = eventResponse;
+          const jsonMatch = eventResponse.match(/```(?:json)?\s*([\s\S]*?)```/);
+          if (jsonMatch) {
+            jsonStr = jsonMatch[1].trim();
+          } else {
+            const objMatch = eventResponse.match(/\{[\s\S]*\}/);
+            if (objMatch) jsonStr = objMatch[0];
+          }
+          eventData = JSON.parse(jsonStr);
+        } catch (parseError) {
+          console.error('[StoryEngine] Failed to parse minor event AI response:', parseError);
+          minorState.generating = false;
+          return null;
+        }
+        
+        // Calculate actual costs based on company cash
+        const baseCash = gameState.cash;
+        eventData.choices = (eventData.choices || []).map((choice, idx) => ({
+          ...choice,
+          cost: Math.floor(baseCash * (choice.costPercent || 0)),
+          consequence: choice.consequence || 'The situation resolves.',
+          gameplayEffect: this.generateMinorEffectFromChoice(choice, eventData)
+        }));
+        
+        // Map employee names to IDs
+        const involvedIds = (eventData.involvedEmployeeNames || [])
+          .map(name => {
+            const emp = gameState.employees.find(e => e.name.toLowerCase() === name.toLowerCase());
+            return emp?.id;
+          })
+          .filter(Boolean);
+        
+        // Build the final minor event record (compatible with StoryEngine format)
+        const minorEvent = {
+          id: `minor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          eventKey: `minor_${eventData.category}`,
+          title: eventData.title || '📋 Office Matter',
+          cinematicText: eventData.description,
+          category: eventData.category,
+          tone: eventData.tone,
+          involvedEmployeeIds: involvedIds,
+          choices: eventData.choices,
+          actNumber: gameState.story.currentAct,
+          type: 'minor', // New type to distinguish from spine/emergent
+          timestamp: Date.now(),
+          resolved: false
+        };
+        
+        // Add to queue
+        minorState.queue.push(minorEvent);
+        minorState.generating = false;
+        minorState.nextGenerationTime = Date.now() + minorState.generationCooldown;
+        
+        // Show notification
+        this.showMinorEventNotification(minorEvent);
+        
+        console.log('[StoryEngine] Minor event generated:', minorEvent.title);
+        
+        return minorEvent;
+        
+      } catch (error) {
+        console.error('[StoryEngine] Minor event generation failed:', error);
+        minorState.generating = false;
+        return null;
+      }
+    },
+    
+    /**
+     * Generate a gameplay effect from a minor event choice
+     */
+    generateMinorEffectFromChoice(choice, eventData) {
+      const alignment = choice.alignment || 'neutral';
+      const category = eventData.category || 'general';
+      
+      // Default effects based on alignment
+      const baseEffects = {
+        light: { type: 'boost_all_trust', amount: 3 },
+        dark: { type: 'decrease_all_trust', amount: 2 },
+        ambitious: { type: 'boost_all_productivity', amount: 2 },
+        cautious: { type: 'boost_all_trust', amount: 1 },
+        neutral: null
+      };
+      
+      // Apply cost effect if there's a cost
+      if (choice.costPercent > 0) {
+        return {
+          type: 'spend_cash',
+          amount: Math.floor(gameState.cash * choice.costPercent),
+          boostMorale: alignment === 'light' || alignment === 'ambitious'
+        };
+      }
+      
+      return baseEffects[alignment] || null;
+    },
+    
+    /**
+     * Show a corner notification for a new minor event
+     */
+    showMinorEventNotification(event) {
+      // Check if notification already exists
+      let notifContainer = document.getElementById('minorEventNotification');
+      if (notifContainer) notifContainer.remove();
+      
+      notifContainer = document.createElement('div');
+      notifContainer.id = 'minorEventNotification';
+      notifContainer.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        max-width: 320px;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 15px;
+        z-index: 10000;
+        animation: slideInRight 0.3s ease-out;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        cursor: pointer;
+      `;
+      
+      notifContainer.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+          <span style="font-size:1.5rem;">📋</span>
+          <div>
+            <div style="color:#667eea; font-weight:bold; font-size:0.85rem;">MINOR EVENT</div>
+            <div style="color:#fff; font-size:1rem;">${event.title}</div>
+          </div>
+        </div>
+        <div style="color:#a0aec0; font-size:0.85rem; margin-bottom:12px;">${event.cinematicText.substring(0, 80)}...</div>
+        <div style="display:flex; gap:10px;">
+          <button onclick="StoryEngine.showMinorEventModal()" style="
+            flex:1; padding:8px 12px; background:#667eea; border:none; border-radius:6px;
+            color:#fff; font-size:0.85rem; cursor:pointer;
+          ">View</button>
+          <button onclick="document.getElementById('minorEventNotification').remove()" style="
+            padding:8px 12px; background:transparent; border:1px solid #444; border-radius:6px;
+            color:#888; font-size:0.85rem; cursor:pointer;
+          ">Later</button>
+        </div>
+      `;
+      
+      notifContainer.onclick = (e) => {
+        if (e.target.tagName !== 'BUTTON') {
+          this.showMinorEventModal();
+        }
+      };
+      
+      document.body.appendChild(notifContainer);
+      
+      // Auto-dismiss after 15 seconds
+      setTimeout(() => {
+        if (document.getElementById('minorEventNotification')) {
+          notifContainer.style.animation = 'slideInRight 0.3s ease-out reverse';
+          setTimeout(() => notifContainer.remove(), 300);
+        }
+      }, 15000);
+      
+      // Add animation if not present
+      if (!document.getElementById('minorEventStyles')) {
+        const style = document.createElement('style');
+        style.id = 'minorEventStyles';
+        style.textContent = `
+          @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    },
+    
+    /**
+     * Show the minor event modal (uses StoryEngine's unified modal system)
+     */
+    showMinorEventModal() {
+      const minorState = this.initializeMinorEvents();
+      const event = minorState.queue[0]; // Show oldest queued event
+      
+      if (!event) return;
+      
+      // Remove notification
+      const notif = document.getElementById('minorEventNotification');
+      if (notif) notif.remove();
+      
+      // Set as active and use StoryEngine's modal
+      gameState.story.activeSpineEvent = event;
+      this.showStoryEventModal(event);
+    },
+    
+    /**
+     * Resolve a minor event choice
+     */
+    resolveMinorEventChoice(eventId, choiceId) {
+      const minorState = this.initializeMinorEvents();
+      const eventIdx = minorState.queue.findIndex(e => e.id === eventId);
+      
+      if (eventIdx === -1) return;
+      
+      const event = minorState.queue[eventIdx];
+      const choice = event.choices.find(c => c.id === choiceId);
+      
+      if (!choice) return;
+      
+      // Check if player can afford it
+      if (choice.cost > 0 && gameState.cash < choice.cost) {
+        if (typeof showNotification === 'function') {
+          showNotification('❌ Not enough cash!', 'error');
+        }
+        return;
+      }
+      
+      // Deduct cost
+      if (choice.cost > 0) {
+        gameState.cash -= choice.cost;
+      }
+      
+      // Apply gameplay effects
+      if (choice.gameplayEffect) {
+        this.executeGameplayEffect(choice.gameplayEffect);
+      }
+      
+      // Apply alignment effect
+      if (choice.alignment) {
+        this.applyAlignmentEffect(choice.alignment);
+      }
+      
+      // Track the action
+      this.trackAction(`minor_event_${event.category}`, {
+        eventTitle: event.title,
+        choiceId: choice.id,
+        alignment: choice.alignment
+      });
+      
+      // Mark as resolved
+      event.resolved = true;
+      event.chosenOption = choiceId;
+      event.outcomeText = choice.consequence;
+      
+      // Move to history
+      minorState.history.unshift(event);
+      minorState.queue.splice(eventIdx, 1);
+      if (minorState.history.length > 30) {
+        minorState.history.pop();
+      }
+      
+      // Clear active event
+      gameState.story.activeSpineEvent = null;
+      
+      // Close modal
+      const modal = document.getElementById('storyEventModal');
+      if (modal) modal.remove();
+      
+      // Add to journal
+      this.addJournalEntry({
+        title: event.title,
+        content: `${event.cinematicText}\n\nYou chose: "${choice.text}"\n\n${choice.consequence}`,
+        type: 'minor',
+        memorable: false
+      });
+      
+      // Save
+      if (typeof saveGame === 'function') saveGame(false);
+    },
+    
+    /**
+     * Get count of pending minor events
+     */
+    getMinorEventCount() {
+      const minorState = this.initializeMinorEvents();
+      return minorState.queue.length;
+    },
+    
+    /**
+     * Open the minor events panel (shows all queued events)
+     */
+    openMinorEventsPanel() {
+      const minorState = this.initializeMinorEvents();
+      
+      if (minorState.queue.length === 0) {
+        if (typeof showNotification === 'function') {
+          showNotification('No pending events right now!', 'info');
+        }
+        return;
+      }
+      
+      // Show the first queued event
+      this.showMinorEventModal();
     }
   };
 
@@ -18151,10 +18702,20 @@ RESPOND IN JSON ONLY:
   
   /**
    * Update the bell notification icon in the top bar
+   * Now combines StoryEngine minor events and legacy dynamic events
    */
   function updateEventBellNotification() {
+    // Count from both systems
+    let pendingCount = 0;
+    
+    // Check StoryEngine minor events first
+    if (typeof StoryEngine !== 'undefined' && StoryEngine.getMinorEventCount) {
+      pendingCount += StoryEngine.getMinorEventCount();
+    }
+    
+    // Also count legacy dynamic events for backwards compatibility
     const eventState = initializeDynamicEventSystem();
-    const pendingCount = eventState.queue.filter(e => e.status === 'pending').length;
+    pendingCount += eventState.queue.filter(e => e.status === 'pending').length;
     
     const bellBtn = document.getElementById('eventBellBtn');
     const bellDot = document.getElementById('eventBellDot');
@@ -18238,8 +18799,62 @@ RESPOND IN JSON ONLY:
   
   /**
    * Open the event panel to view/resolve pending events
+   * Now redirects to StoryEngine's unified minor events system
    */
   window.openEventPanel = function() {
+    // REDIRECT TO STORY ENGINE'S UNIFIED SYSTEM
+    if (typeof StoryEngine !== 'undefined' && StoryEngine.openMinorEventsPanel) {
+      // Check if there are any minor events in StoryEngine
+      const minorCount = StoryEngine.getMinorEventCount();
+      
+      if (minorCount > 0) {
+        StoryEngine.openMinorEventsPanel();
+        return;
+      }
+      
+      // Also check legacy dynamic events for backwards compatibility
+      const eventState = initializeDynamicEventSystem();
+      const legacyPending = eventState.queue.filter(e => e.status === 'pending');
+      
+      if (legacyPending.length === 0) {
+        // No events anywhere - show unified empty state
+        const overlay = document.createElement('div');
+        overlay.id = 'eventPanelModal';
+        overlay.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.9); z-index: 100000;
+          display: flex; justify-content: center; align-items: center;
+          animation: fadeIn 0.3s ease-out;
+        `;
+        
+        const isGenerating = StoryEngine.initializeMinorEvents().generating || eventState.generating;
+        
+        overlay.innerHTML = `
+          <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                      border-radius: 15px; max-width: 450px; width: 90%; padding: 40px; text-align: center;
+                      border: 2px solid #333;">
+            <div style="font-size:4rem; margin-bottom:20px; opacity:0.5;">🔔</div>
+            <h2 style="margin:0 0 10px 0; color:#fff;">No Pending Events</h2>
+            <p style="color:#8899a6; margin-bottom:25px;">New events will appear here when something happens at your company.</p>
+            ${isGenerating ? `
+              <div style="color:#667eea; font-size:0.9rem;">
+                <div class="spinner" style="display:inline-block; width:16px; height:16px; border:2px solid #667eea; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite; vertical-align:middle; margin-right:8px;"></div>
+                Generating new event...
+              </div>
+            ` : ''}
+            <button onclick="document.getElementById('eventPanelModal').remove()"
+                    style="margin-top:20px; padding:12px 40px; background:#333; border:none; 
+                           border-radius:8px; color:white; font-size:1rem; cursor:pointer;">
+              Close
+            </button>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        return;
+      }
+    }
+    
+    // LEGACY FALLBACK: Use old dynamic events system for existing saves
     const eventState = initializeDynamicEventSystem();
     const pendingEvents = eventState.queue.filter(e => e.status === 'pending');
     
@@ -18279,9 +18894,8 @@ RESPOND IN JSON ONLY:
       return;
     }
     
-    // Show the first pending event
-    const currentEvent = pendingEvents[0];
-    showDynamicEventModal(currentEvent, pendingEvents.length);
+    // Show the first pending event (legacy)
+    showDynamicEventModal(pendingEvents[0], pendingEvents.length);
   };
   
   /**
@@ -19394,10 +20008,10 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
   
   /**
    * Check for and trigger company events
-   * Now triggers the dynamic AI-generated event system
+   * Now redirects to StoryEngine's unified minor events system
    */
   function checkForCompanyEvent() {
-    // Initialize legacy events state if needed (for backwards compatibility)
+    // Initialize legacy events state if needed (for backwards compatibility with old saves)
     if (!gameState.companyEvents) {
       gameState.companyEvents = {
         active: [],
@@ -19407,6 +20021,16 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
         eventsThisWeek: 0
       };
     }
+    
+    // REDIRECT TO UNIFIED STORY ENGINE
+    // The StoryEngine now handles all events (spine, emergent, and minor)
+    if (typeof StoryEngine !== 'undefined' && StoryEngine.checkMinorEvents) {
+      StoryEngine.checkMinorEvents();
+      return;
+    }
+    
+    // FALLBACK: Old system if StoryEngine not loaded (should not happen)
+    console.warn('[Events] StoryEngine not available, falling back to legacy system');
     
     // GRACE PERIOD: Don't fire events on brand new saves
     const employeeCount = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active').length;
@@ -19419,7 +20043,7 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
     const fiveDaysMs = 5 * 24 * 60 * 60 * 1000 / (gameState.time?.gameSpeed || 1);
     if (timePlayed < fiveDaysMs) return;
     
-    // Initialize dynamic events system
+    // Initialize dynamic events system (legacy)
     const eventState = initializeDynamicEventSystem();
     
     // Max 3 queued events at a time
@@ -19438,7 +20062,7 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
       return;
     }
     
-    // Trigger dynamic event generation (async, non-blocking)
+    // Trigger dynamic event generation (async, non-blocking) - LEGACY FALLBACK
     generateDynamicEvent().catch(e => {
       console.error('[Events] Dynamic event generation failed:', e);
     });
