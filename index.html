@@ -13303,10 +13303,21 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
       fair_promotion: { moral: 3, desc: 'promoted based on merit' },
       unfair_promotion: { moral: -4, desc: 'promoted a favorite unfairly' },
       
-      // Relationship Events
+      // Relationship Events (SFW)
       romantic_advance_welcome: { moral: 0, desc: 'pursued mutual attraction' },
       romantic_advance_unwelcome: { moral: -8, desc: 'made unwanted advances' },
       respected_boundaries: { moral: 3, desc: 'respected someone\'s boundaries' },
+      
+      // Intimate Events (NSFW - only tracked if SFW mode is OFF)
+      intimate_encounter: { moral: 0, desc: 'shared an intimate moment', nsfw: true },
+      first_intimate_encounter: { moral: 0, desc: 'crossed an intimate threshold', nsfw: true },
+      seduced_employee: { moral: -2, desc: 'seduced someone under your authority', nsfw: true },
+      mutual_attraction_consummated: { moral: 1, desc: 'acted on mutual desire', nsfw: true },
+      coerced_intimacy: { moral: -10, desc: 'pressured someone into intimacy', nsfw: true },
+      office_romance_discovered: { moral: 0, desc: 'had a relationship exposed', nsfw: true },
+      passionate_affair: { moral: -1, desc: 'began a passionate affair', nsfw: true },
+      broke_heart: { moral: -4, desc: 'ended an intimate relationship badly', nsfw: true },
+      rewarded_loyalty_intimately: { moral: -1, desc: 'mixed pleasure with business', nsfw: true },
       
       // Business Ethics
       exploited_worker: { moral: -6, desc: 'pushed someone too hard' },
@@ -13327,6 +13338,42 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
     },
     
     // ============================================
+    // CONTENT VARIANTS - SFW/NSFW story alternatives
+    // ============================================
+    
+    /**
+     * Check if adult content is allowed (SFW mode is OFF)
+     */
+    isAdultContentEnabled() {
+      return typeof isSFWMode === 'function' ? !isSFWMode() : true;
+    },
+    
+    /**
+     * Get content variant based on SFW mode
+     * @param {object} variants - { sfw: '...', nsfw: '...' }
+     * @returns {string} The appropriate content variant
+     */
+    getContentVariant(variants) {
+      if (!variants) return '';
+      if (typeof variants === 'string') return variants;
+      
+      return this.isAdultContentEnabled() && variants.nsfw ? variants.nsfw : (variants.sfw || variants.nsfw || '');
+    },
+    
+    /**
+     * Generate text with optional spicy additions
+     * @param {string} baseText - The SFW base text
+     * @param {string} spicyAddition - Additional NSFW text to append
+     * @returns {string} Combined text based on content mode
+     */
+    addSpice(baseText, spicyAddition) {
+      if (!spicyAddition || !this.isAdultContentEnabled()) {
+        return baseText;
+      }
+      return `${baseText}\n\n${spicyAddition}`;
+    },
+    
+    // ============================================
     // ACTION TRACKING - Your story is written by your deeds
     // ============================================
     
@@ -13340,6 +13387,12 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
       const weight = this.ACTION_WEIGHTS[actionType];
       if (!weight) {
         console.warn(`[StoryEngine] Unknown action type: ${actionType}`);
+        return;
+      }
+      
+      // Skip NSFW action tracking if SFW mode is enabled
+      if (weight.nsfw && !this.isAdultContentEnabled()) {
+        console.log(`[StoryEngine] Skipping NSFW action in SFW mode: ${actionType}`);
         return;
       }
       
@@ -13535,6 +13588,97 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
             reason: action.type,
             timestamp: Date.now()
           };
+        }
+      }
+      
+      // ============================================
+      // NSFW EVENT TRIGGERS - Only check if adult content enabled
+      // ============================================
+      if (this.isAdultContentEnabled()) {
+        // Simmering tension - employee with high desire + affection, not recently triggered
+        const desiringEmployee = employees.find(e => 
+          (e.stats?.desire || 0) > 65 && 
+          (e.stats?.affection || 0) > 55 &&
+          !gameState.story.narrativeFlags[`tension_${e.id}`]
+        );
+        if (desiringEmployee && Math.random() < 0.15) {
+          gameState.story.narrativeFlags[`tension_${desiringEmployee.id}`] = true;
+          setTimeout(() => this.triggerEmergentEvent('simmering_tension'), 2000);
+          return;
+        }
+        
+        // Office whispers - triggered after 3+ intimate encounters
+        const intimateCount = (gameState.story.actionLog || []).filter(a => 
+          a.type.includes('intimate')
+        ).length;
+        if (intimateCount >= 3 && !gameState.story.narrativeFlags.office_whispers_shown) {
+          if (Math.random() < 0.25) {
+            gameState.story.narrativeFlags.office_whispers_shown = true;
+            setTimeout(() => this.triggerEmergentEvent('office_whispers'), 3000);
+            return;
+          }
+        }
+        
+        // Catching feelings - high intimacy + high affection
+        const attachedEmployee = employees.find(e => 
+          (e.memory?.intimacyLevel || 0) > 65 && 
+          (e.stats?.affection || 0) > 75 &&
+          !gameState.story.narrativeFlags[`feelings_${e.id}`]
+        );
+        if (attachedEmployee && Math.random() < 0.1) {
+          gameState.story.narrativeFlags[`feelings_${attachedEmployee.id}`] = true;
+          setTimeout(() => this.triggerEmergentEvent('catching_feelings'), 4000);
+          return;
+        }
+        
+        // Late night - high desire + high trust, random chance
+        const lateNightCandidate = employees.find(e => 
+          (e.stats?.desire || 0) > 70 && 
+          (e.stats?.trust || 0) > 65 &&
+          !gameState.story.narrativeFlags[`late_night_${e.id}`]
+        );
+        if (lateNightCandidate && Math.random() < 0.08) {
+          gameState.story.narrativeFlags[`late_night_${lateNightCandidate.id}`] = true;
+          setTimeout(() => this.triggerEmergentEvent('late_night'), 2000);
+          return;
+        }
+        
+        // Power play - high trust, moderate desire, wants to explore dynamics
+        const powerPlayCandidate = employees.find(e => 
+          (e.stats?.trust || 0) > 75 && 
+          (e.stats?.desire || 0) > 50 &&
+          (e.memory?.intimacyLevel || 0) > 30 &&
+          !gameState.story.narrativeFlags[`power_play_${e.id}`]
+        );
+        if (powerPlayCandidate && Math.random() < 0.06) {
+          gameState.story.narrativeFlags[`power_play_${powerPlayCandidate.id}`] = true;
+          setTimeout(() => this.triggerEmergentEvent('power_play'), 3000);
+          return;
+        }
+        
+        // Green-eyed jealousy - triggered when intimate with 2+ people
+        const intimatePartnerCount = employees.filter(e => 
+          (e.memory?.hasHadIntimateEncounter)
+        ).length;
+        if (intimatePartnerCount >= 2 && !gameState.story.narrativeFlags.jealousy_shown) {
+          if (Math.random() < 0.2) {
+            gameState.story.narrativeFlags.jealousy_shown = true;
+            setTimeout(() => this.triggerEmergentEvent('green_eyed'), 3500);
+            return;
+          }
+        }
+        
+        // Business trip - available mid-game when affection is moderate+
+        const tripCandidate = employees.find(e => 
+          (e.stats?.affection || 0) > 45 && 
+          (e.stats?.desire || 0) > 40 &&
+          !gameState.story.narrativeFlags.business_trip_shown &&
+          gameState.day > 30 // After first month
+        );
+        if (tripCandidate && Math.random() < 0.04) {
+          gameState.story.narrativeFlags.business_trip_shown = true;
+          setTimeout(() => this.triggerEmergentEvent('business_trip'), 2500);
+          return;
         }
       }
     },
@@ -13794,11 +13938,465 @@ Word reaches you: a competitor has noticed too. They're circling. Making quiet i
               ]
             };
           }
+        },
+        
+        // ============================================
+        // INTIMATE/NSFW EVENTS - Only trigger when adult content enabled
+        // These add spice WITHOUT taking away from SFW players
+        // ============================================
+        
+        // Tension in the air - someone's desire is becoming obvious
+        simmering_tension: {
+          title: '🔥 Simmering Tension',
+          nsfwOnly: true,
+          generateContent: () => {
+            // Find employee with highest desire
+            const desiring = employees
+              .filter(e => (e.stats?.desire || 0) > 60 && (e.stats?.affection || 0) > 50)
+              .sort((a, b) => (b.stats?.desire || 0) - (a.stats?.desire || 0))[0];
+            
+            if (!desiring) return null;
+            
+            const intimacy = desiring.memory?.intimacyLevel || 0;
+            const hasHistory = intimacy > 50;
+            
+            return {
+              cinematicText: `You notice ${desiring.name} lingering after a meeting. Everyone else has filed out, but they remain, pretending to organize papers.
+
+${hasHistory 
+  ? `There's history between you. The kind that makes eye contact feel like a conversation. The kind that makes "staying late" mean something else entirely.`
+  : `Something has shifted lately. The way they look at you has changed. Lingering glances across the office. Finding excuses to be near you.`}
+
+They finally look up, and there's no mistaking that expression. Want. Barely contained.
+
+"I was wondering..." they start, then pause. "If you're not busy tonight..."
+
+*The air feels charged. This is a line—one you can cross, or draw.*`,
+              choices: [
+                { 
+                  id: 'accept', 
+                  text: '🔥 "I\'m free. Let\'s get out of here."', 
+                  consequence: hasHistory ? 'You both know exactly where this is going.' : 'Tonight changes everything.',
+                  gameplayEffect: { 
+                    type: 'intimate_encounter', 
+                    employeeId: desiring?.id,
+                    trackAction: hasHistory ? 'intimate_encounter' : 'first_intimate_encounter'
+                  }
+                },
+                { 
+                  id: 'tease', 
+                  text: '😏 "Depends on what you had in mind..."', 
+                  consequence: 'You let the tension build. Anticipation is its own reward.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: desiring?.id, stat: 'desire', amount: 15 }
+                },
+                { 
+                  id: 'rain_check', 
+                  text: '📅 "Not tonight. But soon."', 
+                  consequence: 'A promise. They\'ll hold you to it.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: desiring?.id, stat: 'affection', amount: 5 }
+                },
+                { 
+                  id: 'boundary', 
+                  text: '✋ "I think we should keep things professional."', 
+                  consequence: 'Disappointment flickers across their face. But they nod.',
+                  gameplayEffect: { 
+                    type: 'boost_employee', 
+                    employeeId: desiring?.id, 
+                    stat: 'desire', 
+                    amount: -20,
+                    trackAction: 'respected_boundaries'
+                  }
+                }
+              ]
+            };
+          }
+        },
+        
+        // Office rumors about your activities
+        office_whispers: {
+          title: '👀 Office Whispers',
+          nsfwOnly: true,
+          generateContent: () => {
+            // Count intimate encounters
+            const intimateActions = (gameState.story.actionLog || []).filter(a => 
+              a.type.includes('intimate') || a.type.includes('seduced')
+            );
+            const partners = [...new Set(intimateActions.map(a => a.context?.employeeName).filter(Boolean))];
+            
+            return {
+              cinematicText: `You overhear it in the break room. Hushed voices that go quiet when you appear.
+
+"...saw them leave together three times this week..."
+"...door was locked for an hour..."
+"...${partners.length > 1 ? 'wonder who else' : 'everyone knows'}..."
+
+The office has noticed your... extracurricular activities. ${partners.length > 1 
+  ? `Multiple names are being whispered. ${partners.slice(0, 2).join(' and ')} among them.` 
+  : partners.length === 1 
+    ? `${partners[0]}'s name keeps coming up.`
+    : `They're speculating, even if they don't have specifics.`}
+
+*Secrets have a way of becoming currency in an office. How do you handle yours?*`,
+              choices: [
+                { 
+                  id: 'own_it', 
+                  text: '🤷 "My personal life is my business."', 
+                  consequence: 'Confidence or arrogance? They\'ll decide.',
+                  gameplayEffect: { type: 'boost_all_trust', amount: -2 }
+                },
+                { 
+                  id: 'discretion', 
+                  text: '🤫 Start being more... discreet.', 
+                  consequence: 'What they don\'t see, they can\'t gossip about.',
+                  gameplayEffect: { type: 'unlock_ability', ability: 'discreet_mode' }
+                },
+                { 
+                  id: 'embrace', 
+                  text: '💋 "Life\'s too short to hide who you are."', 
+                  consequence: 'Bold. Some admire it. Some judge it.',
+                  gameplayEffect: { type: 'boost_all_productivity', amount: -3 }
+                },
+                { 
+                  id: 'hr_meeting', 
+                  text: '📋 Call a meeting about professionalism and boundaries.', 
+                  consequence: 'The irony isn\'t lost on anyone. But it stops the chatter.',
+                  gameplayEffect: { type: 'boost_all_trust', amount: 3 }
+                }
+              ]
+            };
+          }
+        },
+        
+        // Someone wants more than a fling
+        catching_feelings: {
+          title: '💕 Catching Feelings',
+          nsfwOnly: true,
+          generateContent: () => {
+            // Find employee with high intimacy AND high affection
+            const attached = employees
+              .filter(e => (e.memory?.intimacyLevel || 0) > 60 && (e.stats?.affection || 0) > 70)
+              .sort((a, b) => (b.stats?.affection || 0) - (a.stats?.affection || 0))[0];
+            
+            if (!attached) return null;
+            
+            return {
+              cinematicText: `${attached.name} asks to speak with you privately. There's something different about them today. Nervous. Vulnerable.
+
+"I need to say something before I lose my nerve." They take a breath. "What we have... I know how it started. I know what it is. But..."
+
+Their eyes meet yours. Raw. Unguarded.
+
+"I think I'm falling for you. Really falling. And I need to know if this is just... *fun* for you, or if there's something more."
+
+*This is the moment where casual becomes complicated. Or ends.*`,
+              choices: [
+                { 
+                  id: 'reciprocate', 
+                  text: '❤️ "I feel it too. This is real for me."', 
+                  consequence: 'You step off the edge together.',
+                  gameplayEffect: { 
+                    type: 'boost_employee', 
+                    employeeId: attached?.id, 
+                    stat: 'affection', 
+                    amount: 25,
+                    trackAction: 'mutual_attraction_consummated'
+                  }
+                },
+                { 
+                  id: 'slow_down', 
+                  text: '🤔 "I care about you. But I need time to figure out what this is."', 
+                  consequence: 'Honest but uncertain. They accept it. For now.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: attached?.id, stat: 'trust', amount: 10 }
+                },
+                { 
+                  id: 'just_physical', 
+                  text: '😔 "I\'m not looking for anything serious right now."', 
+                  consequence: 'The light dims in their eyes. Something breaks.',
+                  gameplayEffect: { 
+                    type: 'boost_employee', 
+                    employeeId: attached?.id, 
+                    stat: 'affection', 
+                    amount: -15,
+                    trackAction: 'broke_heart'
+                  }
+                },
+                { 
+                  id: 'end_it', 
+                  text: '🚪 "Maybe we should stop. Before someone gets hurt."', 
+                  consequence: 'You walk away. It\'s the kind thing to do. Doesn\'t make it easy.',
+                  gameplayEffect: { 
+                    type: 'boost_employee', 
+                    employeeId: attached?.id, 
+                    stat: 'desire', 
+                    amount: -30,
+                    trackAction: 'broke_heart'
+                  }
+                }
+              ]
+            };
+          }
+        },
+        
+        // Late night at the office with high-desire employee
+        late_night: {
+          title: '🌙 Late Night',
+          nsfwOnly: true,
+          generateContent: () => {
+            const candidate = employees
+              .filter(e => (e.stats?.desire || 0) > 70 && (e.stats?.trust || 0) > 60)
+              .sort((a, b) => (b.stats?.desire || 0) - (a.stats?.desire || 0))[0];
+            
+            if (!candidate) return null;
+            
+            return {
+              cinematicText: `The office is empty. Just you and the glow of computer screens.
+
+Then you hear footsteps. ${candidate.name} appears at your door, jacket half-off, a bottle of wine in hand.
+
+"I was going to leave this on your desk with a note," they say. "But then I saw your light was still on."
+
+They step inside. Close the door. Lock it.
+
+"We could open it now. Celebrate another successful quarter." Their voice drops. "Or we could celebrate... differently."
+
+*It's late. No one would know. The question is what YOU want.*`,
+              choices: [
+                { 
+                  id: 'wine', 
+                  text: '🍷 "Let\'s start with the wine and see where the night takes us."', 
+                  consequence: 'Some of the best nights start with patience.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: candidate?.id, stat: 'desire', amount: 10 }
+                },
+                { 
+                  id: 'direct', 
+                  text: '🔥 Pull them close. "I know exactly where this night is going."', 
+                  consequence: 'No pretense. No games. Just heat.',
+                  gameplayEffect: { 
+                    type: 'intimate_encounter', 
+                    employeeId: candidate?.id,
+                    trackAction: 'intimate_encounter'
+                  }
+                },
+                { 
+                  id: 'rain_check', 
+                  text: '📅 "Tonight I really do need to finish this. But hold that thought."', 
+                  consequence: 'Anticipation is a powerful thing. They leave with a promise.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: candidate?.id, stat: 'affection', amount: 5 }
+                },
+                { 
+                  id: 'decline', 
+                  text: '✋ "I appreciate the offer, but I should probably just go home."', 
+                  consequence: 'They mask disappointment with a smile. "Maybe next time."',
+                  gameplayEffect: { type: 'boost_employee', employeeId: candidate?.id, stat: 'desire', amount: -10 }
+                }
+              ]
+            };
+          }
+        },
+        
+        // Power dynamic exploration
+        power_play: {
+          title: '⚡ Power Play',
+          nsfwOnly: true,
+          generateContent: () => {
+            const willing = employees
+              .filter(e => (e.stats?.desire || 0) > 50 && (e.stats?.trust || 0) > 70)
+              .sort((a, b) => (b.stats?.trust || 0) - (a.stats?.trust || 0))[0];
+            
+            if (!willing) return null;
+            
+            const intimacy = willing.memory?.intimacyLevel || 0;
+            
+            return {
+              cinematicText: `${willing.name} closes your office door and takes a deep breath.
+
+"I've been thinking about... us. The dynamic." They're choosing their words carefully. "You're my boss. You hold power over my career, my livelihood."
+
+A pause. They meet your eyes.
+
+"And I find that... ${intimacy > 40 ? 'exciting. More than I should.' : 'intriguing. In ways I'm still figuring out.'}"
+
+They move closer. "I'm not saying I *want* you to use that power. But knowing you *could*..." Their voice trails off.
+
+*This is complicated territory. Consent, power, desire—all tangled together.*`,
+              choices: [
+                { 
+                  id: 'reassure', 
+                  text: '💝 "I would never use my position to pressure you. What happens between us is separate."', 
+                  consequence: 'You draw a clear line. Power at work, equals in private.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: willing?.id, stat: 'trust', amount: 15 }
+                },
+                { 
+                  id: 'acknowledge', 
+                  text: '😏 "That dynamic goes both ways. You have power over me too."', 
+                  consequence: 'They hadn\'t considered that. Something shifts.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: willing?.id, stat: 'affection', amount: 10 }
+                },
+                { 
+                  id: 'explore', 
+                  text: '🔥 "If that dynamic excites you... we could explore that. Safely."', 
+                  consequence: 'A door opens. What lies beyond is up to both of you.',
+                  gameplayEffect: { 
+                    type: 'intimate_encounter', 
+                    employeeId: willing?.id,
+                    context: 'power_dynamic_exploration',
+                    intimacyGain: 20
+                  }
+                },
+                { 
+                  id: 'step_back', 
+                  text: '⚠️ "That\'s exactly why maybe we shouldn\'t do this."', 
+                  consequence: 'You prioritize ethics over desire. They respect it. Mostly.',
+                  gameplayEffect: { 
+                    type: 'boost_employee', 
+                    employeeId: willing?.id, 
+                    stat: 'desire', 
+                    amount: -15
+                  }
+                }
+              ]
+            };
+          }
+        },
+        
+        // Jealousy emerges when you're intimate with multiple people
+        green_eyed: {
+          title: '💚 Green-Eyed',
+          nsfwOnly: true,
+          generateContent: () => {
+            // Get employees you've been intimate with
+            const intimateActions = (gameState.story.actionLog || []).filter(a => 
+              a.type.includes('intimate')
+            );
+            const intimatePartners = employees.filter(e => 
+              intimateActions.some(a => a.context?.employeeId === e.id)
+            );
+            
+            if (intimatePartners.length < 2) return null;
+            
+            // The jealous one is the one with highest affection
+            const jealousOne = intimatePartners
+              .sort((a, b) => (b.stats?.affection || 0) - (a.stats?.affection || 0))[0];
+            const other = intimatePartners.find(p => p.id !== jealousOne?.id);
+            
+            if (!jealousOne || !other) return null;
+            
+            return {
+              cinematicText: `${jealousOne.name} catches you in the hallway, voice low but intense.
+
+"I saw you with ${other.name} yesterday. Coming out of your office. Hair messed up. Shirt untucked."
+
+Their eyes are hurt but burning. "I thought we had something. Was I wrong? Or am I just... *one of many*?"
+
+*This was bound to happen. Hearts get complicated when bodies don't.*`,
+              choices: [
+                { 
+                  id: 'choose_them', 
+                  text: '❤️ "You\'re right. It\'s been unfair to you. You\'re who I want."', 
+                  consequence: 'You commit. But what about the others?',
+                  gameplayEffect: { 
+                    type: 'boost_employee', 
+                    employeeId: jealousOne?.id, 
+                    stat: 'affection', 
+                    amount: 25
+                  }
+                },
+                { 
+                  id: 'honest_poly', 
+                  text: '🔄 "I care about you. I care about them too. I won\'t lie about that."', 
+                  consequence: 'Radical honesty. They either accept it or they don\'t.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: jealousOne?.id, stat: 'trust', amount: 5 }
+                },
+                { 
+                  id: 'deflect', 
+                  text: '🤷 "My personal life is complicated. I never promised exclusivity."', 
+                  consequence: 'Cold but true. Something hardens in their expression.',
+                  gameplayEffect: { 
+                    type: 'boost_employee', 
+                    employeeId: jealousOne?.id, 
+                    stat: 'affection', 
+                    amount: -20
+                  }
+                },
+                { 
+                  id: 'end_all', 
+                  text: '🚪 "Maybe this is a sign I shouldn\'t be doing this with *anyone* at work."', 
+                  consequence: 'The safest choice. The loneliest one too.',
+                  gameplayEffect: { type: 'spread_rumors' }
+                }
+              ]
+            };
+          }
+        },
+        
+        // Business trip opportunity
+        business_trip: {
+          title: '✈️ Business Trip',
+          nsfwOnly: true,
+          generateContent: () => {
+            const candidate = employees
+              .filter(e => (e.stats?.desire || 0) > 40 && (e.stats?.affection || 0) > 40)
+              .sort((a, b) => ((b.stats?.desire || 0) + (b.stats?.affection || 0)) - 
+                            ((a.stats?.desire || 0) + (a.stats?.affection || 0)))[0];
+            
+            if (!candidate) return null;
+            
+            return {
+              cinematicText: `An important conference is coming up. You need to send someone.
+
+${candidate.name} appears in your doorway. "I heard about the trip. I'd like to go. *With you*."
+
+There's something in the way they say it. The conference is in a nice city. Two nights. Hotel rooms. 
+
+Away from the office. Away from prying eyes. Away from the daily rhythms that keep things... appropriate.
+
+"It could be good for my professional development," they add with a slight smile. "Among other things."
+
+*A trip like this could change everything. Or nothing. Depends on what happens in those hotel hallways.*`,
+              choices: [
+                { 
+                  id: 'together', 
+                  text: '✈️ "Pack your bags. We leave Thursday."', 
+                  consequence: 'What happens on business trips stays on business trips. Usually.',
+                  gameplayEffect: { 
+                    type: 'boost_employee', 
+                    employeeId: candidate?.id, 
+                    stat: 'desire', 
+                    amount: 20
+                  }
+                },
+                { 
+                  id: 'adjoining', 
+                  text: '🏨 "I\'ll book adjoining rooms. No promises, but... no closed doors either."', 
+                  consequence: 'The implication hangs in the air. They smile knowingly.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: candidate?.id, stat: 'affection', amount: 10 }
+                },
+                { 
+                  id: 'professional', 
+                  text: '📋 "This trip is strictly business. Separate floors."', 
+                  consequence: 'Clear boundaries. Disappointed but respectful nod.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: candidate?.id, stat: 'trust', amount: 5 }
+                },
+                { 
+                  id: 'send_else', 
+                  text: '👥 "Actually, I\'m sending someone else. Less... complicated."', 
+                  consequence: 'You remove the temptation entirely.',
+                  gameplayEffect: { type: 'boost_employee', employeeId: candidate?.id, stat: 'desire', amount: -10 }
+                }
+              ]
+            };
+          }
         }
       };
       
       const template = eventTemplates[eventType];
       if (!template) return null;
+      
+      // Check if this is an NSFW-only event and if adult content is disabled
+      if (template.nsfwOnly && !this.isAdultContentEnabled()) {
+        console.log(`[StoryEngine] Skipping NSFW event in SFW mode: ${eventType}`);
+        return null;
+      }
       
       const content = template.generateContent();
       
@@ -15014,6 +15612,90 @@ RESPOND IN STRICT JSON (no markdown):
           if (!gameState.story.unlockedAbilities.includes(effect.ability)) {
             gameState.story.unlockedAbilities.push(effect.ability);
             showNotification(`New ability unlocked: ${effect.ability}`, 'success');
+          }
+          break;
+        
+        // ============================================
+        // NSFW EFFECT TYPES - Only execute if adult content enabled
+        // ============================================
+        case 'intimate_encounter':
+          if (this.isAdultContentEnabled() && effect.employeeId) {
+            const emp = gameState.employees.find(e => e.id === effect.employeeId);
+            if (emp) {
+              // Boost intimacy level
+              if (!emp.memory) emp.memory = {};
+              emp.memory.intimacyLevel = Math.min(100, (emp.memory.intimacyLevel || 0) + (effect.intimacyGain || 15));
+              
+              // Track the intimate action
+              const isFirst = !emp.memory.hasHadIntimateEncounter;
+              emp.memory.hasHadIntimateEncounter = true;
+              
+              this.trackAction(isFirst ? 'first_intimate_encounter' : 'intimate_encounter', {
+                employeeId: emp.id,
+                employeeName: emp.name,
+                intimacyLevel: emp.memory.intimacyLevel,
+                context: effect.context || 'private_moment'
+              });
+              
+              // Stat changes based on encounter nature
+              if (emp.stats) {
+                emp.stats.affection = Math.min(100, (emp.stats.affection || 20) + (effect.affectionGain || 8));
+                emp.stats.desire = Math.max(0, (emp.stats.desire || 50) - 15); // Temporarily satisfied
+                
+                // Trust can go up or down depending on how it was initiated
+                if (effect.wasConsensual !== false) {
+                  emp.stats.trust = Math.min(100, (emp.stats.trust || 50) + 5);
+                } else {
+                  emp.stats.trust = Math.max(0, (emp.stats.trust || 50) - 20);
+                  this.trackAction('coerced_intimacy', { employeeId: emp.id, employeeName: emp.name });
+                }
+              }
+              
+              // Add to journal (text filtered by content mode)
+              this.addJournalEntry({
+                title: this.getContentVariant({
+                  nsfw: `💋 Private Moment with ${emp.name}`,
+                  sfw: `💝 Special Connection with ${emp.name}`
+                }),
+                content: this.getContentVariant({
+                  nsfw: effect.nsfwJournalText || `You and ${emp.name} shared an intimate moment. The professional boundaries have blurred considerably.`,
+                  sfw: `You and ${emp.name} have grown much closer. There's something special developing between you.`
+                }),
+                type: 'relationship',
+                memorable: isFirst
+              });
+            }
+          }
+          break;
+          
+        case 'boost_desire':
+          if (this.isAdultContentEnabled() && effect.employeeId) {
+            const emp = gameState.employees.find(e => e.id === effect.employeeId);
+            if (emp && emp.stats) {
+              emp.stats.desire = Math.min(100, (emp.stats.desire || 30) + (effect.amount || 10));
+            }
+          }
+          break;
+          
+        case 'spread_rumors':
+          // Word spreads about player's... activities
+          if (this.isAdultContentEnabled()) {
+            employees.forEach(emp => {
+              if (emp.stats) {
+                // Other employees become more curious/interested or scandalized
+                const reaction = Math.random();
+                if (reaction < 0.4) {
+                  // Intrigued
+                  emp.stats.desire = Math.min(100, (emp.stats.desire || 30) + 8);
+                } else if (reaction < 0.7) {
+                  // Neutral/accepting
+                } else {
+                  // Scandalized
+                  emp.stats.trust = Math.max(0, (emp.stats.trust || 50) - 5);
+                }
+              }
+            });
+            gameState.story.narrativeFlags.rumors_spreading = true;
           }
           break;
           
