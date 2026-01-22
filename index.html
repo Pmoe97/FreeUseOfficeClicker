@@ -17062,131 +17062,242 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
     // ============================================
     startPrecisionGame(gameArea, config) {
       const difficulty = config.difficulty || 'medium';
-      const speeds = { easy: 2500, medium: 1800, hard: 1200 };
-      const zones = { easy: 35, medium: 25, hard: 15 }; // percent width of success zone
       
-      const speed = speeds[difficulty];
-      const zoneWidth = zones[difficulty];
-      const zoneStart = 50 - (zoneWidth / 2); // Center the zone
+      // Multi-round configuration like tension game
+      const roundConfigs = {
+        easy: { totalRounds: 3, allowedMisses: 2, speeds: [2800, 2500, 2200], zones: [40, 35, 30] },
+        medium: { totalRounds: 4, allowedMisses: 2, speeds: [2200, 1900, 1600, 1400], zones: [30, 25, 22, 18] },
+        hard: { totalRounds: 5, allowedMisses: 1, speeds: [1800, 1500, 1300, 1100, 900], zones: [25, 20, 16, 14, 12] }
+      };
       
-      gameArea.innerHTML = `
-        <div style="width: 100%; margin-bottom: 30px;">
-          <!-- The bar track -->
-          <div style="
-            position: relative; 
-            height: 50px; 
-            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
-            border-radius: 25px;
-            overflow: hidden;
-            border: 2px solid #333;
-          ">
-            <!-- Success zone -->
-            <div style="
-              position: absolute;
-              left: ${zoneStart}%;
-              width: ${zoneWidth}%;
-              height: 100%;
-              background: linear-gradient(180deg, #4ecca3 0%, #2d8a6e 100%);
-              opacity: 0.8;
-            "></div>
-            
-            <!-- Moving marker -->
-            <div id="precisionMarker" style="
-              position: absolute;
-              left: 0%;
-              top: 5px;
-              width: 8px;
-              height: 40px;
-              background: linear-gradient(180deg, #fff 0%, #ffd700 100%);
-              border-radius: 4px;
-              box-shadow: 0 0 15px rgba(255,215,0,0.8);
-              transition: none;
-            "></div>
-          </div>
-          
-          <!-- Zone indicators -->
-          <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.8rem; color: #666;">
-            <span>Too early</span>
-            <span style="color: #4ecca3;">✓ Perfect</span>
-            <span>Too late</span>
-          </div>
-        </div>
-        
-        <!-- Big tap button -->
-        <button id="precisionTapBtn" style="
-          width: 150px; height: 150px;
-          border-radius: 50%;
-          background: linear-gradient(145deg, #667eea 0%, #764ba2 100%);
-          border: 4px solid #fff;
-          color: #fff;
-          font-size: 1.5rem;
-          font-weight: bold;
-          cursor: pointer;
-          box-shadow: 0 0 30px rgba(102,126,234,0.5);
-          transition: transform 0.1s, box-shadow 0.1s;
-          touch-action: manipulation;
-        ">
-          TAP!
-        </button>
-      `;
+      const cfg = roundConfigs[difficulty];
       
-      const marker = document.getElementById('precisionMarker');
-      const tapBtn = document.getElementById('precisionTapBtn');
-      
+      // Game state
+      let currentRound = 1;
+      let hits = 0;
+      let misses = 0;
       let position = 0;
       let direction = 1;
       let animating = true;
+      let roundActive = true;
+      let showingInstructions = true;
       
-      // Animate the marker back and forth
-      const animate = () => {
-        if (!animating) return;
+      const getCurrentSpeed = () => cfg.speeds[Math.min(currentRound - 1, cfg.speeds.length - 1)];
+      const getCurrentZone = () => cfg.zones[Math.min(currentRound - 1, cfg.zones.length - 1)];
+      
+      const renderGame = () => {
+        const zoneWidth = getCurrentZone();
+        const zoneStart = 50 - (zoneWidth / 2);
         
-        position += direction * (100 / (speed / 16.67)); // ~60fps
+        const hitIcons = Array(cfg.totalRounds).fill('○').map((_, i) => {
+          if (i < hits) return '<span style="color:#4ecca3;">●</span>';
+          if (i < hits + misses) return '<span style="color:#f72585;">✕</span>';
+          return '<span style="color:#555;">○</span>';
+        }).join(' ');
         
-        if (position >= 100) {
-          position = 100;
-          direction = -1;
-        } else if (position <= 0) {
-          position = 0;
-          direction = 1;
+        gameArea.innerHTML = `
+          ${showingInstructions ? `
+            <div id="precisionInstructions" style="
+              position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+              background: rgba(0,0,0,0.95); border: 2px solid #667eea; border-radius: 16px;
+              padding: 25px; max-width: 320px; text-align: center; z-index: 10;
+            ">
+              <div style="font-size: 2.5rem; margin-bottom: 10px;">🎯</div>
+              <div style="color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">Precision Timing</div>
+              <div style="color: #a0aec0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                A marker moves back and forth across the bar.<br><br>
+                <span style="color: #4ecca3;">Tap when it's in the GREEN zone!</span><br><br>
+                The zone gets smaller each round.
+              </div>
+              <button id="startPrecisionBtn" style="
+                padding: 12px 30px; background: linear-gradient(135deg, #667eea, #764ba2);
+                border: none; border-radius: 8px; color: #fff; font-size: 1rem;
+                font-weight: bold; cursor: pointer;
+              ">Got it!</button>
+            </div>
+          ` : ''}
+          
+          <div style="margin-bottom: 10px; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            <div style="font-size: 0.9rem; color: #a0aec0;">
+              Round <span style="color:#fff; font-weight:bold;">${currentRound}</span> of ${cfg.totalRounds}
+              <span style="margin-left: 15px;">Misses left: <span style="color:${cfg.allowedMisses - misses > 0 ? '#4ecca3' : '#f72585'}; font-weight:bold;">${cfg.allowedMisses - misses}</span></span>
+            </div>
+          </div>
+          
+          <!-- Progress indicator -->
+          <div style="margin-bottom: 15px; font-size: 1.3rem; letter-spacing: 4px; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            ${hitIcons}
+          </div>
+          
+          <div style="width: 100%; margin-bottom: 25px; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            <!-- The bar track -->
+            <div style="
+              position: relative; 
+              height: 60px; 
+              background: linear-gradient(90deg, #f7258544 0%, #f7258544 ${zoneStart}%, 
+                #4ecca3 ${zoneStart}%, #4ecca3 ${zoneStart + zoneWidth}%, 
+                #f7258544 ${zoneStart + zoneWidth}%, #f7258544 100%);
+              border-radius: 30px;
+              overflow: hidden;
+              border: 3px solid #333;
+            ">
+              <!-- Zone size label -->
+              <div style="
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                color: rgba(255,255,255,0.5); font-size: 0.8rem; font-weight: bold;
+              ">${zoneWidth}%</div>
+              
+              <!-- Moving marker -->
+              <div id="precisionMarker" style="
+                position: absolute;
+                left: 0%;
+                top: 8px;
+                width: 10px;
+                height: 44px;
+                background: linear-gradient(180deg, #fff 0%, #ffd700 100%);
+                border-radius: 5px;
+                box-shadow: 0 0 20px rgba(255,215,0,0.9);
+                transition: none;
+              "></div>
+            </div>
+            
+            <!-- Zone indicators -->
+            <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.75rem; color: #666;">
+              <span>❌ Too early</span>
+              <span style="color: #4ecca3;">✓ Perfect zone</span>
+              <span>Too late ❌</span>
+            </div>
+          </div>
+          
+          <!-- Big tap button -->
+          <button id="precisionTapBtn" style="
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            background: ${roundActive ? 'linear-gradient(145deg, #667eea 0%, #764ba2 100%)' : '#333'};
+            border: 4px solid #fff;
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: ${roundActive ? 'pointer' : 'default'};
+            box-shadow: 0 0 30px rgba(102,126,234,0.5);
+            transition: transform 0.1s, box-shadow 0.1s;
+            touch-action: manipulation;
+            ${showingInstructions ? 'opacity: 0.3;' : ''}
+          ">
+            ${roundActive ? 'TAP!' : 'WAIT...'}
+          </button>
+        `;
+        
+        // Bind instruction dismiss
+        if (showingInstructions) {
+          document.getElementById('startPrecisionBtn').onclick = () => {
+            showingInstructions = false;
+            renderGame();
+            startAnimation();
+          };
         }
         
-        if (marker) {
-          marker.style.left = `calc(${position}% - 4px)`;
+        // Bind tap handler
+        if (!showingInstructions && roundActive) {
+          const tapBtn = document.getElementById('precisionTapBtn');
+          tapBtn.onclick = handleTap;
+          tapBtn.ontouchstart = (e) => { e.preventDefault(); handleTap(); };
         }
-        
-        requestAnimationFrame(animate);
       };
       
-      animate();
+      const startAnimation = () => {
+        position = 0;
+        direction = 1;
+        animating = true;
+        
+        const animate = () => {
+          if (!animating) return;
+          
+          const speed = getCurrentSpeed();
+          position += direction * (100 / (speed / 16.67));
+          
+          if (position >= 100) {
+            position = 100;
+            direction = -1;
+          } else if (position <= 0) {
+            position = 0;
+            direction = 1;
+          }
+          
+          const marker = document.getElementById('precisionMarker');
+          if (marker) {
+            marker.style.left = `calc(${position}% - 5px)`;
+          }
+          
+          requestAnimationFrame(animate);
+        };
+        
+        animate();
+      };
       
-      // Handle tap
       const handleTap = () => {
+        if (!roundActive || showingInstructions) return;
+        
         animating = false;
-        tapBtn.disabled = true;
-        tapBtn.style.transform = 'scale(0.9)';
+        roundActive = false;
         
-        // Calculate score based on position relative to zone
-        const zoneCenter = 50;
-        const distanceFromCenter = Math.abs(position - zoneCenter);
-        const inZone = position >= zoneStart && position <= (zoneStart + zoneWidth);
+        const tapBtn = document.getElementById('precisionTapBtn');
+        if (tapBtn) tapBtn.style.transform = 'scale(0.9)';
         
-        let score, result;
+        // Check if in zone
+        const zoneWidth = getCurrentZone();
+        const zoneStart = 50 - (zoneWidth / 2);
+        const zoneEnd = zoneStart + zoneWidth;
+        const inZone = position >= zoneStart && position <= zoneEnd;
+        
         if (inZone) {
-          // Perfect zone - score based on closeness to center
-          score = Math.round(100 - (distanceFromCenter * 2));
-          result = score >= 90 ? 'perfect' : 'success';
+          hits++;
+          if (tapBtn) {
+            tapBtn.textContent = '✓';
+            tapBtn.style.background = 'linear-gradient(145deg, #4ecca3 0%, #2ecc71 100%)';
+          }
         } else {
-          // Outside zone - partial failure
-          score = Math.max(0, Math.round(50 - distanceFromCenter));
-          result = score >= 25 ? 'partial' : 'failure';
+          misses++;
+          if (tapBtn) {
+            tapBtn.textContent = '✗';
+            tapBtn.style.background = 'linear-gradient(145deg, #f72585 0%, #b5179e 100%)';
+          }
         }
         
-        this.showGameResult(result, score);
+        // Check game end
+        setTimeout(() => {
+          if (misses > cfg.allowedMisses) {
+            const finalScore = Math.round((hits / cfg.totalRounds) * 50);
+            this.showGameResult('failure', finalScore);
+          } else if (currentRound >= cfg.totalRounds) {
+            const hitRate = hits / cfg.totalRounds;
+            let result, score;
+            if (hitRate === 1) {
+              result = 'perfect'; score = 100;
+            } else if (hitRate >= 0.75) {
+              result = 'success'; score = Math.round(70 + hitRate * 25);
+            } else if (hitRate >= 0.5) {
+              result = 'partial'; score = Math.round(40 + hitRate * 30);
+            } else {
+              result = 'failure'; score = Math.round(hitRate * 40);
+            }
+            this.showGameResult(result, score);
+          } else {
+            // Next round
+            currentRound++;
+            roundActive = true;
+            renderGame();
+            setTimeout(startAnimation, 500);
+          }
+        }, 600);
       };
       
-      tapBtn.onclick = handleTap;
-      tapBtn.ontouchstart = (e) => { e.preventDefault(); handleTap(); };
+      // Initial render
+      renderGame();
+      
+      this.activeGame.cleanup = () => {
+        animating = false;
+      };
     },
     
     // ============================================
@@ -17195,97 +17306,172 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
     startIntensityGame(gameArea, config) {
       const difficulty = config.difficulty || 'medium';
       const targets = { easy: 15, medium: 25, hard: 40 };
-      const times = { easy: 5000, medium: 4000, hard: 3500 };
+      const times = { easy: 6000, medium: 5000, hard: 4000 };
       
       const targetTaps = targets[difficulty];
       const timeLimit = times[difficulty];
       let tapCount = 0;
-      let gameActive = true;
+      let gameActive = false;
+      let showingInstructions = true;
+      let timerInterval = null;
+      let startTime = null;
       
-      gameArea.innerHTML = `
-        <div style="width: 100%; margin-bottom: 20px;">
-          <!-- Progress bar -->
-          <div style="
-            position: relative;
-            height: 30px;
-            background: #1a1a2e;
-            border-radius: 15px;
-            overflow: hidden;
-            border: 2px solid #333;
-          ">
-            <div id="intensityBar" style="
-              height: 100%;
-              width: 0%;
-              background: linear-gradient(90deg, #f72585 0%, #ffd700 50%, #4ecca3 100%);
-              transition: width 0.05s;
-              border-radius: 13px;
-            "></div>
-            <div style="
-              position: absolute; top: 50%; left: 50%;
-              transform: translate(-50%, -50%);
-              color: #fff; font-weight: bold; font-size: 0.9rem;
-              text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      const renderGame = () => {
+        gameArea.innerHTML = `
+          ${showingInstructions ? `
+            <div id="intensityInstructions" style="
+              position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+              background: rgba(0,0,0,0.95); border: 2px solid #f72585; border-radius: 16px;
+              padding: 25px; max-width: 320px; text-align: center; z-index: 10;
             ">
-              <span id="tapCountDisplay">0</span> / ${targetTaps}
+              <div style="font-size: 2.5rem; margin-bottom: 10px;">⚡</div>
+              <div style="color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">Intensity Rush</div>
+              <div style="color: #a0aec0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                Tap the button as <span style="color: #f72585; font-weight: bold;">FAST</span> as you can!<br><br>
+                Fill the meter to <span style="color: #4ecca3;">${targetTaps} taps</span><br>
+                before time runs out.<br><br>
+                <span style="color: #ffd700;">⏱️ ${(timeLimit/1000).toFixed(0)} seconds</span>
+              </div>
+              <button id="startIntensityBtn" style="
+                padding: 12px 30px; background: linear-gradient(135deg, #f72585, #b5179e);
+                border: none; border-radius: 8px; color: #fff; font-size: 1rem;
+                font-weight: bold; cursor: pointer;
+              ">Let's Go!</button>
+            </div>
+          ` : ''}
+          
+          <div style="width: 100%; margin-bottom: 20px; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            <!-- Progress bar -->
+            <div style="
+              position: relative;
+              height: 40px;
+              background: #1a1a2e;
+              border-radius: 20px;
+              overflow: hidden;
+              border: 3px solid #333;
+            ">
+              <div id="intensityBar" style="
+                height: 100%;
+                width: 0%;
+                background: linear-gradient(90deg, #f72585 0%, #ffd700 50%, #4ecca3 100%);
+                transition: width 0.05s;
+                border-radius: 17px;
+              "></div>
+              <div style="
+                position: absolute; top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                color: #fff; font-weight: bold; font-size: 1.1rem;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+              ">
+                <span id="tapCountDisplay">${tapCount}</span> / ${targetTaps}
+              </div>
+            </div>
+            
+            <!-- Timer -->
+            <div style="margin-top: 15px; text-align: center;">
+              <span style="color: #f72585; font-size: 2rem; font-weight: bold;" id="intensityTimer">${(timeLimit/1000).toFixed(1)}</span>
+              <span style="color: #888; font-size: 1rem;">s remaining</span>
             </div>
           </div>
           
-          <!-- Timer -->
-          <div style="margin-top: 10px; text-align: center;">
-            <span style="color: #f72585; font-size: 1.5rem; font-weight: bold;" id="intensityTimer">${(timeLimit/1000).toFixed(1)}</span>
-            <span style="color: #666; font-size: 0.9rem;">s</span>
-          </div>
-        </div>
+          <!-- Feedback text -->
+          <div id="intensityFeedback" style="
+            height: 30px; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold;
+            ${showingInstructions ? 'opacity: 0.3;' : ''}
+          "></div>
+          
+          <!-- Big tap button -->
+          <button id="intensityTapBtn" style="
+            width: 180px; height: 180px;
+            border-radius: 50%;
+            background: ${gameActive ? 'linear-gradient(145deg, #f72585 0%, #b5179e 100%)' : '#444'};
+            border: 5px solid #fff;
+            color: #fff;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: ${gameActive ? 'pointer' : 'default'};
+            box-shadow: ${gameActive ? '0 0 40px rgba(247,37,133,0.6)' : 'none'};
+            transition: transform 0.05s;
+            touch-action: manipulation;
+            ${showingInstructions ? 'opacity: 0.3;' : ''}
+          ">
+            ${gameActive ? '⚡ TAP!' : 'READY'}
+          </button>
+        `;
         
-        <!-- Big tap button -->
-        <button id="intensityTapBtn" style="
-          width: 180px; height: 180px;
-          border-radius: 50%;
-          background: linear-gradient(145deg, #f72585 0%, #b5179e 100%);
-          border: 5px solid #fff;
-          color: #fff;
-          font-size: 2rem;
-          font-weight: bold;
-          cursor: pointer;
-          box-shadow: 0 0 40px rgba(247,37,133,0.6);
-          transition: transform 0.05s;
-          touch-action: manipulation;
-        ">
-          ⚡ TAP!
-        </button>
-      `;
-      
-      const bar = document.getElementById('intensityBar');
-      const counter = document.getElementById('tapCountDisplay');
-      const timer = document.getElementById('intensityTimer');
-      const tapBtn = document.getElementById('intensityTapBtn');
-      
-      // Timer countdown
-      const startTime = Date.now();
-      const timerInterval = setInterval(() => {
-        if (!gameActive) return;
-        
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, timeLimit - elapsed) / 1000;
-        timer.textContent = remaining.toFixed(1);
-        
-        if (remaining <= 0) {
-          clearInterval(timerInterval);
-          this.endIntensityGame(tapCount, targetTaps);
+        // Bind instruction dismiss
+        if (showingInstructions) {
+          document.getElementById('startIntensityBtn').onclick = () => {
+            showingInstructions = false;
+            gameActive = true;
+            startTime = Date.now();
+            renderGame();
+            startTimer();
+          };
         }
-      }, 50);
+        
+        // Bind tap handler
+        if (gameActive) {
+          const tapBtn = document.getElementById('intensityTapBtn');
+          tapBtn.onclick = handleTap;
+          tapBtn.ontouchstart = (e) => { e.preventDefault(); handleTap(); };
+        }
+      };
+      
+      const startTimer = () => {
+        timerInterval = setInterval(() => {
+          if (!gameActive) return;
+          
+          const elapsed = Date.now() - startTime;
+          const remaining = Math.max(0, timeLimit - elapsed) / 1000;
+          const timer = document.getElementById('intensityTimer');
+          if (timer) timer.textContent = remaining.toFixed(1);
+          
+          // Update feedback based on pace
+          const expectedProgress = (elapsed / timeLimit) * targetTaps;
+          const feedback = document.getElementById('intensityFeedback');
+          if (feedback) {
+            if (tapCount >= expectedProgress * 1.2) {
+              feedback.textContent = '🔥 On Fire!';
+              feedback.style.color = '#4ecca3';
+            } else if (tapCount >= expectedProgress * 0.8) {
+              feedback.textContent = '👍 Good pace!';
+              feedback.style.color = '#ffd700';
+            } else {
+              feedback.textContent = '⚠️ Speed up!';
+              feedback.style.color = '#f72585';
+            }
+          }
+          
+          if (remaining <= 0) {
+            clearInterval(timerInterval);
+            this.endIntensityGame(tapCount, targetTaps);
+          }
+        }, 50);
+      };
       
       // Handle taps
       const handleTap = () => {
         if (!gameActive) return;
         
         tapCount++;
-        counter.textContent = tapCount;
-        bar.style.width = Math.min(100, (tapCount / targetTaps) * 100) + '%';
+        const counter = document.getElementById('tapCountDisplay');
+        const bar = document.getElementById('intensityBar');
+        if (counter) counter.textContent = tapCount;
+        if (bar) bar.style.width = Math.min(100, (tapCount / targetTaps) * 100) + '%';
         
         // Visual feedback
-        tapBtn.style.transform = 'scale(0.95)';
-        setTimeout(() => tapBtn.style.transform = 'scale(1)', 50);
+        const tapBtn = document.getElementById('intensityTapBtn');
+        if (tapBtn) {
+          tapBtn.style.transform = 'scale(0.93)';
+          tapBtn.style.boxShadow = '0 0 60px rgba(247,37,133,0.9)';
+          setTimeout(() => {
+            if (tapBtn) {
+              tapBtn.style.transform = 'scale(1)';
+              tapBtn.style.boxShadow = '0 0 40px rgba(247,37,133,0.6)';
+            }
+          }, 50);
+        }
         
         // Win condition
         if (tapCount >= targetTaps) {
@@ -17295,15 +17481,14 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
         }
       };
       
-      tapBtn.onclick = handleTap;
-      tapBtn.ontouchstart = (e) => { e.preventDefault(); handleTap(); };
+      // Initial render
+      renderGame();
       
       this.activeGame.cleanup = () => {
         gameActive = false;
-        clearInterval(timerInterval);
+        if (timerInterval) clearInterval(timerInterval);
       };
     },
-    
     endIntensityGame(taps, target) {
       const percentage = (taps / target) * 100;
       let result, score;
@@ -17336,6 +17521,7 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
       const pattern = [];
       const playerInput = [];
       let isShowingPattern = true;
+      let showingInstructions = true;
       
       // Generate random pattern
       for (let i = 0; i < patternLength; i++) {
@@ -17345,45 +17531,84 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
       const buttonColors = ['#f72585', '#4ecca3', '#ffd700', '#667eea'];
       const buttonLabels = ['♥', '♠', '♦', '♣'];
       
-      gameArea.innerHTML = `
-        <div style="margin-bottom: 20px;">
-          <div id="recallStatus" style="color: #ffd700; font-size: 1.2rem; font-weight: bold; min-height: 30px;">
-            Watch the pattern...
+      const renderGame = () => {
+        gameArea.innerHTML = `
+          ${showingInstructions ? `
+            <div id="recallInstructions" style="
+              position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+              background: rgba(0,0,0,0.95); border: 2px solid #4ecca3; border-radius: 16px;
+              padding: 25px; max-width: 320px; text-align: center; z-index: 10;
+            ">
+              <div style="font-size: 2.5rem; margin-bottom: 10px;">🧠</div>
+              <div style="color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">Read the Room</div>
+              <div style="color: #a0aec0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                Watch the buttons light up in sequence.<br><br>
+                Then <span style="color: #4ecca3; font-weight: bold;">repeat the pattern</span> by tapping them in the same order!<br><br>
+                <span style="color: #ffd700;">Pattern length: ${patternLength}</span>
+              </div>
+              <button id="startRecallBtn" style="
+                padding: 12px 30px; background: linear-gradient(135deg, #4ecca3, #2d8a6e);
+                border: none; border-radius: 8px; color: #fff; font-size: 1rem;
+                font-weight: bold; cursor: pointer;
+              ">Show Pattern!</button>
+            </div>
+          ` : ''}
+          
+          <div style="margin-bottom: 20px; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            <div id="recallStatus" style="color: #ffd700; font-size: 1.2rem; font-weight: bold; min-height: 30px;">
+              ${showingInstructions ? 'Ready...' : 'Watch the pattern...'}
+            </div>
           </div>
-        </div>
+          
+          <!-- Pattern buttons in 2x2 grid -->
+          <div style="
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 280px;
+            ${showingInstructions ? 'opacity: 0.3;' : ''}
+          ">
+            ${[0,1,2,3].map(i => `
+              <button id="recallBtn${i}" class="recall-btn" data-index="${i}" style="
+                width: 100%; aspect-ratio: 1;
+                border-radius: 16px;
+                background: ${buttonColors[i]}33;
+                border: 3px solid ${buttonColors[i]};
+                color: ${buttonColors[i]};
+                font-size: 2.5rem;
+                cursor: pointer;
+                transition: all 0.15s;
+                opacity: 0.6;
+                touch-action: manipulation;
+              ">${buttonLabels[i]}</button>
+            `).join('')}
+          </div>
+          
+          <!-- Progress dots -->
+          <div id="recallProgress" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            ${pattern.map(() => `<div style="width: 12px; height: 12px; border-radius: 50%; background: #333; border: 1px solid #555;"></div>`).join('')}
+          </div>
+          
+          <!-- Legend -->
+          <div style="margin-top: 15px; font-size: 0.8rem; color: #666; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            <span style="color: #4ecca3;">●</span> Correct <span style="margin-left: 15px; color: #f72585;">●</span> Wrong
+          </div>
+        `;
         
-        <!-- Pattern buttons in 2x2 grid -->
-        <div style="
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 15px;
-          max-width: 280px;
-        ">
-          ${[0,1,2,3].map(i => `
-            <button id="recallBtn${i}" class="recall-btn" data-index="${i}" style="
-              width: 100%; aspect-ratio: 1;
-              border-radius: 16px;
-              background: ${buttonColors[i]}33;
-              border: 3px solid ${buttonColors[i]};
-              color: ${buttonColors[i]};
-              font-size: 2.5rem;
-              cursor: pointer;
-              transition: all 0.15s;
-              opacity: 0.6;
-              touch-action: manipulation;
-            ">${buttonLabels[i]}</button>
-          `).join('')}
-        </div>
-        
-        <!-- Progress dots -->
-        <div id="recallProgress" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center;">
-          ${pattern.map(() => `<div style="width: 12px; height: 12px; border-radius: 50%; background: #333; border: 1px solid #555;"></div>`).join('')}
-        </div>
-      `;
+        // Bind instruction dismiss
+        if (showingInstructions) {
+          document.getElementById('startRecallBtn').onclick = () => {
+            showingInstructions = false;
+            renderGame();
+            setupButtonHandlers();
+            showPattern();
+          };
+        }
+      };
       
-      const buttons = gameArea.querySelectorAll('.recall-btn');
-      const statusEl = document.getElementById('recallStatus');
-      const progressDots = document.getElementById('recallProgress').children;
+      const buttons = () => gameArea.querySelectorAll('.recall-btn');
+      const statusEl = () => document.getElementById('recallStatus');
+      const progressDots = () => document.getElementById('recallProgress')?.children || [];
       
       // Flash a button
       const flashButton = (index, duration = 400) => {
@@ -17401,21 +17626,13 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
         }, duration);
       };
       
-      // Show the pattern
-      const showPattern = async () => {
-        await new Promise(r => setTimeout(r, 500));
-        
-        for (let i = 0; i < pattern.length; i++) {
-          flashButton(pattern[i], 500);
-          await new Promise(r => setTimeout(r, 700));
-        }
-        
-        isShowingPattern = false;
-        statusEl.textContent = 'Your turn! Repeat the pattern';
-        statusEl.style.color = '#4ecca3';
-        
-        // Enable buttons
-        buttons.forEach(btn => btn.style.pointerEvents = 'auto');
+      const setupButtonHandlers = () => {
+        buttons().forEach(btn => {
+          btn.style.pointerEvents = 'none'; // Disabled during pattern show
+          const idx = parseInt(btn.dataset.index);
+          btn.onclick = () => handleInput(idx);
+          btn.ontouchstart = (e) => { e.preventDefault(); handleInput(idx); };
+        });
       };
       
       // Handle player input
@@ -17426,24 +17643,31 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
         playerInput.push(index);
         
         const currentIndex = playerInput.length - 1;
+        const dots = progressDots();
+        const status = statusEl();
         
         // Check if correct
         if (playerInput[currentIndex] === pattern[currentIndex]) {
           // Correct!
-          progressDots[currentIndex].style.background = '#4ecca3';
+          if (dots[currentIndex]) dots[currentIndex].style.background = '#4ecca3';
           
           // Check if complete
           if (playerInput.length === pattern.length) {
-            statusEl.textContent = 'Perfect! 🎉';
-            buttons.forEach(btn => btn.style.pointerEvents = 'none');
+            if (status) {
+              status.textContent = 'Perfect! 🎉';
+              status.style.color = '#4ecca3';
+            }
+            buttons().forEach(btn => btn.style.pointerEvents = 'none');
             setTimeout(() => this.showGameResult('perfect', 100), 500);
           }
         } else {
           // Wrong!
-          progressDots[currentIndex].style.background = '#f72585';
-          statusEl.textContent = 'Wrong! 😔';
-          statusEl.style.color = '#f72585';
-          buttons.forEach(btn => btn.style.pointerEvents = 'none');
+          if (dots[currentIndex]) dots[currentIndex].style.background = '#f72585';
+          if (status) {
+            status.textContent = 'Wrong! 😔';
+            status.style.color = '#f72585';
+          }
+          buttons().forEach(btn => btn.style.pointerEvents = 'none');
           
           // Score based on how far they got
           const score = Math.round((currentIndex / pattern.length) * 60);
@@ -17452,16 +17676,28 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
         }
       };
       
-      // Set up button handlers
-      buttons.forEach(btn => {
-        btn.style.pointerEvents = 'none'; // Disabled during pattern show
-        const idx = parseInt(btn.dataset.index);
-        btn.onclick = () => handleInput(idx);
-        btn.ontouchstart = (e) => { e.preventDefault(); handleInput(idx); };
-      });
+      // Show the pattern
+      const showPattern = async () => {
+        await new Promise(r => setTimeout(r, 500));
+        
+        for (let i = 0; i < pattern.length; i++) {
+          flashButton(pattern[i], 500);
+          await new Promise(r => setTimeout(r, 700));
+        }
+        
+        isShowingPattern = false;
+        const status = statusEl();
+        if (status) {
+          status.textContent = 'Your turn! Repeat the pattern';
+          status.style.color = '#4ecca3';
+        }
+        
+        // Enable buttons
+        buttons().forEach(btn => btn.style.pointerEvents = 'auto');
+      };
       
-      // Start showing pattern
-      showPattern();
+      // Initial render
+      renderGame();
     },
     
     // ============================================
@@ -17470,43 +17706,83 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
     startReflexGame(gameArea, config) {
       const difficulty = config.difficulty || 'medium';
       const targetCounts = { easy: 8, medium: 12, hard: 18 };
-      const durations = { easy: 1200, medium: 900, hard: 600 };
+      const durations = { easy: 1400, medium: 1000, hard: 700 };
       
       const totalTargets = targetCounts[difficulty];
       const targetDuration = durations[difficulty];
       let caught = 0;
       let missed = 0;
       let spawned = 0;
-      let gameActive = true;
+      let gameActive = false;
+      let showingInstructions = true;
       
-      gameArea.innerHTML = `
-        <div style="width: 100%; margin-bottom: 15px; display: flex; justify-content: space-between;">
-          <div style="color: #4ecca3;">✓ Caught: <span id="reflexCaught">0</span></div>
-          <div style="color: #f72585;">✗ Missed: <span id="reflexMissed">0</span></div>
-        </div>
+      const renderGame = () => {
+        gameArea.innerHTML = `
+          ${showingInstructions ? `
+            <div id="reflexInstructions" style="
+              position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+              background: rgba(0,0,0,0.95); border: 2px solid #ffd700; border-radius: 16px;
+              padding: 25px; max-width: 320px; text-align: center; z-index: 10;
+            ">
+              <div style="font-size: 2.5rem; margin-bottom: 10px;">⭐</div>
+              <div style="color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">Quick Reflexes</div>
+              <div style="color: #a0aec0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                Stars will appear in the play area.<br><br>
+                <span style="color: #ffd700; font-weight: bold;">Tap them before they disappear!</span><br><br>
+                <span style="color: #4ecca3;">Targets: ${totalTargets}</span>
+                <span style="margin-left: 10px; color: #f72585;">Speed: ${difficulty}</span>
+              </div>
+              <button id="startReflexBtn" style="
+                padding: 12px 30px; background: linear-gradient(135deg, #ffd700, #f7a800);
+                border: none; border-radius: 8px; color: #1a1a2e; font-size: 1rem;
+                font-weight: bold; cursor: pointer;
+              ">Ready!</button>
+            </div>
+          ` : ''}
+          
+          <div style="width: 100%; margin-bottom: 15px; display: flex; justify-content: space-between; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            <div style="color: #4ecca3;">✓ Caught: <span id="reflexCaught">${caught}</span></div>
+            <div style="color: #f72585;">✗ Missed: <span id="reflexMissed">${missed}</span></div>
+          </div>
+          
+          <!-- Game field -->
+          <div id="reflexField" style="
+            position: relative;
+            width: 100%;
+            height: 260px;
+            background: radial-gradient(circle at center, #16213e 0%, #0f1419 100%);
+            border-radius: 16px;
+            border: 2px solid ${gameActive ? '#ffd700' : '#333'};
+            overflow: hidden;
+            touch-action: manipulation;
+            ${showingInstructions ? 'opacity: 0.3;' : ''}
+          ">
+            ${!gameActive && !showingInstructions ? `
+              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                color: #ffd700; font-size: 1.5rem; font-weight: bold;">Get Ready...</div>
+            ` : ''}
+          </div>
+          
+          <!-- Progress -->
+          <div style="margin-top: 15px; color: #888; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            Progress: <span id="reflexProgress">${spawned}</span> / ${totalTargets} targets
+          </div>
+        `;
         
-        <!-- Game field -->
-        <div id="reflexField" style="
-          position: relative;
-          width: 100%;
-          height: 250px;
-          background: radial-gradient(circle at center, #16213e 0%, #0f1419 100%);
-          border-radius: 16px;
-          border: 2px solid #333;
-          overflow: hidden;
-          touch-action: manipulation;
-        "></div>
-        
-        <!-- Progress -->
-        <div style="margin-top: 15px; color: #888;">
-          <span id="reflexProgress">${spawned}</span> / ${totalTargets} targets
-        </div>
-      `;
-      
-      const field = document.getElementById('reflexField');
-      const caughtEl = document.getElementById('reflexCaught');
-      const missedEl = document.getElementById('reflexMissed');
-      const progressEl = document.getElementById('reflexProgress');
+        // Bind instruction dismiss
+        if (showingInstructions) {
+          document.getElementById('startReflexBtn').onclick = () => {
+            showingInstructions = false;
+            renderGame();
+            // Short countdown then start
+            setTimeout(() => {
+              gameActive = true;
+              renderGame();
+              setTimeout(spawnTarget, 300);
+            }, 800);
+          };
+        }
+      };
       
       const spawnTarget = () => {
         if (!gameActive || spawned >= totalTargets) {
@@ -17517,11 +17793,18 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
           return;
         }
         
+        const field = document.getElementById('reflexField');
+        const caughtEl = document.getElementById('reflexCaught');
+        const missedEl = document.getElementById('reflexMissed');
+        const progressEl = document.getElementById('reflexProgress');
+        
+        if (!field) return;
+        
         spawned++;
-        progressEl.textContent = spawned;
+        if (progressEl) progressEl.textContent = spawned;
         
         const target = document.createElement('div');
-        const size = 50 + Math.random() * 20;
+        const size = 55 + Math.random() * 20;
         const x = Math.random() * (field.offsetWidth - size);
         const y = Math.random() * (field.offsetHeight - size);
         
@@ -17536,7 +17819,7 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
           border-radius: 50%;
           cursor: pointer;
           animation: reflexPop 0.2s ease-out;
-          box-shadow: 0 0 20px rgba(255,215,0,0.6);
+          box-shadow: 0 0 25px rgba(255,215,0,0.7);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -17550,7 +17833,7 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
           if (!target.parentNode) return;
           
           caught++;
-          caughtEl.textContent = caught;
+          if (caughtEl) caughtEl.textContent = caught;
           
           // Pop effect
           target.style.transform = 'scale(1.3)';
@@ -17567,19 +17850,20 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
         setTimeout(() => {
           if (target.parentNode) {
             missed++;
-            missedEl.textContent = missed;
+            const missedEl = document.getElementById('reflexMissed');
+            if (missedEl) missedEl.textContent = missed;
             target.style.opacity = '0';
             setTimeout(() => target.remove(), 150);
           }
         }, targetDuration);
         
         // Schedule next spawn
-        const nextDelay = 300 + Math.random() * 500;
+        const nextDelay = 350 + Math.random() * 450;
         setTimeout(spawnTarget, nextDelay);
       };
       
-      // Start spawning
-      setTimeout(spawnTarget, 500);
+      // Initial render
+      renderGame();
       
       this.activeGame.cleanup = () => {
         gameActive = false;
@@ -17613,7 +17897,7 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
     startComposureGame(gameArea, config) {
       const difficulty = config.difficulty || 'medium';
       const durations = { easy: 5000, medium: 7000, hard: 10000 };
-      const drifts = { easy: 0.3, medium: 0.5, hard: 0.8 };
+      const drifts = { easy: 0.35, medium: 0.55, hard: 0.85 };
       
       const duration = durations[difficulty];
       const driftSpeed = drifts[difficulty];
@@ -17621,113 +17905,187 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
       
       let position = 50; // Start centered
       let timeInZone = 0;
-      let gameActive = true;
-      let drift = (Math.random() - 0.5) * driftSpeed;
-      
-      gameArea.innerHTML = `
-        <div style="margin-bottom: 20px;">
-          <div style="color: #ffd700; font-size: 1.1rem;">Stay balanced!</div>
-        </div>
-        
-        <!-- Balance bar -->
-        <div style="
-          position: relative;
-          width: 100%;
-          height: 60px;
-          background: linear-gradient(90deg, 
-            #f72585 0%, #f7258555 ${50 - safeZone}%, 
-            #4ecca3 ${50 - safeZone}%, #4ecca3 ${50 + safeZone}%, 
-            #f7258555 ${50 + safeZone}%, #f72585 100%
-          );
-          border-radius: 30px;
-          border: 2px solid #333;
-          overflow: hidden;
-        ">
-          <!-- Balance indicator -->
-          <div id="composureMarker" style="
-            position: absolute;
-            left: 50%;
-            top: 5px;
-            width: 12px;
-            height: 50px;
-            background: #fff;
-            border-radius: 6px;
-            transform: translateX(-50%);
-            box-shadow: 0 0 15px rgba(255,255,255,0.8);
-            transition: left 0.05s;
-          "></div>
-        </div>
-        
-        <!-- Time bar -->
-        <div style="margin-top: 20px; width: 100%;">
-          <div style="
-            height: 8px;
-            background: #1a1a2e;
-            border-radius: 4px;
-            overflow: hidden;
-          ">
-            <div id="composureTimer" style="
-              height: 100%;
-              width: 0%;
-              background: linear-gradient(90deg, #667eea, #4ecca3);
-              transition: width 0.1s;
-            "></div>
-          </div>
-          <div style="color: #888; font-size: 0.85rem; margin-top: 5px;">Hold steady...</div>
-        </div>
-        
-        <!-- Control buttons -->
-        <div style="display: flex; gap: 20px; margin-top: 25px; justify-content: center;">
-          <button id="composureLeft" style="
-            width: 100px; height: 80px;
-            border-radius: 16px;
-            background: linear-gradient(145deg, #667eea 0%, #764ba2 100%);
-            border: 3px solid #fff;
-            color: #fff;
-            font-size: 2rem;
-            cursor: pointer;
-            touch-action: manipulation;
-          ">◀</button>
-          <button id="composureRight" style="
-            width: 100px; height: 80px;
-            border-radius: 16px;
-            background: linear-gradient(145deg, #667eea 0%, #764ba2 100%);
-            border: 3px solid #fff;
-            color: #fff;
-            font-size: 2rem;
-            cursor: pointer;
-            touch-action: manipulation;
-          ">▶</button>
-        </div>
-      `;
-      
-      const marker = document.getElementById('composureMarker');
-      const timerBar = document.getElementById('composureTimer');
-      const leftBtn = document.getElementById('composureLeft');
-      const rightBtn = document.getElementById('composureRight');
-      
+      let gameActive = false;
+      let showingInstructions = true;
+      let drift = 0;
+      let startTime = null;
       let leftPressed = false;
       let rightPressed = false;
       
-      // Button handlers
-      const startLeft = () => leftPressed = true;
-      const stopLeft = () => leftPressed = false;
-      const startRight = () => rightPressed = true;
-      const stopRight = () => rightPressed = false;
+      const renderGame = () => {
+        gameArea.innerHTML = `
+          ${showingInstructions ? `
+            <div id="composureInstructions" style="
+              position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+              background: rgba(0,0,0,0.95); border: 2px solid #667eea; border-radius: 16px;
+              padding: 25px; max-width: 340px; text-align: center; z-index: 10;
+            ">
+              <div style="font-size: 2.5rem; margin-bottom: 10px;">⚖️</div>
+              <div style="color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">Keep Composure</div>
+              <div style="color: #a0aec0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                The marker drifts randomly left and right.<br><br>
+                <span style="color: #4ecca3;">Keep it in the GREEN zone</span><br>
+                using the <b>◀</b> and <b>▶</b> buttons!<br><br>
+                <span style="color: #ffd700;">Hold ${(duration/1000).toFixed(0)} seconds to fill the bar.</span>
+              </div>
+              <button id="startComposureBtn" style="
+                padding: 12px 30px; background: linear-gradient(135deg, #667eea, #764ba2);
+                border: none; border-radius: 8px; color: #fff; font-size: 1rem;
+                font-weight: bold; cursor: pointer;
+              ">Begin!</button>
+            </div>
+          ` : ''}
+          
+          <div style="margin-bottom: 15px; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            <div id="composureStatus" style="color: ${position >= (50 - safeZone) && position <= (50 + safeZone) ? '#4ecca3' : '#f72585'}; font-size: 1.1rem; font-weight: bold;">
+              ${gameActive ? (position >= (50 - safeZone) && position <= (50 + safeZone) ? '✓ Balanced!' : '⚠️ Drifting!') : 'Get Ready...'}
+            </div>
+          </div>
+          
+          <!-- Balance bar -->
+          <div style="
+            position: relative;
+            width: 100%;
+            height: 65px;
+            background: linear-gradient(90deg, 
+              #f72585 0%, #f7258555 ${50 - safeZone}%, 
+              #4ecca3 ${50 - safeZone}%, #4ecca3 ${50 + safeZone}%, 
+              #f7258555 ${50 + safeZone}%, #f72585 100%
+            );
+            border-radius: 32px;
+            border: 3px solid #333;
+            overflow: hidden;
+            ${showingInstructions ? 'opacity: 0.3;' : ''}
+          ">
+            <!-- Zone labels -->
+            <div style="position: absolute; top: 50%; left: 8%; transform: translateY(-50%); color: rgba(255,255,255,0.4); font-size: 0.7rem;">DANGER</div>
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.5); font-size: 0.8rem; font-weight: bold;">SAFE</div>
+            <div style="position: absolute; top: 50%; right: 8%; transform: translateY(-50%); color: rgba(255,255,255,0.4); font-size: 0.7rem;">DANGER</div>
+            
+            <!-- Balance indicator -->
+            <div id="composureMarker" style="
+              position: absolute;
+              left: ${position}%;
+              top: 7px;
+              width: 14px;
+              height: 51px;
+              background: #fff;
+              border-radius: 7px;
+              transform: translateX(-50%);
+              box-shadow: 0 0 20px rgba(255,255,255,0.9);
+              transition: left 0.05s;
+            "></div>
+          </div>
+          
+          <!-- Time bar (progress) -->
+          <div style="margin-top: 20px; width: 100%; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span style="color: #888; font-size: 0.85rem;">Progress</span>
+              <span id="composurePercent" style="color: #4ecca3; font-size: 0.85rem; font-weight: bold;">0%</span>
+            </div>
+            <div style="
+              height: 12px;
+              background: #1a1a2e;
+              border-radius: 6px;
+              overflow: hidden;
+              border: 1px solid #333;
+            ">
+              <div id="composureTimer" style="
+                height: 100%;
+                width: 0%;
+                background: linear-gradient(90deg, #667eea, #4ecca3);
+                transition: width 0.1s;
+              "></div>
+            </div>
+          </div>
+          
+          <!-- Control buttons -->
+          <div style="display: flex; gap: 30px; margin-top: 25px; justify-content: center; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            <button id="composureLeft" style="
+              width: 110px; height: 90px;
+              border-radius: 16px;
+              background: ${leftPressed ? 'linear-gradient(145deg, #4ecca3 0%, #2d8a6e 100%)' : 'linear-gradient(145deg, #667eea 0%, #764ba2 100%)'};
+              border: 3px solid #fff;
+              color: #fff;
+              font-size: 2.5rem;
+              cursor: pointer;
+              touch-action: manipulation;
+              user-select: none;
+            ">◀</button>
+            <button id="composureRight" style="
+              width: 110px; height: 90px;
+              border-radius: 16px;
+              background: ${rightPressed ? 'linear-gradient(145deg, #4ecca3 0%, #2d8a6e 100%)' : 'linear-gradient(145deg, #667eea 0%, #764ba2 100%)'};
+              border: 3px solid #fff;
+              color: #fff;
+              font-size: 2.5rem;
+              cursor: pointer;
+              touch-action: manipulation;
+              user-select: none;
+            ">▶</button>
+          </div>
+          
+          <!-- Instruction reminder -->
+          <div style="margin-top: 15px; color: #666; font-size: 0.8rem; ${showingInstructions ? 'opacity: 0.3;' : ''}">
+            Hold the buttons to move the marker
+          </div>
+        `;
+        
+        // Bind instruction dismiss
+        if (showingInstructions) {
+          document.getElementById('startComposureBtn').onclick = () => {
+            showingInstructions = false;
+            gameActive = true;
+            drift = (Math.random() - 0.5) * driftSpeed;
+            startTime = Date.now();
+            renderGame();
+            setupButtons();
+            gameLoop();
+          };
+        }
+      };
       
-      leftBtn.onmousedown = startLeft;
-      leftBtn.onmouseup = stopLeft;
-      leftBtn.onmouseleave = stopLeft;
-      leftBtn.ontouchstart = (e) => { e.preventDefault(); startLeft(); };
-      leftBtn.ontouchend = stopLeft;
+      const setupButtons = () => {
+        const leftBtn = document.getElementById('composureLeft');
+        const rightBtn = document.getElementById('composureRight');
+        
+        if (!leftBtn || !rightBtn) return;
+        
+        // Button handlers
+        const startLeft = () => { leftPressed = true; updateButtonStyles(); };
+        const stopLeft = () => { leftPressed = false; updateButtonStyles(); };
+        const startRight = () => { rightPressed = true; updateButtonStyles(); };
+        const stopRight = () => { rightPressed = false; updateButtonStyles(); };
+        
+        leftBtn.onmousedown = startLeft;
+        leftBtn.onmouseup = stopLeft;
+        leftBtn.onmouseleave = stopLeft;
+        leftBtn.ontouchstart = (e) => { e.preventDefault(); startLeft(); };
+        leftBtn.ontouchend = stopLeft;
+        leftBtn.ontouchcancel = stopLeft;
+        
+        rightBtn.onmousedown = startRight;
+        rightBtn.onmouseup = stopRight;
+        rightBtn.onmouseleave = stopRight;
+        rightBtn.ontouchstart = (e) => { e.preventDefault(); startRight(); };
+        rightBtn.ontouchend = stopRight;
+        rightBtn.ontouchcancel = stopRight;
+      };
       
-      rightBtn.onmousedown = startRight;
-      rightBtn.onmouseup = stopRight;
-      rightBtn.onmouseleave = stopRight;
-      rightBtn.ontouchstart = (e) => { e.preventDefault(); startRight(); };
-      rightBtn.ontouchend = stopRight;
-      
-      const startTime = Date.now();
+      const updateButtonStyles = () => {
+        const leftBtn = document.getElementById('composureLeft');
+        const rightBtn = document.getElementById('composureRight');
+        if (leftBtn) {
+          leftBtn.style.background = leftPressed 
+            ? 'linear-gradient(145deg, #4ecca3 0%, #2d8a6e 100%)'
+            : 'linear-gradient(145deg, #667eea 0%, #764ba2 100%)';
+        }
+        if (rightBtn) {
+          rightBtn.style.background = rightPressed 
+            ? 'linear-gradient(145deg, #4ecca3 0%, #2d8a6e 100%)'
+            : 'linear-gradient(145deg, #667eea 0%, #764ba2 100%)';
+        }
+      };
       
       const gameLoop = () => {
         if (!gameActive) return;
@@ -17738,19 +18096,20 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
         position += drift;
         
         // Change drift randomly
-        if (Math.random() < 0.02) {
+        if (Math.random() < 0.025) {
           drift = (Math.random() - 0.5) * driftSpeed * 2;
         }
         
         // Apply player input
-        if (leftPressed) position -= 1.5;
-        if (rightPressed) position += 1.5;
+        if (leftPressed) position -= 1.8;
+        if (rightPressed) position += 1.8;
         
         // Clamp position
         position = Math.max(5, Math.min(95, position));
         
         // Update marker
-        marker.style.left = position + '%';
+        const marker = document.getElementById('composureMarker');
+        if (marker) marker.style.left = position + '%';
         
         // Check if in safe zone
         const inZone = position >= (50 - safeZone) && position <= (50 + safeZone);
@@ -17758,9 +18117,19 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
           timeInZone += 16.67; // ~60fps
         }
         
+        // Update status
+        const status = document.getElementById('composureStatus');
+        if (status) {
+          status.textContent = inZone ? '✓ Balanced!' : '⚠️ Drifting!';
+          status.style.color = inZone ? '#4ecca3' : '#f72585';
+        }
+        
         // Update timer
         const progress = (elapsed / duration) * 100;
-        timerBar.style.width = Math.min(100, progress) + '%';
+        const timerBar = document.getElementById('composureTimer');
+        const percentEl = document.getElementById('composurePercent');
+        if (timerBar) timerBar.style.width = Math.min(100, progress) + '%';
+        if (percentEl) percentEl.textContent = Math.round(progress) + '%';
         
         // Check win condition
         if (elapsed >= duration) {
@@ -17772,7 +18141,8 @@ costPercent: 0 to 0.1 (0=free, 0.01=1% of cash). alignment: light/dark/neutral/a
         requestAnimationFrame(gameLoop);
       };
       
-      gameLoop();
+      // Initial render
+      renderGame();
       
       this.activeGame.cleanup = () => {
         gameActive = false;
