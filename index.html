@@ -12117,6 +12117,12 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
     // Process flag chains daily
     processFlagChains();
     
+    // ========== STORY ONGOING EFFECTS ==========
+    // Process timed consequences, buffs, debuffs, and check disabled products/employees
+    if (typeof StoryEngine !== 'undefined' && StoryEngine.processOngoingEffects) {
+      StoryEngine.processOngoingEffects();
+    }
+    
     // Update UI
     updateTimeDisplay();
   }
@@ -15832,11 +15838,33 @@ Generate a realistic, dramatic outcome for this action that fits the story tone.
 - How would the involved characters react emotionally?
 - Does this show leadership, creativity, cowardice, cruelty, or something else?
 
+AVAILABLE GAMEPLAY EFFECT TYPES (pick the most appropriate):
+CONSEQUENCES (negative):
+- "fine" with amount (forced cash loss, 5000-100000)
+- "decrease_all_trust" with amount (5-20)
+- "decrease_all_productivity" with amount (5-20)
+- "disable_product" with duration in days (1-7) - shuts down production
+- "employee_quits" - if action is cruel enough, someone may resign
+- "random_employee_quits" - unhappy employee leaves
+- "reputation_hit" with amount (5-20)
+- "investigation" with duration (7-30) - regulatory scrutiny
+- "temporary_debuff" with stat, multiplier (0.5-0.9), duration (3-14)
+
+BENEFITS (positive):
+- "bonus_cash" with amount (1000-50000)
+- "boost_all_trust" with amount (5-20)
+- "boost_all_productivity" with amount (5-20)
+- "boost_all_comfort" with amount (5-15)
+- "reputation_boost" with amount (5-20)
+- "loyalty_boost" with duration (7-30) - prevents quitting
+- "temporary_buff" with stat, multiplier (1.1-1.5), duration (3-14)
+- "unlock_perk" with perkId, name, description - permanent benefit
+
 RESPOND IN JSON:
 {
   "text": "2-3 sentences describing what happens as a result of the player's action. Be dramatic and engaging.",
   "alignment": "one of: lawful, light, neutral, dark, ruthless, ambitious, defiant, humble, charismatic, calculating, pragmatic, cautious, adaptive, risky, diplomatic, cunning, innovative",
-  "gameplayEffect": {"type": "boost_all_trust|decrease_all_trust|boost_all_productivity|spend_cash|etc", "amount": 5-15} or null,
+  "gameplayEffect": {"type": "effect_type_from_list", "amount": number, "duration": days_if_applicable, "reason": "brief reason"} or null for minor actions,
   "wasClever": true/false (was the response creative or smart?),
   "employeeReactions": [{"name": "Name", "reaction": "brief emotional reaction"}]
 }`;
@@ -16080,22 +16108,28 @@ RESPOND IN JSON:
     /**
      * Execute real gameplay effects from story choices
      * This is what makes choices MATTER - they change the actual game
+     * 
+     * CONSEQUENCES: Things that hurt the player
+     * BENEFITS: Things that help the player
      */
     executeGameplayEffect(effect) {
       if (!effect || !effect.type) return;
       
-      console.log(`[StoryEngine] 🎮 Executing gameplay effect: ${effect.type}`);
+      console.log(`[StoryEngine] 🎮 Executing gameplay effect: ${effect.type}`, effect);
       
       const employees = gameState.employees.filter(e => e.hired && e.employmentStatus === 'active');
       
       switch(effect.type) {
+        // ============================================
+        // STAT EFFECTS - Basic stat changes
+        // ============================================
         case 'boost_all_trust':
           employees.forEach(emp => {
             if (emp.stats) {
               emp.stats.trust = Math.min(100, (emp.stats.trust || 50) + effect.amount);
             }
           });
-          showNotification(`Trust improved across the team (+${effect.amount})`, 'success');
+          showNotification(`📈 Trust improved across the team (+${effect.amount})`, 'success');
           break;
           
         case 'decrease_all_trust':
@@ -16104,7 +16138,7 @@ RESPOND IN JSON:
               emp.stats.trust = Math.max(0, (emp.stats.trust || 50) - effect.amount);
             }
           });
-          showNotification(`Team trust declined (-${effect.amount})`, 'warning');
+          showNotification(`📉 Team trust declined (-${effect.amount})`, 'warning');
           break;
           
         case 'boost_all_productivity':
@@ -16113,9 +16147,68 @@ RESPOND IN JSON:
               emp.stats.productivity = Math.min(100, (emp.stats.productivity || 70) + effect.amount);
             }
           });
-          showNotification(`Team productivity improved (+${effect.amount}%)`, 'success');
+          showNotification(`📈 Team productivity improved (+${effect.amount}%)`, 'success');
+          break;
+        
+        case 'decrease_all_productivity':
+          employees.forEach(emp => {
+            if (emp.stats) {
+              emp.stats.productivity = Math.max(0, (emp.stats.productivity || 70) - effect.amount);
+            }
+          });
+          showNotification(`📉 Team productivity declined (-${effect.amount}%)`, 'warning');
+          break;
+        
+        case 'boost_all_comfort':
+          employees.forEach(emp => {
+            if (emp.stats) {
+              emp.stats.comfort = Math.min(100, (emp.stats.comfort || 60) + effect.amount);
+            }
+          });
+          showNotification(`☀️ Workplace comfort improved (+${effect.amount})`, 'success');
+          break;
+        
+        case 'decrease_all_comfort':
+          employees.forEach(emp => {
+            if (emp.stats) {
+              emp.stats.comfort = Math.max(0, (emp.stats.comfort || 60) - effect.amount);
+            }
+          });
+          showNotification(`🌧️ Workplace comfort declined (-${effect.amount})`, 'warning');
+          break;
+        
+        case 'boost_all_affection':
+          employees.forEach(emp => {
+            if (emp.stats) {
+              emp.stats.affection = Math.min(100, (emp.stats.affection || 20) + effect.amount);
+            }
+          });
+          showNotification(`💕 Team bonds strengthened (+${effect.amount})`, 'success');
+          break;
+        
+        case 'boost_employee':
+          if (effect.employeeId) {
+            const emp = gameState.employees.find(e => e.id === effect.employeeId);
+            if (emp && emp.stats && effect.stat && effect.amount) {
+              emp.stats[effect.stat] = Math.min(100, (emp.stats[effect.stat] || 50) + effect.amount);
+              showNotification(`📈 ${emp.name}'s ${effect.stat} increased!`, 'success');
+            }
+          }
+          break;
+        
+        case 'decrease_employee':
+          if (effect.employeeId) {
+            const emp = gameState.employees.find(e => e.id === effect.employeeId);
+            if (emp && emp.stats && effect.stat && effect.amount) {
+              emp.stats[effect.stat] = Math.max(0, (emp.stats[effect.stat] || 50) - effect.amount);
+              showNotification(`📉 ${emp.name}'s ${effect.stat} decreased`, 'warning');
+            }
+          }
           break;
           
+        // ============================================
+        // FINANCIAL EFFECTS - Money consequences/benefits
+        // ============================================
         case 'spend_cash':
           if (gameState.cash >= effect.amount) {
             gameState.cash -= effect.amount;
@@ -16126,24 +16219,265 @@ RESPOND IN JSON:
                   emp.stats.trust = Math.min(100, (emp.stats.trust || 50) + 8);
                 }
               });
-              showNotification(`Spent $${effect.amount.toLocaleString()} - Team morale boosted!`, 'success');
-            }
-            if (effect.boostAffection) {
+              showNotification(`💰 Spent ${formatCash(effect.amount)} - Team morale boosted!`, 'success');
+            } else if (effect.boostAffection) {
               employees.forEach(emp => {
                 if (emp.stats) {
                   emp.stats.affection = Math.min(100, (emp.stats.affection || 20) + 10);
                 }
               });
-              showNotification(`Spent $${effect.amount.toLocaleString()} - Team bonds strengthened!`, 'success');
+              showNotification(`💰 Spent ${formatCash(effect.amount)} - Team bonds strengthened!`, 'success');
+            } else {
+              showNotification(`💰 Spent ${formatCash(effect.amount)}`, 'info');
             }
           } else {
-            showNotification(`Couldn't afford $${effect.amount.toLocaleString()} - promise noted but not fulfilled`, 'warning');
+            showNotification(`❌ Couldn't afford ${formatCash(effect.amount)}!`, 'error');
             this.trackAction('broke_promise', { type: effect.type, amount: effect.amount });
           }
           break;
+        
+        case 'fine':
+        case 'penalty':
+          // Forced payment - can go negative if needed
+          const fineAmount = effect.amount || 10000;
+          gameState.cash -= fineAmount;
+          showNotification(`⚠️ FINE: -${formatCash(fineAmount)}`, 'error');
+          this.addJournalEntry({
+            title: '💸 Financial Penalty',
+            content: effect.reason || `The company was fined ${formatCash(fineAmount)}.`,
+            type: 'consequence',
+            memorable: fineAmount >= 50000
+          });
+          break;
+        
+        case 'bonus_cash':
+        case 'reward_cash':
+          const rewardAmount = effect.amount || 5000;
+          gameState.cash += rewardAmount;
+          showNotification(`💵 Received ${formatCash(rewardAmount)}!`, 'success');
+          if (effect.reason) {
+            this.addJournalEntry({
+              title: '💰 Financial Reward',
+              content: effect.reason,
+              type: 'benefit',
+              memorable: rewardAmount >= 25000
+            });
+          }
+          break;
+        
+        case 'ongoing_cost':
+          // Add a recurring cost that will be deducted periodically
+          if (!gameState.story.ongoingEffects) gameState.story.ongoingEffects = [];
+          gameState.story.ongoingEffects.push({
+            id: `cost_${Date.now()}`,
+            type: 'recurring_cost',
+            amount: effect.amount || 1000,
+            frequency: effect.frequency || 'daily',
+            duration: effect.duration || 7, // days
+            startDay: gameState.currentDay,
+            reason: effect.reason || 'Ongoing expense'
+          });
+          showNotification(`📅 Ongoing cost: ${formatCash(effect.amount)}/day for ${effect.duration} days`, 'warning');
+          break;
+        
+        case 'ongoing_income':
+          // Add a recurring income
+          if (!gameState.story.ongoingEffects) gameState.story.ongoingEffects = [];
+          gameState.story.ongoingEffects.push({
+            id: `income_${Date.now()}`,
+            type: 'recurring_income',
+            amount: effect.amount || 1000,
+            frequency: effect.frequency || 'daily',
+            duration: effect.duration || 7,
+            startDay: gameState.currentDay,
+            reason: effect.reason || 'Bonus income'
+          });
+          showNotification(`📅 Bonus income: +${formatCash(effect.amount)}/day for ${effect.duration} days!`, 'success');
+          break;
+        
+        // ============================================
+        // PRODUCT EFFECTS - Production consequences/benefits
+        // ============================================
+        case 'disable_product':
+          // Temporarily disable a product line
+          const disableTarget = effect.productId 
+            ? gameState.products.find(p => p.id === effect.productId)
+            : gameState.products.find(p => p.running && p.unlocked);
           
+          if (disableTarget) {
+            disableTarget.disabled = true;
+            disableTarget.disabledUntil = gameState.currentDay + (effect.duration || 3);
+            disableTarget.disabledReason = effect.reason || 'Temporarily unavailable';
+            disableTarget.running = false;
+            showNotification(`🚫 ${disableTarget.name} disabled for ${effect.duration || 3} days!`, 'error');
+            this.addJournalEntry({
+              title: `🚫 ${disableTarget.name} Shut Down`,
+              content: effect.reason || `${disableTarget.name} has been temporarily disabled and cannot generate revenue.`,
+              type: 'consequence',
+              memorable: true
+            });
+          }
+          break;
+        
+        case 'disable_random_product':
+          // Disable a random active product
+          const activeProducts = gameState.products.filter(p => p.running && p.unlocked && !p.disabled);
+          if (activeProducts.length > 0) {
+            const randomProduct = activeProducts[Math.floor(Math.random() * activeProducts.length)];
+            randomProduct.disabled = true;
+            randomProduct.disabledUntil = gameState.currentDay + (effect.duration || 3);
+            randomProduct.disabledReason = effect.reason || 'Technical issues';
+            randomProduct.running = false;
+            showNotification(`🚫 ${randomProduct.name} disabled for ${effect.duration || 3} days!`, 'error');
+          }
+          break;
+        
+        case 'boost_product':
+          // Temporarily boost a product's output
+          const boostTarget = effect.productId 
+            ? gameState.products.find(p => p.id === effect.productId)
+            : gameState.products.find(p => p.running && p.unlocked);
+          
+          if (boostTarget) {
+            if (!boostTarget.temporaryBoosts) boostTarget.temporaryBoosts = [];
+            boostTarget.temporaryBoosts.push({
+              multiplier: effect.multiplier || 1.5,
+              expiresDay: gameState.currentDay + (effect.duration || 7),
+              reason: effect.reason || 'Production boost'
+            });
+            showNotification(`🚀 ${boostTarget.name} production boosted ${Math.round((effect.multiplier || 1.5) * 100)}% for ${effect.duration || 7} days!`, 'success');
+          }
+          break;
+        
+        case 'production_halt':
+          // Stop ALL production for a period
+          gameState.products.forEach(p => {
+            if (p.running) {
+              p.disabled = true;
+              p.disabledUntil = gameState.currentDay + (effect.duration || 1);
+              p.disabledReason = effect.reason || 'Production halted';
+              p.running = false;
+            }
+          });
+          showNotification(`⛔ ALL PRODUCTION HALTED for ${effect.duration || 1} day(s)!`, 'error');
+          this.addJournalEntry({
+            title: '⛔ Company-Wide Production Halt',
+            content: effect.reason || 'All production has been temporarily stopped.',
+            type: 'consequence',
+            memorable: true
+          });
+          break;
+          
+        // ============================================
+        // EMPLOYEE EFFECTS - Hiring/Firing consequences
+        // ============================================
+        case 'employee_quits':
+          // A specific employee quits
+          const quitter = effect.employeeId 
+            ? gameState.employees.find(e => e.id === effect.employeeId)
+            : null;
+          
+          if (quitter && quitter.hired && quitter.employmentStatus === 'active') {
+            quitter.employmentStatus = 'resigned';
+            quitter.hired = false;
+            quitter.resignReason = effect.reason || 'Personal reasons';
+            showNotification(`😢 ${quitter.name} has resigned!`, 'error');
+            this.addJournalEntry({
+              title: `👋 ${quitter.name} Resigned`,
+              content: effect.reason || `${quitter.name} has left the company.`,
+              type: 'consequence',
+              memorable: true,
+              involvedCharacters: [quitter.name]
+            });
+          }
+          break;
+        
+        case 'random_employee_quits':
+          // A random disgruntled employee quits
+          const unhappyEmployees = employees.filter(e => 
+            (e.stats?.trust || 50) < 40 || (e.stats?.comfort || 60) < 30
+          );
+          if (unhappyEmployees.length > 0) {
+            const quitting = unhappyEmployees[Math.floor(Math.random() * unhappyEmployees.length)];
+            quitting.employmentStatus = 'resigned';
+            quitting.hired = false;
+            quitting.resignReason = effect.reason || 'Couldn\'t take it anymore';
+            showNotification(`😢 ${quitting.name} has quit!`, 'error');
+            this.addJournalEntry({
+              title: `👋 ${quitting.name} Quit`,
+              content: `${quitting.name} couldn't take it anymore and has left the company.`,
+              type: 'consequence',
+              memorable: true,
+              involvedCharacters: [quitting.name]
+            });
+          }
+          break;
+        
+        case 'mass_resignation_risk':
+          // Multiple employees might quit based on conditions
+          const atRisk = employees.filter(e => (e.stats?.trust || 50) < 30);
+          let quitters = 0;
+          atRisk.forEach(emp => {
+            if (Math.random() < (effect.chance || 0.3)) {
+              emp.employmentStatus = 'resigned';
+              emp.hired = false;
+              quitters++;
+            }
+          });
+          if (quitters > 0) {
+            showNotification(`😱 ${quitters} employee(s) resigned in protest!`, 'error');
+            this.addJournalEntry({
+              title: '🚨 Mass Resignation',
+              content: `${quitters} employees have resigned due to poor working conditions.`,
+              type: 'consequence',
+              memorable: true
+            });
+          }
+          break;
+        
+        case 'employee_unavailable':
+          // Employee is temporarily unavailable (sick, suspended, etc)
+          const unavailTarget = effect.employeeId 
+            ? gameState.employees.find(e => e.id === effect.employeeId)
+            : null;
+          
+          if (unavailTarget) {
+            unavailTarget.unavailable = true;
+            unavailTarget.unavailableUntil = gameState.currentDay + (effect.duration || 3);
+            unavailTarget.unavailableReason = effect.reason || 'Temporarily unavailable';
+            showNotification(`🚫 ${unavailTarget.name} unavailable for ${effect.duration || 3} days`, 'warning');
+          }
+          break;
+        
+        case 'bonus_hire':
+          // Get a free/discounted employee
+          if (!gameState.story.bonusHires) gameState.story.bonusHires = [];
+          gameState.story.bonusHires.push({
+            discount: effect.discount || 1.0, // 1.0 = free, 0.5 = half price
+            level: effect.level || 1,
+            expires: gameState.currentDay + (effect.duration || 30),
+            reason: effect.reason || 'Special recruitment opportunity'
+          });
+          showNotification(`🎁 Free hire available! Check the job market.`, 'success');
+          break;
+        
+        case 'loyalty_boost':
+          // Prevent any employee from quitting for a duration
+          if (!gameState.story.ongoingEffects) gameState.story.ongoingEffects = [];
+          gameState.story.ongoingEffects.push({
+            id: `loyalty_${Date.now()}`,
+            type: 'quit_prevention',
+            duration: effect.duration || 14,
+            startDay: gameState.currentDay,
+            reason: effect.reason || 'High morale'
+          });
+          showNotification(`💪 Team loyalty maxed! No one will quit for ${effect.duration || 14} days.`, 'success');
+          break;
+          
+        // ============================================
+        // REPUTATION/NARRATIVE EFFECTS
+        // ============================================
         case 'mark_complainers':
-          // Flag any employees with low trust for potential "consequences"
           employees.filter(e => e.stats?.trust < 40).forEach(emp => {
             if (!emp.narrativeFlags) emp.narrativeFlags = {};
             emp.narrativeFlags.marked_complainer = true;
@@ -16152,34 +16486,131 @@ RESPOND IN JSON:
             gameState.story.narrativeFlags.fear_mode = true;
             this.addJournalEntry({
               title: '☠️ Rule of Fear',
-              content: 'You\'ve chosen to lead through intimidation. Dissent will be punished. Some will submit. Others will remember.',
+              content: 'You\'ve chosen to lead through intimidation. Dissent will be punished.',
               type: 'consequence',
               memorable: true
             });
           }
           break;
-          
-        case 'boost_employee':
-          // Boost a specific employee if identified
-          if (effect.employeeId) {
-            const emp = gameState.employees.find(e => e.id === effect.employeeId);
-            if (emp && emp.stats) {
-              if (effect.stat && effect.amount) {
-                emp.stats[effect.stat] = Math.min(100, (emp.stats[effect.stat] || 50) + effect.amount);
-              }
-            }
-          }
+        
+        case 'reputation_hit':
+          // Negative reputation affects future hiring and events
+          gameState.story.reputationScore = Math.max(0, 
+            (gameState.story.reputationScore || 50) - (effect.amount || 10)
+          );
+          showNotification(`📉 Company reputation damaged (-${effect.amount || 10})`, 'warning');
+          break;
+        
+        case 'reputation_boost':
+          gameState.story.reputationScore = Math.min(100, 
+            (gameState.story.reputationScore || 50) + (effect.amount || 10)
+          );
+          showNotification(`📈 Company reputation improved (+${effect.amount || 10})!`, 'success');
+          break;
+        
+        case 'media_attention':
+          // Triggers future events related to media coverage
+          gameState.story.narrativeFlags.media_watching = true;
+          gameState.story.mediaAttentionLevel = (gameState.story.mediaAttentionLevel || 0) + 1;
+          showNotification(`📰 The media is paying attention to your company...`, 'warning');
+          break;
+        
+        case 'investigation':
+          // Regulatory investigation - ongoing stress
+          if (!gameState.story.ongoingEffects) gameState.story.ongoingEffects = [];
+          gameState.story.ongoingEffects.push({
+            id: `investigation_${Date.now()}`,
+            type: 'investigation',
+            severity: effect.severity || 'minor',
+            duration: effect.duration || 14,
+            startDay: gameState.currentDay,
+            potentialFine: effect.potentialFine || 50000,
+            reason: effect.reason || 'Regulatory investigation'
+          });
+          gameState.story.narrativeFlags.under_investigation = true;
+          showNotification(`🔍 Your company is under investigation!`, 'error');
+          this.addJournalEntry({
+            title: '🔍 Investigation Launched',
+            content: effect.reason || 'Regulatory authorities have launched an investigation into the company.',
+            type: 'consequence',
+            memorable: true
+          });
+          break;
+        
+        case 'investigation_cleared':
+          // Investigation resolved positively
+          gameState.story.narrativeFlags.under_investigation = false;
+          gameState.story.ongoingEffects = (gameState.story.ongoingEffects || [])
+            .filter(e => e.type !== 'investigation');
+          showNotification(`✅ Investigation cleared! No charges filed.`, 'success');
+          this.addJournalEntry({
+            title: '✅ Investigation Cleared',
+            content: 'The investigation has concluded with no findings against the company.',
+            type: 'benefit',
+            memorable: true
+          });
           break;
           
+        // ============================================
+        // SPECIAL UNLOCKS & ABILITIES
+        // ============================================
         case 'unlock_ability':
-          // Unlock special abilities/options
           if (!gameState.story.unlockedAbilities) gameState.story.unlockedAbilities = [];
           if (!gameState.story.unlockedAbilities.includes(effect.ability)) {
             gameState.story.unlockedAbilities.push(effect.ability);
-            showNotification(`New ability unlocked: ${effect.ability}`, 'success');
+            showNotification(`🔓 New ability: ${effect.ability}`, 'success');
           }
           break;
         
+        case 'unlock_perk':
+          // Permanent company perk
+          if (!gameState.story.companyPerks) gameState.story.companyPerks = [];
+          if (!gameState.story.companyPerks.find(p => p.id === effect.perkId)) {
+            gameState.story.companyPerks.push({
+              id: effect.perkId,
+              name: effect.name || 'Special Perk',
+              description: effect.description || 'A special company benefit',
+              effect: effect.perkEffect || {}
+            });
+            showNotification(`🌟 New perk unlocked: ${effect.name}!`, 'success');
+            this.addJournalEntry({
+              title: `🌟 Perk Unlocked: ${effect.name}`,
+              content: effect.description || 'A new permanent benefit for the company.',
+              type: 'benefit',
+              memorable: true
+            });
+          }
+          break;
+        
+        case 'temporary_buff':
+          // Timed bonus to various systems
+          if (!gameState.story.ongoingEffects) gameState.story.ongoingEffects = [];
+          gameState.story.ongoingEffects.push({
+            id: `buff_${Date.now()}`,
+            type: 'buff',
+            stat: effect.stat || 'productivity',
+            multiplier: effect.multiplier || 1.2,
+            duration: effect.duration || 7,
+            startDay: gameState.currentDay,
+            reason: effect.reason || 'Temporary boost'
+          });
+          showNotification(`⬆️ ${effect.stat || 'Productivity'} boosted ${Math.round((effect.multiplier || 1.2) * 100)}% for ${effect.duration || 7} days!`, 'success');
+          break;
+        
+        case 'temporary_debuff':
+          if (!gameState.story.ongoingEffects) gameState.story.ongoingEffects = [];
+          gameState.story.ongoingEffects.push({
+            id: `debuff_${Date.now()}`,
+            type: 'debuff',
+            stat: effect.stat || 'productivity',
+            multiplier: effect.multiplier || 0.8,
+            duration: effect.duration || 7,
+            startDay: gameState.currentDay,
+            reason: effect.reason || 'Temporary penalty'
+          });
+          showNotification(`⬇️ ${effect.stat || 'Productivity'} reduced to ${Math.round((effect.multiplier || 0.8) * 100)}% for ${effect.duration || 7} days`, 'warning');
+          break;
+          
         // ============================================
         // NSFW EFFECT TYPES - Only execute if adult content enabled
         // ============================================
@@ -16187,11 +16618,9 @@ RESPOND IN JSON:
           if (this.isAdultContentEnabled() && effect.employeeId) {
             const emp = gameState.employees.find(e => e.id === effect.employeeId);
             if (emp) {
-              // Boost intimacy level
               if (!emp.memory) emp.memory = {};
               emp.memory.intimacyLevel = Math.min(100, (emp.memory.intimacyLevel || 0) + (effect.intimacyGain || 15));
               
-              // Track the intimate action
               const isFirst = !emp.memory.hasHadIntimateEncounter;
               emp.memory.hasHadIntimateEncounter = true;
               
@@ -16202,12 +16631,10 @@ RESPOND IN JSON:
                 context: effect.context || 'private_moment'
               });
               
-              // Stat changes based on encounter nature
               if (emp.stats) {
                 emp.stats.affection = Math.min(100, (emp.stats.affection || 20) + (effect.affectionGain || 8));
-                emp.stats.desire = Math.max(0, (emp.stats.desire || 50) - 15); // Temporarily satisfied
+                emp.stats.desire = Math.max(0, (emp.stats.desire || 50) - 15);
                 
-                // Trust can go up or down depending on how it was initiated
                 if (effect.wasConsensual !== false) {
                   emp.stats.trust = Math.min(100, (emp.stats.trust || 50) + 5);
                 } else {
@@ -16216,15 +16643,14 @@ RESPOND IN JSON:
                 }
               }
               
-              // Add to journal (text filtered by content mode)
               this.addJournalEntry({
                 title: this.getContentVariant({
                   nsfw: `💋 Private Moment with ${emp.name}`,
                   sfw: `💝 Special Connection with ${emp.name}`
                 }),
                 content: this.getContentVariant({
-                  nsfw: effect.nsfwJournalText || `You and ${emp.name} shared an intimate moment. The professional boundaries have blurred considerably.`,
-                  sfw: `You and ${emp.name} have grown much closer. There's something special developing between you.`
+                  nsfw: effect.nsfwJournalText || `You and ${emp.name} shared an intimate moment.`,
+                  sfw: `You and ${emp.name} have grown much closer.`
                 }),
                 type: 'relationship',
                 memorable: isFirst
@@ -16243,19 +16669,13 @@ RESPOND IN JSON:
           break;
           
         case 'spread_rumors':
-          // Word spreads about player's... activities
           if (this.isAdultContentEnabled()) {
             employees.forEach(emp => {
               if (emp.stats) {
-                // Other employees become more curious/interested or scandalized
                 const reaction = Math.random();
                 if (reaction < 0.4) {
-                  // Intrigued
                   emp.stats.desire = Math.min(100, (emp.stats.desire || 30) + 8);
-                } else if (reaction < 0.7) {
-                  // Neutral/accepting
-                } else {
-                  // Scandalized
+                } else if (reaction >= 0.7) {
                   emp.stats.trust = Math.max(0, (emp.stats.trust || 50) - 5);
                 }
               }
@@ -16267,6 +16687,103 @@ RESPOND IN JSON:
         default:
           console.warn(`[StoryEngine] Unknown gameplay effect type: ${effect.type}`);
       }
+      
+      // Save after any effect
+      saveGame(false);
+    },
+    
+    /**
+     * Process ongoing effects each day (called from day advancement)
+     */
+    processOngoingEffects() {
+      if (!gameState.story?.ongoingEffects) return;
+      
+      const today = gameState.currentDay;
+      const expiredEffects = [];
+      
+      gameState.story.ongoingEffects.forEach(effect => {
+        const daysActive = today - effect.startDay;
+        
+        // Check if expired
+        if (daysActive >= effect.duration) {
+          expiredEffects.push(effect);
+          return;
+        }
+        
+        // Process daily effects
+        switch(effect.type) {
+          case 'recurring_cost':
+            gameState.cash -= effect.amount;
+            break;
+          case 'recurring_income':
+            gameState.cash += effect.amount;
+            break;
+          case 'investigation':
+            // Small daily chance of investigation concluding (badly)
+            if (Math.random() < 0.05) {
+              gameState.cash -= effect.potentialFine;
+              showNotification(`⚖️ Investigation concluded: Fined ${formatCash(effect.potentialFine)}`, 'error');
+              expiredEffects.push(effect);
+              gameState.story.narrativeFlags.under_investigation = false;
+            }
+            break;
+        }
+      });
+      
+      // Remove expired effects
+      expiredEffects.forEach(expired => {
+        const idx = gameState.story.ongoingEffects.indexOf(expired);
+        if (idx !== -1) {
+          gameState.story.ongoingEffects.splice(idx, 1);
+          
+          // Notify of expiration for significant effects
+          if (expired.type === 'buff' || expired.type === 'debuff') {
+            showNotification(`⏰ ${expired.reason || 'Temporary effect'} has ended`, 'info');
+          }
+        }
+      });
+      
+      // Process disabled products
+      gameState.products.forEach(product => {
+        if (product.disabled && product.disabledUntil <= today) {
+          product.disabled = false;
+          delete product.disabledUntil;
+          delete product.disabledReason;
+          showNotification(`✅ ${product.name} is operational again!`, 'success');
+        }
+        
+        // Process temporary boosts
+        if (product.temporaryBoosts) {
+          product.temporaryBoosts = product.temporaryBoosts.filter(boost => boost.expiresDay > today);
+        }
+      });
+      
+      // Process unavailable employees
+      gameState.employees.forEach(emp => {
+        if (emp.unavailable && emp.unavailableUntil <= today) {
+          emp.unavailable = false;
+          delete emp.unavailableUntil;
+          delete emp.unavailableReason;
+          showNotification(`✅ ${emp.name} is back!`, 'success');
+        }
+      });
+    },
+    
+    /**
+     * Get total product multiplier including temporary boosts
+     */
+    getProductMultiplier(product) {
+      let multiplier = 1.0;
+      
+      if (product.disabled) return 0;
+      
+      if (product.temporaryBoosts) {
+        product.temporaryBoosts.forEach(boost => {
+          multiplier *= boost.multiplier;
+        });
+      }
+      
+      return multiplier;
     },
     
     /**
@@ -20058,6 +20575,11 @@ RESPOND IN JSON ONLY:
       });
     }
     
+    // Apply special gameplay effects (fines, product disabling, resignations, etc.)
+    if (outcome.specialEffect && typeof StoryEngine !== 'undefined') {
+      StoryEngine.executeGameplayEffect(outcome.specialEffect);
+    }
+    
     // Mark as resolved
     event.resolved = true;
     event.status = 'resolved';
@@ -20184,6 +20706,11 @@ RESPOND IN JSON ONLY:
       });
     }
     
+    // Apply special gameplay effects based on minigame outcome
+    if (outcome.specialEffect && typeof StoryEngine !== 'undefined') {
+      StoryEngine.executeGameplayEffect(outcome.specialEffect);
+    }
+    
     // Mark as resolved
     event.resolved = true;
     event.status = 'resolved';
@@ -20265,25 +20792,39 @@ RESPOND IN JSON ONLY:
 
 EVENT: ${event.title}
 DESCRIPTION: ${event.description}
+CATEGORY: ${event.category || 'general'}
 INVOLVED EMPLOYEES: ${involvedEmps.map(e => e.name).join(', ') || 'None specifically'}
 
 PLAYER'S CUSTOM ACTION: "${customResponse}"
 
 Generate a realistic outcome for this action. Consider:
 - Is this action reasonable/possible?
-- What would the consequences be?
+- What would the consequences be (good OR bad)?
 - How would the employees react?
+
+AVAILABLE CONSEQUENCE TYPES (use for serious negative outcomes):
+- Fine/penalty: Set "specialEffect": {"type": "fine", "amount": 5000-100000, "reason": "why"}
+- Product shutdown: Set "specialEffect": {"type": "disable_product", "duration": 1-7, "reason": "why"}
+- Employee quits: Set "specialEffect": {"type": "employee_quits", "reason": "why they left"}
+- Investigation: Set "specialEffect": {"type": "investigation", "duration": 7-30, "reason": "what triggered it"}
+
+AVAILABLE BENEFIT TYPES (use for good outcomes):
+- Cash bonus: Set "specialEffect": {"type": "bonus_cash", "amount": 1000-25000, "reason": "source"}
+- Loyalty boost: Set "specialEffect": {"type": "loyalty_boost", "duration": 7-14}
+- Reputation boost: Set "specialEffect": {"type": "reputation_boost", "amount": 5-15}
+- Productivity boost: Set "specialEffect": {"type": "temporary_buff", "stat": "productivity", "multiplier": 1.2, "duration": 7}
 
 RESPOND IN JSON:
 {
   "text": "1-2 sentences describing what happens as a result of the player's action",
   "companyEffects": {"productivity": 0, "comfort": 0, "affection": 0, "trust": 0},
   "employeeEffects": [{"name": "EmployeeName", "stat": "trust", "change": 5, "reason": "brief reason"}],
+  "specialEffect": null or {"type": "effect_type", ...params},
   "duration": 7,
   "wasClever": true
 }
 
-Effects range from -20 to +20. wasClever is true if the player's response was creative or smart.`;
+companyEffects range from -20 to +20. wasClever is true if the player's response was creative or smart.`;
 
     const response = await queuedGenerateText(prompt);
     
