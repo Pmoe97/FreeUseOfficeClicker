@@ -15619,6 +15619,27 @@ RESPOND IN STRICT JSON (no markdown):
           <!-- Choices -->
           <div id="storyChoicesContainer" style="padding:0 30px 30px; ${gameState.story.settings.dramaticPauses ? 'opacity:0;' : ''}">
             ${choicesHtml}
+            
+            <!-- Open-ended response option (unified with meta events) -->
+            <div style="margin-top:20px; padding-top:15px; border-top:1px dashed #333;">
+              <div style="color:#8899a6; font-size:0.8rem; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                <span style="color:#667eea;">✨</span> Or take a different approach:
+              </div>
+              <div style="display:flex; gap:8px;">
+                <input type="text" id="storyCustomResponseInput" placeholder="Type your own action..." 
+                       style="flex:1; padding:14px 16px; background:#0f0f1a; border:2px solid #333; border-radius:10px; 
+                              color:#fff; font-size:0.95rem; transition: all 0.3s ease;"
+                       onfocus="this.style.borderColor='#667eea'"
+                       onblur="this.style.borderColor='#333'"
+                       onkeypress="if(event.key==='Enter' && this.value.trim()) StoryEngine.resolveCustomResponse('${event.id}', this.value)">
+                <button onclick="const input = document.getElementById('storyCustomResponseInput'); if(input.value.trim()) StoryEngine.resolveCustomResponse('${event.id}', input.value);"
+                        style="padding:14px 24px; background:linear-gradient(135deg, #667eea, #764ba2); border:none; border-radius:10px; color:white; cursor:pointer; font-weight:600; transition: all 0.3s ease;"
+                        onmouseenter="this.style.transform='scale(1.05)'"
+                        onmouseleave="this.style.transform='scale(1)'">
+                  Do it
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       `;
@@ -15714,6 +15735,132 @@ RESPOND IN STRICT JSON (no markdown):
       
       // Proceed with normal choice resolution
       this.finalizeChoice(event, choice);
+    },
+    
+    /**
+     * Resolve a custom/open-ended player response in a story event
+     * Uses AI to generate an appropriate outcome for the player's typed action
+     */
+    async resolveCustomResponse(eventId, customResponse) {
+      const event = gameState.story.activeSpineEvent;
+      if (!event || event.id !== eventId) return;
+      
+      if (!customResponse || !customResponse.trim()) {
+        showNotification('Please type an action first!', 'warning');
+        return;
+      }
+      
+      // Show loading state
+      const modal = document.getElementById('storyEventModal');
+      const submitBtn = modal?.querySelector('button[onclick*="resolveCustomResponse"]');
+      const input = document.getElementById('storyCustomResponseInput');
+      
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span style="animation: spin 1s linear infinite; display:inline-block;">⌛</span> Thinking...';
+      }
+      if (input) input.disabled = true;
+      
+      try {
+        // Generate AI outcome for the custom response
+        const outcome = await this.generateStoryCustomOutcome(event, customResponse.trim());
+        
+        // Create a synthetic choice based on the custom response
+        const customChoice = {
+          id: 'custom_' + Date.now(),
+          text: customResponse.trim(),
+          consequence: outcome.text,
+          alignment: outcome.alignment || 'adaptive',
+          gameplayEffect: outcome.gameplayEffect || null,
+          wasCustomResponse: true
+        };
+        
+        // Finalize with the custom choice
+        this.finalizeChoice(event, customChoice, outcome);
+        
+        // If AI flagged this as clever, give bonus feedback
+        if (outcome.wasClever) {
+          setTimeout(() => {
+            showNotification('✨ Clever approach!', 'success');
+          }, 1500);
+        }
+        
+      } catch (e) {
+        console.error('[StoryEngine] Custom response generation failed:', e);
+        showNotification('Something went wrong. Try a preset choice instead.', 'error');
+        
+        // Re-enable input
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Do it';
+        }
+        if (input) input.disabled = false;
+      }
+    },
+    
+    /**
+     * Generate outcome for a custom story response using AI
+     */
+    async generateStoryCustomOutcome(event, customResponse) {
+      // Get involved employees
+      const involvedEmps = [];
+      if (event.involvedEmployees) {
+        event.involvedEmployees.forEach(id => {
+          const emp = gameState.employees.find(e => e.id === id);
+          if (emp) involvedEmps.push(emp);
+        });
+      }
+      if (event.involvedCharacters) {
+        event.involvedCharacters.forEach(name => {
+          const emp = gameState.employees.find(e => e.name.toLowerCase() === name.toLowerCase());
+          if (emp && !involvedEmps.includes(emp)) involvedEmps.push(emp);
+        });
+      }
+      
+      const prompt = `In an office management game with story events, the player has chosen to take a custom action instead of the provided choices.
+
+STORY EVENT: "${event.title}"
+EVENT DESCRIPTION: ${event.cinematicText?.substring(0, 400) || event.description || 'An important moment in the office...'}
+EVENT TYPE: ${event.type === 'spine' ? 'Major Story Event' : event.type === 'minor' ? 'Minor Event' : 'Emergent Event'}
+INVOLVED CHARACTERS: ${involvedEmps.map(e => e.name).join(', ') || 'Various employees'}
+
+PLAYER'S CUSTOM ACTION: "${customResponse}"
+
+Generate a realistic, dramatic outcome for this action that fits the story tone. Consider:
+- Is this action reasonable or wildly inappropriate for the situation?
+- What would the realistic consequences be?
+- How would the involved characters react emotionally?
+- Does this show leadership, creativity, cowardice, cruelty, or something else?
+
+RESPOND IN JSON:
+{
+  "text": "2-3 sentences describing what happens as a result of the player's action. Be dramatic and engaging.",
+  "alignment": "one of: lawful, light, neutral, dark, ruthless, ambitious, defiant, humble, charismatic, calculating, pragmatic, cautious, adaptive, risky, diplomatic, cunning, innovative",
+  "gameplayEffect": {"type": "boost_all_trust|decrease_all_trust|boost_all_productivity|spend_cash|etc", "amount": 5-15} or null,
+  "wasClever": true/false (was the response creative or smart?),
+  "employeeReactions": [{"name": "Name", "reaction": "brief emotional reaction"}]
+}`;
+
+      const response = await queuedGenerateText(prompt);
+      
+      try {
+        let jsonStr = response;
+        const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) jsonStr = jsonMatch[1].trim();
+        else {
+          const objMatch = response.match(/\{[\s\S]*\}/);
+          if (objMatch) jsonStr = objMatch[0];
+        }
+        return JSON.parse(jsonStr);
+      } catch (e) {
+        console.error('[StoryEngine] Failed to parse custom outcome:', e);
+        return {
+          text: 'Your unconventional approach yields unexpected results...',
+          alignment: 'adaptive',
+          gameplayEffect: null,
+          wasClever: false
+        };
+      }
     },
     
     /**
@@ -19646,10 +19793,24 @@ RESPOND IN JSON ONLY:
       `;
     }
     
-    // Build choices HTML with open-ended option
+    // Build choices HTML with minigame support and open-ended option (unified with story events)
     const choicesHtml = eventRecord.choices.map((choice, idx) => {
       const canAfford = gameState.cash >= (choice.cost || 0);
       const costText = choice.cost > 0 ? formatCash(choice.cost) : '';
+      
+      // Check if this choice has a minigame skill check
+      const hasMinigame = choice.minigame && typeof StoryMinigames !== 'undefined';
+      const minigameIcon = hasMinigame ? (StoryMinigames.GAME_TYPES[choice.minigame.type]?.icon || '🎮') : '';
+      const minigameLabel = hasMinigame ? `
+        <span style="
+          display: inline-flex; align-items: center; gap: 4px;
+          background: linear-gradient(135deg, #667eea33, #764ba233);
+          padding: 3px 8px; border-radius: 12px;
+          font-size: 0.7rem; color: #a0aec0;
+          margin-left: 8px;
+        ">${minigameIcon} Skill Check</span>
+      ` : '';
+      
       return `
         <button onclick="resolveDynamicEvent('${eventRecord.id}', ${idx}, null)"
                 style="width:100%; padding:14px 16px; margin:6px 0; 
@@ -19659,12 +19820,12 @@ RESPOND IN JSON ONLY:
                        cursor:${canAfford ? 'pointer' : 'not-allowed'}; 
                        font-size:0.9rem; text-align:left;
                        transition: all 0.2s ease;
-                       display:flex; justify-content:space-between; align-items:center;
+                       display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;
                        ${canAfford ? '' : 'opacity:0.6;'}"
                 ${canAfford ? '' : 'disabled'}
                 onmouseenter="if(!this.disabled){this.style.borderColor='#e94560'; this.style.transform='translateX(5px)';}"
                 onmouseleave="if(!this.disabled){this.style.borderColor='#667eea'; this.style.transform='translateX(0)';}">
-          <span>${choice.text}</span>
+          <span style="display:flex; align-items:center;">${choice.text}${minigameLabel}</span>
           ${costText ? `<span style="color:#ff6b9d; font-size:0.8rem; margin-left:10px;">${costText}</span>` : ''}
         </button>
       `;
@@ -19816,13 +19977,36 @@ RESPOND IN JSON ONLY:
     if (choiceIndex >= 0 && choiceIndex < event.choices.length) {
       // Standard choice
       choice = event.choices[choiceIndex];
-      outcome = choice.outcome;
       
-      // Check cost
+      // Check cost first
       if (choice.cost > 0 && gameState.cash < choice.cost) {
         showNotification('❌ Not enough cash!', 'error');
         return;
       }
+      
+      // Check if this choice requires a minigame skill check (unified with story events)
+      if (choice.minigame && typeof StoryMinigames !== 'undefined') {
+        // Close the meta event modal temporarily
+        const modal = document.getElementById('eventPanelModal');
+        if (modal) {
+          modal.style.opacity = '0';
+          modal.style.pointerEvents = 'none';
+        }
+        
+        // Launch the minigame
+        const mg = choice.minigame;
+        StoryMinigames.launchMinigame(mg.type, {
+          title: mg.title || choice.text,
+          themeText: mg.description || 'Complete the skill check!',
+          difficulty: mg.difficulty || 'medium'
+        }, (result) => {
+          // Minigame complete - resolve with modified outcome
+          resolveDynamicEventAfterMinigame(eventId, choiceIndex, result);
+        });
+        return;
+      }
+      
+      outcome = choice.outcome;
       
       // Deduct cost
       if (choice.cost > 0) {
@@ -19941,6 +20125,135 @@ RESPOND IN JSON ONLY:
   };
   
   /**
+   * Resolve a dynamic event after completing a minigame skill check
+   * Called by the minigame callback to continue event resolution
+   */
+  window.resolveDynamicEventAfterMinigame = function(eventId, choiceIndex, minigameResult) {
+    const eventState = initializeDynamicEventSystem();
+    const eventIdx = eventState.queue.findIndex(e => e.id === eventId);
+    
+    if (eventIdx === -1) return;
+    
+    const event = eventState.queue[eventIdx];
+    const choice = event.choices[choiceIndex];
+    if (!choice) return;
+    
+    const mg = choice.minigame;
+    let outcome = choice.outcome || {};
+    
+    // Modify outcome based on minigame result
+    if (minigameResult.result === 'perfect' && mg.perfectOutcome) {
+      outcome = { ...outcome, ...mg.perfectOutcome };
+      showNotification('⭐ Perfect! Your skill impressed everyone!', 'success');
+    } else if ((minigameResult.result === 'success' || minigameResult.result === 'perfect') && mg.successOutcome) {
+      outcome = { ...outcome, ...mg.successOutcome };
+    } else if (minigameResult.result === 'partial' && mg.partialOutcome) {
+      outcome = { ...outcome, ...mg.partialOutcome };
+      showNotification('⚠️ Partial success - could have gone better.', 'warning');
+    } else if (minigameResult.result === 'failure' && mg.failureOutcome) {
+      outcome = { ...outcome, ...mg.failureOutcome };
+      showNotification('❌ That didn\'t go as planned...', 'error');
+    }
+    
+    // Ensure outcome has text
+    if (!outcome.text) {
+      outcome.text = minigameResult.result === 'success' || minigameResult.result === 'perfect' 
+        ? 'Your skilled handling of the situation produced good results.'
+        : 'Despite your best efforts, things didn\'t go smoothly.';
+    }
+    
+    // Deduct cost if applicable
+    if (choice.cost > 0) {
+      gameState.cash -= choice.cost;
+    }
+    
+    // Apply company-wide effects
+    if (outcome.companyEffects) {
+      applyCompanyEventEffect(outcome.companyEffects);
+    }
+    
+    // Apply individual employee effects
+    if (outcome.employeeEffects && outcome.employeeEffects.length > 0) {
+      outcome.employeeEffects.forEach(effect => {
+        const emp = gameState.employees.find(e => 
+          e.name.toLowerCase() === effect.name?.toLowerCase() || e.id === effect.employeeId
+        );
+        if (emp) {
+          applyEmployeeEventEffect(emp, effect);
+        }
+      });
+    }
+    
+    // Mark as resolved
+    event.resolved = true;
+    event.status = 'resolved';
+    event.chosenOption = choiceIndex;
+    event.outcomeText = outcome.text;
+    event.resolvedAt = Date.now();
+    event.minigameResult = minigameResult;
+    
+    // Move to history
+    eventState.history.unshift(event);
+    eventState.queue.splice(eventIdx, 1);
+    eventState.viewedTotal++;
+    
+    // Trim history
+    if (eventState.history.length > 50) eventState.history.pop();
+    
+    // Add to chronicle with minigame result noted
+    const mgResultText = minigameResult.result === 'perfect' ? ' [PERFECT]' :
+                         minigameResult.result === 'success' ? ' [SUCCESS]' :
+                         minigameResult.result === 'partial' ? ' [PARTIAL]' : ' [FAILED]';
+    
+    if (typeof StoryEngine !== 'undefined' && StoryEngine.addJournalEntry) {
+      const involvedEmps = (event.involvedEmployeeIds || [])
+        .map(id => gameState.employees.find(e => e.id === id))
+        .filter(Boolean);
+      
+      StoryEngine.addJournalEntry({
+        title: event.title,
+        content: `${event.description}\n\nChoice: ${choice.text}${mgResultText}\n\nOutcome: ${outcome.text}`,
+        type: 'minor',
+        category: event.category || 'company',
+        memorable: minigameResult.result === 'perfect',
+        involvedCharacters: involvedEmps.map(e => e.name)
+      });
+      
+      // Add to involved employees' memories
+      involvedEmps.forEach(emp => {
+        if (emp.memory?.eventMemories) {
+          emp.memory.eventMemories.push({
+            eventId: event.id,
+            title: event.title,
+            description: event.description,
+            outcome: outcome.text,
+            playerChoice: choice.text,
+            minigameResult: minigameResult.result,
+            timestamp: Date.now(),
+            type: 'meta_event'
+          });
+          if (emp.memory.eventMemories.length > 20) {
+            emp.memory.eventMemories = emp.memory.eventMemories.slice(-20);
+          }
+        }
+      });
+    }
+    
+    // Close the faded modal
+    const modal = document.getElementById('eventPanelModal');
+    if (modal) modal.remove();
+    
+    // Show outcome modal
+    showDynamicEventOutcome(event, outcome, minigameResult);
+    
+    // Update bell
+    updateEventBellNotification();
+    
+    // Save game
+    saveGame(false);
+  };
+  
+  /**
    * Generate outcome for a custom player response using AI
    */
   async function generateCustomOutcome(event, customResponse) {
@@ -19996,8 +20309,9 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
   
   /**
    * Show the outcome modal for a resolved dynamic event
+   * Optional minigameResult param shows skill check badge
    */
-  function showDynamicEventOutcome(event, outcome) {
+  function showDynamicEventOutcome(event, outcome, minigameResult = null) {
     const overlay = document.createElement('div');
     overlay.id = 'eventOutcomeModal';
     overlay.style.cssText = `
@@ -20006,6 +20320,25 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
       display: flex; justify-content: center; align-items: center;
       animation: fadeIn 0.3s ease-out;
     `;
+    
+    // Minigame result badge (unified with story events)
+    let minigameBadge = '';
+    if (minigameResult) {
+      const badgeColors = {
+        perfect: { bg: '#ffd700', text: '#000', icon: '⭐' },
+        success: { bg: '#4ecca3', text: '#000', icon: '✓' },
+        partial: { bg: '#ff9500', text: '#000', icon: '~' },
+        failure: { bg: '#e94560', text: '#fff', icon: '✗' }
+      };
+      const bc = badgeColors[minigameResult.result] || badgeColors.partial;
+      minigameBadge = `
+        <div style="margin-bottom:15px;">
+          <span style="display:inline-block; background:${bc.bg}; color:${bc.text}; padding:6px 16px; border-radius:20px; font-size:0.85rem; font-weight:bold;">
+            ${bc.icon} Skill Check: ${minigameResult.result.toUpperCase()}
+          </span>
+        </div>
+      `;
+    }
     
     // Build effects summary
     let effectsSummary = '';
@@ -20056,6 +20389,7 @@ Effects range from -20 to +20. wasClever is true if the player's response was cr
     `;
     
     modal.innerHTML = `
+      ${minigameBadge}
       <div style="font-size:3rem; margin-bottom:15px;">${isPositive ? '✨' : '📋'}</div>
       <h2 style="margin:0 0 15px 0; color:#fff; font-size:1.2rem;">Outcome</h2>
       <p style="color:#ccc; font-size:0.95rem; line-height:1.6; margin-bottom:15px;">
