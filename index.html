@@ -11782,6 +11782,104 @@ Send a brief follow-up message (1-2 sentences) checking in about this. Be casual
   }
   
   /**
+   * Get story context for NPC conversations
+   * Returns summary of story events/arcs this NPC was involved in
+   */
+  function getStoryContextForNPC(emp) {
+    if (!emp) return null;
+    
+    const contextLines = [];
+    
+    // 1. Check event memories stored on the employee
+    if (emp.memory?.eventMemories && emp.memory.eventMemories.length > 0) {
+      const recentEvents = emp.memory.eventMemories.slice(-5); // Last 5 events
+      recentEvents.forEach(event => {
+        const timeAgo = getRelativeTimeString(event.timestamp);
+        contextLines.push(`- ${timeAgo}: "${event.title}" - ${event.outcome || event.description}`);
+      });
+    }
+    
+    // 2. Check story journal for entries involving this NPC
+    if (gameState.story?.journal) {
+      const involvedEntries = gameState.story.journal
+        .filter(entry => {
+          // Check if NPC is mentioned in involvedCharacters or content
+          if (entry.involvedCharacters?.includes(emp.name)) return true;
+          if (entry.content?.toLowerCase().includes(emp.name.toLowerCase())) return true;
+          return false;
+        })
+        .slice(0, 5); // Last 5 relevant journal entries
+      
+      involvedEntries.forEach(entry => {
+        const timeAgo = getRelativeTimeString(entry.timestamp);
+        const alreadyHave = contextLines.some(l => l.includes(entry.title));
+        if (!alreadyHave) {
+          contextLines.push(`- ${timeAgo}: "${entry.title}" (${entry.type || 'event'})`);
+        }
+      });
+    }
+    
+    // 3. Check if NPC is part of any active story arcs
+    if (gameState.story?.emergentNarratives?.activeArcs) {
+      const myArcs = gameState.story.emergentNarratives.activeArcs.filter(arc => 
+        arc.participants?.includes(emp.id) || arc.participants?.includes(emp.name)
+      );
+      
+      myArcs.forEach(arc => {
+        contextLines.push(`- ONGOING: "${arc.name}" storyline (${arc.stage || 'in progress'})`);
+      });
+    }
+    
+    // 4. Check relationship milestones with player
+    if (emp.relationships?.player?.history && emp.relationships.player.history.length > 0) {
+      const significantEvents = emp.relationships.player.history
+        .filter(h => h.significant || h.change > 10)
+        .slice(-3);
+      
+      significantEvents.forEach(h => {
+        contextLines.push(`- Our history: ${h.event}`);
+      });
+    }
+    
+    // 5. Check StoryEngine spine events this NPC was involved in
+    if (typeof StoryEngine !== 'undefined' && gameState.story?.spineProgress) {
+      const triggeredSpines = Object.values(gameState.story.spineProgress).filter(Boolean);
+      triggeredSpines.forEach(spineId => {
+        // Check if this NPC was involved
+        const spineData = gameState.story?.actData?.[gameState.story.currentAct]?.spineEventsTriggered || [];
+        const wasInvolved = spineData.some(s => 
+          s.involvedEmployees?.includes(emp.id) || s.involvedEmployees?.includes(emp.name)
+        );
+        if (wasInvolved) {
+          contextLines.push(`- Part of major story event: ${spineId}`);
+        }
+      });
+    }
+    
+    if (contextLines.length === 0) return null;
+    
+    return `These are events/stories I was personally involved in with the boss (player). I remember these and can reference them:\n${contextLines.join('\n')}`;
+  }
+  
+  /**
+   * Get relative time string (e.g., "2 days ago", "last week")
+   */
+  function getRelativeTimeString(timestamp) {
+    if (!timestamp) return 'recently';
+    
+    const now = gameState.time?.currentTime || Date.now();
+    const diff = now - timestamp;
+    const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+    
+    if (days < 1) return 'today';
+    if (days === 1) return 'yesterday';
+    if (days < 7) return `${days} days ago`;
+    if (days < 14) return 'last week';
+    if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+    return `${Math.floor(days / 30)} month(s) ago`;
+  }
+  
+  /**
    * Get recent chat context for prompts
    */
   function getRecentChatContext(npcId, maxMessages = 5) {
@@ -15745,6 +15843,44 @@ RESPOND IN STRICT JSON (no markdown):
         });
       }
       
+      // ========== ADD EVENT MEMORY TO INVOLVED NPCS ==========
+      // So NPCs remember being part of story events
+      if (event.involvedEmployees || event.involvedCharacters) {
+        const involvedIds = event.involvedEmployees || [];
+        const involvedNames = event.involvedCharacters || [];
+        
+        // Find employees by ID or name
+        const involvedEmps = gameState.employees.filter(emp => 
+          involvedIds.includes(emp.id) || 
+          involvedNames.some(name => emp.name.toLowerCase() === name.toLowerCase())
+        );
+        
+        involvedEmps.forEach(emp => {
+          if (typeof ensureEmployeeMemory === 'function') {
+            ensureEmployeeMemory(emp);
+          }
+          if (!emp.memory) emp.memory = {};
+          if (!emp.memory.eventMemories) emp.memory.eventMemories = [];
+          
+          emp.memory.eventMemories.push({
+            eventId: event.id,
+            eventKey: event.eventKey,
+            title: event.title,
+            description: event.cinematicText?.substring(0, 200) || '',
+            outcome: choice.consequence,
+            playerChoice: choice.text,
+            timestamp: Date.now(),
+            type: event.type || 'story',
+            wasSpine: event.type === 'spine'
+          });
+          
+          // Keep only last 20 event memories per employee
+          if (emp.memory.eventMemories.length > 20) {
+            emp.memory.eventMemories = emp.memory.eventMemories.slice(-20);
+          }
+        });
+      }
+      
       // If this was a minor event, move it to minor events history
       if (event.type === 'minor') {
         const minorState = this.initializeMinorEvents();
@@ -19641,6 +19777,17 @@ RESPOND IN JSON ONLY:
       // Trim history
       if (eventState.history.length > 50) eventState.history.pop();
       
+      // Add dismissed events to chronicle too (so player can see what they skipped)
+      if (typeof StoryEngine !== 'undefined' && StoryEngine.addJournalEntry) {
+        StoryEngine.addJournalEntry({
+          title: event.title,
+          content: `${event.description}\n\n[Event was dismissed without a decision]`,
+          type: 'minor',
+          category: event.category || 'company',
+          memorable: false
+        });
+      }
+      
       updateEventBellNotification();
       
       // Check if more events to show
@@ -19742,6 +19889,42 @@ RESPOND IN JSON ONLY:
     
     // Trim history
     if (eventState.history.length > 50) eventState.history.pop();
+    
+    // ========== ADD TO STORY CHRONICLE ==========
+    // Meta events (bell events) should appear in the chronicle as minor events
+    if (typeof StoryEngine !== 'undefined' && StoryEngine.addJournalEntry) {
+      const involvedEmps = (event.involvedEmployeeIds || [])
+        .map(id => gameState.employees.find(e => e.id === id))
+        .filter(Boolean);
+      
+      StoryEngine.addJournalEntry({
+        title: event.title,
+        content: `${event.description}\n\nChoice: ${choice?.text || customResponse || 'Dismissed'}\n\nOutcome: ${outcome.text}`,
+        type: 'minor',
+        category: event.category || 'company',
+        memorable: event.judgeScore?.total >= 30,
+        involvedCharacters: involvedEmps.map(e => e.name)
+      });
+      
+      // Also add to involved employees' memories for conversation context
+      involvedEmps.forEach(emp => {
+        if (emp.memory?.eventMemories) {
+          emp.memory.eventMemories.push({
+            eventId: event.id,
+            title: event.title,
+            description: event.description,
+            outcome: outcome.text,
+            playerChoice: choice?.text || customResponse,
+            timestamp: Date.now(),
+            type: 'meta_event'
+          });
+          // Keep only last 20 event memories per employee
+          if (emp.memory.eventMemories.length > 20) {
+            emp.memory.eventMemories = emp.memory.eventMemories.slice(-20);
+          }
+        }
+      });
+    }
     
     // Close event modal
     const modal = document.getElementById('eventPanelModal');
@@ -28653,7 +28836,8 @@ Write the post (1-3 sentences):`;
           lastHobbyMention: 0
         },
         conversationPhase: 'early', // early, familiar, intimate
-        intimacyLevel: 0 // 0-100 scale
+        intimacyLevel: 0, // 0-100 scale
+        eventMemories: [] // Story events this NPC was involved in
       };
       // ingest old strings as low-importance notes
       for (const s of prev) remember(emp, s, 'note', 0.5);
@@ -28667,6 +28851,11 @@ Write the post (1-3 sentences):`;
         lastJobMention: 0,
         lastHobbyMention: 0
       };
+    }
+    
+    // Ensure eventMemories array exists
+    if (!emp.memory.eventMemories) {
+      emp.memory.eventMemories = [];
     }
     
     // Upgrade existing memory caps
@@ -29865,6 +30054,12 @@ MOVEMENT QUALITY: ${randomFrom(banks.movementQuality, 5).join(', ')}
       '',
       '=== RELEVANT MEMORIES ===',
       ...relevant.slice(0, 10).map(i => `Remember: ${i.text}`), // Show up to 10 relevant memories
+      
+      // Story/Event memories - what major events/arcs has this NPC been part of?
+      ...(() => {
+        const storyContext = getStoryContextForNPC(emp);
+        return storyContext ? ['', '=== STORY EVENTS I WAS INVOLVED IN ===', storyContext] : [];
+      })(),
     ].join('\n');
 
   // ========== TIME AWARENESS REINFORCEMENT (CRITICAL FIX) ==========
