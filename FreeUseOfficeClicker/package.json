@@ -1,0 +1,13 @@
+{
+  "name": "free-use-office-clicker-build",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build step that minifies index.html into a paste-into-Perchance artifact.",
+  "scripts": {
+    "build": "node build-perchance.mjs"
+  },
+  "devDependencies": {
+    "terser": "^5.36.0"
+  }
+}
