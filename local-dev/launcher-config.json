@@ -1,0 +1,12 @@
+{
+  "OLLAMA_MODEL": "hf.co/bartowski/Tiger-Gemma-9B-v3-GGUF:Q4_K_M",
+  "OLLAMA_URL": "http://127.0.0.1:11434",
+  "CHECKPOINT": "absolutereality_v181.safetensors",
+  "COMFY_URL": "http://127.0.0.1:8188",
+  "COMFY_DIR": "D:\\AI\\ComfyUI_windows_portable",
+  "COMFY_BAT": "run_nvidia_gpu.bat",
+  "IMG_WIDTH": 512,
+  "IMG_HEIGHT": 768,
+  "IMG_STEPS": 28,
+  "IMG_CFG": 7
+}

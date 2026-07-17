@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "office-clicker",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "./FreeUseOfficeClicker", "-l", "3000", "--no-clipboard"],
+      "port": 3000
+    },
+    {
+      "name": "office-clicker-local",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["local-dev/server.mjs"],
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}
