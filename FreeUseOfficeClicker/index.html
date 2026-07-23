@@ -21,6 +21,49 @@
     })();
 </script>
 
+<!-- Umami analytics + unique player ID tracking (Perchance owns <head>, so inject at runtime) -->
+<script>
+    !(function () {
+        var UMAMI_WEBSITE_ID = "8e5016bf-d7db-4da2-9c77-66e962f3b38c";
+
+        function getPlayerId() {
+            try {
+                var id = localStorage.getItem("fuoc_playerId");
+                if (!id) {
+                    id = crypto.randomUUID();
+                    localStorage.setItem("fuoc_playerId", id);
+                }
+                return id;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function trackSessionStart() {
+            try {
+                var playerId = getPlayerId();
+                window.fuocPlayerId = playerId;
+                if (window.umami && typeof window.umami.track === "function") {
+                    window.umami.track("session_start", { playerId: playerId, game: "FUOC" });
+                }
+            } catch (e) {}
+        }
+
+        function inject() {
+            var head = document.head || document.getElementsByTagName("head")[0];
+            if (!head) return !1;
+            if (document.querySelector('script[data-website-id="' + UMAMI_WEBSITE_ID + '"]')) return !0;
+            var s = document.createElement("script");
+            (s.defer = !0), (s.src = "https://cloud.umami.is/script.js");
+            s.setAttribute("data-website-id", UMAMI_WEBSITE_ID);
+            s.onload = trackSessionStart;
+            head.appendChild(s);
+            return !0;
+        }
+        inject() || document.addEventListener("DOMContentLoaded", inject, { once: !0 });
+    })();
+</script>
+
 <!-- Top Bar (Step 2 re-skin → token-backed components, scoped under .fuoc-ui) -->
 <div id="topBar" class="fuoc-ui topbar">
     <a class="brand" href="#" title="Command Center" onclick="switchTab('dashboard'); return false;">
