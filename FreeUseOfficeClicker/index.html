@@ -21,6 +21,222 @@
     })();
 </script>
 
+<!-- ============================================================================
+     DISPLAY SETTINGS — themes + accessibility options
+     Runs FIRST, before any markup or CSS is parsed, so the chosen theme is on
+     <html> before the first paint (no flash of the wrong theme).
+
+     Deliberately standalone from gameState/saves, mirroring the fuoc_log_settings
+     pattern: display preferences must survive a save reset, apply on the title
+     screen, and work even if the save fails to load. A player who set light mode
+     because of astigmatism should never be dropped back into the dark theme.
+     ============================================================================ -->
+<script>
+    (function () {
+        var LS_KEY = "fuoc_display_settings";
+
+        // Theme metadata drives the picker UI in Settings → Display.
+        // The swatches must stay literal — they preview themes other than the
+        // active one, so a token (which always resolves to the ACTIVE theme) would
+        // make every swatch identical. fuoc-codemod:ignore-start
+        var THEMES = [
+            {
+                id: "dark",
+                label: "Midnight",
+                blurb: "The original dark navy look.",
+                swatch: ["#0f1419", "#1a1a2e", "#667eea", "#4ecca3"],
+            },
+            {
+                id: "light",
+                label: "Daylight",
+                blurb: "Off-white and low-glare — easier with astigmatism.",
+                swatch: ["#eceef3", "#f8f9fc", "#3d51b5", "#127a51"],
+            },
+            {
+                id: "hc-dark",
+                label: "High Contrast",
+                blurb: "Pure black with brightened text and strong borders.",
+                swatch: ["#000000", "#0b0b12", "#9db4ff", "#4fe3a4"],
+            },
+            {
+                id: "dim",
+                label: "Dimmed",
+                blurb: "Muted and soft for long sessions or light sensitivity.",
+                swatch: ["#171b22", "#20242e", "#5f74b8", "#3d9d75"],
+            },
+            {
+                id: "auto",
+                label: "Match System",
+                blurb: "Follows your device's light/dark setting.",
+                swatch: ["#171b22", "#eceef3", "#4c8dff", "#36b37e"],
+            },
+        ]; // fuoc-codemod:ignore-end
+
+        var DEFAULTS = {
+            theme: "dark",
+            scale: 1, // 0.9 – 1.4
+            reduceMotion: false,
+            reduceGlow: false,
+            bigTargets: false,
+            focusRings: false,
+            readableFont: false,
+        };
+
+        function read() {
+            var cfg = {};
+            for (var k in DEFAULTS) cfg[k] = DEFAULTS[k];
+            try {
+                var raw = localStorage.getItem(LS_KEY);
+                if (raw) {
+                    var saved = JSON.parse(raw);
+                    for (var key in DEFAULTS) if (saved[key] !== undefined) cfg[key] = saved[key];
+                }
+            } catch (e) {
+                /* private mode / storage blocked — fall back to defaults */
+            }
+            // Clamp anything a hand-edited value could break.
+            cfg.scale = Math.min(1.4, Math.max(0.9, Number(cfg.scale) || 1));
+            if (!THEMES.some(function (t) { return t.id === cfg.theme; })) cfg.theme = DEFAULTS.theme;
+            return cfg;
+        }
+
+        var cfg = read();
+
+        function save() {
+            try {
+                localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+            } catch (e) {}
+        }
+
+        /** "auto" resolves against the OS preference at apply time. */
+        function effectiveTheme() {
+            if (cfg.theme !== "auto") return cfg.theme;
+            try {
+                return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+            } catch (e) {
+                return "dark";
+            }
+        }
+
+        function apply() {
+            var root = document.documentElement;
+            if (!root) return;
+            root.setAttribute("data-fuoc-theme", effectiveTheme());
+
+            if (cfg.scale !== 1) {
+                root.setAttribute("data-fuoc-scale", String(cfg.scale));
+                root.style.setProperty("--ui-scale", String(cfg.scale));
+            } else {
+                root.removeAttribute("data-fuoc-scale");
+                root.style.removeProperty("--ui-scale");
+            }
+
+            toggleAttr(root, "data-fuoc-motion", cfg.reduceMotion, "off");
+            toggleAttr(root, "data-fuoc-flat", cfg.reduceGlow, "1");
+            toggleAttr(root, "data-fuoc-targets", cfg.bigTargets, "big");
+            toggleAttr(root, "data-fuoc-focus", cfg.focusRings, "1");
+            toggleAttr(root, "data-fuoc-font", cfg.readableFont, "readable");
+
+            try {
+                window.dispatchEvent(new CustomEvent("fuoc:display-change", { detail: get() }));
+            } catch (e) {}
+        }
+
+        function toggleAttr(el, attr, on, value) {
+            if (on) el.setAttribute(attr, value);
+            else el.removeAttribute(attr);
+        }
+
+        function get() {
+            var out = {};
+            for (var k in cfg) out[k] = cfg[k];
+            out.effectiveTheme = effectiveTheme();
+            return out;
+        }
+
+        function set(patch) {
+            for (var k in patch) if (k in DEFAULTS) cfg[k] = patch[k];
+            cfg.scale = Math.min(1.4, Math.max(0.9, Number(cfg.scale) || 1));
+            save();
+            apply();
+            return get();
+        }
+
+        window.DisplaySettings = {
+            LS_KEY: LS_KEY,
+            THEMES: THEMES,
+            DEFAULTS: DEFAULTS,
+            get: get,
+            set: set,
+            apply: apply,
+            setTheme: function (id) { return set({ theme: id }); },
+            setScale: function (n) { return set({ scale: n }); },
+            toggle: function (key) {
+                var patch = {};
+                patch[key] = !cfg[key];
+                return set(patch);
+            },
+            reset: function () {
+                cfg = {};
+                for (var k in DEFAULTS) cfg[k] = DEFAULTS[k];
+                save();
+                apply();
+                return get();
+            },
+        };
+
+        /**
+         * Append a 2-digit hex alpha to a colour that may now be a var() token.
+         *
+         * The codebase builds glows and gradient washes by string-concatenating an
+         * alpha onto a colour (`box-shadow: 0 0 20px ${fuocAlpha(c, "44")}`). That breaks the moment
+         * `c` holds "var(--l-indigo)", so those 33 sites call through here instead:
+         * a token gets resolved against the live theme first, then the alpha applied.
+         */
+        window.fuocAlpha = function (color, alphaHex) {
+            if (typeof color !== "string" || !color) return color;
+            var c = color.trim();
+            if (c.slice(0, 4) === "var(") {
+                var inner = c.slice(4, c.lastIndexOf(")"));
+                var name = inner.split(",")[0].trim();
+                var fallback = inner.indexOf(",") > -1 ? inner.slice(inner.indexOf(",") + 1).trim() : "";
+                try {
+                    c = getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+                } catch (e) {
+                    c = fallback;
+                }
+                if (!c) return "transparent";
+                c = c.trim();
+            }
+            if (c.charAt(0) === "#") {
+                if (c.length === 4) c = "#" + c[1] + c[1] + c[2] + c[2] + c[3] + c[3];
+                if (c.length === 7) return c + alphaHex;
+                if (c.length === 9) return c.slice(0, 7) + alphaHex; // replace existing alpha
+                return c;
+            }
+            var m = c.match(/rgba?\(([^)]+)\)/);
+            if (m) {
+                var parts = m[1].split(/[,\s/]+/).filter(Boolean);
+                var a = (parseInt(alphaHex, 16) / 255).toFixed(3);
+                return "rgba(" + parts[0] + ", " + parts[1] + ", " + parts[2] + ", " + a + ")";
+            }
+            return c; // named colour or unknown form — alpha isn't expressible, use as-is
+        };
+
+        apply();
+
+        // Follow the OS while "Match System" is selected.
+        try {
+            var mq = window.matchMedia("(prefers-color-scheme: light)");
+            var onChange = function () {
+                if (cfg.theme === "auto") apply();
+            };
+            if (mq.addEventListener) mq.addEventListener("change", onChange);
+            else if (mq.addListener) mq.addListener(onChange);
+        } catch (e) {}
+    })();
+</script>
+
 <!-- Umami analytics + unique player ID tracking (Perchance owns <head>, so inject at runtime) -->
 <script>
     !(function () {
@@ -44,6 +260,11 @@
                 var playerId = getPlayerId();
                 window.fuocPlayerId = playerId;
                 if (window.umami && typeof window.umami.track === "function") {
+                    // auto-track is disabled (shared Umami site across multiple games), so send our
+                    // own pageview tagged with `game` — otherwise traffic from every game gets lumped together.
+                    window.umami.track(function (props) {
+                        return Object.assign({}, props, { game: "FUOC", playerId: playerId });
+                    });
                     window.umami.track("session_start", { playerId: playerId, game: "FUOC" });
                 }
             } catch (e) {}
@@ -56,6 +277,7 @@
             var s = document.createElement("script");
             (s.defer = !0), (s.src = "https://cloud.umami.is/script.js");
             s.setAttribute("data-website-id", UMAMI_WEBSITE_ID);
+            s.setAttribute("data-auto-track", "false");
             s.onload = trackSessionStart;
             head.appendChild(s);
             return !0;
@@ -25944,7 +26166,7 @@ I've been thinking about you... want to find somewhere private?</textarea
                         c = r
                             ? `\n          <span style="\n            display: inline-flex; align-items: center; gap: 4px;\n            background: ${l ? "rgba(255,107,157,0.2)" : "rgba(255,0,0,0.2)"};\n            padding: 3px 8px; border-radius: 12px;\n            font-size: 0.7rem; color: ${l ? "#ff6b9d" : "#ff4444"};\n            margin-left: 8px;\n          ">💰 ${"function" == typeof formatCash ? formatCash(s) : "$" + s.toLocaleString()}</span>\n        `
                             : "";
-                    return `\n          <button class="story-choice-btn" onclick="StoryEngine.resolveChoice('${e.id}', '${t.id}')"\n                  data-scaled-cost="${s}"\n                  style="width:100%; padding:18px 20px; margin:8px 0; \n                         background:linear-gradient(135deg, rgba(15,52,96,0.9) 0%, rgba(22,33,62,0.9) 100%);\n                         border:2px solid ${l ? n : "#444"}; border-radius:12px; \n                         color:${l ? "#fff" : "#666"}; cursor:${l ? "pointer" : "not-allowed"}; text-align:left;\n                         transition:all 0.3s ease; position:relative; overflow:hidden;\n                         ${l ? "" : "opacity:0.6;"}"\n                  ${l ? "" : "disabled"}>\n            <div style="position:relative; z-index:1;">\n              <div style="font-size:1rem; font-weight:600; margin-bottom:6px; display:flex; align-items:center; flex-wrap:wrap;">\n                ${t.text}${i}${c}\n              </div>\n              <div style="font-size:0.8rem; color:${l ? n : "#555"}; opacity:0.9; font-style:italic;">${t.consequence || ""}</div>\n            </div>\n            <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(90deg, ${n}22 0%, transparent 100%); opacity:0; transition:opacity 0.3s;" class="choice-hover-bg"></div>\n          </button>\n        `;
+                    return `\n          <button class="story-choice-btn" onclick="StoryEngine.resolveChoice('${e.id}', '${t.id}')"\n                  data-scaled-cost="${s}"\n                  style="width:100%; padding:18px 20px; margin:8px 0; \n                         background:linear-gradient(135deg, rgba(15,52,96,0.9) 0%, rgba(22,33,62,0.9) 100%);\n                         border:2px solid ${l ? n : "#444"}; border-radius:12px; \n                         color:${l ? "#fff" : "#666"}; cursor:${l ? "pointer" : "not-allowed"}; text-align:left;\n                         transition:all 0.3s ease; position:relative; overflow:hidden;\n                         ${l ? "" : "opacity:0.6;"}"\n                  ${l ? "" : "disabled"}>\n            <div style="position:relative; z-index:1;">\n              <div style="font-size:1rem; font-weight:600; margin-bottom:6px; display:flex; align-items:center; flex-wrap:wrap;">\n                ${t.text}${i}${c}\n              </div>\n              <div style="font-size:0.8rem; color:${l ? n : "#555"}; opacity:0.9; font-style:italic;">${t.consequence || ""}</div>\n            </div>\n            <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(90deg, ${fuocAlpha(n, "22")} 0%, transparent 100%); opacity:0; transition:opacity 0.3s;" class="choice-hover-bg"></div>\n          </button>\n        `;
                 })
                 .join("");
             (n.innerHTML = `\n        <div class="story-modal-content" style="\n          background:linear-gradient(180deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%);\n          border-radius:20px; max-width:700px; width:100%; max-height:90vh;\n          overflow-y:auto; border:2px solid #667eea;\n          box-shadow:0 0 100px rgba(102,126,234,0.3), 0 0 40px rgba(102,126,234,0.2);\n          animation:storySlideUp 0.6s ease-out;\n        ">\n          \x3c!-- Top bar with act indicator and close button --\x3e\n          <div style="padding:15px 25px; background:linear-gradient(90deg, #667eea22 0%, transparent 50%, #764ba222 100%); border-bottom:1px solid #667eea33;">\n            <div style="display:flex; justify-content:space-between; align-items:center;">\n              <div style="display:flex; align-items:center; gap:10px;">\n                <span style="color:#667eea; font-size:0.8rem; text-transform:uppercase; letter-spacing:2px;">ACT ${e.actNumber || gameState.story.currentAct}</span>\n                <span style="color:#444;">•</span>\n                <span style="color:var(--text-dim); font-size:0.8rem;">${this.ACT_CONFIG[e.actNumber || gameState.story.currentAct]?.name || ""}</span>\n              </div>\n              <div style="display:flex; align-items:center; gap:15px;">\n                <div style="color:var(--accent-gold); font-size:0.8rem;">📖 ${"spine" === e.type ? "Major Story Event" : "minor" === e.type ? "Minor Event" : "Event"}</div>\n                <button id="closeStoryEventBtn" title="Close (you can continue later)" style="\n                  background: rgba(255,255,255,0.1); border: 1px solid var(--border-strong); border-radius: 50%;\n                  width: 32px; height: 32px; color: var(--text-mute); font-size: 1.2rem; cursor: pointer;\n                  display: flex; align-items: center; justify-content: center;\n                  transition: all 0.2s ease;\n                " onmouseenter="this.style.background='rgba(233,69,96,0.3)';this.style.borderColor='#e94560';this.style.color='#e94560';"\n                   onmouseleave="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='#555';this.style.color='#888';">✕</button>\n              </div>\n            </div>\n          </div>\n          \n          \x3c!-- Title --\x3e\n          <div style="padding:25px 30px 15px; text-align:center;">\n            <h1 style="margin:0; font-size:2rem; color:#fff; text-shadow:0 2px 20px rgba(102,126,234,0.5); letter-spacing:1px;">${e.title}</h1>\n          </div>\n          \n          ${a}\n          \n          \x3c!-- Event image (populated async or from template) --\x3e\n          <div id="storyEventImageSlot" style="padding:0 30px;">\n            ${e.imageUrl ? `<img src="${e.imageUrl}" style="width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin:10px 0; box-shadow:0 4px 20px rgba(0,0,0,0.5);">` : ""}\n          </div>\n          \n          \x3c!-- Cinematic text --\x3e\n          <div id="storyTextContainer" style="padding:10px 30px 25px;">\n            <div id="storyText" style="color:#d1d5db; font-size:1.05rem; line-height:1.8; white-space:pre-wrap; font-family:Georgia, serif;">\n              ${gameState.story.settings.dramaticPauses ? "" : e.cinematicText}\n            </div>\n          </div>\n          \n          \x3c!-- Choices --\x3e\n          <div id="storyChoicesContainer" style="padding:0 30px 30px; ${gameState.story.settings.dramaticPauses ? "opacity:0;" : ""}">\n            ${o}\n            \n            \x3c!-- Open-ended response option (unified with meta events) --\x3e\n            <div style="margin-top:20px; padding-top:15px; border-top:1px dashed #333;">\n              <div style="color:var(--text-dim); font-size:0.8rem; margin-bottom:10px; display:flex; align-items:center; gap:8px;">\n                <span style="color:#667eea;">✨</span> Or take a different approach:\n              </div>\n              <div style="display:flex; gap:8px;">\n                <input type="text" id="storyCustomResponseInput" placeholder="Type your own action..." \n                       style="flex:1; padding:14px 16px; background:#0f0f1a; border:2px solid var(--border); border-radius:10px; \n                              color:#fff; font-size:0.95rem; transition: all 0.3s ease;"\n                       onfocus="this.style.borderColor='#667eea'"\n                       onblur="this.style.borderColor='#333'"\n                       onkeypress="if(event.key==='Enter' && this.value.trim()) StoryEngine.resolveCustomResponse('${e.id}', this.value)">\n                <button onclick="const input = document.getElementById('storyCustomResponseInput'); if(input.value.trim()) StoryEngine.resolveCustomResponse('${e.id}', input.value);"\n                        style="padding:14px 24px; background:linear-gradient(135deg, #667eea, #764ba2); border:none; border-radius:10px; color:white; cursor:pointer; font-weight:600; transition: all 0.3s ease;"\n                        onmouseenter="this.style.transform='scale(1.05)'"\n                        onmouseleave="this.style.transform='scale(1)'">\n                  Do it\n                </button>\n              </div>\n            </div>\n          </div>\n        </div>\n      `),
@@ -31469,10 +31691,10 @@ I've been thinking about you... want to find somewhere private?</textarea
                             l = s
                                 ? `\n          <span style="\n            display: inline-flex; align-items: center; gap: 4px;\n            background: ${r ? "rgba(255,107,157,0.2)" : "rgba(255,0,0,0.2)"};\n            padding: 3px 8px; border-radius: 12px;\n            font-size: 0.7rem; color: ${r ? "#ff6b9d" : "#ff4444"};\n            margin-left: 8px;\n          ">💰 ${"function" == typeof formatCash ? formatCash(i) : "$" + i.toLocaleString()}</span>\n        `
                                 : "";
-                        return `\n          <button class="story-choice-btn" \n                  onclick="StoryEngine.resolveMultiStepChoice('${e.id}')"\n                  data-scaled-cost="${i}"\n                  style="width:100%; padding:16px 18px; margin:6px 0; \n                         background:linear-gradient(135deg, rgba(15,52,96,0.9) 0%, rgba(22,33,62,0.9) 100%);\n                         border:2px solid ${r ? t : "#444"}; border-radius:12px; \n                         color:${r ? "#fff" : "#666"}; cursor:${r ? "pointer" : "not-allowed"}; text-align:left;\n                         transition:all 0.3s ease; position:relative; overflow:hidden;\n                         ${r ? "" : "opacity:0.6;"}"\n                  ${r ? "" : "disabled"}>\n            <div style="position:relative; z-index:1;">\n              <div style="font-size:0.95rem; font-weight:600; margin-bottom:4px; display:flex; align-items:center; flex-wrap:wrap;">\n                ${e.text}${o}${l}\n              </div>\n              <div style="font-size:0.75rem; color:${r ? t : "#555"}; opacity:0.9; font-style:italic;">${e.consequence || ""}</div>\n            </div>\n            <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(90deg, ${t}22 0%, transparent 100%); opacity:0; transition:opacity 0.3s;" class="choice-hover-bg"></div>\n          </button>\n        `;
+                        return `\n          <button class="story-choice-btn" \n                  onclick="StoryEngine.resolveMultiStepChoice('${e.id}')"\n                  data-scaled-cost="${i}"\n                  style="width:100%; padding:16px 18px; margin:6px 0; \n                         background:linear-gradient(135deg, rgba(15,52,96,0.9) 0%, rgba(22,33,62,0.9) 100%);\n                         border:2px solid ${r ? t : "#444"}; border-radius:12px; \n                         color:${r ? "#fff" : "#666"}; cursor:${r ? "pointer" : "not-allowed"}; text-align:left;\n                         transition:all 0.3s ease; position:relative; overflow:hidden;\n                         ${r ? "" : "opacity:0.6;"}"\n                  ${r ? "" : "disabled"}>\n            <div style="position:relative; z-index:1;">\n              <div style="font-size:0.95rem; font-weight:600; margin-bottom:4px; display:flex; align-items:center; flex-wrap:wrap;">\n                ${e.text}${o}${l}\n              </div>\n              <div style="font-size:0.75rem; color:${r ? t : "#555"}; opacity:0.9; font-style:italic;">${e.consequence || ""}</div>\n            </div>\n            <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(90deg, ${fuocAlpha(t, "22")} 0%, transparent 100%); opacity:0; transition:opacity 0.3s;" class="choice-hover-bg"></div>\n          </button>\n        `;
                     })
                     .join("");
-            (s.innerHTML = `\n        <div class="story-modal-content" style="\n          background:linear-gradient(180deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%);\n          border-radius:20px; max-width:750px; width:100%; max-height:90vh;\n          overflow-y:auto; border:2px solid ${r};\n          box-shadow:0 0 100px ${r}44, 0 0 40px ${r}22;\n          animation:storySlideUp 0.6s ease-out;\n        ">\n          \x3c!-- Top bar with event title and theme --\x3e\n          <div style="padding:15px 25px; background:linear-gradient(90deg, ${r}33 0%, transparent 50%, ${r}33 100%); border-bottom:1px solid ${r}55;">\n            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">\n              <div style="display:flex; align-items:center; gap:10px;">\n                <span style="font-size:1.5rem;">${a.title.match(/^[^\s]+/)[0] || "📖"}</span>\n                <span style="color:${r}; font-size:0.9rem; font-weight:600;">${o.title}</span>\n              </div>\n              <div style="display:flex; align-items:center; gap:12px;">\n                <div style="display:flex; align-items:center; gap:8px;">\n                  <span style="color:var(--text-dim); font-size:0.8rem;">Score:</span>\n                  <span style="color:${o.cumulativeScore >= 0 ? "#4ecca3" : "#e94560"}; font-weight:bold;">\n                    ${o.cumulativeScore >= 0 ? "+" : ""}${o.cumulativeScore}\n                  </span>\n                </div>\n                <button id="closeStoryEventBtn" title="Close (progress will be saved)" style="\n                  background: rgba(255,255,255,0.1); border: 1px solid var(--border-strong); border-radius: 50%;\n                  width: 32px; height: 32px; color: var(--text-mute); font-size: 1.2rem; cursor: pointer;\n                  display: flex; align-items: center; justify-content: center;\n                  transition: all 0.2s ease;\n                " onmouseenter="this.style.background='rgba(233,69,96,0.3)';this.style.borderColor='#e94560';this.style.color='#e94560';"\n                   onmouseleave="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='#555';this.style.color='#888';">✕</button>\n              </div>\n            </div>\n          </div>\n          \n          \x3c!-- Progress bar --\x3e\n          <div style="padding:20px 30px; background:rgba(0,0,0,0.3);">\n            <div style="display:flex; align-items:center; justify-content:center; gap:0;">\n              ${l}\n            </div>\n          </div>\n          \n          \x3c!-- Step title --\x3e\n          <div style="padding:20px 30px 10px; text-align:center;">\n            <h2 style="margin:0; font-size:1.6rem; color:#fff; text-shadow:0 2px 15px ${r}66;">${e.title}</h2>\n            <div style="color:var(--text-mute); font-size:0.8rem; margin-top:5px;">\n              Step ${o.currentStep} of ${a.totalSteps}${e.isFinalStep ? " • Final Step" : ""}\n            </div>\n          </div>\n          \n          \x3c!-- Cinematic text --\x3e\n          <div id="storyTextContainer" style="padding:10px 30px 20px;">\n            <div id="storyText" style="color:#d1d5db; font-size:1rem; line-height:1.75; white-space:pre-wrap; font-family:Georgia, serif;">\n              ${gameState.story.settings.dramaticPauses ? "" : t}\n            </div>\n          </div>\n          \n          \x3c!-- Choices --\x3e\n          <div id="storyChoicesContainer" style="padding:0 30px 25px; ${gameState.story.settings.dramaticPauses ? "opacity:0;" : ""}">\n            ${c}\n          </div>\n        </div>\n      `),
+            (s.innerHTML = `\n        <div class="story-modal-content" style="\n          background:linear-gradient(180deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%);\n          border-radius:20px; max-width:750px; width:100%; max-height:90vh;\n          overflow-y:auto; border:2px solid ${r};\n          box-shadow:0 0 100px ${fuocAlpha(r, "44")}, 0 0 40px ${fuocAlpha(r, "22")};\n          animation:storySlideUp 0.6s ease-out;\n        ">\n          \x3c!-- Top bar with event title and theme --\x3e\n          <div style="padding:15px 25px; background:linear-gradient(90deg, ${fuocAlpha(r, "33")} 0%, transparent 50%, ${fuocAlpha(r, "33")} 100%); border-bottom:1px solid ${fuocAlpha(r, "55")};">\n            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">\n              <div style="display:flex; align-items:center; gap:10px;">\n                <span style="font-size:1.5rem;">${a.title.match(/^[^\s]+/)[0] || "📖"}</span>\n                <span style="color:${r}; font-size:0.9rem; font-weight:600;">${o.title}</span>\n              </div>\n              <div style="display:flex; align-items:center; gap:12px;">\n                <div style="display:flex; align-items:center; gap:8px;">\n                  <span style="color:var(--text-dim); font-size:0.8rem;">Score:</span>\n                  <span style="color:${o.cumulativeScore >= 0 ? "#4ecca3" : "#e94560"}; font-weight:bold;">\n                    ${o.cumulativeScore >= 0 ? "+" : ""}${o.cumulativeScore}\n                  </span>\n                </div>\n                <button id="closeStoryEventBtn" title="Close (progress will be saved)" style="\n                  background: rgba(255,255,255,0.1); border: 1px solid var(--border-strong); border-radius: 50%;\n                  width: 32px; height: 32px; color: var(--text-mute); font-size: 1.2rem; cursor: pointer;\n                  display: flex; align-items: center; justify-content: center;\n                  transition: all 0.2s ease;\n                " onmouseenter="this.style.background='rgba(233,69,96,0.3)';this.style.borderColor='#e94560';this.style.color='#e94560';"\n                   onmouseleave="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='#555';this.style.color='#888';">✕</button>\n              </div>\n            </div>\n          </div>\n          \n          \x3c!-- Progress bar --\x3e\n          <div style="padding:20px 30px; background:rgba(0,0,0,0.3);">\n            <div style="display:flex; align-items:center; justify-content:center; gap:0;">\n              ${l}\n            </div>\n          </div>\n          \n          \x3c!-- Step title --\x3e\n          <div style="padding:20px 30px 10px; text-align:center;">\n            <h2 style="margin:0; font-size:1.6rem; color:#fff; text-shadow:0 2px 15px ${fuocAlpha(r, "66")};">${e.title}</h2>\n            <div style="color:var(--text-mute); font-size:0.8rem; margin-top:5px;">\n              Step ${o.currentStep} of ${a.totalSteps}${e.isFinalStep ? " • Final Step" : ""}\n            </div>\n          </div>\n          \n          \x3c!-- Cinematic text --\x3e\n          <div id="storyTextContainer" style="padding:10px 30px 20px;">\n            <div id="storyText" style="color:#d1d5db; font-size:1rem; line-height:1.75; white-space:pre-wrap; font-family:Georgia, serif;">\n              ${gameState.story.settings.dramaticPauses ? "" : t}\n            </div>\n          </div>\n          \n          \x3c!-- Choices --\x3e\n          <div id="storyChoicesContainer" style="padding:0 30px 25px; ${gameState.story.settings.dramaticPauses ? "opacity:0;" : ""}">\n            ${c}\n          </div>\n        </div>\n      `),
                 document.body.appendChild(s);
             const d = s.querySelector("#closeStoryEventBtn");
             d &&
@@ -31691,7 +31913,7 @@ I've been thinking about you... want to find somewhere private?</textarea
                     })
                     .join("")}\n            </div>\n          </div>\n        `;
             }
-            (o.innerHTML = `\n        <div class="story-modal-content" style="\n          background:linear-gradient(180deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%);\n          border-radius:20px; max-width:700px; width:100%; max-height:90vh;\n          overflow-y:auto; border:2px solid ${i};\n          box-shadow:0 0 100px ${i}44, 0 0 40px ${i}22;\n          animation:storySlideUp 0.6s ease-out;\n          position:relative;\n        ">\n          \x3c!-- Close Button (prevents softlock) --\x3e\n          <button onclick="\n            gameState.story.activeMultiStepEvent = null;\n            document.getElementById('storyEventModal').remove();\n            if (typeof saveGame === 'function') saveGame();\n          " style="\n            position:absolute; top:15px; right:15px; z-index:10;\n            background:rgba(255,255,255,0.1); border:none; color:var(--text-mute);\n            width:36px; height:36px; border-radius:50%; cursor:pointer;\n            font-size:1.3rem; display:flex; align-items:center; justify-content:center;\n            transition:all 0.2s;\n          " onmouseenter="this.style.background='rgba(255,255,255,0.2)'; this.style.color='#fff'"\n             onmouseleave="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#888'">✕</button>\n\n          \x3c!-- Header --\x3e\n          <div style="padding:30px 30px 20px; text-align:center; background:linear-gradient(180deg, ${i}22 0%, transparent 100%);">\n            <div style="font-size:4rem; margin-bottom:15px;">\n              ${e.cumulativeScore >= 10 ? "🏆" : e.cumulativeScore >= 5 ? "⭐" : e.cumulativeScore >= 0 ? "✨" : "💫"}\n            </div>\n            <h1 style="margin:0; font-size:1.8rem; color:${i}; text-shadow:0 2px 20px ${i}88;">\n              ${n.title}\n            </h1>\n            <div style="color:var(--text-mute); font-size:0.9rem; margin-top:10px;">${e.title} Complete</div>\n          </div>\n          \n          \x3c!-- Score display --\x3e\n          <div style="text-align:center; padding:0 30px 20px;">\n            <div style="\n              display:inline-block; padding:15px 40px;\n              background:linear-gradient(135deg, ${i}33 0%, transparent 100%);\n              border:2px solid ${i}55; border-radius:50px;\n            ">\n              <span style="color:var(--text-mute); font-size:0.9rem;">Final Score:</span>\n              <span style="color:${i}; font-size:2rem; font-weight:bold; margin-left:10px;">\n                ${e.cumulativeScore >= 0 ? "+" : ""}${e.cumulativeScore}\n              </span>\n            </div>\n          </div>\n          \n          \x3c!-- Outcome text --\x3e\n          <div style="padding:0 30px 20px;">\n            <div style="\n              color:#d1d5db; font-size:1.1rem; line-height:1.7;\n              text-align:center; font-family:Georgia, serif;\n              padding:20px; background:rgba(255,255,255,0.02);\n              border-radius:15px; border-left:3px solid ${i};\n            ">\n              ${a}\n            </div>\n          </div>\n          \n          \x3c!-- Journey summary --\x3e\n          <div style="padding:0 30px 20px;">\n            <div style="color:var(--text-mute); font-size:0.8rem; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Your Journey</div>\n            ${s}\n          </div>\n          \n          ${r}\n          \n          \x3c!-- Continue button --\x3e\n          <div style="padding:20px 30px 30px; text-align:center;">\n            <button onclick="\n              gameState.story.activeMultiStepEvent = null;\n              document.getElementById('storyEventModal').remove();\n              if (typeof saveGame === 'function') saveGame();\n            " style="\n              padding:16px 50px; \n              background:linear-gradient(135deg, ${i}, ${i}88);\n              border:none; border-radius:12px; color:#000; \n              font-size:1.1rem; font-weight:bold; cursor:pointer;\n              transition:all 0.3s ease;\n              box-shadow:0 5px 20px ${i}44;\n            "\n            onmouseenter="this.style.transform='scale(1.05)'"\n            onmouseleave="this.style.transform='scale(1)'">\n              Continue\n            </button>\n          </div>\n        </div>\n      `),
+            (o.innerHTML = `\n        <div class="story-modal-content" style="\n          background:linear-gradient(180deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%);\n          border-radius:20px; max-width:700px; width:100%; max-height:90vh;\n          overflow-y:auto; border:2px solid ${i};\n          box-shadow:0 0 100px ${fuocAlpha(i, "44")}, 0 0 40px ${fuocAlpha(i, "22")};\n          animation:storySlideUp 0.6s ease-out;\n          position:relative;\n        ">\n          \x3c!-- Close Button (prevents softlock) --\x3e\n          <button onclick="\n            gameState.story.activeMultiStepEvent = null;\n            document.getElementById('storyEventModal').remove();\n            if (typeof saveGame === 'function') saveGame();\n          " style="\n            position:absolute; top:15px; right:15px; z-index:10;\n            background:rgba(255,255,255,0.1); border:none; color:var(--text-mute);\n            width:36px; height:36px; border-radius:50%; cursor:pointer;\n            font-size:1.3rem; display:flex; align-items:center; justify-content:center;\n            transition:all 0.2s;\n          " onmouseenter="this.style.background='rgba(255,255,255,0.2)'; this.style.color='#fff'"\n             onmouseleave="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#888'">✕</button>\n\n          \x3c!-- Header --\x3e\n          <div style="padding:30px 30px 20px; text-align:center; background:linear-gradient(180deg, ${fuocAlpha(i, "22")} 0%, transparent 100%);">\n            <div style="font-size:4rem; margin-bottom:15px;">\n              ${e.cumulativeScore >= 10 ? "🏆" : e.cumulativeScore >= 5 ? "⭐" : e.cumulativeScore >= 0 ? "✨" : "💫"}\n            </div>\n            <h1 style="margin:0; font-size:1.8rem; color:${i}; text-shadow:0 2px 20px ${fuocAlpha(i, "88")};">\n              ${n.title}\n            </h1>\n            <div style="color:var(--text-mute); font-size:0.9rem; margin-top:10px;">${e.title} Complete</div>\n          </div>\n          \n          \x3c!-- Score display --\x3e\n          <div style="text-align:center; padding:0 30px 20px;">\n            <div style="\n              display:inline-block; padding:15px 40px;\n              background:linear-gradient(135deg, ${fuocAlpha(i, "33")} 0%, transparent 100%);\n              border:2px solid ${fuocAlpha(i, "55")}; border-radius:50px;\n            ">\n              <span style="color:var(--text-mute); font-size:0.9rem;">Final Score:</span>\n              <span style="color:${i}; font-size:2rem; font-weight:bold; margin-left:10px;">\n                ${e.cumulativeScore >= 0 ? "+" : ""}${e.cumulativeScore}\n              </span>\n            </div>\n          </div>\n          \n          \x3c!-- Outcome text --\x3e\n          <div style="padding:0 30px 20px;">\n            <div style="\n              color:#d1d5db; font-size:1.1rem; line-height:1.7;\n              text-align:center; font-family:Georgia, serif;\n              padding:20px; background:rgba(255,255,255,0.02);\n              border-radius:15px; border-left:3px solid ${i};\n            ">\n              ${a}\n            </div>\n          </div>\n          \n          \x3c!-- Journey summary --\x3e\n          <div style="padding:0 30px 20px;">\n            <div style="color:var(--text-mute); font-size:0.8rem; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Your Journey</div>\n            ${s}\n          </div>\n          \n          ${r}\n          \n          \x3c!-- Continue button --\x3e\n          <div style="padding:20px 30px 30px; text-align:center;">\n            <button onclick="\n              gameState.story.activeMultiStepEvent = null;\n              document.getElementById('storyEventModal').remove();\n              if (typeof saveGame === 'function') saveGame();\n            " style="\n              padding:16px 50px; \n              background:linear-gradient(135deg, ${i}, ${fuocAlpha(i, "88")});\n              border:none; border-radius:12px; color:#000; \n              font-size:1.1rem; font-weight:bold; cursor:pointer;\n              transition:all 0.3s ease;\n              box-shadow:0 5px 20px ${fuocAlpha(i, "44")};\n            "\n            onmouseenter="this.style.transform='scale(1.05)'"\n            onmouseleave="this.style.transform='scale(1)'">\n              Continue\n            </button>\n          </div>\n        </div>\n      `),
                 document.body.appendChild(o),
                 o.addEventListener("click", (e) => {
                     e.target === o &&
@@ -31872,7 +32094,7 @@ I've been thinking about you... want to find somewhere private?</textarea
                         innovative: "#00d4ff",
                         compassionate: "#4ecca3",
                     }[t.choiceAlignment] || "#667eea";
-                i = `\n          <div style="margin-top:20px; padding:15px; background:linear-gradient(135deg, ${e}22, transparent); border-radius:10px; border-left:3px solid ${e};">\n            <div style="font-size:0.85rem; color:var(--text-mute); margin-bottom:8px;">YOUR CHOICE:</div>\n            <div style="font-size:1rem; color:#fff; font-weight:600; margin-bottom:10px;">"${t.choiceMade}"</div>\n            ${t.choiceAlignment ? `<div style="font-size:0.75rem; color:${e}; text-transform:uppercase; margin-bottom:10px;">${t.choiceAlignment}</div>` : ""}\n            ${t.choiceConsequence ? `\n              <div style="font-size:0.85rem; color:var(--text-dim); font-style:italic; border-top:1px solid var(--border); padding-top:10px; margin-top:10px;">\n                ${t.choiceConsequence}\n              </div>\n            ` : ""}\n          </div>\n        `;
+                i = `\n          <div style="margin-top:20px; padding:15px; background:linear-gradient(135deg, ${fuocAlpha(e, "22")}, transparent); border-radius:10px; border-left:3px solid ${e};">\n            <div style="font-size:0.85rem; color:var(--text-mute); margin-bottom:8px;">YOUR CHOICE:</div>\n            <div style="font-size:1rem; color:#fff; font-weight:600; margin-bottom:10px;">"${t.choiceMade}"</div>\n            ${t.choiceAlignment ? `<div style="font-size:0.75rem; color:${e}; text-transform:uppercase; margin-bottom:10px;">${t.choiceAlignment}</div>` : ""}\n            ${t.choiceConsequence ? `\n              <div style="font-size:0.85rem; color:var(--text-dim); font-style:italic; border-top:1px solid var(--border); padding-top:10px; margin-top:10px;">\n                ${t.choiceConsequence}\n              </div>\n            ` : ""}\n          </div>\n        `;
             }
             let s = "";
             t.imageUrl &&
@@ -32103,7 +32325,7 @@ I've been thinking about you... want to find somewhere private?</textarea
             if (t) {
                 const n = this.MULTI_STEP_EVENTS[t.id];
                 (e.style.display = "block"),
-                    (e.innerHTML = `\n          <div style="background:linear-gradient(135deg, ${t.themeColor || "#667eea"}22, transparent); padding:12px; border-radius:10px; border-left:3px solid ${t.themeColor || "#667eea"};">\n            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">\n              <span style="font-size:1.2rem;">${n.title.match(/^[^\s]+/)[0] || "🎬"}</span>\n              <span style="color:#fff; font-weight:600; font-size:0.9rem;">In Progress</span>\n            </div>\n            <div style="color:var(--text-dim); font-size:0.8rem;">\n              Step ${t.currentStep} of ${t.totalSteps} • Score: <span style="color:${t.cumulativeScore >= 0 ? "#4ecca3" : "#e94560"}">${t.cumulativeScore >= 0 ? "+" : ""}${t.cumulativeScore}</span>\n            </div>\n            <button onclick="StoryEngine.showMultiStepEventStep(${t.currentStep - 1})" style="\n              margin-top:10px; padding:8px 15px; width:100%;\n              background:#667eea; border:none; border-radius:8px;\n              color:white; font-size:0.85rem; cursor:pointer;\n            ">Continue Event</button>\n          </div>\n        `);
+                    (e.innerHTML = `\n          <div style="background:linear-gradient(135deg, ${fuocAlpha(t.themeColor || "#667eea", "22")}, transparent); padding:12px; border-radius:10px; border-left:3px solid ${t.themeColor || "#667eea"};">\n            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">\n              <span style="font-size:1.2rem;">${n.title.match(/^[^\s]+/)[0] || "🎬"}</span>\n              <span style="color:#fff; font-weight:600; font-size:0.9rem;">In Progress</span>\n            </div>\n            <div style="color:var(--text-dim); font-size:0.8rem;">\n              Step ${t.currentStep} of ${t.totalSteps} • Score: <span style="color:${t.cumulativeScore >= 0 ? "#4ecca3" : "#e94560"}">${t.cumulativeScore >= 0 ? "+" : ""}${t.cumulativeScore}</span>\n            </div>\n            <button onclick="StoryEngine.showMultiStepEventStep(${t.currentStep - 1})" style="\n              margin-top:10px; padding:8px 15px; width:100%;\n              background:#667eea; border:none; border-radius:8px;\n              color:white; font-size:0.85rem; cursor:pointer;\n            ">Continue Event</button>\n          </div>\n        `);
             } else
                 a.length > 0
                     ? ((e.style.display = "block"),
@@ -32340,7 +32562,7 @@ I've been thinking about you... want to find somewhere private?</textarea
             (n.id = "actTransitionCinematic"),
                 (n.style.cssText =
                     "\n        position: fixed; top: 0; left: 0; width: 100%; height: 100%;\n        background: #000; z-index: 100005;\n        display: flex; flex-direction: column; justify-content: center; align-items: center;\n        animation: actCinematicFadeIn 1.5s ease-out;\n      "),
-                (n.innerHTML = `\n        <style>\n          @keyframes actCinematicFadeIn {\n            0% { opacity: 0; }\n            100% { opacity: 1; }\n          }\n          @keyframes actTitleGlow {\n            0%, 100% { text-shadow: 0 0 20px ${t?.color || "#667eea"}; }\n            50% { text-shadow: 0 0 40px ${t?.color || "#667eea"}, 0 0 60px ${t?.color || "#667eea"}; }\n          }\n          @keyframes actLineReveal {\n            0% { width: 0; }\n            100% { width: 100%; }\n          }\n        </style>\n        \n        <div style="text-align: center; max-width: 800px; padding: 40px;">\n          \x3c!-- Act Number --\x3e\n          <div style="\n            font-size: 1.2rem; color: var(--text-mute); letter-spacing: 8px;\n            margin-bottom: 20px; opacity: 0;\n            animation: storyFadeIn 1s ease-out 0.5s forwards;\n          ">ACT ${e.actNumber}</div>\n          \n          \x3c!-- Title --\x3e\n          <h1 style="\n            font-size: 3rem; color: ${t?.color || "#667eea"}; margin: 0;\n            font-weight: 700; letter-spacing: 3px;\n            animation: actTitleGlow 3s ease-in-out infinite;\n            opacity: 0; animation: storyFadeIn 1s ease-out 1s forwards, actTitleGlow 3s ease-in-out infinite 1s;\n          ">${t?.title || "New Chapter"}</h1>\n          \n          \x3c!-- Decorative line --\x3e\n          <div style="\n            height: 2px; background: linear-gradient(90deg, transparent, ${t?.color || "#667eea"}, transparent);\n            margin: 30px auto; max-width: 400px;\n            animation: actLineReveal 2s ease-out 1.5s forwards;\n          "></div>\n          \n          \x3c!-- Tone --\x3e\n          <div style="\n            font-size: 1.1rem; color: var(--text-mute); font-style: italic;\n            margin-bottom: 30px; opacity: 0;\n            animation: storyFadeIn 1s ease-out 2s forwards;\n          ">"${t?.tone || "A new beginning"}"</div>\n          \n          \x3c!-- Continue button --\x3e\n          <button onclick="gameState.story.activeSpineEvent = StoryEngine.pendingActEvent; StoryEngine.showStoryEventModal(StoryEngine.pendingActEvent); document.getElementById('actTransitionCinematic').remove();" style="\n            padding: 15px 40px; font-size: 1.1rem;\n            background: linear-gradient(135deg, ${t?.color || "#667eea"} 0%, ${t?.color || "#764ba2"}88 100%);\n            border: none; border-radius: 12px; color: #fff;\n            cursor: pointer; font-weight: 600;\n            opacity: 0; animation: storyFadeIn 1s ease-out 3s forwards;\n            transition: transform 0.2s, box-shadow 0.2s;\n          " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">\n            Continue Your Story\n          </button>\n        </div>\n      `),
+                (n.innerHTML = `\n        <style>\n          @keyframes actCinematicFadeIn {\n            0% { opacity: 0; }\n            100% { opacity: 1; }\n          }\n          @keyframes actTitleGlow {\n            0%, 100% { text-shadow: 0 0 20px ${t?.color || "#667eea"}; }\n            50% { text-shadow: 0 0 40px ${t?.color || "#667eea"}, 0 0 60px ${t?.color || "#667eea"}; }\n          }\n          @keyframes actLineReveal {\n            0% { width: 0; }\n            100% { width: 100%; }\n          }\n        </style>\n        \n        <div style="text-align: center; max-width: 800px; padding: 40px;">\n          \x3c!-- Act Number --\x3e\n          <div style="\n            font-size: 1.2rem; color: var(--text-mute); letter-spacing: 8px;\n            margin-bottom: 20px; opacity: 0;\n            animation: storyFadeIn 1s ease-out 0.5s forwards;\n          ">ACT ${e.actNumber}</div>\n          \n          \x3c!-- Title --\x3e\n          <h1 style="\n            font-size: 3rem; color: ${t?.color || "#667eea"}; margin: 0;\n            font-weight: 700; letter-spacing: 3px;\n            animation: actTitleGlow 3s ease-in-out infinite;\n            opacity: 0; animation: storyFadeIn 1s ease-out 1s forwards, actTitleGlow 3s ease-in-out infinite 1s;\n          ">${t?.title || "New Chapter"}</h1>\n          \n          \x3c!-- Decorative line --\x3e\n          <div style="\n            height: 2px; background: linear-gradient(90deg, transparent, ${t?.color || "#667eea"}, transparent);\n            margin: 30px auto; max-width: 400px;\n            animation: actLineReveal 2s ease-out 1.5s forwards;\n          "></div>\n          \n          \x3c!-- Tone --\x3e\n          <div style="\n            font-size: 1.1rem; color: var(--text-mute); font-style: italic;\n            margin-bottom: 30px; opacity: 0;\n            animation: storyFadeIn 1s ease-out 2s forwards;\n          ">"${t?.tone || "A new beginning"}"</div>\n          \n          \x3c!-- Continue button --\x3e\n          <button onclick="gameState.story.activeSpineEvent = StoryEngine.pendingActEvent; StoryEngine.showStoryEventModal(StoryEngine.pendingActEvent); document.getElementById('actTransitionCinematic').remove();" style="\n            padding: 15px 40px; font-size: 1.1rem;\n            background: linear-gradient(135deg, ${t?.color || "#667eea"} 0%, ${fuocAlpha(t?.color || "#764ba2", "88")} 100%);\n            border: none; border-radius: 12px; color: #fff;\n            cursor: pointer; font-weight: 600;\n            opacity: 0; animation: storyFadeIn 1s ease-out 3s forwards;\n            transition: transform 0.2s, box-shadow 0.2s;\n          " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">\n            Continue Your Story\n          </button>\n        </div>\n      `),
                 document.body.appendChild(n),
                 (this.pendingActEvent = e);
         },
@@ -32741,7 +32963,7 @@ I've been thinking about you... want to find somewhere private?</textarea
             const a = e
                 .map((e) => {
                     const t = this.MULTI_STEP_EVENTS[e];
-                    return `\n          <button onclick="document.getElementById('multiStepSelectorModal').remove(); StoryEngine.startMultiStepEvent('${e}');"\n                  style="\n                    width: 100%; padding: 20px; margin: 10px 0;\n                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);\n                    border: 2px solid ${t.themeColor || "#667eea"};\n                    border-radius: 15px; cursor: pointer; text-align: left;\n                    transition: all 0.3s ease;\n                  "\n                  onmouseenter="this.style.transform='translateX(10px)'; this.style.borderColor='${t.themeColor || "#667eea"}'"\n                  onmouseleave="this.style.transform='translateX(0)'">\n            <div style="display: flex; align-items: center; gap: 15px;">\n              <div style="font-size: 2.5rem;">${t.title.match(/^[^\s]+/)[0] || "📖"}</div>\n              <div>\n                <div style="color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">\n                  ${t.title.replace(/^[^\s]+\s*/, "")}\n                </div>\n                <div style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 5px;">${t.description}</div>\n                <div style="display: flex; gap: 10px; flex-wrap: wrap;">\n                  <span style="background: ${t.themeColor || "#667eea"}44; color: ${t.themeColor || "#667eea"}; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">\n                    ${t.totalSteps} Steps\n                  </span>\n                  <span style="background: #33333388; color: var(--text-dim); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">\n                    ${t.theme?.replace(/_/g, " ") || "Story"}\n                  </span>\n                </div>\n              </div>\n            </div>\n          </button>\n        `;
+                    return `\n          <button onclick="document.getElementById('multiStepSelectorModal').remove(); StoryEngine.startMultiStepEvent('${e}');"\n                  style="\n                    width: 100%; padding: 20px; margin: 10px 0;\n                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);\n                    border: 2px solid ${t.themeColor || "#667eea"};\n                    border-radius: 15px; cursor: pointer; text-align: left;\n                    transition: all 0.3s ease;\n                  "\n                  onmouseenter="this.style.transform='translateX(10px)'; this.style.borderColor='${t.themeColor || "#667eea"}'"\n                  onmouseleave="this.style.transform='translateX(0)'">\n            <div style="display: flex; align-items: center; gap: 15px;">\n              <div style="font-size: 2.5rem;">${t.title.match(/^[^\s]+/)[0] || "📖"}</div>\n              <div>\n                <div style="color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">\n                  ${t.title.replace(/^[^\s]+\s*/, "")}\n                </div>\n                <div style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 5px;">${t.description}</div>\n                <div style="display: flex; gap: 10px; flex-wrap: wrap;">\n                  <span style="background: ${fuocAlpha(t.themeColor || "#667eea", "44")}; color: ${t.themeColor || "#667eea"}; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">\n                    ${t.totalSteps} Steps\n                  </span>\n                  <span style="background: #33333388; color: var(--text-dim); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem;">\n                    ${t.theme?.replace(/_/g, " ") || "Story"}\n                  </span>\n                </div>\n              </div>\n            </div>\n          </button>\n        `;
                 })
                 .join("");
             (n.innerHTML = `\n        <div style="\n          background: linear-gradient(180deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%);\n          border-radius: 20px; max-width: 600px; width: 100%; max-height: 90vh;\n          overflow-y: auto; border: 2px solid #667eea;\n          box-shadow: 0 0 100px rgba(102,126,234,0.3);\n        ">\n          <div style="padding: 25px 30px; border-bottom: 1px solid var(--border);">\n            <div style="display: flex; justify-content: space-between; align-items: center;">\n              <div>\n                <h2 style="margin: 0; color: #fff; font-size: 1.5rem;">🎬 Extended Events</h2>\n                <p style="margin: 8px 0 0; color: var(--text-dim); font-size: 0.9rem;">Multi-step scenarios that unfold across multiple scenes</p>\n              </div>\n              <button onclick="document.getElementById('multiStepSelectorModal').remove()"\n                      style="background: none; border: none; color: var(--text-mute); font-size: 1.5rem; cursor: pointer;">✕</button>\n            </div>\n          </div>\n          <div style="padding: 20px 30px 30px;">\n            ${a}\n          </div>\n        </div>\n      `),
@@ -33418,7 +33640,7 @@ I've been thinking about you... want to find somewhere private?</textarea
             const r = ["#f72585", "#4ecca3", "#ffd700", "#667eea"],
                 l = ["♥", "♠", "♦", "♣"],
                 c = () => {
-                    (e.innerHTML = `\n          ${s ? `\n            <div id="recallInstructions" style="\n              position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);\n              background: rgba(0,0,0,0.95); border: 2px solid var(--positive); border-radius: 16px;\n              padding: 25px; max-width: 320px; text-align: center; z-index: 10;\n            ">\n              <div style="font-size: 2.5rem; margin-bottom: 10px;">🧠</div>\n              <div style="color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">Read the Room</div>\n              <div style="color: #a0aec0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">\n                Watch the buttons light up in sequence.<br><br>\n                Then <span style="color: var(--positive); font-weight: bold;">repeat the pattern</span> by tapping them in the same order!<br><br>\n                <span style="color: var(--accent-gold);">Pattern length: ${n}</span>\n              </div>\n              <button id="startRecallBtn" style="\n                padding: 12px 30px; background: linear-gradient(135deg, #4ecca3, #2d8a6e);\n                border: none; border-radius: 8px; color: #fff; font-size: 1rem;\n                font-weight: bold; cursor: pointer;\n              ">Show Pattern!</button>\n            </div>\n          ` : ""}\n          \n          <div style="margin-bottom: 20px; ${s ? "opacity: 0.3;" : ""}">\n            <div id="recallStatus" style="color: var(--accent-gold); font-size: 1.2rem; font-weight: bold; min-height: 30px;">\n              ${s ? "Ready..." : "Watch the pattern..."}\n            </div>\n          </div>\n          \n          \x3c!-- Pattern buttons in 2x2 grid --\x3e\n          <div style="\n            display: grid;\n            grid-template-columns: repeat(2, 1fr);\n            gap: 15px;\n            max-width: 280px;\n            ${s ? "opacity: 0.3;" : ""}\n          ">\n            ${[0, 1, 2, 3].map((e) => `\n              <button id="recallBtn${e}" class="recall-btn" data-index="${e}" style="\n                width: 100%; aspect-ratio: 1;\n                border-radius: 16px;\n                background: ${r[e]}33;\n                border: 3px solid ${r[e]};\n                color: ${r[e]};\n                font-size: 2.5rem;\n                cursor: pointer;\n                transition: all 0.15s;\n                opacity: 0.6;\n                touch-action: manipulation;\n              ">${l[e]}</button>\n            `).join("")}\n          </div>\n          \n          \x3c!-- Progress dots --\x3e\n          <div id="recallProgress" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center; ${s ? "opacity: 0.3;" : ""}">\n            ${a.map(() => '<div style="width: 12px; height: 12px; border-radius: 50%; background: #333; border: 1px solid var(--border-strong);"></div>').join("")}\n          </div>\n          \n          \x3c!-- Legend --\x3e\n          <div style="margin-top: 15px; font-size: 0.8rem; color: var(--text-mute); ${s ? "opacity: 0.3;" : ""}">\n            <span style="color: var(--positive);">●</span> Correct <span style="margin-left: 15px; color: #f72585;">●</span> Wrong\n          </div>\n        `),
+                    (e.innerHTML = `\n          ${s ? `\n            <div id="recallInstructions" style="\n              position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);\n              background: rgba(0,0,0,0.95); border: 2px solid var(--positive); border-radius: 16px;\n              padding: 25px; max-width: 320px; text-align: center; z-index: 10;\n            ">\n              <div style="font-size: 2.5rem; margin-bottom: 10px;">🧠</div>\n              <div style="color: #fff; font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">Read the Room</div>\n              <div style="color: #a0aec0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">\n                Watch the buttons light up in sequence.<br><br>\n                Then <span style="color: var(--positive); font-weight: bold;">repeat the pattern</span> by tapping them in the same order!<br><br>\n                <span style="color: var(--accent-gold);">Pattern length: ${n}</span>\n              </div>\n              <button id="startRecallBtn" style="\n                padding: 12px 30px; background: linear-gradient(135deg, #4ecca3, #2d8a6e);\n                border: none; border-radius: 8px; color: #fff; font-size: 1rem;\n                font-weight: bold; cursor: pointer;\n              ">Show Pattern!</button>\n            </div>\n          ` : ""}\n          \n          <div style="margin-bottom: 20px; ${s ? "opacity: 0.3;" : ""}">\n            <div id="recallStatus" style="color: var(--accent-gold); font-size: 1.2rem; font-weight: bold; min-height: 30px;">\n              ${s ? "Ready..." : "Watch the pattern..."}\n            </div>\n          </div>\n          \n          \x3c!-- Pattern buttons in 2x2 grid --\x3e\n          <div style="\n            display: grid;\n            grid-template-columns: repeat(2, 1fr);\n            gap: 15px;\n            max-width: 280px;\n            ${s ? "opacity: 0.3;" : ""}\n          ">\n            ${[0, 1, 2, 3].map((e) => `\n              <button id="recallBtn${e}" class="recall-btn" data-index="${e}" style="\n                width: 100%; aspect-ratio: 1;\n                border-radius: 16px;\n                background: ${fuocAlpha(r[e], "33")};\n                border: 3px solid ${r[e]};\n                color: ${r[e]};\n                font-size: 2.5rem;\n                cursor: pointer;\n                transition: all 0.15s;\n                opacity: 0.6;\n                touch-action: manipulation;\n              ">${l[e]}</button>\n            `).join("")}\n          </div>\n          \n          \x3c!-- Progress dots --\x3e\n          <div id="recallProgress" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center; ${s ? "opacity: 0.3;" : ""}">\n            ${a.map(() => '<div style="width: 12px; height: 12px; border-radius: 50%; background: #333; border: 1px solid var(--border-strong);"></div>').join("")}\n          </div>\n          \n          \x3c!-- Legend --\x3e\n          <div style="margin-top: 15px; font-size: 0.8rem; color: var(--text-mute); ${s ? "opacity: 0.3;" : ""}">\n            <span style="color: var(--positive);">●</span> Correct <span style="margin-left: 15px; color: #f72585;">●</span> Wrong\n          </div>\n        `),
                         s &&
                             (document.getElementById("startRecallBtn").onclick = () => {
                                 (s = !1), c(), u(), h();
@@ -33855,7 +34077,7 @@ I've been thinking about you... want to find somewhere private?</textarea
             const i = document.getElementById("minigameContainer");
             if (i) {
                 const e = document.createElement("button");
-                (e.style.cssText = `\n          margin-top: 25px; padding: 15px 40px;\n          background: linear-gradient(135deg, ${a.color} 0%, ${a.color}88 100%);\n          border: none; border-radius: 12px;\n          color: #fff; font-size: 1.1rem; font-weight: bold;\n          cursor: pointer;\n          box-shadow: 0 4px 20px ${a.color}44;\n        `),
+                (e.style.cssText = `\n          margin-top: 25px; padding: 15px 40px;\n          background: linear-gradient(135deg, ${a.color} 0%, ${fuocAlpha(a.color, "88")} 100%);\n          border: none; border-radius: 12px;\n          color: #fff; font-size: 1.1rem; font-weight: bold;\n          cursor: pointer;\n          box-shadow: 0 4px 20px ${fuocAlpha(a.color, "44")};\n        `),
                     (e.textContent = "Continue"),
                     (e.onclick = () => this.completeGame()),
                     i.appendChild(e);
@@ -58257,7 +58479,7 @@ I've been thinking about you... want to find somewhere private?</textarea
                         ];
                     i.activityPenalty < 0 && s.push(`• Inactivity: ${i.activityPenalty} pts`);
                     const r = s.join("&#10;");
-                    return `\n          <div onclick="showEmployeeProfile('${n.id}')" title="${r}" style="background:var(--surface-2); padding:12px; border-radius:8px; margin-bottom:8px; cursor:pointer; transition:all 0.2s;" onmouseenter="this.style.background='#16213e'" onmouseleave="this.style.background='#0f3460'">\n            <div style="display:flex; justify-content:space-between; align-items:center;">\n              <div style="display:flex; align-items:center; gap:10px;">\n                <div style="font-size:1.5rem;">${a}</div>\n                <div>\n                  <div style="font-weight:600;">${getColoredName(n)}</div>\n                  <div style="color:var(--text-mute); font-size:0.8rem;">${n.career?.title || "Staff"} • ${n.productManaged || "Unassigned"}</div>\n                </div>\n              </div>\n              <div style="text-align:right;">\n                <div style="display:flex; align-items:center; gap:6px; justify-content:flex-end;">\n                  <span style="background:${o.color}22; color:${o.color}; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:0.85rem;">${o.letter}</span>\n                  <span style="color:${o.color}; font-weight:600; font-size:0.9rem;">${Math.floor(e.score)} pts</span>\n                </div>\n                <div style="color:var(--text-mute); font-size:0.75rem;">${o.label}</div>\n              </div>\n            </div>\n          </div>\n        `;
+                    return `\n          <div onclick="showEmployeeProfile('${n.id}')" title="${r}" style="background:var(--surface-2); padding:12px; border-radius:8px; margin-bottom:8px; cursor:pointer; transition:all 0.2s;" onmouseenter="this.style.background='#16213e'" onmouseleave="this.style.background='#0f3460'">\n            <div style="display:flex; justify-content:space-between; align-items:center;">\n              <div style="display:flex; align-items:center; gap:10px;">\n                <div style="font-size:1.5rem;">${a}</div>\n                <div>\n                  <div style="font-weight:600;">${getColoredName(n)}</div>\n                  <div style="color:var(--text-mute); font-size:0.8rem;">${n.career?.title || "Staff"} • ${n.productManaged || "Unassigned"}</div>\n                </div>\n              </div>\n              <div style="text-align:right;">\n                <div style="display:flex; align-items:center; gap:6px; justify-content:flex-end;">\n                  <span style="background:${fuocAlpha(o.color, "22")}; color:${o.color}; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:0.85rem;">${o.letter}</span>\n                  <span style="color:${o.color}; font-weight:600; font-size:0.9rem;">${Math.floor(e.score)} pts</span>\n                </div>\n                <div style="color:var(--text-mute); font-size:0.75rem;">${o.label}</div>\n              </div>\n            </div>\n          </div>\n        `;
                 })
                 .join("")),
                 n.length > 3 &&
@@ -60356,7 +60578,7 @@ I've been thinking about you... want to find somewhere private?</textarea
         const c = i && o.level > i.level,
             d = c ? "Promote" : i ? "Transfer" : "Assign",
             p = c ? "#4ecca3" : "#00d4ff";
-        (l.innerHTML = `\n      <style>\n        @keyframes fadeIn {\n          from { opacity: 0; }\n          to { opacity: 1; }\n        }\n        @keyframes slideUp {\n          from { transform: translateY(30px); opacity: 0; }\n          to { transform: translateY(0); opacity: 1; }\n        }\n        @keyframes pulse {\n          0%, 100% { transform: scale(1); }\n          50% { transform: scale(1.05); }\n        }\n      </style>\n      <div style="background:var(--bg); border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.8); max-width:700px; width:90%; overflow:hidden; animation:slideUp 0.3s ease;">\n        \x3c!-- Header --\x3e\n        <div style="padding:24px; background:linear-gradient(135deg, ${p}, ${p}22); border-bottom:2px solid ${p};">\n          <h2 style="margin:0; color:#fff; font-size:1.8rem; text-align:center; display:flex; align-items:center; justify-content:center; gap:12px;">\n            ${c ? "⬆️" : "↔️"}\n            <span>Confirm ${d}</span>\n          </h2>\n        </div>\n        \n        \x3c!-- Content --\x3e\n        <div style="padding:32px 24px;">\n          \x3c!-- Employee Card --\x3e\n          <div style="text-align:center; margin-bottom:24px;">\n            <img src="${a.profileImage || "https://placehold.co/80x80"}" style="width:80px; height:80px; border-radius:50%; border:3px solid ${p}; object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.3);">\n            <h3 style="color:#fff; margin:12px 0 4px 0; font-size:1.3rem;">${a.name}</h3>\n            ${a.career ? `<div style="color:var(--text-mute); font-size:0.9rem;">Currently: ${a.career.title || "Employee"} (Level ${a.career.level || 1})</div>` : ""}\n          </div>\n          \n          \x3c!-- Position Cards with Arrow --\x3e\n          <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin:24px 0;">\n            \x3c!-- Old Position (if exists) --\x3e\n            ${i ? `\n              <div style="flex:1; background:var(--surface); border:2px solid ${s?.color || "#555"}; border-radius:12px; padding:16px; text-align:center;">\n                <div style="font-size:1.5rem; margin-bottom:8px;">${s?.icon || "📋"}</div>\n                <div style="color:#fff; font-weight:600; font-size:0.9rem; margin-bottom:4px;">${i.title}</div>\n                <div style="color:var(--text-mute); font-size:0.75rem;">Level ${Math.floor(i.level)}</div>\n              </div>\n            ` : '\n              <div style="flex:1; background:var(--surface); border:2px dashed #555; border-radius:12px; padding:16px; text-align:center; opacity:0.5;">\n                <div style="font-size:1.5rem; margin-bottom:8px;">❌</div>\n                <div style="color:var(--text-mute); font-weight:600; font-size:0.9rem;">Unassigned</div>\n              </div>\n            '}\n            \n            \x3c!-- Arrow --\x3e\n            <div style="font-size:2rem; color:${p}; animation:pulse 2s infinite;">\n              ${c ? "⬆️" : "➡️"}\n            </div>\n            \n            \x3c!-- New Position --\x3e\n            <div style="flex:1; background:linear-gradient(135deg, ${r.color}22, ${r.color}11); border:2px solid ${r.color}; border-radius:12px; padding:16px; text-align:center; box-shadow:0 0 20px ${r.color}44;">\n              <div style="font-size:1.5rem; margin-bottom:8px;">${r.icon}</div>\n              <div style="color:#fff; font-weight:600; font-size:0.9rem; margin-bottom:4px;">${o.title}</div>\n              <div style="color:${r.color}; font-size:0.75rem; font-weight:600;">Level ${Math.floor(o.level)}</div>\n            </div>\n          </div>\n          \n          \x3c!-- Cost Info --\x3e\n          <div style="background:#1a1a2e; border:2px solid ${gameState.cash >= n ? p : "#e94560"}; border-radius:10px; padding:16px; margin:24px 0;">\n            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">\n              <span style="color:var(--text-mute); font-size:0.9rem;">Cost:</span>\n              <span style="color:${gameState.cash >= n ? "#4ecca3" : "#e94560"}; font-weight:700; font-size:1.2rem;">$${formatNumber(n)}</span>\n            </div>\n            <div style="display:flex; justify-content:space-between; align-items:center;">\n              <span style="color:var(--text-mute); font-size:0.9rem;">Your Cash:</span>\n              <span style="color:#fff; font-weight:600; font-size:1rem;">$${formatNumber(gameState.cash)}</span>\n            </div>\n            ${gameState.cash >= n ? `\n              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:8px; border-top:1px solid var(--border);">\n                <span style="color:var(--text-mute); font-size:0.9rem;">After ${d}:</span>\n                <span style="color:var(--positive); font-weight:600; font-size:1rem;">$${formatNumber(gameState.cash - n)}</span>\n              </div>\n            ` : ""}\n          </div>\n          \n          ${gameState.cash < n ? '\n            <div style="background:rgba(233,69,96,0.1); border:1px solid var(--danger); border-radius:8px; padding:12px; margin-bottom:16px; text-align:center;">\n              <span style="color:var(--danger); font-size:0.9rem; font-weight:600;">⚠️ Insufficient funds!</span>\n            </div>\n          ' : ""}\n          \n          \x3c!-- Action Buttons --\x3e\n          <div style="display:flex; gap:12px; margin-top:24px;">\n            <button onclick="document.getElementById('promotionConfirmModal').remove()" style="flex:1; padding:14px; background:var(--surface); border:2px solid var(--border-strong); border-radius:10px; color:#fff; font-weight:600; font-size:1rem; cursor:pointer; transition:all 0.2s;" onmouseenter="this.style.background='#1a2640'; this.style.borderColor='#777'" onmouseleave="this.style.background='#16213e'; this.style.borderColor='#555'">\n              ✕ Cancel\n            </button>\n            <button \n              onclick="executePromotion('${e}', '${t}')" \n              style="flex:1; padding:14px; background:${gameState.cash >= n ? `linear-gradient(135deg, ${p}, ${p}dd)` : "#555"}; border:none; border-radius:10px; color:${gameState.cash >= n ? "#000" : "#999"}; font-weight:700; font-size:1rem; cursor:${gameState.cash >= n ? "pointer" : "not-allowed"}; transition:all 0.2s; box-shadow:${gameState.cash >= n ? `0 4px 12px ${p}44` : "none"};"\n              ${gameState.cash >= n ? `onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px ${p}66'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px ${p}44'"` : "disabled"}\n            >\n              ✓ Confirm ${d}\n            </button>\n          </div>\n        </div>\n      </div>\n    `),
+        (l.innerHTML = `\n      <style>\n        @keyframes fadeIn {\n          from { opacity: 0; }\n          to { opacity: 1; }\n        }\n        @keyframes slideUp {\n          from { transform: translateY(30px); opacity: 0; }\n          to { transform: translateY(0); opacity: 1; }\n        }\n        @keyframes pulse {\n          0%, 100% { transform: scale(1); }\n          50% { transform: scale(1.05); }\n        }\n      </style>\n      <div style="background:var(--bg); border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.8); max-width:700px; width:90%; overflow:hidden; animation:slideUp 0.3s ease;">\n        \x3c!-- Header --\x3e\n        <div style="padding:24px; background:linear-gradient(135deg, ${p}, ${fuocAlpha(p, "22")}); border-bottom:2px solid ${p};">\n          <h2 style="margin:0; color:#fff; font-size:1.8rem; text-align:center; display:flex; align-items:center; justify-content:center; gap:12px;">\n            ${c ? "⬆️" : "↔️"}\n            <span>Confirm ${d}</span>\n          </h2>\n        </div>\n        \n        \x3c!-- Content --\x3e\n        <div style="padding:32px 24px;">\n          \x3c!-- Employee Card --\x3e\n          <div style="text-align:center; margin-bottom:24px;">\n            <img src="${a.profileImage || "https://placehold.co/80x80"}" style="width:80px; height:80px; border-radius:50%; border:3px solid ${p}; object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.3);">\n            <h3 style="color:#fff; margin:12px 0 4px 0; font-size:1.3rem;">${a.name}</h3>\n            ${a.career ? `<div style="color:var(--text-mute); font-size:0.9rem;">Currently: ${a.career.title || "Employee"} (Level ${a.career.level || 1})</div>` : ""}\n          </div>\n          \n          \x3c!-- Position Cards with Arrow --\x3e\n          <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin:24px 0;">\n            \x3c!-- Old Position (if exists) --\x3e\n            ${i ? `\n              <div style="flex:1; background:var(--surface); border:2px solid ${s?.color || "#555"}; border-radius:12px; padding:16px; text-align:center;">\n                <div style="font-size:1.5rem; margin-bottom:8px;">${s?.icon || "📋"}</div>\n                <div style="color:#fff; font-weight:600; font-size:0.9rem; margin-bottom:4px;">${i.title}</div>\n                <div style="color:var(--text-mute); font-size:0.75rem;">Level ${Math.floor(i.level)}</div>\n              </div>\n            ` : '\n              <div style="flex:1; background:var(--surface); border:2px dashed #555; border-radius:12px; padding:16px; text-align:center; opacity:0.5;">\n                <div style="font-size:1.5rem; margin-bottom:8px;">❌</div>\n                <div style="color:var(--text-mute); font-weight:600; font-size:0.9rem;">Unassigned</div>\n              </div>\n            '}\n            \n            \x3c!-- Arrow --\x3e\n            <div style="font-size:2rem; color:${p}; animation:pulse 2s infinite;">\n              ${c ? "⬆️" : "➡️"}\n            </div>\n            \n            \x3c!-- New Position --\x3e\n            <div style="flex:1; background:linear-gradient(135deg, ${fuocAlpha(r.color, "22")}, ${fuocAlpha(r.color, "11")}); border:2px solid ${r.color}; border-radius:12px; padding:16px; text-align:center; box-shadow:0 0 20px ${fuocAlpha(r.color, "44")};">\n              <div style="font-size:1.5rem; margin-bottom:8px;">${r.icon}</div>\n              <div style="color:#fff; font-weight:600; font-size:0.9rem; margin-bottom:4px;">${o.title}</div>\n              <div style="color:${r.color}; font-size:0.75rem; font-weight:600;">Level ${Math.floor(o.level)}</div>\n            </div>\n          </div>\n          \n          \x3c!-- Cost Info --\x3e\n          <div style="background:#1a1a2e; border:2px solid ${gameState.cash >= n ? p : "#e94560"}; border-radius:10px; padding:16px; margin:24px 0;">\n            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">\n              <span style="color:var(--text-mute); font-size:0.9rem;">Cost:</span>\n              <span style="color:${gameState.cash >= n ? "#4ecca3" : "#e94560"}; font-weight:700; font-size:1.2rem;">$${formatNumber(n)}</span>\n            </div>\n            <div style="display:flex; justify-content:space-between; align-items:center;">\n              <span style="color:var(--text-mute); font-size:0.9rem;">Your Cash:</span>\n              <span style="color:#fff; font-weight:600; font-size:1rem;">$${formatNumber(gameState.cash)}</span>\n            </div>\n            ${gameState.cash >= n ? `\n              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:8px; border-top:1px solid var(--border);">\n                <span style="color:var(--text-mute); font-size:0.9rem;">After ${d}:</span>\n                <span style="color:var(--positive); font-weight:600; font-size:1rem;">$${formatNumber(gameState.cash - n)}</span>\n              </div>\n            ` : ""}\n          </div>\n          \n          ${gameState.cash < n ? '\n            <div style="background:rgba(233,69,96,0.1); border:1px solid var(--danger); border-radius:8px; padding:12px; margin-bottom:16px; text-align:center;">\n              <span style="color:var(--danger); font-size:0.9rem; font-weight:600;">⚠️ Insufficient funds!</span>\n            </div>\n          ' : ""}\n          \n          \x3c!-- Action Buttons --\x3e\n          <div style="display:flex; gap:12px; margin-top:24px;">\n            <button onclick="document.getElementById('promotionConfirmModal').remove()" style="flex:1; padding:14px; background:var(--surface); border:2px solid var(--border-strong); border-radius:10px; color:#fff; font-weight:600; font-size:1rem; cursor:pointer; transition:all 0.2s;" onmouseenter="this.style.background='#1a2640'; this.style.borderColor='#777'" onmouseleave="this.style.background='#16213e'; this.style.borderColor='#555'">\n              ✕ Cancel\n            </button>\n            <button \n              onclick="executePromotion('${e}', '${t}')" \n              style="flex:1; padding:14px; background:${gameState.cash >= n ? `linear-gradient(135deg, ${p}, ${fuocAlpha(p, "dd")})` : "#555"}; border:none; border-radius:10px; color:${gameState.cash >= n ? "#000" : "#999"}; font-weight:700; font-size:1rem; cursor:${gameState.cash >= n ? "pointer" : "not-allowed"}; transition:all 0.2s; box-shadow:${gameState.cash >= n ? `0 4px 12px ${fuocAlpha(p, "44")}` : "none"};"\n              ${gameState.cash >= n ? `onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px ${fuocAlpha(p, "66")}'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px ${fuocAlpha(p, "44")}'"` : "disabled"}\n            >\n              ✓ Confirm ${d}\n            </button>\n          </div>\n        </div>\n      </div>\n    `),
             document.body.appendChild(l),
             l.addEventListener("click", (e) => {
                 e.target === l && l.remove();
@@ -93027,7 +93249,7 @@ I've been thinking about you... want to find somewhere private?</textarea
                 const s = EncounterCategories[t] || {},
                     r = (n?.length || 0) + (a?.length || 0),
                     c = e.currentDesire?.matchCategories?.includes(t);
-                l += `<button class="enc-act-btn ${c ? "enc-desire-match" : ""}" onclick="encounterSelectCategory('${t}')" style="border-color:${s.color || "#333"}22;"><span>${s.emoji || "❓"} ${"SceneControl" === t ? "Control" : t}${c ? " ✦" : ""}</span><span class="enc-act-stage">${r} actions</span></button>`;
+                l += `<button class="enc-act-btn ${c ? "enc-desire-match" : ""}" onclick="encounterSelectCategory('${t}')" style="border-color:${fuocAlpha(s.color || "#333", "22")};"><span>${s.emoji || "❓"} ${"SceneControl" === t ? "Control" : t}${c ? " ✦" : ""}</span><span class="enc-act-stage">${r} actions</span></button>`;
             }
             s > 0 &&
                 (l += `<button class="enc-act-btn" onclick="encounterSelectCategory('_Requests')" style="border-color:#9b59b622;"><span>🙏 Ask Them To...</span><span class="enc-act-stage">${s} requests</span></button>`);
@@ -93962,25 +94184,10 @@ I've been thinking about you... want to find somewhere private?</textarea
          shift the box model app-wide. Border-box is scoped to .fuoc-ui.
      ============================================================ */
     :root {
-        /* palette (disciplined dark-navy) */
-        --bg: #0a0d13;
-        --surface: #111722;
-        --surface-2: #18202e;
-        --surface-3: #1f2937;
-        --border: #26303f;
-        --border-strong: #37445a;
-        --text: #e7ecf3;
-        --text-dim: #8a97ac;
-        --text-mute: #5d6878;
-        --accent: #4c8dff;
-        --accent-dim: #23314f;
-        --accent-ink: #cfe0ff;
-        --positive: #36b37e;
-        --positive-dim: #143a2c;
-        --danger: #e5484d;
-        --danger-dim: #3a1719;
-        --warning: #f5a623;
-        --warning-dim: #3a2c12;
+        /* palette — every COLOUR token now lives in the THEME LAYER further down
+           (search "FUOC THEME LAYER"), which restates them per theme. Keeping them
+           in one generated block is what makes light/high-contrast/dim possible.
+           Non-colour tokens (type, spacing, radius, z-index) stay here. */
         /* type */
         --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         --font-num: "SF Mono", ui-monospace, "JetBrains Mono", "Roboto Mono", Menlo, monospace;
@@ -93990,19 +94197,7 @@ I've been thinking about you... want to find somewhere private?</textarea
         --fs-md: 0.95rem;
         --fs-lg: 1.2rem;
         --fs-xl: 1.5rem;
-        /* gold heading accent (legacy #ffd700 → tunable gold token) */
-        --accent-gold: #f5c542;
-        --accent-gold-dim: #3a3112;
-        /* chat bubble type palette (thin gradient outlines, color-coded by sender) */
-        --chat-self: #38bdf8; /* YOU — bright sky-blue, high contrast */
-        --chat-self-2: #2563eb;
-        --chat-self-fill: #13243b; /* faint blue-tinted bubble fill (highlight) */
-        --chat-other: #ff5ec8; /* RECEIVED — magenta */
-        --chat-other-2: #b832d6; /* → violet-magenta */
-        --chat-narrator: #a855f7; /* NARRATOR — violet */
-        --chat-narrator-2: #7c3aed;
-        --chat-memory: #f5b942; /* STORY MEMORY — amber/gold */
-        --chat-memory-2: #d97706;
+        /* gold heading accent + chat bubble palette → THEME LAYER */
         /* spacing — dense scale */
         --s1: 3px;
         --s2: 6px;
@@ -94015,10 +94210,7 @@ I've been thinking about you... want to find somewhere private?</textarea
         --r2: 7px;
         --r3: 11px;
         --rpill: 999px;
-        /* elevation */
-        --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-        --shadow-2: 0 10px 30px rgba(0, 0, 0, 0.5);
-        --sheet-shadow: 0 -14px 40px rgba(0, 0, 0, 0.5);
+        /* elevation → THEME LAYER (--shadow-1/-2, --sheet-shadow, --scrim) */
         /* z-index tiers (per discovery doc) */
         --z-ui: 100;
         --z-fixed: 1000;
@@ -94028,6 +94220,897 @@ I've been thinking about you... want to find somewhere private?</textarea
         /* safe-area inset (mobile chrome) */
         --safe-b: env(safe-area-inset-bottom, 0px);
     }
+
+    /* ==== FUOC THEME LAYER · GENERATED by tools/gen-theme-css.mjs — DO NOT EDIT BY HAND ==== */
+    /*  4 themes, 170 tokens each.
+        The "dark" column reproduces the pre-theme values exactly, so switching a
+        colour literal to its bridge token is a visual no-op on the default theme.
+        Edit tools/palette.mjs, then run:  npm run theme:tokens                     */
+
+    /* ── Midnight (default) (dark) ─────────────────────────────── */
+    :root,
+    :root[data-fuoc-theme="dark"] {
+        /* design-system tokens (.fuoc-ui components) */
+        --bg:                 #0a0d13;
+        --surface:            #111722;
+        --surface-2:          #18202e;
+        --surface-3:          #1f2937;
+        --border:             #26303f;
+        --border-strong:      #37445a;
+        --text:               #e7ecf3;
+        --text-dim:           #8a97ac;
+        --text-mute:          #5d6878;
+        --accent:             #4c8dff;
+        --accent-dim:         #23314f;
+        --accent-ink:         #cfe0ff;
+        --positive:           #36b37e;
+        --positive-dim:       #143a2c;
+        --danger:             #e5484d;
+        --danger-dim:         #3a1719;
+        --warning:            #f5a623;
+        --warning-dim:        #3a2c12;
+        --accent-gold:        #f5c542;
+        --accent-gold-dim:    #3a3112;
+        --chat-self:          #38bdf8;
+        --chat-self-2:        #2563eb;
+        --chat-self-fill:     #13243b;
+        --chat-other:         #ff5ec8;
+        --chat-other-2:       #b832d6;
+        --chat-narrator:      #a855f7;
+        --chat-narrator-2:    #7c3aed;
+        --chat-memory:        #f5b942;
+        --chat-memory-2:      #d97706;
+        /* effects */
+        --shadow-1:           0 1px 2px rgba(0,0,0,0.45);
+        --shadow-2:           0 10px 30px rgba(0,0,0,0.5);
+        --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.5);
+        --scrim:              rgba(0,0,0,0.7);
+        --focus-ring:         #7fb2ff;
+        --glow:               1;
+        /* legacy bridge · surfaces, lines, ink */
+        --l-bg:               #0f1419;
+        --l-bg-black:         #0a0a0a;
+        --l-bg-black-2:       #1a1a1a;
+        --l-panel:            #1a1a2e;
+        --l-panel-2:          #16213e;
+        --l-panel-3:          #1c2738;
+        --l-panel-deep:       #0e1522;
+        --l-panel-deep-2:     #101a2a;
+        --l-panel-deep-3:     #142035;
+        --l-panel-alt:        #1a1f2e;
+        --l-panel-alt-2:      #1a1d23;
+        --l-panel-violet:     #1a1028;
+        --l-slate:            #2d3436;
+        --l-slate-2:          #2f3336;
+        --l-line:             #0f3460;
+        --l-neutral-3:        #333333;
+        --l-neutral-4:        #444444;
+        --l-neutral-5:        #555555;
+        --l-neutral-6:        #666666;
+        --l-neutral-7:        #777777;
+        --l-neutral-8:        #888888;
+        --l-neutral-9:        #999999;
+        --l-ink:              #ffffff;
+        --l-ink-dim:          #cccccc;
+        --l-ink-dim-2:        #aaaaaa;
+        --l-ink-cool:         #a0aec0;
+        --l-ink-cool-2:       #b2bec3;
+        --l-ink-cool-3:       #d1d5db;
+        --l-ink-slate:        #636e72;
+        --l-ink-soft:         #e8f0f7;
+        --l-on-accent:        #0f1419;
+        /* legacy bridge · accents */
+        --l-indigo:           #667eea;
+        --l-indigo-lt:        #7193ff;
+        --l-indigo-deep:      #764ba2;
+        --l-indigo-dark:      #341f97;
+        --l-purple-deep:      #533483;
+        --l-red:              #e94560;
+        --l-red-lt:           #ff6b6b;
+        --l-red-2:            #d63031;
+        --l-red-3:            #e74c3c;
+        --l-red-4:            #ff4444;
+        --l-red-dim:          #c73e54;
+        --l-red-dark:         #8b0000;
+        --l-green:            #4ecca3;
+        --l-green-2:          #00b894;
+        --l-green-3:          #2ecc71;
+        --l-green-4:          #06d6a0;
+        --l-green-lt:         #5ad6a6;
+        --l-green-lt-2:       #55efc4;
+        --l-green-dark:       #2d8a6e;
+        --l-cyan:             #00d4ff;
+        --l-cyan-dark:        #0099cc;
+        --l-cyan-2:           #3fc7ff;
+        --l-cyan-3:           #3dd6ed;
+        --l-teal:             #4ecdc4;
+        --l-teal-2:           #00cec9;
+        --l-blue:             #3498db;
+        --l-blue-2:           #0984e3;
+        --l-discord:          #5865f2;
+        --l-gold:             #ffd700;
+        --l-gold-lt:          #ffc457;
+        --l-orange:           #ffa500;
+        --l-orange-2:         #ff9800;
+        --l-orange-3:         #ff9500;
+        --l-orange-4:         #e67e22;
+        --l-orange-red:       #ff4500;
+        --l-amber:            #f39c12;
+        --l-amber-2:          #f9a826;
+        --l-amber-3:          #f9a825;
+        --l-amber-4:          #ffa726;
+        --l-amber-5:          #ff9f1c;
+        --l-yellow:           #f9ca24;
+        --l-yellow-2:         #f1c40f;
+        --l-pink:             #ff6b9d;
+        --l-pink-2:           #e84393;
+        --l-pink-lt:          #fd79a8;
+        --l-pink-3:           #ff69b4;
+        --l-pink-pale:        #f093fb;
+        --l-magenta:          #f72585;
+        --l-magenta-2:        #b5179e;
+        --l-crimson:          #ff0055;
+        --l-plum:             #6b2d5b;
+        --l-violet:           #c77dff;
+        --l-violet-2:         #9b59b6;
+        --l-violet-3:         #9d4edd;
+        --l-violet-4:         #8e44ad;
+        --l-violet-lt:        #a29bfe;
+        --l-violet-deep:      #6c5ce7;
+        --l-violet-deep-2:    #7c3aed;
+        /* translucent fills (dark veils / white sheens) */
+        --l-veil-05:          rgba(0, 0, 0, 0.05);
+        --l-veil-08:          rgba(0, 0, 0, 0.08);
+        --l-veil-10:          rgba(0, 0, 0, 0.1);
+        --l-veil-12:          rgba(0, 0, 0, 0.12);
+        --l-veil-15:          rgba(0, 0, 0, 0.15);
+        --l-veil-20:          rgba(0, 0, 0, 0.2);
+        --l-veil-25:          rgba(0, 0, 0, 0.25);
+        --l-veil-30:          rgba(0, 0, 0, 0.3);
+        --l-veil-35:          rgba(0, 0, 0, 0.35);
+        --l-veil-40:          rgba(0, 0, 0, 0.4);
+        --l-veil-45:          rgba(0, 0, 0, 0.45);
+        --l-veil-50:          rgba(0, 0, 0, 0.5);
+        --l-veil-55:          rgba(0, 0, 0, 0.55);
+        --l-veil-60:          rgba(0, 0, 0, 0.6);
+        --l-veil-65:          rgba(0, 0, 0, 0.65);
+        --l-veil-70:          rgba(0, 0, 0, 0.7);
+        --l-veil-75:          rgba(0, 0, 0, 0.75);
+        --l-veil-80:          rgba(0, 0, 0, 0.8);
+        --l-veil-85:          rgba(0, 0, 0, 0.85);
+        --l-veil-90:          rgba(0, 0, 0, 0.9);
+        --l-veil-92:          rgba(0, 0, 0, 0.92);
+        --l-veil-95:          rgba(0, 0, 0, 0.95);
+        --l-veil-98:          rgba(0, 0, 0, 0.98);
+        --l-sheen-05:         rgba(255, 255, 255, 0.05);
+        --l-sheen-08:         rgba(255, 255, 255, 0.08);
+        --l-sheen-10:         rgba(255, 255, 255, 0.1);
+        --l-sheen-12:         rgba(255, 255, 255, 0.12);
+        --l-sheen-15:         rgba(255, 255, 255, 0.15);
+        --l-sheen-20:         rgba(255, 255, 255, 0.2);
+        --l-sheen-25:         rgba(255, 255, 255, 0.25);
+        --l-sheen-30:         rgba(255, 255, 255, 0.3);
+        --l-sheen-35:         rgba(255, 255, 255, 0.35);
+        --l-sheen-40:         rgba(255, 255, 255, 0.4);
+        --l-sheen-45:         rgba(255, 255, 255, 0.45);
+        --l-sheen-50:         rgba(255, 255, 255, 0.5);
+        --l-sheen-55:         rgba(255, 255, 255, 0.55);
+        --l-sheen-60:         rgba(255, 255, 255, 0.6);
+        --l-sheen-65:         rgba(255, 255, 255, 0.65);
+        --l-sheen-70:         rgba(255, 255, 255, 0.7);
+        --l-sheen-75:         rgba(255, 255, 255, 0.75);
+        --l-sheen-80:         rgba(255, 255, 255, 0.8);
+        --l-sheen-85:         rgba(255, 255, 255, 0.85);
+        --l-sheen-90:         rgba(255, 255, 255, 0.9);
+        --l-sheen-92:         rgba(255, 255, 255, 0.92);
+        --l-sheen-95:         rgba(255, 255, 255, 0.95);
+        --l-sheen-98:         rgba(255, 255, 255, 0.98);
+    }
+
+    /* ── Daylight (light) ─────────────────────────────── */
+    :root[data-fuoc-theme="light"] {
+        /* design-system tokens (.fuoc-ui components) */
+        --bg:                 #eceef3;
+        --surface:            #f8f9fc;
+        --surface-2:          #f1f3f8;
+        --surface-3:          #e9edf4;
+        --border:             #d4dae5;
+        --border-strong:      #b6bfd0;
+        --text:               #1b2129;
+        --text-dim:           #4a5566;
+        --text-mute:          #66707f;
+        --accent:             #1b5fd0;
+        --accent-dim:         #dbe6fb;
+        --accent-ink:         #0b3576;
+        --positive:           #127a51;
+        --positive-dim:       #d6f2e5;
+        --danger:             #c01c22;
+        --danger-dim:         #fbdedf;
+        --warning:            #94620a;
+        --warning-dim:        #fbeed3;
+        --accent-gold:        #8a6a05;
+        --accent-gold-dim:    #faf0cf;
+        --chat-self:          #0b6b93;
+        --chat-self-2:        #1b4bb8;
+        --chat-self-fill:     #e2eefb;
+        --chat-other:         #a3128a;
+        --chat-other-2:       #8a1ba6;
+        --chat-narrator:      #6d21b8;
+        --chat-narrator-2:    #5417b0;
+        --chat-memory:        #8a6207;
+        --chat-memory-2:      #8a4d04;
+        /* effects */
+        --shadow-1:           0 1px 2px rgba(18,25,38,0.10);
+        --shadow-2:           0 8px 24px rgba(18,25,38,0.12);
+        --sheet-shadow:       0 -10px 32px rgba(18,25,38,0.14);
+        --scrim:              rgba(32,40,54,0.42);
+        --focus-ring:         #0b53c8;
+        --glow:               0;
+        /* legacy bridge · surfaces, lines, ink */
+        --l-bg:               #eceef3;
+        --l-bg-black:         #e8eaf0;
+        --l-bg-black-2:       #f2f3f7;
+        --l-panel:            #f8f9fc;
+        --l-panel-2:          #f1f3f8;
+        --l-panel-3:          #e9edf4;
+        --l-panel-deep:       #e6eaf2;
+        --l-panel-deep-2:     #e8ecf4;
+        --l-panel-deep-3:     #eaeef5;
+        --l-panel-alt:        #f0f2f7;
+        --l-panel-alt-2:      #eef0f4;
+        --l-panel-violet:     #f3eefb;
+        --l-slate:            #dfe3e6;
+        --l-slate-2:          #e1e4e6;
+        --l-line:             #ccd6e6;
+        --l-neutral-3:        #d6d9df;
+        --l-neutral-4:        #ccd0d6;
+        --l-neutral-5:        #b9bec7;
+        --l-neutral-6:        #a8aeb8;
+        --l-neutral-7:        #9aa1ac;
+        --l-neutral-8:        #7d848f;
+        --l-neutral-9:        #6f7681;
+        --l-ink:              #1b2129;
+        --l-ink-dim:          #39414c;
+        --l-ink-dim-2:        #4d5561;
+        --l-ink-cool:         #4a5566;
+        --l-ink-cool-2:       #495259;
+        --l-ink-cool-3:       #3b424c;
+        --l-ink-slate:        #5a646a;
+        --l-ink-soft:         #2b323b;
+        --l-on-accent:        #10151c;
+        /* legacy bridge · accents */
+        --l-indigo:           #213fca;
+        --l-indigo-lt:        #214aca;
+        --l-indigo-deep:      #754aa0;
+        --l-indigo-dark:      #341f97;
+        --l-purple-deep:      #533483;
+        --l-red:              #c6203c;
+        --l-red-lt:           #bc1f1f;
+        --l-red-2:            #c52627;
+        --l-red-3:            #c62f20;
+        --l-red-4:            #ba1e1e;
+        --l-red-dim:          #b63449;
+        --l-red-dark:         #781313;
+        --l-green:            #1d785b;
+        --l-green-2:          #116a58;
+        --l-green-3:          #177840;
+        --l-green-4:          #116a53;
+        --l-green-lt:         #187a54;
+        --l-green-lt-2:       #126c53;
+        --l-green-dark:       #26785f;
+        --l-cyan:             #136577;
+        --l-cyan-dark:        #156884;
+        --l-cyan-2:           #16688a;
+        --l-cyan-3:           #146b78;
+        --l-teal:             #1c766f;
+        --l-teal-2:           #116664;
+        --l-blue:             #1b6fa7;
+        --l-blue-2:           #1b6ba9;
+        --l-discord:          #212fca;
+        --l-gold:             #695b11;
+        --l-gold-lt:          #7f5a15;
+        --l-orange:           #7f5a15;
+        --l-orange-2:         #845715;
+        --l-orange-3:         #885816;
+        --l-orange-4:         #985519;
+        --l-orange-red:       #ab431c;
+        --l-amber:            #845a16;
+        --l-amber-2:          #845a16;
+        --l-amber-3:          #845a15;
+        --l-amber-4:          #855816;
+        --l-amber-5:          #865716;
+        --l-yellow:           #725d12;
+        --l-yellow-2:         #6e5c12;
+        --l-pink:             #b81e52;
+        --l-pink-2:           #c4206f;
+        --l-pink-lt:          #b51e54;
+        --l-pink-3:           #b61e6a;
+        --l-pink-pale:        #a01daf;
+        --l-magenta:          #b71e64;
+        --l-magenta-2:        #af1d9a;
+        --l-crimson:          #b81e51;
+        --l-plum:             #6b2d5b;
+        --l-violet:           #8121ca;
+        --l-violet-2:         #8947a3;
+        --l-violet-3:         #7e25c6;
+        --l-violet-4:         #8a42a8;
+        --l-violet-lt:        #2c21ca;
+        --l-violet-deep:      #3421ca;
+        --l-violet-deep-2:    #5f21ca;
+        /* translucent fills (dark veils / white sheens) */
+        --l-veil-05:          rgba(28, 36, 50, 0.02);
+        --l-veil-08:          rgba(28, 36, 50, 0.04);
+        --l-veil-10:          rgba(28, 36, 50, 0.05);
+        --l-veil-12:          rgba(28, 36, 50, 0.05);
+        --l-veil-15:          rgba(28, 36, 50, 0.07);
+        --l-veil-20:          rgba(28, 36, 50, 0.09);
+        --l-veil-25:          rgba(28, 36, 50, 0.11);
+        --l-veil-30:          rgba(28, 36, 50, 0.14);
+        --l-veil-35:          rgba(28, 36, 50, 0.16);
+        --l-veil-40:          rgba(28, 36, 50, 0.18);
+        --l-veil-45:          rgba(28, 36, 50, 0.2);
+        --l-veil-50:          rgba(28, 36, 50, 0.23);
+        --l-veil-55:          rgba(28, 36, 50, 0.25);
+        --l-veil-60:          rgba(28, 36, 50, 0.27);
+        --l-veil-65:          rgba(28, 36, 50, 0.29);
+        --l-veil-70:          rgba(28, 36, 50, 0.32);
+        --l-veil-75:          rgba(28, 36, 50, 0.34);
+        --l-veil-80:          rgba(28, 36, 50, 0.36);
+        --l-veil-85:          rgba(28, 36, 50, 0.38);
+        --l-veil-90:          rgba(28, 36, 50, 0.41);
+        --l-veil-92:          rgba(28, 36, 50, 0.41);
+        --l-veil-95:          rgba(28, 36, 50, 0.43);
+        --l-veil-98:          rgba(28, 36, 50, 0.44);
+        --l-sheen-05:         rgba(20, 28, 42, 0.03);
+        --l-sheen-08:         rgba(20, 28, 42, 0.04);
+        --l-sheen-10:         rgba(20, 28, 42, 0.05);
+        --l-sheen-12:         rgba(20, 28, 42, 0.06);
+        --l-sheen-15:         rgba(20, 28, 42, 0.08);
+        --l-sheen-20:         rgba(20, 28, 42, 0.1);
+        --l-sheen-25:         rgba(20, 28, 42, 0.13);
+        --l-sheen-30:         rgba(20, 28, 42, 0.15);
+        --l-sheen-35:         rgba(20, 28, 42, 0.18);
+        --l-sheen-40:         rgba(20, 28, 42, 0.2);
+        --l-sheen-45:         rgba(20, 28, 42, 0.23);
+        --l-sheen-50:         rgba(20, 28, 42, 0.25);
+        --l-sheen-55:         rgba(20, 28, 42, 0.28);
+        --l-sheen-60:         rgba(20, 28, 42, 0.3);
+        --l-sheen-65:         rgba(20, 28, 42, 0.33);
+        --l-sheen-70:         rgba(20, 28, 42, 0.35);
+        --l-sheen-75:         rgba(20, 28, 42, 0.38);
+        --l-sheen-80:         rgba(20, 28, 42, 0.4);
+        --l-sheen-85:         rgba(20, 28, 42, 0.43);
+        --l-sheen-90:         rgba(20, 28, 42, 0.45);
+        --l-sheen-92:         rgba(20, 28, 42, 0.46);
+        --l-sheen-95:         rgba(20, 28, 42, 0.48);
+        --l-sheen-98:         rgba(20, 28, 42, 0.49);
+    }
+
+    /* ── High Contrast (hc-dark) ─────────────────────────────── */
+    :root[data-fuoc-theme="hc-dark"] {
+        /* design-system tokens (.fuoc-ui components) */
+        --bg:                 #000000;
+        --surface:            #08090d;
+        --surface-2:          #0e1118;
+        --surface-3:          #151a24;
+        --border:             #9aa7bd;
+        --border-strong:      #7f8ea8;
+        --text:               #ffffff;
+        --text-dim:           #d5dde8;
+        --text-mute:          #a9b4c2;
+        --accent:             #7fb2ff;
+        --accent-dim:         #12233d;
+        --accent-ink:         #e8f1ff;
+        --positive:           #4fe3a4;
+        --positive-dim:       #0a2b1f;
+        --danger:             #ff7a7f;
+        --danger-dim:         #2c0d0f;
+        --warning:            #ffc457;
+        --warning-dim:        #2b1f08;
+        --accent-gold:        #ffdb6b;
+        --accent-gold-dim:    #2b2408;
+        --chat-self:          #7fd9ff;
+        --chat-self-2:        #6a9dff;
+        --chat-self-fill:     #001a2e;
+        --chat-other:         #ff96dc;
+        --chat-other-2:       #dd7cf0;
+        --chat-narrator:      #c896ff;
+        --chat-narrator-2:    #a986ff;
+        --chat-memory:        #ffd27a;
+        --chat-memory-2:      #ffab4d;
+        /* effects */
+        --shadow-1:           0 0 0 1px #ffffff40;
+        --shadow-2:           0 0 0 2px #ffffff33;
+        --sheet-shadow:       0 -2px 0 2px #ffffff33;
+        --scrim:              rgba(0,0,0,0.88);
+        --focus-ring:         #ffffff;
+        --glow:               0.35;
+        /* legacy bridge · surfaces, lines, ink */
+        --l-bg:               #000000;
+        --l-bg-black:         #000000;
+        --l-bg-black-2:       #0a0a0a;
+        --l-panel:            #0b0b12;
+        --l-panel-2:          #08101f;
+        --l-panel-3:          #0d1520;
+        --l-panel-deep:       #000208;
+        --l-panel-deep-2:     #02060f;
+        --l-panel-deep-3:     #050b16;
+        --l-panel-alt:        #0a0d14;
+        --l-panel-alt-2:      #0a0c0f;
+        --l-panel-violet:     #0c0616;
+        --l-slate:            #14191a;
+        --l-slate-2:          #16191a;
+        --l-line:             #3c6ba8;
+        --l-neutral-3:        #4a4a4a;
+        --l-neutral-4:        #5c5c5c;
+        --l-neutral-5:        #7a7a7a;
+        --l-neutral-6:        #8f8f8f;
+        --l-neutral-7:        #a3a3a3;
+        --l-neutral-8:        #b5b5b5;
+        --l-neutral-9:        #c4c4c4;
+        --l-ink:              #ffffff;
+        --l-ink-dim:          #f0f0f0;
+        --l-ink-dim-2:        #e0e0e0;
+        --l-ink-cool:         #dce6f5;
+        --l-ink-cool-2:       #e4eef2;
+        --l-ink-cool-3:       #f2f5f9;
+        --l-ink-slate:        #9aa8ae;
+        --l-ink-soft:         #ffffff;
+        --l-on-accent:        #000000;
+        /* legacy bridge · accents */
+        --l-indigo:           #758cf4;
+        --l-indigo-lt:        #7193ff;
+        --l-indigo-deep:      #a985ce;
+        --l-indigo-dark:      #9884f4;
+        --l-purple-deep:      #a685da;
+        --l-red:              #f7657e;
+        --l-red-lt:           #ff6b6b;
+        --l-red-2:            #ee6f6f;
+        --l-red-3:            #f56a5b;
+        --l-red-4:            #ff5e5e;
+        --l-red-dim:          #e17587;
+        --l-red-dark:         #ff6262;
+        --l-green:            #5bd7af;
+        --l-green-2:          #33ffd7;
+        --l-green-3:          #52e08e;
+        --l-green-4:          #33ffca;
+        --l-green-lt:         #55dda8;
+        --l-green-lt-2:       #4df7c7;
+        --l-green-dark:       #5ed4b0;
+        --l-cyan:             #33ddff;
+        --l-cyan-dark:        #33ccff;
+        --l-cyan-2:           #3fc7ff;
+        --l-cyan-3:           #3cdef6;
+        --l-teal:             #5ad8cf;
+        --l-teal-2:           #33fffa;
+        --l-blue:             #4aa9e8;
+        --l-blue-2:           #33a6ff;
+        --l-discord:          #7f8afe;
+        --l-gold:             #ffdf33;
+        --l-gold-lt:          #ffc457;
+        --l-orange:           #ffb733;
+        --l-orange-2:         #ffad33;
+        --l-orange-3:         #ffaa33;
+        --l-orange-4:         #f29440;
+        --l-orange-red:       #ff6a33;
+        --l-amber:            #feb034;
+        --l-amber-2:          #ffb133;
+        --l-amber-3:          #ffb133;
+        --l-amber-4:          #ffac33;
+        --l-amber-5:          #ffa933;
+        --l-yellow:           #ffd233;
+        --l-yellow-2:         #fdd535;
+        --l-pink:             #ff6b9d;
+        --l-pink-2:           #f65ea8;
+        --l-pink-lt:          #ff77a7;
+        --l-pink-3:           #ff69b4;
+        --l-pink-pale:        #f38fff;
+        --l-magenta:          #ff55a3;
+        --l-magenta-2:        #f94de0;
+        --l-crimson:          #ff578f;
+        --l-plum:             #d378bb;
+        --l-violet:           #c77dff;
+        --l-violet-2:         #b67ece;
+        --l-violet-3:         #b876ed;
+        --l-violet-4:         #bb7dd5;
+        --l-violet-lt:        #a19aff;
+        --l-violet-deep:      #9286f5;
+        --l-violet-deep-2:    #ab7bfd;
+        /* translucent fills (dark veils / white sheens) */
+        --l-veil-05:          rgba(0, 0, 0, 0.06);
+        --l-veil-08:          rgba(0, 0, 0, 0.09);
+        --l-veil-10:          rgba(0, 0, 0, 0.12);
+        --l-veil-12:          rgba(0, 0, 0, 0.14);
+        --l-veil-15:          rgba(0, 0, 0, 0.17);
+        --l-veil-20:          rgba(0, 0, 0, 0.23);
+        --l-veil-25:          rgba(0, 0, 0, 0.29);
+        --l-veil-30:          rgba(0, 0, 0, 0.35);
+        --l-veil-35:          rgba(0, 0, 0, 0.4);
+        --l-veil-40:          rgba(0, 0, 0, 0.46);
+        --l-veil-45:          rgba(0, 0, 0, 0.52);
+        --l-veil-50:          rgba(0, 0, 0, 0.57);
+        --l-veil-55:          rgba(0, 0, 0, 0.63);
+        --l-veil-60:          rgba(0, 0, 0, 0.69);
+        --l-veil-65:          rgba(0, 0, 0, 0.75);
+        --l-veil-70:          rgba(0, 0, 0, 0.81);
+        --l-veil-75:          rgba(0, 0, 0, 0.86);
+        --l-veil-80:          rgba(0, 0, 0, 0.92);
+        --l-veil-85:          rgba(0, 0, 0, 0.98);
+        --l-veil-90:          rgba(0, 0, 0, 1);
+        --l-veil-92:          rgba(0, 0, 0, 1);
+        --l-veil-95:          rgba(0, 0, 0, 1);
+        --l-veil-98:          rgba(0, 0, 0, 1);
+        --l-sheen-05:         rgba(255, 255, 255, 0.06);
+        --l-sheen-08:         rgba(255, 255, 255, 0.1);
+        --l-sheen-10:         rgba(255, 255, 255, 0.13);
+        --l-sheen-12:         rgba(255, 255, 255, 0.15);
+        --l-sheen-15:         rgba(255, 255, 255, 0.19);
+        --l-sheen-20:         rgba(255, 255, 255, 0.25);
+        --l-sheen-25:         rgba(255, 255, 255, 0.31);
+        --l-sheen-30:         rgba(255, 255, 255, 0.38);
+        --l-sheen-35:         rgba(255, 255, 255, 0.44);
+        --l-sheen-40:         rgba(255, 255, 255, 0.5);
+        --l-sheen-45:         rgba(255, 255, 255, 0.56);
+        --l-sheen-50:         rgba(255, 255, 255, 0.63);
+        --l-sheen-55:         rgba(255, 255, 255, 0.69);
+        --l-sheen-60:         rgba(255, 255, 255, 0.75);
+        --l-sheen-65:         rgba(255, 255, 255, 0.81);
+        --l-sheen-70:         rgba(255, 255, 255, 0.88);
+        --l-sheen-75:         rgba(255, 255, 255, 0.94);
+        --l-sheen-80:         rgba(255, 255, 255, 1);
+        --l-sheen-85:         rgba(255, 255, 255, 1);
+        --l-sheen-90:         rgba(255, 255, 255, 1);
+        --l-sheen-92:         rgba(255, 255, 255, 1);
+        --l-sheen-95:         rgba(255, 255, 255, 1);
+        --l-sheen-98:         rgba(255, 255, 255, 1);
+    }
+
+    /* ── Dimmed (dim) ─────────────────────────────── */
+    :root[data-fuoc-theme="dim"] {
+        /* design-system tokens (.fuoc-ui components) */
+        --bg:                 #151920;
+        --surface:            #1c212a;
+        --surface-2:          #232935;
+        --surface-3:          #2a313e;
+        --border:             #313947;
+        --border-strong:      #43506a;
+        --text:               #d5dae3;
+        --text-dim:           #98a4b6;
+        --text-mute:          #6f7988;
+        --accent:             #4a7fd6;
+        --accent-dim:         #28344c;
+        --accent-ink:         #bccfee;
+        --positive:           #3d9d75;
+        --positive-dim:       #1a3b2f;
+        --danger:             #c9525a;
+        --danger-dim:         #3b2024;
+        --warning:            #d09441;
+        --warning-dim:        #3a2f1b;
+        --accent-gold:        #d3ac49;
+        --accent-gold-dim:    #3a3320;
+        --chat-self:          #4098bf;
+        --chat-self-2:        #3a5fbe;
+        --chat-self-fill:     #1a2738;
+        --chat-other:         #cc63ab;
+        --chat-other-2:       #9a4bb0;
+        --chat-narrator:      #8f5cc4;
+        --chat-narrator-2:    #6d4bb8;
+        --chat-memory:        #cfa24b;
+        --chat-memory-2:      #b0742f;
+        /* effects */
+        --shadow-1:           0 1px 2px rgba(0,0,0,0.35);
+        --shadow-2:           0 10px 30px rgba(0,0,0,0.4);
+        --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.4);
+        --scrim:              rgba(0,0,0,0.62);
+        --focus-ring:         #6f9ad6;
+        --glow:               0.5;
+        /* legacy bridge · surfaces, lines, ink */
+        --l-bg:               #171b22;
+        --l-bg-black:         #14171d;
+        --l-bg-black-2:       #1f2229;
+        --l-panel:            #20242e;
+        --l-panel-2:          #1c2230;
+        --l-panel-3:          #232a36;
+        --l-panel-deep:       #161b25;
+        --l-panel-deep-2:     #181e29;
+        --l-panel-deep-3:     #1b2230;
+        --l-panel-alt:        #20242e;
+        --l-panel-alt-2:      #1f2228;
+        --l-panel-violet:     #221933;
+        --l-slate:            #333a3d;
+        --l-slate-2:          #353a3d;
+        --l-line:             #1c3f6b;
+        --l-neutral-3:        #3a3d44;
+        --l-neutral-4:        #4a4d54;
+        --l-neutral-5:        #5c6068;
+        --l-neutral-6:        #6d717a;
+        --l-neutral-7:        #7d828b;
+        --l-neutral-8:        #8d929b;
+        --l-neutral-9:        #9ba0a8;
+        --l-ink:              #d5dae3;
+        --l-ink-dim:          #aeb5c0;
+        --l-ink-dim-2:        #98a0ac;
+        --l-ink-cool:         #93a0b3;
+        --l-ink-cool-2:       #a1abb1;
+        --l-ink-cool-3:       #b4bac3;
+        --l-ink-slate:        #727d83;
+        --l-ink-soft:         #c6ced8;
+        --l-on-accent:        #12161d;
+        /* legacy bridge · accents */
+        --l-indigo:           #6176d1;
+        --l-indigo-lt:        #6685e6;
+        --l-indigo-deep:      #70538e;
+        --l-indigo-dark:      #3e2f85;
+        --l-purple-deep:      #543e76;
+        --l-red:              #cd495f;
+        --l-red-lt:           #e56262;
+        --l-red-2:            #b64040;
+        --l-red-3:            #ca5043;
+        --l-red-4:            #e14646;
+        --l-red-dim:          #ab4a59;
+        --l-red-dark:         #7c1414;
+        --l-green:            #52b494;
+        --l-green-2:          #199c83;
+        --l-green-3:          #40ab6e;
+        --l-green-4:          #22b18c;
+        --l-green-lt:         #5abe97;
+        --l-green-lt-2:       #54d4b0;
+        --l-green-dark:       #397b67;
+        --l-cyan:             #22b1ce;
+        --l-cyan-dark:        #1c87aa;
+        --l-cyan-2:           #43b2e0;
+        --l-cyan-3:           #43bdd0;
+        --l-teal:             #52b5ae;
+        --l-teal-2:           #1caca8;
+        --l-blue:             #3f8bbe;
+        --l-blue-2:           #267abb;
+        --l-discord:          #5661d7;
+        --l-gold:             #ceb322;
+        --l-gold-lt:          #e3b154;
+        --l-orange:           #ce9122;
+        --l-orange-2:         #ce8822;
+        --l-orange-3:         #ce8622;
+        --l-orange-4:         #c27735;
+        --l-orange-red:       #ce5022;
+        --l-amber:            #ca8c2b;
+        --l-amber-2:          #d89832;
+        --l-amber-3:          #d89831;
+        --l-amber-4:          #de9831;
+        --l-amber-5:          #dc912a;
+        --l-yellow:           #d8b330;
+        --l-yellow-2:         #c5a72b;
+        --l-pink:             #e5628e;
+        --l-pink-2:           #cc4888;
+        --l-pink-lt:          #e56c97;
+        --l-pink-3:           #e561a3;
+        --l-pink-pale:        #db7fe6;
+        --l-magenta:          #d6317d;
+        --l-magenta-2:        #9a2c8a;
+        --l-crimson:          #ce225b;
+        --l-plum:             #643759;
+        --l-violet:           #b36fe8;
+        --l-violet-2:         #8d5ba2;
+        --l-violet-3:         #9051c3;
+        --l-violet-4:         #814e96;
+        --l-violet-lt:        #8b84ea;
+        --l-violet-deep:      #685acd;
+        --l-violet-deep-2:    #7641cf;
+        /* translucent fills (dark veils / white sheens) */
+        --l-veil-05:          rgba(0, 0, 0, 0.05);
+        --l-veil-08:          rgba(0, 0, 0, 0.07);
+        --l-veil-10:          rgba(0, 0, 0, 0.09);
+        --l-veil-12:          rgba(0, 0, 0, 0.11);
+        --l-veil-15:          rgba(0, 0, 0, 0.14);
+        --l-veil-20:          rgba(0, 0, 0, 0.18);
+        --l-veil-25:          rgba(0, 0, 0, 0.23);
+        --l-veil-30:          rgba(0, 0, 0, 0.27);
+        --l-veil-35:          rgba(0, 0, 0, 0.32);
+        --l-veil-40:          rgba(0, 0, 0, 0.36);
+        --l-veil-45:          rgba(0, 0, 0, 0.41);
+        --l-veil-50:          rgba(0, 0, 0, 0.45);
+        --l-veil-55:          rgba(0, 0, 0, 0.5);
+        --l-veil-60:          rgba(0, 0, 0, 0.54);
+        --l-veil-65:          rgba(0, 0, 0, 0.59);
+        --l-veil-70:          rgba(0, 0, 0, 0.63);
+        --l-veil-75:          rgba(0, 0, 0, 0.68);
+        --l-veil-80:          rgba(0, 0, 0, 0.72);
+        --l-veil-85:          rgba(0, 0, 0, 0.77);
+        --l-veil-90:          rgba(0, 0, 0, 0.81);
+        --l-veil-92:          rgba(0, 0, 0, 0.83);
+        --l-veil-95:          rgba(0, 0, 0, 0.86);
+        --l-veil-98:          rgba(0, 0, 0, 0.88);
+        --l-sheen-05:         rgba(255, 255, 255, 0.04);
+        --l-sheen-08:         rgba(255, 255, 255, 0.07);
+        --l-sheen-10:         rgba(255, 255, 255, 0.09);
+        --l-sheen-12:         rgba(255, 255, 255, 0.1);
+        --l-sheen-15:         rgba(255, 255, 255, 0.13);
+        --l-sheen-20:         rgba(255, 255, 255, 0.17);
+        --l-sheen-25:         rgba(255, 255, 255, 0.21);
+        --l-sheen-30:         rgba(255, 255, 255, 0.26);
+        --l-sheen-35:         rgba(255, 255, 255, 0.3);
+        --l-sheen-40:         rgba(255, 255, 255, 0.34);
+        --l-sheen-45:         rgba(255, 255, 255, 0.38);
+        --l-sheen-50:         rgba(255, 255, 255, 0.43);
+        --l-sheen-55:         rgba(255, 255, 255, 0.47);
+        --l-sheen-60:         rgba(255, 255, 255, 0.51);
+        --l-sheen-65:         rgba(255, 255, 255, 0.55);
+        --l-sheen-70:         rgba(255, 255, 255, 0.6);
+        --l-sheen-75:         rgba(255, 255, 255, 0.64);
+        --l-sheen-80:         rgba(255, 255, 255, 0.68);
+        --l-sheen-85:         rgba(255, 255, 255, 0.72);
+        --l-sheen-90:         rgba(255, 255, 255, 0.77);
+        --l-sheen-92:         rgba(255, 255, 255, 0.78);
+        --l-sheen-95:         rgba(255, 255, 255, 0.81);
+        --l-sheen-98:         rgba(255, 255, 255, 0.83);
+    }
+
+    /* Page canvas follows the active theme. */
+    html[data-fuoc-theme] {
+        background: var(--l-bg);
+    }
+    html[data-fuoc-theme] body {
+        background-color: var(--l-bg);
+        color: var(--l-ink);
+    }
+
+    /* Light themes need dark form controls chrome (scrollbars, date pickers). */
+    :root[data-fuoc-theme="light"] {
+        color-scheme: light;
+    }
+    :root[data-fuoc-theme="dark"],
+    :root[data-fuoc-theme="hc-dark"],
+    :root[data-fuoc-theme="dim"] {
+        color-scheme: dark;
+    }
+    /* ==== END FUOC THEME LAYER ==== */
+
+    /* ============================================================
+     FUOC ACCESSIBILITY LAYER
+     Player-controlled display options, keyed off data-* attributes that
+     DisplaySettings writes onto <html> before first paint. Every rule here is
+     inert until the matching attribute is present, so the default look is
+     untouched.
+
+     These fight ~2,900 inline styles, which is why !important shows up: an
+     inline style beats any stylesheet selector, and accessibility settings must
+     win. That is the one place in this file where !important is the correct tool.
+     ============================================================ */
+
+    /* ---- UI scale ----------------------------------------------------------
+     97% of the type in this file is sized in rem (1,963 rem vs 61 px), so
+     scaling the root font size scales nearly all text without touching layout. */
+    html[data-fuoc-scale] {
+        font-size: calc(100% * var(--ui-scale, 1));
+    }
+
+    /* ---- Reduce motion ----------------------------------------------------
+     In-game switch, independent of the OS-level @media (prefers-reduced-motion)
+     block further down — players on shared machines can't always change the OS. */
+    html[data-fuoc-motion="off"] *,
+    html[data-fuoc-motion="off"] *::before,
+    html[data-fuoc-motion="off"] *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
+    }
+    html[data-fuoc-motion="off"] {
+        scroll-behavior: auto !important;
+    }
+
+    /* ---- Reduce glow & transparency ---------------------------------------
+     Neon text-shadow on a dark field is the classic astigmatism problem: the
+     halo smears and doubles. This strips glow, blur and see-through panels, and
+     swaps drop shadows for a crisp 1px edge so cards keep their separation. */
+    html[data-fuoc-flat="1"] * {
+        text-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    html[data-fuoc-flat="1"] *:not(img):not(video):not(canvas) {
+        box-shadow: 0 0 0 1px var(--border) !important;
+    }
+    /* Elements that only ever had a glow shouldn't gain a visible ring. */
+    html[data-fuoc-flat="1"] span:not(.chip):not(.pill),
+    html[data-fuoc-flat="1"] b,
+    html[data-fuoc-flat="1"] strong,
+    html[data-fuoc-flat="1"] em,
+    html[data-fuoc-flat="1"] h1,
+    html[data-fuoc-flat="1"] h2,
+    html[data-fuoc-flat="1"] h3,
+    html[data-fuoc-flat="1"] h4,
+    html[data-fuoc-flat="1"] p,
+    html[data-fuoc-flat="1"] label {
+        box-shadow: none !important;
+    }
+    /* filter: blur()/drop-shadow() glows — but keep brightness/grayscale intact
+     for the image-effect utilities the game uses on portraits. */
+    html[data-fuoc-flat="1"] *:not(img):not(video) {
+        filter: none !important;
+    }
+
+    /* ---- Larger tap targets ---------------------------------------------- */
+    html[data-fuoc-targets="big"] button,
+    html[data-fuoc-targets="big"] select,
+    html[data-fuoc-targets="big"] summary,
+    html[data-fuoc-targets="big"] [role="button"],
+    html[data-fuoc-targets="big"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+        min-height: 44px !important;
+    }
+    html[data-fuoc-targets="big"] button {
+        min-width: 44px;
+    }
+    html[data-fuoc-targets="big"] input[type="checkbox"],
+    html[data-fuoc-targets="big"] input[type="radio"] {
+        width: 22px !important;
+        height: 22px !important;
+    }
+    html[data-fuoc-targets="big"] input[type="range"] {
+        height: 32px !important;
+    }
+    /* 16px inputs stop iOS Safari zooming on focus. */
+    html[data-fuoc-targets="big"] input,
+    html[data-fuoc-targets="big"] select,
+    html[data-fuoc-targets="big"] textarea {
+        font-size: max(1rem, 16px) !important;
+    }
+
+    /* ---- Focus visibility -------------------------------------------------
+     The base ring is always on (keyboard-only, so it costs mouse users nothing);
+     the setting makes it thicker and adds a contrasting halo. */
+    :is(button, a, select, summary, textarea, input, [tabindex]):focus-visible {
+        outline: 2px solid var(--focus-ring, #7fb2ff);
+        outline-offset: 2px;
+    }
+    html[data-fuoc-focus="1"] :is(button, a, select, summary, textarea, input, [tabindex]):focus-visible {
+        outline: 3px solid var(--focus-ring, #7fb2ff) !important;
+        outline-offset: 3px !important;
+        box-shadow: 0 0 0 6px color-mix(in srgb, var(--focus-ring, #7fb2ff) 35%, transparent) !important;
+    }
+
+    /* ---- Readable font ----------------------------------------------------
+     Verdana carries the stack: wide, open apertures, distinct 1/l/I, and it is
+     installed everywhere. Atkinson Hyperlegible is used when the player has it. */
+    html[data-fuoc-font="readable"] {
+        --font-ui: "Atkinson Hyperlegible", Verdana, "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+    html[data-fuoc-font="readable"] body,
+    html[data-fuoc-font="readable"] body *:not(.num):not(code):not(pre):not(.emoji) {
+        font-family: "Atkinson Hyperlegible", Verdana, "Trebuchet MS", "Segoe UI", sans-serif !important;
+        letter-spacing: 0.012em;
+    }
+    /* Numbers stay tabular so counters don't jitter as they climb. */
+    html[data-fuoc-font="readable"] .num {
+        font-variant-numeric: tabular-nums lining-nums !important;
+    }
+
+    /* ---- Light-theme repairs ---------------------------------------------
+     A handful of patterns can't be reached by token substitution: gradient text
+     fills, hard-coded white text inside gradient headers, and image overlays.
+     Scoped to the light theme so the dark themes never see them. */
+    :root[data-fuoc-theme="light"] input,
+    :root[data-fuoc-theme="light"] select,
+    :root[data-fuoc-theme="light"] textarea {
+        background-color: var(--l-panel);
+        color: var(--l-ink);
+        border-color: var(--border);
+    }
+    :root[data-fuoc-theme="light"] ::placeholder {
+        color: var(--text-mute);
+        opacity: 1;
+    }
+    /* Scrollbars: the dark-on-dark custom scrollbars vanish on a light field. */
+    :root[data-fuoc-theme="light"] ::-webkit-scrollbar-track {
+        background: var(--l-panel-2) !important;
+    }
+    :root[data-fuoc-theme="light"] ::-webkit-scrollbar-thumb {
+        background: var(--border-strong) !important;
+    }
+    :root[data-fuoc-theme="light"] ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-mute) !important;
+    }
+
     /* numeric utility — tabular figures so growing numbers never reflow */
     .num {
         font-family: var(--font-num);
