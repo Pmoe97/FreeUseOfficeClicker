@@ -70,7 +70,7 @@ export const STRUCTURAL = [
     // color: white`). Dark, light and dim keep their accents dark enough for white to
     // work, but High Contrast brightens accents to clear 7:1 on black — so there the
     // same ink has to go black instead.
-    ['--l-ink-on-fill',     '#ffffff',  'onFill',  '#ffffff', '#000000', '#0d1014'],
+    ['--l-ink-on-fill',     '#ffffff',  'onFill',  '#ffffff', '#000000', '#f2f4f8'],
 ];
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ export const SEMANTIC = [
     ['--border-strong',  '#37445a', '#b6bfd0', '#7f8ea8', '#43506a'],
     ['--text',           '#e7ecf3', '#1b2129', '#ffffff', '#d5dae3'],
     ['--text-dim',       '#8a97ac', '#4a5566', '#d5dde8', '#98a4b6'],
-    ['--text-mute',      '#6b7789', '#66707f', '#a9b4c2', '#6f7988'],
+    ['--text-mute',      '#6b7789', '#66707f', '#a9b4c2', '#7b8595'],
     ['--accent',         '#4c8dff', '#1b5fd0', '#7fb2ff', '#4a7fd6'],
     ['--accent-dim',     '#23314f', '#dbe6fb', '#12233d', '#28344c'],
     ['--accent-ink',     '#cfe0ff', '#0b3576', '#e8f1ff', '#bccfee'],
@@ -176,6 +176,24 @@ export const ACCENTS = [
     ['--l-pink-pale',     '#f093fb'],   ['--l-magenta',       '#f72585'],
     ['--l-magenta-2',     '#b5179e'],   ['--l-crimson',       '#ff0055'],
     ['--l-plum',          '#6b2d5b'],
+
+    // One-off literals that are used as TEXT (found by tools/suggest-tail-tokens.mjs).
+    // Decorative one-offs used only as gradient stops stay literals — they sit behind
+    // ink that follows the fill. These don't: on a light theme a pale pink label would
+    // keep its dark-theme lightness and land on an off-white panel.
+    ['--l-x-red-pale',    '#ff7e82'],   ['--l-x-red-pale-2',  '#ff9fb3'],
+    ['--l-x-red-pale-3',  '#ff87ab'],   ['--l-x-red-pale-4',  '#ffb9c9'],
+    ['--l-x-red',         '#ff6b86'],   ['--l-x-red-2',       '#ff7074'],
+    ['--l-x-grey',        '#71767b'],   ['--l-x-yellow',      '#ffc107'],
+    ['--l-x-yellow-pale', '#ffeaa7'],   ['--l-x-orange',      '#ffaa00'],
+    ['--l-x-orange-2',    '#ffce54'],   ['--l-x-green-pale',  '#b9ffc9'],
+    ['--l-x-teal',        '#88c0d0'],   ['--l-x-teal-pale',   '#95e1d3'],
+    ['--l-x-blue',        '#5e81ac'],   ['--l-x-blue-pale',   '#b9c9ff'],
+    ['--l-x-blue-pale-2', '#74b9ff'],   ['--l-x-blue-pale-3', '#c8d6e5'],
+    ['--l-x-blue-pale-4', '#7c8cff'],   ['--l-x-blue-pale-5', '#bcd2e6'],
+    ['--l-x-violet-pale', '#ddb6f2'],   ['--l-x-violet-pale-2','#c9a0dc'],
+    ['--l-x-violet-pale-3','#d4b8e8'],  ['--l-x-violet-pale-4','#d5a6f0'],
+    ['--l-x-pink',        '#b48ead'],
 
     ['--l-violet',        '#c77dff'],   ['--l-violet-2',      '#9b59b6'],
     ['--l-violet-3',      '#9d4edd'],   ['--l-violet-4',      '#8e44ad'],
@@ -315,6 +333,9 @@ export function buildMap() {
  */
 export function snapToStructural(hex, maxDistance = 0.06) {
     const { s, l } = hsl(hex);
+    // A near-grey navy (#2c3e50) reads as structure, so it can travel a little further
+    // to reach a token than a saturated one-off can.
+    if (l <= 0.34 && s <= 0.35) maxDistance = 0.09;
     let band;
     if (l <= 0.34) band = ['surface', 'line'];
     else if (s <= 0.16 && l >= 0.5) band = ['ink', 'line'];

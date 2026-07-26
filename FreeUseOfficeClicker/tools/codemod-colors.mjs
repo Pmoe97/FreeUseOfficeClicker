@@ -22,8 +22,8 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { buildMap, buildAlphaMap, snapToStructural, VEIL_ALPHAS } from './palette.mjs';
-import { hsl } from './color-lib.mjs';
+import { buildMap, buildAlphaMap, snapToStructural, SEMANTIC, VEIL_ALPHAS } from './palette.mjs';
+import { hsl, contrast } from './color-lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SRC = join(here, '..', 'index.html');
@@ -33,6 +33,9 @@ const STAGES = {
     text: new Set(['ink', 'onDark', 'onFill']),
     accents: new Set(['accent']),
     veils: new Set(['veil']),
+    // Not a literal pass: re-decides already-migrated on-fill ink now that the fill's
+    // own lightness is taken into account. Safe to re-run.
+    retune: new Set(['retune']),
 };
 
 const arg = (name, dflt) => {
@@ -111,22 +114,46 @@ function isTextColor(back) {
     );
 }
 
-/** Does the surrounding declaration paint a saturated / dynamic fill behind us? */
+/**
+ * Should ink on this fill be dark rather than white?
+ *
+ * Judged on contrast, not lightness: a green --positive fill measures l=0.46 yet leaves
+ * white text at 2.7:1. The 3:1 cut-off is deliberately conservative — white-on-#e5484d
+ * (4.2:1) and white-on-#667eea (3.4:1) are this game's visual identity and stay put,
+ * while genuinely unreadable pairings (green 2.7, orange 2.2, hot pink 2.7) flip.
+ */
+function needsDarkInk(fillHex) {
+    const white = contrast('#ffffff', fillHex);
+    const dark = contrast('#0f1419', fillHex);
+    return white < 3 && dark > white;
+}
+
+/**
+ * Does the surrounding declaration paint a saturated / dynamic fill behind us?
+ * Returns false, or { light: true|false|null } describing the fill's own lightness —
+ * ink on a PALE fill (#ff69b4, --positive) has to go dark, ink on a mid/deep fill
+ * (--danger, --l-indigo) has to stay light. `null` means we couldn't tell.
+ */
 function hasBrightFill(ctx) {
     const s = ctx.all;
     const bgDecl = /background[a-z-]*\s*:\s*([^;"'`]*)/gi;
     let m;
     while ((m = bgDecl.exec(s))) {
         const value = m[1];
-        if (/gradient|\$\{/.test(value)) return true; // dynamic or gradient fill
-        if (BRIGHT_TOKEN_RE.test(value)) return true; // already-tokenised accent
         const hex = value.match(/#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/);
-        if (hex && hsl(hex[0]).l > 0.34) return true;
+        if (hex && hsl(hex[0]).l > 0.34) return { light: needsDarkInk(hex[0]) };
+        if (BRIGHT_TOKEN_RE.test(value)) {
+            // Resolve the token's dark-theme value so we can judge the fill.
+            const token = value.match(/var\((--[a-z0-9-]+)/);
+            const legacy = token && TOKEN_VALUES.get(token[1]);
+            return { light: legacy ? needsDarkInk(legacy) : null };
+        }
+        if (/gradient|\$\{/.test(value)) return { light: null }; // dynamic or gradient fill
     }
     // Gradient-filled ancestor written in the same template chunk (headers etc).
-    if (/linear-gradient\([^)]*\)\s*;?\s*$/.test(ctx.back)) return true;
+    if (/linear-gradient\([^)]*\)\s*;?\s*$/.test(ctx.back)) return { light: null };
     // Fill supplied by a component class on the same tag.
-    if (FILL_CLASS_RE.test(ctx.rawBack.slice(-220))) return true;
+    if (FILL_CLASS_RE.test(ctx.rawBack.slice(-220))) return { light: null };
     return false;
 }
 
@@ -135,10 +162,17 @@ function hasBrightFill(ctx) {
 const TOKEN_MAP = buildMap();
 const ALPHA_MAP = buildAlphaMap();
 
+// token -> its dark-theme value, so hasBrightFill() can judge `background: var(--danger)`.
+const TOKEN_VALUES = new Map();
+for (const [literal, entry] of TOKEN_MAP) if (!TOKEN_VALUES.has(entry.token)) TOKEN_VALUES.set(entry.token, literal);
+for (const row of SEMANTIC) TOKEN_VALUES.set(row[0], row[1]);
+
 // `white` behaves exactly like #ffffff — but ONLY as a CSS value. The bare word
 // also appears in `white-space:` and in a lot of prose ("alabaster white skin",
 // which feeds image prompts), so isCssKeyword() below gates every match.
 const LITERAL_RE = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b|\bwhite\b|rgba?\(\s*(?:0\s*,\s*0\s*,\s*0|255\s*,\s*255\s*,\s*255)\s*,\s*(?:0?\.\d+|1|0)\s*\)/g;
+// Both on-fill inks, so the pass can correct in either direction and be re-run freely.
+const RETUNE_RE = /var\(--l-(?:ink-on-fill|on-accent)\)/g;
 
 const COLOR_PROP =
     '(?:color|background|background-color|border-color|border-top-color|border-right-color|border-bottom-color|border-left-color|outline-color|caret-color|text-decoration-color|-webkit-text-fill-color|fill|stroke)';
@@ -183,6 +217,32 @@ function run(src, stageRoles, opts) {
     const stats = { replaced: {}, skipped: {}, unknown: {}, snapped: {} };
     const bump = (bucket, key) => (bucket[key] = (bucket[key] || 0) + 1);
 
+    if (stageRoles.has('retune')) {
+        for (const m of src.matchAll(RETUNE_RE)) {
+            if (inRanges(ranges, m.index)) continue;
+            const ctx = declContext(src, m.index);
+            if (!isTextColor(ctx.back)) continue; // only ink decisions
+            const fill = hasBrightFill(ctx);
+            if (!fill || fill.light === null) {
+                // Nothing local to judge (gradient, component class, dynamic colour).
+                bump(stats.skipped, 'fill unknown (kept)');
+                continue;
+            }
+            const want = fill.light ? '--l-on-accent' : '--l-ink-on-fill';
+            if (m[0] === `var(${want})`) {
+                bump(stats.skipped, 'already correct');
+                continue;
+            }
+            edits.push({ i: m.index, len: m[0].length, token: want, raw: m[0] });
+            bump(stats.replaced, `retune:${want}`);
+        }
+        let retuned = src;
+        for (const e of edits.sort((a, b) => b.i - a.i)) {
+            retuned = retuned.slice(0, e.i) + `var(${e.token})` + retuned.slice(e.i + e.len);
+        }
+        return { out: opts.dry ? src : retuned, edits, stats };
+    }
+
     for (const m of src.matchAll(LITERAL_RE)) {
         const raw = m[0];
         const i = m.index;
@@ -226,30 +286,41 @@ function run(src, stageRoles, opts) {
                 continue;
             }
             const key = raw === 'white' ? '#ffffff' : raw.toLowerCase();
+            const textUse = isTextColor(ctx.back);
             let entry = TOKEN_MAP.get(key);
             if (!entry) {
                 // One-off dark surface or grey → snap to the nearest structural token.
                 const snap = snapToStructural(key);
-                if (!snap) {
+                if (snap) {
+                    entry = snap;
+                    bump(stats.snapped, `${key}→${snap.token} (Δ${snap.distance.toFixed(3)})`);
+                } else if (textUse && hsl(key).l <= 0.34) {
+                    // Any dark colour used as TEXT is ink meant to sit on something
+                    // bright, whatever its hue (#05231b on a green fill, #2d1515 on
+                    // red). It has to follow the fill, so route it to the on-fill ink.
+                    entry = { token: '--l-on-accent', role: 'onDark' };
+                    bump(stats.snapped, `${key}→--l-on-accent (dark ink)`);
+                } else {
                     bump(stats.unknown, key);
                     continue;
                 }
-                entry = snap;
-                bump(stats.snapped, `${key}→${snap.token} (Δ${snap.distance.toFixed(3)})`);
             }
             token = entry.token;
             role = entry.role;
 
-            const textUse = isTextColor(ctx.back);
-            const brightFill = hasBrightFill(ctx);
+            const fill = hasBrightFill(ctx);
 
-            if (role === 'ink' && textUse && brightFill) {
-                // Light ink printed on a saturated fill. It must NOT follow the page
-                // ink (that would put dark text on a coloured button); it follows the
-                // fill, which means going black in High Contrast where accents are
-                // brightened to clear 7:1.
-                token = '--l-ink-on-fill';
-                role = 'onFill';
+            if (role === 'ink' && textUse && fill) {
+                // Light ink printed on a saturated fill: it follows the FILL, not the
+                // page. Which ink depends on how pale that fill is — white sits fine on
+                // --danger but not on a #ff69b4 or --positive button (both ~2.6:1).
+                if (fill.light === true) {
+                    token = '--l-on-accent'; // pale fill → dark ink, flips per theme
+                    role = 'onDark';
+                } else {
+                    token = '--l-ink-on-fill'; // mid/deep or unknown fill → light ink
+                    role = 'onFill';
+                }
             }
             if ((role === 'surface' || role === 'line') && textUse) {
                 // A dark literal used as TEXT means "ink on something bright".
@@ -340,7 +411,7 @@ function report(stats, edits) {
     }
     const unknown = Object.entries(stats.unknown).sort((a, b) => b[1] - a[1]);
     if (unknown.length) {
-        const shown = unknown.slice(0, 18);
+        const shown = has('verbose') ? unknown : unknown.slice(0, 18);
         console.log(
             `no token (${unknown.length} distinct, ${unknown.reduce((s, [, n]) => s + n, 0)} uses): ` +
                 shown.map(([k, n]) => `${k}×${n}`).join(' ')
