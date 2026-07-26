@@ -10,6 +10,7 @@
     "theme:tokens": "node tools/gen-theme-css.mjs",
     "theme:audit": "node tools/gen-theme-css.mjs --audit",
     "theme:suggest": "node tools/suggest-tail-tokens.mjs",
+    "theme:preview": "node tools/gen-theme-preview.mjs",
     "codemod:colors": "node tools/codemod-colors.mjs",
     "colors:inventory": "node tools/color-inventory.mjs"
   },
