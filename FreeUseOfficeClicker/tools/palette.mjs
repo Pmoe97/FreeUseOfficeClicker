@@ -47,9 +47,9 @@ export const STRUCTURAL = [
     ['--l-neutral-4',       '#444444',  'line',    '#ccd0d6', '#5c5c5c', '#4a4d54'],
     ['--l-neutral-5',       '#555555',  'line',    '#b9bec7', '#7a7a7a', '#5c6068'],
     ['--l-neutral-6',       '#666666',  'line',    '#a8aeb8', '#8f8f8f', '#6d717a'],
-    ['--l-neutral-7',       '#777777',  'line',    '#9aa1ac', '#a3a3a3', '#7d828b'],
-    ['--l-neutral-8',       '#888888',  'line',    '#7d848f', '#b5b5b5', '#8d929b'],
-    ['--l-neutral-9',       '#999999',  'line',    '#6f7681', '#c4c4c4', '#9ba0a8'],
+    ['--l-neutral-7',       '#777777',  'line',    '#656c77', '#a3a3a3', '#7d828b'],
+    ['--l-neutral-8',       '#888888',  'line',    '#5a616b', '#b5b5b5', '#8d929b'],
+    ['--l-neutral-9',       '#999999',  'line',    '#525963', '#c4c4c4', '#9ba0a8'],
 
     ['--l-ink',             '#ffffff',  'ink',     '#1b2129', '#ffffff', '#d5dae3'],
     ['--l-ink-dim',         '#cccccc',  'ink',     '#39414c', '#f0f0f0', '#aeb5c0'],
@@ -65,6 +65,12 @@ export const STRUCTURAL = [
     // near-black, but the light theme DARKENS accents for page contrast, so there
     // the same ink must go white. Hence the flip in the light column.
     ['--l-on-accent',       '#0f1419',  'onDark',  '#ffffff', '#000000', '#12161d'],
+
+    // The mirror case: LIGHT ink printed on an accent fill (`background: var(--danger);
+    // color: white`). Dark, light and dim keep their accents dark enough for white to
+    // work, but High Contrast brightens accents to clear 7:1 on black — so there the
+    // same ink has to go black instead.
+    ['--l-ink-on-fill',     '#ffffff',  'onFill',  '#ffffff', '#000000', '#0d1014'],
 ];
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -84,7 +90,7 @@ export const SEMANTIC = [
     ['--border-strong',  '#37445a', '#b6bfd0', '#7f8ea8', '#43506a'],
     ['--text',           '#e7ecf3', '#1b2129', '#ffffff', '#d5dae3'],
     ['--text-dim',       '#8a97ac', '#4a5566', '#d5dde8', '#98a4b6'],
-    ['--text-mute',      '#5d6878', '#66707f', '#a9b4c2', '#6f7988'],
+    ['--text-mute',      '#6b7789', '#66707f', '#a9b4c2', '#6f7988'],
     ['--accent',         '#4c8dff', '#1b5fd0', '#7fb2ff', '#4a7fd6'],
     ['--accent-dim',     '#23314f', '#dbe6fb', '#12233d', '#28344c'],
     ['--accent-ink',     '#cfe0ff', '#0b3576', '#e8f1ff', '#bccfee'],
@@ -264,10 +270,13 @@ export const THEMES = [
         id: 'dim',
         label: 'Dimmed',
         idx: 3,
-        // Low-glare dark: desaturate and pull toward mid-lightness so nothing burns.
+        // Low-glare dark: desaturated, but NOT darkened — an accent here has to work as
+        // text on a dim panel (the active tab label is accent-coloured), which needs
+        // lightness. The ink printed on accent FILLS goes dark instead (see
+        // --l-ink-on-fill), which is what keeps both sides readable.
         accent: (hex) => {
             const h = hsl(hex);
-            return fromHsl({ h: h.h, s: h.s * 0.72, l: h.l * 0.82 + 0.06 });
+            return fromHsl({ h: h.h, s: h.s * 0.75, l: Math.min(0.72, h.l * 0.85 + 0.08) });
         },
         pageBg: '#171b22',
     },
@@ -278,10 +287,11 @@ export function buildMap() {
     const map = new Map();
     for (const row of STRUCTURAL) {
         const [token, legacy, role] = row;
-        // 'onDark' is reachable only through the codemod's "dark literal used as text"
-        // rule. Keying it by its literal would make it shadow --l-bg, which shares the
-        // same #0f1419 — and every page background would then flip to white ink.
-        if (role === 'onDark') continue;
+        // 'onDark'/'onFill' are reachable only through the codemod's context rules.
+        // Keying them by their literal would make them shadow --l-bg / --l-ink, which
+        // share the same #0f1419 / #ffffff — every page background would then flip to
+        // white ink, and every body text to on-fill white.
+        if (role === 'onDark' || role === 'onFill') continue;
         map.set(legacy, { token, role, row });
         // 3-digit shorthand spelling of the same colour (e.g. #333 for #333333)
         const short = shorthand(legacy);
