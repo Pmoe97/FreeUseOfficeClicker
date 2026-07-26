@@ -40,6 +40,7 @@ export const STRUCTURAL = [
     ['--l-panel-violet',    '#1a1028',  'surface', '#f3eefb', '#0c0616', '#221933'],
     ['--l-slate',           '#2d3436',  'surface', '#dfe3e6', '#14191a', '#333a3d'],
     ['--l-slate-2',         '#2f3336',  'surface', '#e1e4e6', '#16191a', '#353a3d'],
+    ['--l-black',           '#000000',  'surface', '#e4e7ee', '#000000', '#0d1014'],
 
     ['--l-line',            '#0f3460',  'line',    '#ccd6e6', '#3c6ba8', '#1c3f6b'],
     ['--l-neutral-3',       '#333333',  'line',    '#d6d9df', '#4a4a4a', '#3a3d44'],
@@ -277,6 +278,10 @@ export function buildMap() {
     const map = new Map();
     for (const row of STRUCTURAL) {
         const [token, legacy, role] = row;
+        // 'onDark' is reachable only through the codemod's "dark literal used as text"
+        // rule. Keying it by its literal would make it shadow --l-bg, which shares the
+        // same #0f1419 — and every page background would then flip to white ink.
+        if (role === 'onDark') continue;
         map.set(legacy, { token, role, row });
         // 3-digit shorthand spelling of the same colour (e.g. #333 for #333333)
         const short = shorthand(legacy);
@@ -288,6 +293,52 @@ export function buildMap() {
         if (short) map.set(short, { token, role: 'accent' });
     }
     return map;
+}
+
+/**
+ * One-off dark surfaces and greys (~300 literals used once or twice each) would
+ * stay dark holes in a light theme. Rather than mint a token per one-off, snap them
+ * to the nearest structural token — but only when the colour is close enough that
+ * the dark theme can't tell the difference. Saturated one-offs (a brown, a maroon)
+ * fail the distance test and keep their literal, which is the right call: they are
+ * decorative accents, not structure.
+ */
+export function snapToStructural(hex, maxDistance = 0.06) {
+    const { s, l } = hsl(hex);
+    let band;
+    if (l <= 0.34) band = ['surface', 'line'];
+    else if (s <= 0.16 && l >= 0.5) band = ['ink', 'line'];
+    else return null;
+
+    const target = parseRgb(hex);
+    let best = null;
+    for (const row of STRUCTURAL) {
+        const [token, legacy, role] = row;
+        if (!band.includes(role)) continue;
+        // Distance alone would fold a dark maroon into a grey — close in RGB, obviously
+        // different on screen. Require the hue to agree too (or the source to be near-grey).
+        const t = hsl(legacy);
+        const hueGap = Math.min(Math.abs(t.h - hsl(hex).h), 360 - Math.abs(t.h - hsl(hex).h));
+        const hueOk = t.s <= 0.16 ? s <= 0.35 : hueGap <= 35 || s <= 0.2;
+        if (!hueOk) continue;
+        const d = rgbDistance(target, parseRgb(legacy));
+        if (!best || d < best.d) best = { token, role, d };
+    }
+    if (!best || best.d > maxDistance) return null;
+    return { token: best.token, role: best.role, distance: best.d };
+}
+
+function parseRgb(hex) {
+    let h = hex.slice(1);
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+
+function rgbDistance(a, b) {
+    const dr = (a[0] - b[0]) / 255,
+        dg = (a[1] - b[1]) / 255,
+        db = (a[2] - b[2]) / 255;
+    return Math.sqrt(dr * dr + dg * dg + db * db) / Math.sqrt(3);
 }
 
 function shorthand(hex) {

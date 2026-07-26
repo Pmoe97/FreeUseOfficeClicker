@@ -22,7 +22,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { buildMap, buildAlphaMap, VEIL_ALPHAS } from './palette.mjs';
+import { buildMap, buildAlphaMap, snapToStructural, VEIL_ALPHAS } from './palette.mjs';
 import { hsl } from './color-lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -137,7 +137,7 @@ function normaliseAlpha(text) {
 function run(src, stageRoles, opts) {
     const ranges = protectedRanges(src);
     const edits = [];
-    const stats = { replaced: {}, skipped: {}, unknown: {} };
+    const stats = { replaced: {}, skipped: {}, unknown: {}, snapped: {} };
     const bump = (bucket, key) => (bucket[key] = (bucket[key] || 0) + 1);
 
     for (const m of src.matchAll(LITERAL_RE)) {
@@ -179,10 +179,16 @@ function run(src, stageRoles, opts) {
             }
         } else {
             const key = raw === 'white' ? '#ffffff' : raw.toLowerCase();
-            const entry = TOKEN_MAP.get(key);
+            let entry = TOKEN_MAP.get(key);
             if (!entry) {
-                bump(stats.unknown, key);
-                continue;
+                // One-off dark surface or grey → snap to the nearest structural token.
+                const snap = snapToStructural(key);
+                if (!snap) {
+                    bump(stats.unknown, key);
+                    continue;
+                }
+                entry = snap;
+                bump(stats.snapped, `${key}→${snap.token} (Δ${snap.distance.toFixed(3)})`);
             }
             token = entry.token;
             role = entry.role;
@@ -230,6 +236,16 @@ function report(stats, edits) {
     console.log(`\n${total} replacement(s)`, byRole);
     const skipped = Object.entries(stats.skipped).sort((a, b) => b[1] - a[1]);
     if (skipped.length) console.log('skipped:', Object.fromEntries(skipped));
+    const snapped = Object.entries(stats.snapped).sort((a, b) => b[1] - a[1]);
+    if (snapped.length) {
+        const uses = snapped.reduce((s, [, n]) => s + n, 0);
+        console.log(`snapped to nearest token (${snapped.length} literals, ${uses} uses), largest deltas:`);
+        const byDelta = snapped
+            .map(([k, n]) => ({ k, n, d: parseFloat(k.match(/Δ([\d.]+)/)?.[1] || '0') }))
+            .sort((a, b) => b.d - a.d)
+            .slice(0, 8);
+        for (const s of byDelta) console.log(`   ${s.k} ×${s.n}`);
+    }
     const unknown = Object.entries(stats.unknown).sort((a, b) => b[1] - a[1]);
     if (unknown.length) {
         const shown = unknown.slice(0, 18);
