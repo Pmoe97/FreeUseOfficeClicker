@@ -94313,6 +94313,51 @@ I've been thinking about you... want to find somewhere private?</textarea
 </script>
 
 <style>
+    /* ════════════════════════════════════════════════════════════════════════
+       FUOC STYLESHEET — READ THIS FIRST
+       ════════════════════════════════════════════════════════════════════════
+
+       This is the game's main stylesheet (~8.8k lines). There is one other, much
+       smaller <style> block earlier in the file holding boss-fight animations, plus
+       a few blocks the game injects at runtime from JS strings.
+
+       LAYER ORDER (cascade order matters — later wins on equal specificity):
+
+         1. TOKEN LAYER          non-colour design tokens: type scale, spacing,
+                                 radius, z-index tiers, .num, the .fuoc-ui reset
+         2. THEME LAYER          GENERATED — every colour token, once per theme.
+                                 Edit tools/palette.mjs, then `npm run theme:tokens`.
+                                 Never hand-edit between the sentinel comments.
+         3. ACCESSIBILITY LAYER  player display options, keyed off data-fuoc-*
+                                 attributes on <html>. Uses !important on purpose:
+                                 it has to beat 4,400 inline styles.
+         4. COMPONENTS           .fuoc-ui components from the UI overhaul, then the
+                                 older per-tab and per-modal rules, then the mobile
+                                 responsive blocks at the end.
+
+       WHERE COLOURS COME FROM
+         Most of this app's colour lives in inline styles inside JS template strings,
+         where no stylesheet can reach it. Those literals were migrated to tokens
+         (var(--l-*)), so a theme can retune them from one place. When you add UI:
+
+           • use a token, not a literal — var(--surface), var(--text), var(--danger)
+           • text on a coloured button uses var(--l-ink-on-fill) (light ink) or
+             var(--l-on-accent) (dark ink); both flip per theme so the button stays
+             readable. Don't hard-code #fff there.
+           • need a colour+alpha? call fuocAlpha(colour, "44") — string-concatenating
+             an alpha onto a var() produces invalid CSS.
+
+       TOOLING (run from FreeUseOfficeClicker/)
+         npm run css:audit            health report: blocks, tokens, literals left
+         npm run css:audit -- --map   section map with current line numbers
+         npm run css:audit -- --risk  literals that can't follow a theme (should be 0)
+         npm run theme:tokens         regenerate the theme layer from the palette
+         npm run theme:audit          WCAG contrast per theme
+         npm run codemod:colors -- --stage=<surfaces|text|accents|veils|retune>
+
+       Full write-up: docs/theming.md
+       ════════════════════════════════════════════════════════════════════════ */
+
     /* ============================================================
      FUOC DESIGN SYSTEM — TOKEN LAYER  (Mockup D · Density Fusion)
      STEP 1 of the UI overhaul. PURELY ADDITIVE: defines design

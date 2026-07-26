@@ -3,9 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Build step that minifies index.html into a paste-into-Perchance artifact.",
+  "description": "Build step that minifies index.html into a paste-into-Perchance artifact, plus the theming/CSS tooling.",
   "scripts": {
-    "build": "node build-perchance.mjs"
+    "build": "node build-perchance.mjs",
+    "css:audit": "node tools/css-audit.mjs",
+    "theme:tokens": "node tools/gen-theme-css.mjs",
+    "theme:audit": "node tools/gen-theme-css.mjs --audit",
+    "theme:suggest": "node tools/suggest-tail-tokens.mjs",
+    "codemod:colors": "node tools/codemod-colors.mjs",
+    "colors:inventory": "node tools/color-inventory.mjs"
   },
   "devDependencies": {
     "terser": "^5.36.0"
