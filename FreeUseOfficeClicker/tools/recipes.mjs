@@ -64,7 +64,7 @@ export const RECIPES = {
         // Phosphor on glass: surfaces stay very dark and barely tinted, ink glows.
         surface: { range: [0.02, 0.16], sat: 0.42 },
         line: { range: [0.20, 0.58], sat: 0.40 },
-        ink: { range: [0.58, 0.88], sat: 0.55 },
+        ink: { range: [0.50, 0.76], sat: 0.85, forceSat: true },
         accent: { satScale: 1.15, lightScale: 1.02, hueSpread: 0.1 },
     },
     'terminal-amber': {
@@ -74,7 +74,7 @@ export const RECIPES = {
         pageBg: '#0b0600',
         surface: { range: [0.03, 0.17], sat: 0.45 },
         line: { range: [0.21, 0.58], sat: 0.42 },
-        ink: { range: [0.58, 0.86], sat: 0.62 },
+        ink: { range: [0.50, 0.74], sat: 0.88, forceSat: true },
         accent: { satScale: 1.12, lightScale: 1.02, hueSpread: 0.1 },
     },
     ocean: {
@@ -129,7 +129,7 @@ export const RECIPES = {
         // blue light, and a 0.97 top just reads as "Daylight with a tint".
         surface: { range: [0.925, 0.83], sat: 0.62 },
         line: { range: [0.78, 0.34], sat: 0.34 },
-        ink: { range: [0.42, 0.15], sat: 0.30 },
+        ink: { range: [0.42, 0.15], sat: 0.30, forceSat: true },
         accent: { satScale: 0.9, lightScale: 1, hueSpread: 0.16 },
     },
 };
@@ -156,12 +156,32 @@ function placeOnRamp(darkHex, role, spec) {
 /** Re-tint a structural colour onto the recipe's ramp, keeping its rank. */
 export function deriveStructural(darkHex, role, recipe) {
     const spec = recipe[role];
-    const { s } = hsl(darkHex);
+    const { l: darkL, s } = hsl(darkHex);
     const light = placeOnRamp(darkHex, role, spec);
     // A colour that was already near-grey in the default stays near-grey here, so the
     // neutral greys (#333, #888) don't suddenly acquire the theme's cast.
-    const sat = spec.sat * clamp(0.35 + s * 2.2, 0.35, 1);
-    return fromHsl({ h: recipe.hue, s: sat, l: light });
+    //
+    // `forceSat` opts out of that: body ink is #ffffff in the default, i.e. zero
+    // saturation, so the rule washed Terminal's text out to near-white — and phosphor-
+    // coloured text is the entire point of a CRT theme. Themes whose identity lives in
+    // the ink tint set it.
+    const sat = spec.forceSat ? spec.sat : spec.sat * clamp(0.35 + s * 2.2, 0.35, 1);
+    let out = fromHsl({ h: recipe.hue, s: sat, l: light });
+
+    // The `line` ramp is asked to do two jobs: its dark end paints fills (--l-neutral-3
+    // on an inactive chip) and its light end paints muted ink on top of them
+    // (--l-neutral-8). On a deliberately compressed ramp — Nordic, Sepia — the two ends
+    // land ~2.7:1 apart and that text stops being readable. Push the ink end away from
+    // the fill end until it clears 3:1, rather than hand-tuning every recipe.
+    const [lo, hi] = SPANS.line;
+    const t = clamp((darkL - lo) / (hi - lo));
+    if (role === 'line' && t >= 0.5) {
+        const fillEnd = fromHsl({ h: recipe.hue, s: sat, l: spec.range[0] });
+        if (contrast(out, fillEnd) < 3.05) {
+            out = forceContrast(out, fillEnd, 3.05, recipe.mode === 'light' ? -1 : 1);
+        }
+    }
+    return out;
 }
 
 /** Re-hue an accent: semantic families keep their hue, decorative ones move. */
@@ -183,11 +203,12 @@ export function deriveAccent(darkHex, token, recipe) {
     const light = clamp(h.l * (spec.lightScale ?? 1) + (spec.lightShift ?? 0));
     let out = fromHsl({ h: hue, s: sat, l: light });
 
-    // Guarantee the accent is legible as text on this theme's page, the same floor the
-    // hand-authored themes are held to.
+    // Guarantee the accent is legible as text on the worst-case panel of this theme, the
+    // same floor the hand-authored themes are held to.
     const min = recipe.mode === 'light' ? 4.5 : 3;
-    if (contrast(out, recipe.pageBg) < min) {
-        out = forceContrast(out, recipe.pageBg, min, recipe.mode === 'light' ? -1 : 1);
+    const bg = recipe.floorBg || recipe.pageBg;
+    if (contrast(out, bg) < min) {
+        out = forceContrast(out, bg, min, recipe.mode === 'light' ? -1 : 1);
     }
     return out;
 }
@@ -207,10 +228,25 @@ export function deriveOnFill(recipe, sampleFills, prefer) {
 }
 
 // The page background a recipe *declares* is only a starting intent; what actually paints
-// is --l-bg, derived from the ramp. Overwrite pageBg with the derived value so every
-// contrast floor in deriveAccent() is measured against the colour really on screen.
+// is --l-bg, derived from the ramp. Overwrite pageBg with the derived value so contrast is
+// measured against the colour really on screen.
+//
+// floorBg is the surface a contrast floor should actually be measured against: accent text
+// mostly sits on PANELS, not on the page, and the panel ramp runs lighter than the page.
+// Nordic made that concrete — its polar-night surfaces are much lighter than the other
+// dark themes, so accents that cleared 3:1 on its page still landed at 2.8:1 on its cards.
+// Worst case is the light end of the surface ramp for a dark theme, the dark end for light.
 for (const recipe of Object.values(RECIPES)) {
     recipe.pageBg = deriveStructural('#0f1419', 'surface', recipe);
+    const ends = recipe.surface.range.map((l) => fromHsl({ h: recipe.hue, s: recipe.surface.sat, l }));
+    recipe.floorBg = recipe.mode === 'light' ? darkest(ends) : lightest(ends);
+}
+
+function lightest(colours) {
+    return colours.reduce((a, b) => (hsl(a).l >= hsl(b).l ? a : b));
+}
+function darkest(colours) {
+    return colours.reduce((a, b) => (hsl(a).l <= hsl(b).l ? a : b));
 }
 
 /** A *-dim companion: the faint wash behind a status colour. */
