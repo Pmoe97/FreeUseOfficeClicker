@@ -2,9 +2,17 @@
 
 How themes work in this game, why they're built this way, and what to do when you add UI.
 
-Player-facing entry point: **Settings → 🎨 Display**. Four themes (Midnight, Daylight,
-High Contrast, Dimmed) plus "Match System", a 90–140% text-size slider, and five
-accessibility switches.
+Player-facing entry point: **Settings → 🎨 Display**. Twelve themes plus "Match System", a
+90–140% text-size slider, and five accessibility switches.
+
+| Group | Themes |
+| --- | --- |
+| Standard | Midnight (default), Daylight, Match System |
+| Easy on the eyes | High Contrast, Dimmed, Sepia Paper, Nordic |
+| Flavour | Crimson, Deep Ocean, Synthwave, Slate, Terminal, Amber CRT |
+
+The grouping is deliberate: with thirteen cards in one flat grid, the two themes someone
+came looking for because their eyes hurt would be buried among the fun ones.
 
 ---
 
@@ -85,16 +93,54 @@ white text at 2.7:1.
    follows the fill. `npm run css:audit -- --risk` fails the moment a literal is used as
    text, which is the case that breaks a light theme.
 
-## Adding or changing a theme
+## Two kinds of theme
 
-1. Edit `tools/palette.mjs` — add a column to `STRUCTURAL`/`SEMANTIC`/`EFFECTS` and an
-   entry in `THEMES` with an `accent()` transform.
-2. `npm run theme:tokens` (regenerates the layer, prints a contrast report).
-3. Add the theme to `THEMES` in the **DisplaySettings** boot script in `index.html`
-   (id, label, blurb, swatch). The swatches must stay literal hex — they preview themes
-   *other than* the active one, so a token would make every card identical. That block is
-   fenced with `fuoc-codemod:ignore-start/end`.
-4. Re-audit in the browser (below).
+**Hand-authored** (`dark`, `light`, `hc-dark`, `dim`): every one of the 197 tokens has a
+value picked by hand, in a column of `STRUCTURAL`/`SEMANTIC`/`EFFECTS`. Right for the
+themes that define the product's look — and unworkable beyond a handful, since each new
+one is 197 more decisions.
+
+**Recipe** (everything else): defined by a ~12-line spec in `tools/recipes.mjs` and
+derived from the default theme's values. Two rules keep that safe rather than merely fast:
+
+1. **Lightness structure is preserved; hue and saturation are not.** A recipe re-tints, it
+   does not re-rank — `--l-panel-2` stays darker than `--l-panel-3`, and accents keep
+   roughly the lightness they had in the default. This matters beyond aesthetics: the
+   codemod already decided *per site* whether ink on a given fill should be light or dark,
+   based on the default theme's accent lightness. Preserve that lightness and every one of
+   those decisions stays correct.
+2. **Semantic hues survive.** Money green, loss red and warning amber keep their hue
+   family; only decorative hues (indigo, cyan, violet, pink…) are pulled toward the theme.
+   This game's screens are full of +$ and −$ figures, so hue there carries information,
+   and it doubles as the colour-blindness safety net.
+
+Decorative hues are *compressed* toward the theme hue rather than flattened onto it, so a
+palette keeps internal variety — two chips that differed by 60° still differ, by ~11°.
+
+Every derived accent is then held to the same contrast floor as the hand-authored ones
+(`forceContrast` against the theme's real page background, which is itself derived, not
+declared).
+
+## Adding a theme
+
+Recipe (the normal case — ~12 lines):
+
+1. Add an entry to `RECIPES` in `tools/recipes.mjs`: `mode`, `hue`, and the three ramps
+   (`surface`, `line`, `ink`) plus an `accent` spec.
+2. `npm run theme:tokens` — regenerates the layer and prints a contrast report.
+3. `node tools/gen-picker-entries.mjs` — prints the `DisplaySettings.THEMES` table with
+   swatches read from the real palette, so a card can never misrepresent its theme. Paste
+   it between the `fuoc-codemod:ignore` markers in `index.html`. Give the theme a `group`
+   (`Standard` / `Easy on the eyes` / `Flavour`); anything else lands in `Other` rather
+   than vanishing from the picker.
+4. `npm run theme:preview out.html` for a visual contact sheet, then re-audit in the
+   browser (below).
+
+Hand-authored: add a column to the three tables and an entry in `THEMES` with an
+`accent()` transform. Only worth it if the theme needs per-token control.
+
+**Cost:** ~3.4 KB in the built artifact per theme. Relevant because the artifact is up
+against a Perchance size ceiling — see `docs/artifact-size.md`.
 
 ## Accessibility layer
 

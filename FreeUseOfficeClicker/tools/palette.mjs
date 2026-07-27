@@ -17,6 +17,7 @@
 // Regenerate the CSS after editing:  npm run theme:tokens
 
 import { forceContrast, fromHsl, hsl, contrast } from './color-lib.mjs';
+import { RECIPES, deriveStructural, deriveAccent, deriveOnFill, deriveDim } from './recipes.mjs';
 
 /* ────────────────────────────────────────────────────────────────────────────
    1. Structural colours — hand-authored per theme.
@@ -298,6 +299,19 @@ export const THEMES = [
         },
         pageBg: '#171b22',
     },
+
+    // ── Recipe themes ────────────────────────────────────────────────────────
+    // Derived rather than hand-authored: ~12 lines of spec each instead of 197
+    // colours. See tools/recipes.mjs. `group` drives the section headings in the
+    // Settings → Display picker.
+    ...Object.entries(RECIPES).map(([id, recipe]) => ({
+        id,
+        label: recipe.label,
+        recipe,
+        pageBg: recipe.pageBg,
+        // idx is unused for recipe themes; kept so nothing that reads it breaks.
+        idx: null,
+    })),
 ];
 
 /** literal -> { token, role } for every colour the codemod knows how to replace. */
@@ -381,6 +395,8 @@ function shorthand(hex) {
 
 /** Resolved value of `token` in `theme`. */
 export function valueFor(token, theme) {
+    if (theme.recipe) return recipeValue(token, theme);
+
     const s = STRUCTURAL.find((r) => r[0] === token);
     // STRUCTURAL row: [token, legacy, role, light, hc, dim] — dark reuses the legacy literal.
     if (s) return theme.idx === 0 ? s[1] : s[theme.idx + 2];
@@ -394,13 +410,70 @@ export function valueFor(token, theme) {
     return null;
 }
 
+/**
+ * Recipe themes derive every value from the DEFAULT theme's value plus a small spec.
+ * See tools/recipes.mjs for the two rules that keep this safe (lightness structure is
+ * preserved; semantic hues survive).
+ */
+function recipeValue(token, theme) {
+    const r = theme.recipe;
+    const structuralOf = (t) => STRUCTURAL.find((row) => row[0] === t);
+    const semanticOf = (t) => SEMANTIC.find((row) => row[0] === t);
+
+    // Fills the on-fill ink is most often printed on, so its direction is measured.
+    const sampleFills = () =>
+        ['--danger', '--positive', '--accent', '--warning'].map((t) => recipeValue(t, theme));
+
+    const s = structuralOf(token);
+    if (s) {
+        const [, legacy, role] = s;
+        if (role === 'onDark') {
+            // Dark ink on a bright fill in dark modes; white where fills are darkened.
+            return r.mode === 'light' ? '#ffffff' : deriveOnFill(r, sampleFills(), 'dark');
+        }
+        if (role === 'onFill') return deriveOnFill(r, sampleFills());
+        return deriveStructural(legacy, role, r);
+    }
+
+    const a = ACCENTS.find((row) => row[0] === token);
+    if (a) return deriveAccent(a[1], token, r);
+
+    const sem = semanticOf(token);
+    if (sem) {
+        const dark = sem[1];
+        // The design-system tokens map onto the same three roles.
+        if (/^--(bg|surface)/.test(token)) return deriveStructural(dark, 'surface', r);
+        if (/^--border/.test(token)) return deriveStructural(dark, 'line', r);
+        if (/^--text/.test(token)) return deriveStructural(dark, 'ink', r);
+        if (/-dim$/.test(token)) {
+            const base = token.replace(/-dim$/, '');
+            const baseRow = semanticOf(base);
+            return deriveDim(baseRow ? recipeValue(base, theme) : dark, r);
+        }
+        if (token === '--accent-ink') return deriveStructural('#cfe0ff', 'ink', r);
+        if (token === '--chat-self-fill') return deriveDim(recipeValue('--chat-self', theme), r);
+        return deriveAccent(dark, token, r);
+    }
+
+    const eff = EFFECTS.find((row) => row[0] === token);
+    if (eff) {
+        if (token === '--focus-ring') return recipeValue('--accent', theme);
+        // Shadows, scrim and glow follow the mode, not the hue.
+        return r.mode === 'light' ? eff[2] : eff[1];
+    }
+
+    const veil = VEILS.find((row) => row.token === token) || SHEENS.find((row) => row.token === token);
+    if (veil) return r.mode === 'light' ? veil.light : veil.dark;
+
+    return null;
+}
+
 /** Lowest accent contrast in a theme — sanity metric printed by the generator. */
 export function auditTheme(theme) {
-    const bg = theme.pageBg;
-    const worst = ACCENTS.map(([token, legacy]) => ({
-        token,
-        value: theme.accent(legacy),
-        ratio: contrast(theme.accent(legacy), bg),
-    })).sort((a, b) => a.ratio - b.ratio);
+    const bg = theme.pageBg || (theme.recipe && theme.recipe.pageBg);
+    const worst = ACCENTS.map(([token, legacy]) => {
+        const value = valueFor(token, theme);
+        return { token, value, ratio: contrast(value, bg) };
+    }).sort((a, b) => a.ratio - b.ratio);
     return worst;
 }
