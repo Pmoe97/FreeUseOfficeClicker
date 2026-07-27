@@ -103,6 +103,12 @@ async function main() {
   for (const b of jsBefore) for (const n of topLevelNames(b)) topNames.add(n);
   const manglable = [...topNames].filter((n) => !reserved.has(n));
 
+  // compress.toplevel is deliberately OFF. Turning it on saves ~58k, but it drops 342
+  // top-level declarations — and spot-checking showed live functions among them
+  // (runFridayPayroll, updateGameTime, processPayrollConsequences...). They go because
+  // dropping one dead root cascades into everything only that root called, so proving
+  // the whole subtree dead is a separate audit. A wrong call here breaks a feature that
+  // only fires on an in-game Friday, silently. Not a trade worth making for 1.7%.
   const terserOpts = { ...TERSER_BASE, mangle: { toplevel: true, reserved: [...reserved] } };
   let jsBeforeChars = 0;
   let jsAfterChars = 0;
@@ -196,6 +202,29 @@ async function main() {
   );
   if (droppedButReferenced.length) {
     problems.push(`window exposure removed but still referenced elsewhere: ${droppedButReferenced.join(', ')}`);
+  }
+
+  // 3b) <textarea>/<pre> content is the element's VALUE — whitespace in there is not
+  //     formatting. Both the markup pass and the JS-literal pass are supposed to leave
+  //     those regions alone; this proves it, including for the ones written inside JS
+  //     template literals (where the artifact escapes newlines, hence the normalising).
+  //     Contents that are a `${…}` interpolation are excluded: those are JS, which
+  //     terser is entitled to reformat (`a || ""` → `a||""`), and comparing them would
+  //     report a difference that has nothing to do with whitespace-as-content.
+  const verbatimContents = (html) =>
+    [...html.matchAll(/<(textarea|pre)\b[^>]*>([\s\S]*?)<\/\1\s*>/gi)]
+      .map((m) => m[2].replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\r\n/g, '\n'))
+      .filter((c) => !c.includes('${'))
+      .sort();
+  const vBefore = verbatimContents(src);
+  const vAfter = verbatimContents(out);
+  if (vBefore.length !== vAfter.length) {
+    problems.push(`textarea/pre count changed: ${vBefore.length} → ${vAfter.length}`);
+  } else {
+    const changed = vBefore.filter((c, i) => c !== vAfter[i]);
+    if (changed.length) {
+      problems.push(`textarea/pre content changed in ${changed.length} element(s) — whitespace there is content`);
+    }
   }
 
   // 4) Structural sanity: the markup tag skeleton must be unchanged. Compared over the

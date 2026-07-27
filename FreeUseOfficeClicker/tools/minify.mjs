@@ -63,11 +63,7 @@ export function minifyCss(css) {
             const next = css[j] || '';
             const dropAfter = '{};,:>+~(';
             const dropBefore = '{};,>+~)!';
-            if (dropAfter.includes(prev) || dropBefore.includes(next)) {
-                // no space needed
-            } else {
-                out += ' ';
-            }
+            if (!dropAfter.includes(prev) && !dropBefore.includes(next)) out += ' ';
             i = j;
             continue;
         }
@@ -121,19 +117,16 @@ export function minifyMarkup(html, { stripComments = true } = {}) {
         // comments
         if (html.startsWith('<!--', i)) {
             const end = html.indexOf('-->', i + 4);
-            if (stripComments) {
-                i = end === -1 ? n : end + 3;
-            } else {
-                out += html.slice(i, end === -1 ? n : end + 3);
-                i = end === -1 ? n : end + 3;
-            }
+            const stop = end === -1 ? n : end + 3;
+            if (!stripComments) out += html.slice(i, stop);
+            i = stop;
             continue;
         }
 
         // whitespace-sensitive elements: copy through, untouched
         const verbatim = VERBATIM_TAGS.find((t) => startsTag(html, i, t));
         if (verbatim) {
-            const close = html.toLowerCase().indexOf(`</${verbatim}`, i);
+            const close = html.toLowerCase().indexOf('</' + verbatim, i);
             const end = close === -1 ? n : html.indexOf('>', close);
             out += html.slice(i, end === -1 ? n : end + 1);
             i = end === -1 ? n : end + 1;
@@ -151,7 +144,7 @@ export function minifyMarkup(html, { stripComments = true } = {}) {
         // text node
         let j = i;
         while (j < n && html[j] !== '<') j++;
-        out += collapseText(html.slice(i, j));
+        out += html.slice(i, j).replace(/\s+/g, ' ');
         i = j;
     }
 
@@ -197,7 +190,7 @@ function minifyTag(tag) {
             let j = i + 1;
             while (j < n && tag[j] !== quote) j++;
             const value = tag.slice(i + 1, j);
-            out += quote + (COLLAPSIBLE_ATTRS.has(lastAttr) ? collapseAll(value).trim() : value) + quote;
+            out += quote + (COLLAPSIBLE_ATTRS.has(lastAttr) ? value.replace(/\s+/g, ' ').trim() : value) + quote;
             i = j + 1;
             continue;
         }
@@ -227,16 +220,6 @@ function minifyTag(tag) {
     return out;
 }
 
-/** Whitespace runs in text content → a single space (HTML-equivalent). */
-function collapseText(text) {
-    if (!/\s/.test(text)) return text;
-    return text.replace(/\s+/g, ' ');
-}
-
-function collapseAll(s) {
-    return s.replace(/\s+/g, ' ');
-}
-
 /* ────────────────────────────────────────────────────────────────────────────
    HTML inside JS string / template literals
    ──────────────────────────────────────────────────────────────────────────── */
@@ -255,26 +238,46 @@ const HTML_SIGNS =
  */
 export function looksLikeHtml(raw) {
     if (!HTML_SIGNS.test(raw)) return false;
-    // whitespace is content in these
-    if (/<textarea|<pre\b|pre-wrap|pre-line|break-spaces/i.test(raw)) return false;
+    // `white-space: pre-*` turns whitespace back into content, and it can apply to text
+    // written inline in the literal. Too fiddly to segment for the ~10 literals involved.
+    if (/pre-wrap|pre-line|break-spaces/i.test(raw)) return false;
     // prompt/instruction text: numbered or bulleted lines, or an ALL-CAPS directive
     if (/(?:^|\\n|\n)\s*(?:[-*•]|\d+[.)])\s/.test(raw) && !/<\/(?:li|p|div)>/i.test(raw)) return false;
     if (/CRITICAL|INSTRUCTIONS?:|RULES\b|Return ONLY|You are\b/.test(raw)) return false;
     return true;
 }
 
+// Inside these, whitespace is the element's value. A literal containing one is still
+// worth collapsing everywhere else — the largest literal in the file (46k, the
+// custom-employee form) was being skipped entirely because of one <textarea> near its end.
+const VERBATIM_REGION = /<(textarea|pre)\b[\s\S]*?<\/\1\s*>/gi;
+const SENTINEL = '\u0000';
+
 /**
  * Collapse formatting whitespace in an HTML-bearing literal, handling both real
- * newlines (template literals) and escaped ones (quoted strings).
+ * newlines (template literals) and escaped ones (quoted strings), and leaving
+ * <textarea>/<pre> regions exactly as they were.
  */
 export function collapseHtmlLiteral(raw) {
-    return raw
-        // escaped newline + indentation → single space
+    const keep = [];
+    // Park verbatim regions behind NUL-delimited placeholders. A printable placeholder
+    // would be unsafe: " 0 " occurs in ordinary HTML text ("Level 0 "), and the restore
+    // pass would then splice a <textarea> into the wrong place.
+    const parked = raw.replace(VERBATIM_REGION, (m) => {
+        keep.push(m);
+        return SENTINEL + (keep.length - 1) + SENTINEL;
+    });
+
+    const collapsed = parked
+        // escaped newline/tab + indentation → single space
         .replace(/(?:\\n|\\r|\\t)+(?:[ \t]|\\t)*/g, ' ')
         // real newline + indentation → single space
         .replace(/[\r\n]+[ \t]*/g, ' ')
         // long runs of plain spaces → one
         .replace(/[ \t]{2,}/g, ' ');
+
+    if (!keep.length) return collapsed;
+    return collapsed.replace(new RegExp(SENTINEL + '(\\d+)' + SENTINEL, 'g'), (_, i) => keep[Number(i)]);
 }
 
 /** Same content once all whitespace is ignored? Used as the transform's guard. */
