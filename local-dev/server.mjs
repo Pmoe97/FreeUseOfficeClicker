@@ -456,7 +456,9 @@ export async function serveGame(req, res, urlPath) {
     }
     const ext = path.extname(filePath).toLowerCase();
 
-    if (rel === "/index.html") {
+    // The shim is injected for the source AND for the built Perchance artifact, so a
+    // build can be smoke-tested locally before it's pasted anywhere.
+    if (rel === "/index.html" || rel === "/index.perchance.html") {
         const [html, shim] = await Promise.all([readFile(filePath, "utf8"), readFile(CONFIG.SHIM_FILE, "utf8")]);
         // Inject the shim as the FIRST thing in the document so the globals exist before any
         // game script runs. The on-disk file is untouched.
