@@ -1,0 +1,18 @@
+{
+  "name": "free-use-office-clicker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dev tooling for the Perchance file-tree layout (index.html + main.pjs + src/src/srcfiles/). The game itself needs no build step.",
+  "scripts": {
+    "dev": "node local-dev/server.mjs",
+    "css:audit": "node src/src/dev/tools/css-audit.mjs",
+    "theme:tokens": "node src/src/dev/tools/gen-theme-css.mjs",
+    "theme:audit": "node src/src/dev/tools/gen-theme-css.mjs --audit",
+    "theme:suggest": "node src/src/dev/tools/suggest-tail-tokens.mjs",
+    "theme:preview": "node src/src/dev/tools/gen-theme-preview.mjs",
+    "theme:picker": "node src/src/dev/tools/gen-picker-entries.mjs",
+    "codemod:colors": "node src/src/dev/tools/codemod-colors.mjs",
+    "colors:inventory": "node src/src/dev/tools/color-inventory.mjs"
+  }
+}

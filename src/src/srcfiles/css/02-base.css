@@ -1,0 +1,348 @@
+/* ============================================================================
+ * 02-base — Global base: .num, fuoc-ui reset, topbar/vitals/stats, stat-cycle, solvency + shared keyframes
+ * ----------------------------------------------------------------------------
+ */
+
+.fuoc-mini-btn {
+    padding: 7px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+.fuoc-mini-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    background: var(--accent-dim);
+}
+
+.fuoc-a11y-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 4px;
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+}
+.fuoc-a11y-row:first-of-type {
+    border-top: none;
+}
+.fuoc-a11y-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+}
+.fuoc-a11y-row .a11y-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.fuoc-a11y-row .a11y-label {
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+.fuoc-a11y-row .a11y-note {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* ---- Light-theme repairs ---------------------------------------------
+ A handful of patterns can't be reached by token substitution: gradient text
+ fills, hard-coded white text inside gradient headers, and image overlays.
+ Scoped to the light theme so the dark themes never see them. */
+:root[data-fuoc-theme="light"] input,
+:root[data-fuoc-theme="light"] select,
+:root[data-fuoc-theme="light"] textarea {
+    background-color: var(--l-panel);
+    color: var(--l-ink);
+    border-color: var(--border);
+}
+:root[data-fuoc-theme="light"] ::placeholder {
+    color: var(--text-mute);
+    opacity: 1;
+}
+/* Scrollbars: the dark-on-dark custom scrollbars vanish on a light field. */
+:root[data-fuoc-theme="light"] ::-webkit-scrollbar-track {
+    background: var(--l-panel-2) !important;
+}
+:root[data-fuoc-theme="light"] ::-webkit-scrollbar-thumb {
+    background: var(--border-strong) !important;
+}
+:root[data-fuoc-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-mute) !important;
+}
+
+/* numeric utility — tabular figures so growing numbers never reflow */
+.num {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums lining-nums;
+}
+/* SCOPED box-sizing reset — only redesigned components that opt in via
+ the .fuoc-ui wrapper get border-box. Inert until used. */
+.fuoc-ui,
+.fuoc-ui *,
+.fuoc-ui *::before,
+.fuoc-ui *::after {
+    box-sizing: border-box;
+}
+/* keyframes new to the codebase (bellPulse + ticker already exist, reused as-is) */
+@keyframes cashPulse {
+    0% {
+        color: var(--positive);
+        text-shadow: 0 0 14px #36b37e66;
+    }
+    100% {
+        color: var(--text);
+        text-shadow: none;
+    }
+}
+@keyframes softPulse {
+    50% {
+        transform: scale(1.35);
+        opacity: 0.7;
+    }
+}
+@keyframes critEdge {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 #e5484d00;
+    }
+    50% {
+        box-shadow: 0 0 0 3px #e5484d22;
+    }
+}
+
+/* ============================================================
+ FUOC COMPONENTS — TOP BAR  (Step 2 re-skin · scoped to .fuoc-ui)
+ All generic names (.stat/.brand/.iconbtn/.vitals) are scoped under
+ .fuoc-ui so they never collide with existing global classes.
+ #topBar keeps its id, so the collapse system (#topBar.collapsed +
+ #topBar{max-height} and the JS offsetHeight measurement) is intact.
+ Fixed height:49px (not min-height — min-height would defeat the
+ max-height:0 collapse) keeps #newsTicker's sticky top:49px flush.
+ The cash NUMBER (#cashEl) is still styled inline by updateUI()'s
+ formatCashDisplay() wealth-tier coloring — intentionally preserved.
+ ============================================================ */
+.fuoc-ui.topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-fixed);
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    height: 49px;
+    padding: 0 var(--s4);
+    background: linear-gradient(180deg, var(--l-panel-deep), var(--l-bg));
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-1);
+    color: var(--text);
+    font-family: var(--font-ui);
+    transition:
+        max-height 0.3s ease,
+        padding 0.3s ease,
+        opacity 0.3s ease;
+}
+.fuoc-ui .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    flex: 0 0 auto;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-decoration: none;
+    color: var(--text);
+    user-select: none;
+}
+.fuoc-ui .brand .mark {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    background: linear-gradient(135deg, var(--accent), #3461c9);
+    color: var(--l-ink-on-fill);
+    box-shadow: var(--shadow-1);
+}
+.fuoc-ui .brand .name {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+}
+.fuoc-ui .brand .name small {
+    color: var(--text-mute);
+    font-weight: 600;
+    font-size: 9px;
+    letter-spacing: 1.4px;
+    margin-top: 2px;
+}
+.fuoc-ui .vitals {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.fuoc-ui .vsep {
+    width: 1px;
+    align-self: stretch;
+    background: var(--border);
+    margin: 9px 0;
+}
+.fuoc-ui .stat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.15;
+    min-width: 0;
+}
+.fuoc-ui .stat .k {
+    font-size: 9px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    font-weight: 600;
+}
+.fuoc-ui .stat .v {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+.fuoc-ui .stat--hero .v {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+.fuoc-ui .secondary-stat .v {
+    color: var(--text-dim);
+}
+.fuoc-ui .time-stat {
+    font-size: 11px;
+    color: var(--text-dim);
+}
+.fuoc-ui .tb-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--s1);
+    flex: 0 0 auto;
+}
+.fuoc-ui .iconbtn {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--r2);
+    display: grid;
+    place-items: center;
+    color: var(--text-dim);
+    font-size: 15px;
+    position: relative;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    text-decoration: none;
+    transition:
+        background 0.15s,
+        color 0.15s;
+}
+.fuoc-ui .iconbtn:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+.fuoc-ui .iconbtn.discord {
+    color: var(--l-discord);
+}
+.fuoc-ui .iconbtn.discord:hover {
+    color: var(--l-x-blue-pale-4);
+}
+@media (max-width: 768px) {
+    .fuoc-ui.topbar {
+        gap: var(--s2);
+        padding: 0 var(--s3);
+    }
+    .fuoc-ui .brand .name {
+        display: none;
+    }
+    .fuoc-ui .secondary-stat,
+    .fuoc-ui .time-stat,
+    .fuoc-ui .vsep {
+        display: none;
+    }
+}
+
+/* Cash/PerSec tap-to-cycle (mobile) */
+.stat-cycle-wrap {
+    display: contents;
+}
+@media (max-width: 768px) {
+    .stat-cycle-wrap {
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .stat-cycle-wrap .vsep,
+    .stat-cycle-wrap .stat--persec {
+        display: none;
+    }
+    .stat-cycle-wrap.showing-persec .stat--cash {
+        display: none;
+    }
+    .stat-cycle-wrap.showing-persec .stat--persec {
+        display: flex;
+        flex-direction: column;
+        animation: statCycleIn 0.18s ease-out;
+    }
+}
+@keyframes statCycleIn {
+    from {
+        transform: translateY(-6px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ============================================================
+ FUOC COMPONENTS — SOLVENCY CHIP + DASHBOARD  (Step 3 · .fuoc-ui)
+ ============================================================ */
+/* Solvency / payday chip (top bar) */
+.fuoc-ui .solvency {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    padding: var(--s2) var(--s3);
+    border-radius: var(--r2);
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    white-space: nowrap;
+}
+.fuoc-ui .solvency .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+.fuoc-ui .solvency .sol-txt {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+.fuoc-ui .solvency .clock {
+    font-size: 10px;
+    color: var(--text-dim);
+}
+.fuoc-ui .solvency .pay {
+    font-size: 12px;
+    font-weight: 700;
+}
+.fuoc-ui .solvency--ok {
+    border-color: #1d4a3a;
+    background: linear-gradient(180deg, #10231c, var(--l-bg-black-2));
+}

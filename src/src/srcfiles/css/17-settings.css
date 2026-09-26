@@ -1,0 +1,609 @@
+/* ============================================================================
+ * 17-settings — Settings modal: tabs, content, keyframes + responsive
+ * ----------------------------------------------------------------------------
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* SETTINGS MODAL - STYLES & MOBILE RESPONSIVE */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+#settingsModal {
+    z-index: 10001;
+}
+
+#settingsModalContent {
+    animation: settingsModalSlide 0.3s ease;
+}
+
+@keyframes settingsModalSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.settings-tab-btn {
+    transition: all 0.2s ease;
+}
+
+.settings-tab-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--l-indigo);
+}
+
+.settings-tab-content {
+    animation: settingsTabFade 0.2s ease;
+}
+
+@keyframes settingsTabFade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Settings Modal Mobile Responsive */
+@media (max-width: 768px) {
+    #settingsModalContent {
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        max-height: 100%;
+        border-radius: 0;
+        margin: 0;
+        overflow: hidden !important;
+    }
+
+    /* Tab navigation - horizontally scrollable */
+    #settingsTabNav {
+        display: flex;
+        flex-wrap: nowrap;
+        padding: 0 5px;
+        gap: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+
+    #settingsTabNav::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    .settings-tab-btn {
+        padding: 10px 10px;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    /* Tab content - NO horizontal scroll, only vertical */
+    #settingsTabContent {
+        padding: 12px;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    /* Prevent ANY horizontal overflow in settings content */
+    #settingsTabContent,
+    #settingsTabContent * {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Force word wrapping for any text */
+    #settingsTabContent p,
+    #settingsTabContent span,
+    #settingsTabContent label,
+    #settingsTabContent div {
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
+    #settingsTab-images .settings-tab-content > div {
+        grid-template-columns: 1fr !important;
+    }
+
+    #settingsPanel {
+        width: 280px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+    /* SETTINGS MODAL - COMPREHENSIVE MOBILE FIXES (768px) */
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+
+    /* All settings grids - single column on mobile */
+    #settingsTab-general > div,
+    #settingsTab-ai > div,
+    #settingsTab-images > div,
+    #settingsTab-data > div,
+    #settingsTab-content > div {
+        display: block !important;
+    }
+
+    /* Settings cards - more compact, full width */
+    #settingsTab-general > div > div,
+    #settingsTab-ai > div > div,
+    #settingsTab-images > div > div,
+    #settingsTab-data > div > div,
+    #settingsTab-content > div > div {
+        padding: 15px !important;
+        border-radius: 10px !important;
+        margin-bottom: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Cards that span multiple columns - reset on mobile */
+    #settingsTab-general > div > div[style*="grid-column"],
+    #settingsTab-images > div > div[style*="grid-column"] {
+        grid-column: 1 !important;
+    }
+
+    /* Settings section headers */
+    #settingsTabContent h3 {
+        font-size: 1rem !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* Input fields - prevent iOS zoom with 16px minimum */
+    #settingsModal input[type="text"],
+    #settingsModal input[type="number"],
+    #settingsModal input[type="email"],
+    #settingsModal textarea,
+    #settingsModal select {
+        font-size: 16px !important;
+        padding: 10px 12px !important;
+    }
+
+    /* Buttons inside settings */
+    #settingsModal button {
+        font-size: 0.9rem !important;
+        padding: 10px 14px !important;
+        min-height: 44px; /* Touch target */
+    }
+
+    /* Custom world context textareas - shorter height on mobile */
+    #customCompanyContext,
+    #customWorldContext,
+    #customAIContext {
+        height: 60px !important;
+        min-height: 60px !important;
+    }
+
+    /* Auto-visualization grid - single column */
+    #settingsTab-images > div > div:last-child > div:last-child {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* All nested grids within settings tabs - force single column */
+    #settingsTabContent div[style*="grid-template-columns"],
+    #settingsTabContent div[style*="display:grid"],
+    #settingsTabContent div[style*="display: grid"] {
+        display: block !important;
+    }
+
+    /* Nested flex rows - stack vertically */
+    #settingsTabContent div[style*="display:flex"][style*="gap"],
+    #settingsTabContent div[style*="display: flex"][style*="gap"] {
+        flex-direction: column !important;
+    }
+
+    /* Range sliders - better touch targets */
+    #settingsModal input[type="range"] {
+        height: 24px;
+    }
+
+    /* Checkbox/radio - bigger touch targets */
+    #settingsModal input[type="checkbox"],
+    #settingsModal input[type="radio"] {
+        width: 22px !important;
+        height: 22px !important;
+        min-width: 22px !important;
+        min-height: 22px !important;
+    }
+
+    /* Labels with checkboxes - ensure wrap */
+    #settingsModal label {
+        flex-wrap: wrap;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+    /* GROUP CHAT MODALS - MOBILE FIXES (768px) */
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+
+    /* Create Group Modal */
+    #createGroupModal > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        border-radius: 12px !important;
+    }
+
+    #createGroupModal input[type="text"],
+    #createGroupModal input[type="search"] {
+        font-size: 16px !important;
+        padding: 12px !important;
+    }
+
+    /* Participant grid - smaller cards */
+    #participantGrid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+        gap: 8px !important;
+        max-height: 250px !important;
+    }
+
+    /* Participant search - stack on mobile */
+    #createGroupModal > div > div:nth-child(2) > div:last-child > div:first-child {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    #participantSearch {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    /* Group Settings Modal */
+    #groupSettingsModal > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        border-radius: 12px !important;
+    }
+
+    #groupSettingsModal input[type="text"],
+    #groupSettingsModal input[type="number"],
+    #groupSettingsModal select {
+        font-size: 16px !important;
+        padding: 12px !important;
+    }
+
+    #groupSettingsModal input[type="checkbox"] {
+        width: 22px !important;
+        height: 22px !important;
+    }
+
+    /* Group settings sections - more compact */
+    #groupSettingsModal > div > div:nth-child(2) > div {
+        padding: 12px !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* Group Target Selector Modal */
+    #groupTargetSelectorModal > div {
+        width: 95% !important;
+        max-width: 95% !important;
+        max-height: 90vh !important;
+    }
+
+    /* Group Send Money Modal */
+    #groupSendMoneyModal > div {
+        width: 95% !important;
+        max-width: 95% !important;
+    }
+
+    #groupSendMoneyModal input {
+        font-size: 16px !important;
+    }
+
+    /* Group Gift Modal */
+    #groupGiftModal > div {
+        width: 95% !important;
+        max-width: 95% !important;
+        max-height: 90vh !important;
+    }
+
+    /* Group Request Image Modal */
+    #groupRequestImageModal > div {
+        width: 95% !important;
+        max-width: 95% !important;
+    }
+
+    #groupRequestImageModal textarea {
+        font-size: 16px !important;
+    }
+
+    /* Group Photo Request Modal */
+    #groupPhotoRequestModal > div {
+        width: 95% !important;
+        max-width: 95% !important;
+        max-height: 90vh !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+    /* TOP BAR HUD - EXTRA COMPACT FOR SMALL PHONES */
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+
+    #topBar {
+        padding: 4px 6px !important;
+        font-size: 0.75rem !important;
+    }
+
+    #topBar > div {
+        gap: 6px !important;
+    }
+
+    #topBar > div > div {
+        font-size: 0.72rem !important;
+    }
+
+    /* Hide Products count and $/sec on tiny screens - Cash + Employees + Time is enough */
+    #topBar > div:first-child > div:nth-child(2),
+    #topBar > div:first-child > div:nth-child(4) {
+        display: none !important;
+    }
+
+    /* Settings tab navigation - scrollable horizontally */
+    #settingsTabNav {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 3px;
+        gap: 2px;
+    }
+
+    .settings-tab-btn {
+        padding: 8px 8px;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+        white-space: nowrap;
+        min-width: auto;
+    }
+
+    #settingsPanel {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    #openFullSettingsBtn {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+    /* SETTINGS MODAL - EXTRA SMALL MOBILE FIXES (480px) */
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+
+    /* Settings modal content - full screen, no horizontal overflow */
+    #settingsModalContent {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Modal header - more compact */
+    #settingsModalContent > div:first-child {
+        padding: 10px 12px !important;
+        flex-wrap: wrap;
+    }
+
+    #settingsModalContent > div:first-child h2 {
+        font-size: 1rem !important;
+    }
+
+    #settingsModalContent > div:first-child span:first-child {
+        font-size: 1.2rem !important;
+    }
+
+    #closeSettingsModalBtn {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 1.1rem !important;
+    }
+
+    /* Tab content - NO horizontal scroll */
+    #settingsTabContent {
+        padding: 8px !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    /* Text inputs and textareas - full width, no overflow */
+    #settingsModal input,
+    #settingsModal textarea,
+    #settingsModal select {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+    /* GROUP CHAT MODALS - EXTRA SMALL MOBILE FIXES (480px) */
+    /* ═══════════════════════════════════════════════════════════════════════════ */
+
+    /* Create Group Modal - full screen */
+    #createGroupModal {
+        padding: 0 !important;
+        align-items: stretch !important;
+    }
+
+    #createGroupModal > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+    }
+
+    #createGroupModal > div > div:first-child {
+        padding: 12px 15px !important;
+    }
+
+    #createGroupModal > div > div:first-child h2 {
+        font-size: 1rem !important;
+    }
+
+    #createGroupModal > div > div:nth-child(2) {
+        padding: 12px !important;
+    }
+
+    /* Participant grid - even smaller cards */
+    #participantGrid {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)) !important;
+        gap: 6px !important;
+        max-height: 180px !important;
+    }
+
+    /* Selected count badge */
+    #selectedCount {
+        padding: 4px 8px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Create group footer */
+    #createGroupModal > div > div:last-child {
+        padding: 10px 12px !important;
+        gap: 6px !important;
+    }
+
+    #createGroupModal > div > div:last-child button {
+        padding: 10px 14px !important;
+        font-size: 0.85rem !important;
+        min-height: 44px;
+    }
+
+    /* Group Settings Modal - full screen */
+    #groupSettingsModal {
+        padding: 0 !important;
+    }
+
+    #groupSettingsModal > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+    }
+
+    #groupSettingsModal > div > div:first-child {
+        padding: 12px 15px !important;
+    }
+
+    #groupSettingsModal > div > div:first-child h2 {
+        font-size: 1rem !important;
+    }
+
+    #groupSettingsModal > div > div:nth-child(2) {
+        padding: 12px !important;
+    }
+
+    /* Group settings sections - even more compact */
+    #groupSettingsModal > div > div:nth-child(2) > div {
+        padding: 10px !important;
+        margin-bottom: 12px !important;
+    }
+}
+
+/* Extra small mobile - even more compact (380px) */
+@media (max-width: 380px) {
+    /* Super compact tabs */
+    #settingsTabNav {
+        padding: 0 2px !important;
+    }
+
+    #settingsTabNav .settings-tab-btn {
+        padding: 6px 6px !important;
+        font-size: 0.65rem !important;
+    }
+
+    #settingsTabContent {
+        padding: 6px !important;
+    }
+
+    #settingsTab-general > div > div,
+    #settingsTab-ai > div > div,
+    #settingsTab-images > div > div,
+    #settingsTab-data > div > div,
+    #settingsTab-content > div > div {
+        padding: 10px !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Even smaller headers */
+    #settingsTabContent h3 {
+        font-size: 0.9rem !important;
+    }
+
+    #settingsTabContent p,
+    #settingsTabContent label,
+    #settingsTabContent span {
+        font-size: 0.8rem !important;
+    }
+
+    #participantGrid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
+    }
+}
+
+/* Prevent iOS zoom on input focus - global fix */
+@media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+}
+
+/* Touch device - ensure proper tap targets */
+@media (hover: none) and (pointer: coarse) {
+    #settingsModal button,
+    #createGroupModal button,
+    #groupSettingsModal button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    #settingsModal input[type="checkbox"],
+    #settingsModal input[type="radio"],
+    #createGroupModal input[type="checkbox"],
+    #groupSettingsModal input[type="checkbox"] {
+        min-width: 24px;
+        min-height: 24px;
+    }
+}
+
+/* Quick Settings Panel - mobile improvements */
+@media (max-width: 480px) {
+    #settingsPanel {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    #settingsPanel > div {
+        padding: 15px !important;
+    }
+
+    #settingsPanel h2 {
+        font-size: 1.1rem !important;
+    }
+
+    #settingsPanel h3 {
+        font-size: 0.9rem !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* END SETTINGS & GROUP MODALS MOBILE FIXES */
+/* ═══════════════════════════════════════════════════════════════════════════ */

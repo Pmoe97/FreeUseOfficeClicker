@@ -1,0 +1,576 @@
+/* ============================================================================
+ * 11-people — People tab: roster rows, employee cards, chips, programs, ladder, chat-wrap, row menus
+ * ----------------------------------------------------------------------------
+ */
+
+/* --- People Tab: List View --- */
+.fuoc-ui .roster {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+}
+.fuoc-ui .roster-row {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto minmax(0, auto) auto;
+    grid-template-areas: "avatar who prod status acts";
+    align-items: center;
+    column-gap: var(--s3);
+    height: 56px;
+    padding: 0 var(--s3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+.fuoc-ui .roster-row:hover {
+    background: var(--surface-2);
+    border-color: var(--border-strong);
+}
+.fuoc-ui .roster-row > .avatar-sm {
+    grid-area: avatar;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    align-self: center;
+}
+/* Identity — two left-aligned lines: name+level on top, role·location below */
+.fuoc-ui .roster-row .who {
+    grid-area: who;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    line-height: 1.2;
+}
+.fuoc-ui .roster-row .who .nm-line {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    min-width: 0;
+}
+.fuoc-ui .roster-row .who .nm {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text);
+}
+.fuoc-ui .roster-row .who .lvl-chip,
+.fuoc-ui .roster-row .who .rost-fav {
+    flex: 0 0 auto;
+}
+.fuoc-ui .roster-row .who .rost-fav {
+    font-size: var(--fs-xs);
+}
+.fuoc-ui .roster-row .who .sub {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+}
+/* Productivity — bolt and % inline on one baseline, fixed column */
+.fuoc-ui .roster-row .rost-prod {
+    grid-area: prod;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    white-space: nowrap;
+    min-width: 54px;
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+}
+/* Status — payroll chip stacked over the activity status, both inside fixed height */
+.fuoc-ui .roster-row .status-col {
+    grid-area: status;
+    min-width: 0;
+    max-width: 190px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+}
+.fuoc-ui .roster-row .status-col .chip-slot,
+.fuoc-ui .roster-row .status-col .status-slot {
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--s1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-xs);
+}
+.fuoc-ui .roster-row .status-col .chip-slot:empty,
+.fuoc-ui .roster-row .status-col .status-slot:empty {
+    display: none;
+}
+/* Actions — chat is primary, overflow is a quiet ghost */
+.fuoc-ui .roster-row .acts {
+    grid-area: acts;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s1);
+    align-self: center;
+    justify-self: end;
+}
+.fuoc-ui .roster-row .acts .icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--r2);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+}
+.fuoc-ui .roster-row .acts .icon-btn:hover {
+    background: var(--surface-3);
+}
+.fuoc-ui .roster-row .acts .ovf-btn {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-mute);
+}
+.fuoc-ui .roster-row .acts .ovf-btn:hover {
+    background: var(--surface-2);
+    color: var(--text-dim);
+}
+
+/* --- People Tab: Card View --- */
+.fuoc-ui .emp-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+    padding: var(--s3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r3);
+    box-shadow: var(--shadow-1);
+    cursor: pointer;
+    transition: border-color 0.12s, transform 0.12s;
+}
+.fuoc-ui .emp-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+}
+.fuoc-ui .emp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--s3);
+}
+/* --- Company Programs: buff/debuff chips (built on the flags engine) --- */
+.fuoc-ui .roster-row .st {
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.fuoc-ui .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border-radius: var(--rpill);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-dim);
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+.fuoc-ui .chip .lbl {
+    max-width: 84px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fuoc-ui .chip--buff {
+    background: var(--positive-dim);
+    border-color: var(--positive);
+    color: var(--positive);
+}
+.fuoc-ui .chip--mixed {
+    background: var(--warning-dim);
+    border-color: var(--warning);
+    color: var(--warning);
+}
+.fuoc-ui .chip--debuff {
+    background: var(--danger-dim);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+.fuoc-ui .chip-overflow {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: var(--rpill);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    background: var(--surface-3);
+    color: var(--text-dim);
+    flex: 0 0 auto;
+}
+@media (max-width: 768px) {
+    /* Higher specificity (.row-menu.prog-target-menu) so this beats the later
+       base .row-menu{position:absolute} rule — otherwise the picker renders as a
+       tiny absolutely-positioned box with a 0-height list. */
+    .fuoc-ui .row-menu.prog-target-menu {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        top: auto;
+        min-width: 0;
+        max-height: 70vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: var(--sheet-shadow);
+    }
+    .fuoc-ui .row-menu.prog-target-menu > .input,
+    .fuoc-ui .row-menu.prog-target-menu > .btn {
+        flex: 0 0 auto;
+    }
+    .fuoc-ui .row-menu.prog-target-menu #progTargetList {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+    }
+}
+
+/* --- People Tab: Shared Components --- */
+.fuoc-ui .lvl-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s1);
+    padding: 1px var(--s2);
+    border-radius: var(--rpill);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--lvl, var(--text-dim));
+    border: 1px solid var(--lvl, var(--border));
+    background: var(--surface-2);
+}
+.fuoc-ui .unread-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: var(--rpill);
+    background: var(--danger);
+    color: var(--text);
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+}
+/* Company Programs — collapsed card body */
+.fuoc-ui .programs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s2);
+}
+.fuoc-ui .programs .prog {
+    flex: 1 1 160px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+    padding: var(--s3);
+    background: var(--surface-2);
+    border-radius: var(--r2);
+}
+
+/* --- Corporate Ladder Modal: compact list view --- */
+.fuoc-ui .ladder-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
+}
+.fuoc-ui .ladder-band {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    margin-bottom: var(--s2);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--lvl, var(--text-mute));
+}
+.fuoc-ui .ladder-pos {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    min-height: 44px;
+    padding: var(--s2) var(--s3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--lvl, var(--border-strong));
+    border-radius: var(--r2);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+.fuoc-ui .ladder-pos:hover {
+    background: var(--surface-2);
+    border-color: var(--border-strong);
+}
+/* --- Corporate Ladder Modal: Step 7 shell + list chrome --- */
+.fuoc-ui .ladder-modal {
+    max-width: 900px;
+}
+.fuoc-ui .ladder-legend {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    flex-wrap: wrap;
+    padding: var(--s2) var(--s5);
+    border-bottom: 1px solid var(--border);
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+    flex-shrink: 0;
+}
+.fuoc-ui .ladder-legend .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+.fuoc-ui .ladder-modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--s4) var(--s5);
+}
+.fuoc-ui .ladder-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s3);
+    padding: var(--s3) var(--s5);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.fuoc-ui .ladder-positions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s2);
+}
+.fuoc-ui .ladder-pos {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+.fuoc-ui .ladder-pos.is-selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+}
+.fuoc-ui .ladder-pos .nm {
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fuoc-ui .ladder-pos .meta {
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fuoc-ui .ladder-foot .who {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    min-width: 0;
+}
+@media (max-width: 768px) {
+    /* !important to beat the root modal's inline align-items:center → bottom sheet */
+    .fuoc-ui#pyramidModal {
+        align-items: flex-end !important;
+    }
+    .fuoc-ui .ladder-modal {
+        max-width: 100%;
+        width: 100%;
+        max-height: 85vh;
+        border-radius: var(--r3) var(--r3) 0 0;
+        box-shadow: var(--sheet-shadow);
+    }
+    .fuoc-ui .ladder-positions {
+        flex-direction: column;
+    }
+    .fuoc-ui .ladder-foot {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .fuoc-ui .ladder-foot .btn {
+        width: 100%;
+    }
+}
+
+/* --- People Tab: Step 3 render support (avatar, alumni dim, row overflow menu) --- */
+.fuoc-ui .avatar-sm {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+    cursor: pointer;
+}
+.fuoc-ui .avatar-sm.init {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    background: var(--surface-3);
+    color: var(--lvl, var(--text-dim));
+}
+.fuoc-ui .chat-wrap {
+    position: relative;
+    display: inline-flex;
+}
+.fuoc-ui .chat-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: var(--danger);
+    color: var(--text);
+    font-size: var(--fs-xs);
+    border-radius: var(--rpill);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1;
+}
+.fuoc-ui .roster-row.is-alumni {
+    opacity: 0.6;
+}
+.fuoc-ui .ovf-wrap {
+    position: relative;
+    display: inline-flex;
+}
+.fuoc-ui .row-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: var(--z-pop);
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--s2);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r2);
+    box-shadow: var(--shadow-2);
+}
+.fuoc-ui .row-menu[hidden] {
+    display: none;
+}
+.fuoc-ui .row-menu .btn {
+    width: 100%;
+    text-align: left;
+}
+
+/* --- People Tab: Step 6 polish (sticky bar, tap targets) --- */
+/* Sticky control bar: clears the top bar(49) + news ticker → tabNav(top:82, h~49),
+   so it docks at 131px right beneath the tab nav. Page header + Programs card
+   scroll normally above/below it. */
+.fuoc-ui #peopleControlBar {
+    position: sticky;
+    top: 131px;
+    z-index: var(--z-ui);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: var(--s2) 0;
+    margin-bottom: var(--s2);
+}
+/* 44px tap targets + 16px inputs (iOS focus-zoom prevention), scoped to People tab
+   so the global .btn(32)/.icon-btn(30)/.input(<16) defaults aren't disturbed elsewhere. */
+.fuoc-ui #peopleTab .input,
+.fuoc-ui #peopleTab .select {
+    min-height: 44px;
+    font-size: 16px;
+}
+.fuoc-ui #peopleTab .btn {
+    min-height: 44px;
+}
+.fuoc-ui #peopleTab .icon-btn {
+    min-height: 44px;
+    min-width: 44px;
+}
+/* People tab — phone layout */
+@media (max-width: 768px) {
+    /* Control bar: search full-width on row 1; sort + Filters wrap to row 2 */
+    .fuoc-ui #peopleControlBar {
+        flex-wrap: wrap;
+    }
+    .fuoc-ui #peopleControlBar .input {
+        flex: 1 1 100%;
+    }
+    .fuoc-ui #peopleControlBar .select {
+        flex: 1 1 auto;
+    }
+    /* Filters disclosure: stack the four controls full-width */
+    .fuoc-ui #peopleFiltersPanel > .row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .fuoc-ui #peopleFiltersPanel .select,
+    .fuoc-ui #peopleFiltersPanel .btn {
+        width: 100%;
+    }
+    /* Roster row on phones: same fixed-height discipline; productivity tucks under the avatar,
+       level chip hidden, identity gets the room. Name truncates with ellipsis, never vanishes. */
+    .fuoc-ui .roster-row {
+        grid-template-columns: 40px minmax(0, 1fr) auto auto;
+        grid-template-areas:
+            "avatar who  status acts"
+            "prod   who  status acts";
+        grid-template-rows: auto auto;
+        align-items: center;
+        height: auto;
+        min-height: 58px;
+        column-gap: var(--s2);
+        row-gap: 0;
+        padding: var(--s2) var(--s3);
+    }
+    .fuoc-ui .roster-row > .avatar-sm {
+        align-self: end;
+    }
+    .fuoc-ui .roster-row .rost-prod {
+        grid-area: prod;
+        justify-content: center;
+        align-self: start;
+        min-width: 0;
+        font-size: var(--fs-xs);
+    }
+    .fuoc-ui .roster-row .who {
+        align-self: center;
+    }
+    .fuoc-ui .roster-row .who .lvl-chip {
+        display: none;
+    }
+    .fuoc-ui .roster-row .status-col {
+        align-self: center;
+        max-width: 38vw;
+    }
+    /* Card view: tighter (2–3 per row on a phone) */
+    .fuoc-ui .emp-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}

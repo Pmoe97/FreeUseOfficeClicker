@@ -1,0 +1,501 @@
+/* ============================================================================
+ * 19-save-cards — Save cards (quick save/load) + responsive
+ * ----------------------------------------------------------------------------
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* MOBILE RESPONSIVE - SAVE MANAGER */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Card-based mobile layout for save rows */
+.save-card-container {
+    display: none; /* Hidden by default, shown on mobile */
+}
+
+.save-card {
+    background: rgba(22, 33, 62, 0.6);
+    border: 2px solid var(--l-panel-3);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+.save-card.selected {
+    border-color: var(--l-cyan-3) !important;
+    box-shadow: 0 0 0 1px var(--l-cyan-3);
+}
+
+.save-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.save-card-title {
+    flex: 1;
+}
+
+.save-card-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.save-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 6px;
+}
+
+.save-card-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.save-card-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.save-card-actions .save-action-btn {
+    flex: 1;
+    min-width: calc(50% - 3px);
+}
+
+/* Tablet & Small Desktop (Portrait) */
+@media (max-width: 1024px) {
+    .save-manager-container {
+        max-width: 95%;
+        max-height: 95vh;
+    }
+
+    .save-list-container {
+        padding: 0 16px 16px 16px;
+    }
+
+    .save-manager-header,
+    .save-manager-actions,
+    .save-manager-toolbar,
+    .save-manager-footer {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+/* Mobile Landscape & Small Tablets */
+@media (max-width: 768px) {
+    .save-manager-container {
+        max-width: 98%;
+        max-height: 98vh;
+        border-radius: 12px;
+    }
+
+    .save-manager-header {
+        padding: 14px;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .save-manager-title h2 {
+        font-size: 1.4rem;
+    }
+
+    .save-manager-subtitle {
+        font-size: 0.75rem;
+    }
+
+    .save-manager-logo {
+        font-size: 1.5rem;
+    }
+
+    .save-manager-actions {
+        padding: 10px 14px;
+        gap: 6px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .sm-btn {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .save-manager-toolbar {
+        padding: 10px 14px;
+        flex-wrap: wrap;
+    }
+
+    .save-tab {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .save-search-box {
+        max-width: 100%;
+        flex: 1;
+    }
+
+    .save-list-container {
+        padding: 0 10px 10px 10px;
+    }
+
+    .save-table th {
+        padding: 10px 6px;
+        font-size: 0.75rem;
+    }
+
+    .save-table td {
+        padding: 10px 6px;
+        font-size: 0.85rem;
+    }
+
+    .save-manager-footer {
+        padding: 10px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .save-footer-hint {
+        font-size: 0.75rem;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+}
+
+/* Mobile Portrait - Switch to Card Layout */
+@media (max-width: 640px) {
+    .save-manager-container {
+        max-width: 100%;
+        max-height: 95vh;
+        height: 95vh;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .save-manager-header {
+        padding: 8px 12px;
+        border-radius: 0;
+        flex-shrink: 0;
+    }
+
+    .save-manager-title {
+        gap: 8px;
+    }
+
+    .save-manager-title h2 {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .save-manager-subtitle {
+        display: none;
+    }
+
+    .save-manager-logo {
+        font-size: 1.2rem;
+    }
+
+    .save-manager-close {
+        width: 32px;
+        height: 32px;
+        font-size: 1.3rem;
+    }
+
+    /* Action buttons - 2 per row with better spacing */
+    .save-manager-actions {
+        padding: 6px 12px;
+        gap: 6px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        flex-shrink: 0;
+    }
+
+    .sm-btn {
+        padding: 8px 6px;
+        font-size: 0.75rem;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Toolbar adjustments */
+    .save-manager-toolbar {
+        padding: 6px 12px;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .save-tab-group {
+        width: 100%;
+        gap: 4px;
+    }
+
+    .save-tab {
+        flex: 1;
+        padding: 8px 6px;
+        font-size: 0.75rem;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .save-search-box {
+        width: 100%;
+        max-width: 100%;
+        padding: 6px 10px;
+    }
+
+    .save-search-box input {
+        font-size: 0.85rem;
+    }
+
+    .save-list-container {
+        padding: 8px;
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+    }
+
+    /* HIDE TABLE, SHOW CARDS */
+    .save-table {
+        display: none !important;
+    }
+
+    .save-card-container {
+        display: block !important;
+    }
+
+    .save-card {
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .save-card.create-row {
+        background: rgba(0, 212, 255, 0.08);
+        border-color: var(--accent);
+    }
+
+    .save-card-meta {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        overflow-y: visible;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+    }
+
+    .save-card-meta-item {
+        flex-shrink: 0;
+    }
+
+    /* Footer adjustments */
+    .save-manager-footer {
+        padding: 6px 12px;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .save-footer-hint {
+        display: none;
+    }
+
+    .save-count {
+        font-size: 0.75rem;
+        width: 100%;
+        text-align: center;
+    }
+
+    .empty-state {
+        padding: 30px 15px;
+    }
+
+    .empty-state-icon {
+        font-size: 2.5rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1rem;
+        margin: 8px 0 4px 0;
+    }
+
+    .empty-state p {
+        font-size: 0.85rem;
+        margin: 0;
+    }
+}
+
+/* Extra Small Mobile (Portrait) - Ultra Compact */
+@media (max-width: 480px) {
+    .save-manager-container {
+        height: 95vh;
+    }
+
+    .save-manager-header {
+        padding: 6px 10px;
+    }
+
+    .save-manager-title h2 {
+        font-size: 1rem;
+    }
+
+    .save-manager-logo {
+        font-size: 1.1rem;
+    }
+
+    .save-manager-close {
+        width: 28px;
+        height: 28px;
+        font-size: 1.2rem;
+    }
+
+    .save-manager-actions {
+        padding: 5px 8px;
+        gap: 5px;
+    }
+
+    .sm-btn {
+        padding: 7px 5px;
+        font-size: 0.7rem;
+    }
+
+    .save-manager-toolbar {
+        padding: 5px 8px;
+    }
+
+    .save-tab {
+        padding: 7px 5px;
+        font-size: 0.7rem;
+    }
+
+    .save-search-box {
+        padding: 5px 8px;
+    }
+
+    .save-search-box input {
+        font-size: 0.8rem;
+    }
+
+    .save-list-container {
+        padding: 6px;
+    }
+
+    .save-card {
+        padding: 8px;
+        margin-bottom: 6px;
+    }
+
+    .save-card-name {
+        font-size: 0.9rem;
+    }
+
+    .save-card-meta {
+        font-size: 0.7rem;
+        gap: 8px;
+    }
+
+    .save-card-actions .save-action-btn {
+        padding: 7px 8px;
+        font-size: 0.7rem;
+    }
+
+    .save-manager-footer {
+        padding: 5px 8px;
+    }
+
+    .save-count {
+        font-size: 0.7rem;
+    }
+}
+
+/* Mobile Landscape - Optimize for wider, shorter screens */
+@media (max-width: 960px) and (orientation: landscape) {
+    .save-manager-container {
+        max-height: 98vh;
+    }
+
+    .save-manager-header {
+        padding: 8px 16px;
+    }
+
+    .save-manager-title h2 {
+        font-size: 1.2rem;
+    }
+
+    .save-manager-subtitle {
+        font-size: 0.7rem;
+    }
+
+    .save-manager-actions {
+        padding: 6px 16px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .sm-btn {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .save-manager-toolbar {
+        padding: 6px 16px;
+    }
+
+    .save-tab {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .save-manager-footer {
+        padding: 6px 16px;
+    }
+
+    .save-footer-hint {
+        font-size: 0.7rem;
+        gap: 8px;
+    }
+
+    .kbd {
+        padding: 1px 6px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Touch-friendly adjustments - Better touch targets */
+@media (hover: none) and (pointer: coarse) {
+    .sm-btn,
+    .save-tab,
+    .save-action-btn {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 10px;
+    }
+
+    .save-manager-close {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* END MOBILE RESPONSIVE - SAVE MANAGER */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* END SAVE MANAGER STYLES */
+/* ═══════════════════════════════════════════════════════════════════════════ */

@@ -38,10 +38,12 @@ browser  ──(same origin)──>  local-dev/server.mjs  ──>  Ollama  (loc
                                                     └──>  ComfyUI (localhost:8188)  [images]
 ```
 
-`server.mjs` serves `index.html` with an inline `<script>` (from `perchance-shim.js`)
-prepended. That shim defines `window.generateText` / `window.generateImage` — the only two
-globals the game expects from Perchance — and routes them to `/ai/text` and `/ai/image` on
-the same server, which forward to your local AI. Same-origin means no CORS configuration.
+`server.mjs` serves the repo-root `index.html` with an inline `<script>` (from
+`perchance-shim.js`) prepended, plus the game files under `src/` — and nothing else, since
+it listens on your LAN (`.git/`, `archived/` and this folder get a 403). The shim defines
+`window.generateText` / `window.generateImage` and a `kv` store — the globals the game
+expects from Perchance — and routes them to `/ai/text` and `/ai/image` on the same server,
+which forward to your local AI. Same-origin means no CORS configuration.
 
 ## One-time setup
 

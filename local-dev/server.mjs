@@ -24,7 +24,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const CONFIG = {
     PORT: Number(process.env.PORT || 3000),
-    GAME_DIR: path.resolve(__dirname, "../FreeUseOfficeClicker"),
+    // Repo root: index.html + src/src/srcfiles/ (the Perchance file-tree layout). Only those
+    // are served — see serveGame — so .git/, local-dev/ and archived/ never reach the LAN.
+    GAME_DIR: path.resolve(__dirname, ".."),
     SHIM_FILE: path.resolve(__dirname, "perchance-shim.js"),
 
     // --- Text (Ollama) ---
@@ -444,9 +446,11 @@ export const handleImage = trace("image", coreImage);
 export async function serveGame(req, res, urlPath) {
     let rel = decodeURIComponent(urlPath.split("?")[0]);
     if (rel === "/" || rel === "") rel = "/index.html";
-    // prevent path traversal
+    // prevent path traversal, and serve only the game itself: GAME_DIR is the repo root,
+    // and this server listens on 0.0.0.0.
     const filePath = path.normalize(path.join(CONFIG.GAME_DIR, rel));
-    if (!filePath.startsWith(CONFIG.GAME_DIR)) {
+    const srcDir = path.join(CONFIG.GAME_DIR, "src") + path.sep;
+    if (!filePath.startsWith(CONFIG.GAME_DIR) || (rel !== "/index.html" && !filePath.startsWith(srcDir))) {
         res.writeHead(403);
         return res.end("forbidden");
     }
@@ -456,9 +460,7 @@ export async function serveGame(req, res, urlPath) {
     }
     const ext = path.extname(filePath).toLowerCase();
 
-    // The shim is injected for the source AND for the built Perchance artifact, so a
-    // build can be smoke-tested locally before it's pasted anywhere.
-    if (rel === "/index.html" || rel === "/index.perchance.html") {
+    if (rel === "/index.html") {
         const [html, shim] = await Promise.all([readFile(filePath, "utf8"), readFile(CONFIG.SHIM_FILE, "utf8")]);
         // Inject the shim as the FIRST thing in the document so the globals exist before any
         // game script runs. The on-disk file is untouched.

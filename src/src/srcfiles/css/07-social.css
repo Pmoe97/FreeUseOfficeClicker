@@ -1,0 +1,364 @@
+/* ============================================================================
+ * 07-social — Social: comments, filters, pills/bars, negotiator modal, account cards
+ * ----------------------------------------------------------------------------
+ */
+
+/* ---- icon button (chat/group toolbars; color via inline --ic) ---- */
+.fuoc-ui .icon-btn {
+    background: var(--surface-2);
+    border: none;
+    padding: 7px 9px;
+    border-radius: var(--r2);
+    color: var(--ic, var(--text-dim));
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 30px;
+    min-height: 30px;
+}
+.fuoc-ui .icon-btn:hover {
+    background: var(--surface-3);
+}
+.fuoc-ui .group-attach-menu-item {
+    width: 100%;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--ic, var(--text));
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+.fuoc-ui .group-attach-menu-item:last-child {
+    border-bottom: none;
+}
+
+/* ---- algorithm sort buttons (social feed; active state) ---- */
+.fuoc-ui .algo-sort-btn {
+    padding: 6px 8px;
+    background: var(--surface-2);
+    border: none;
+    border-radius: var(--r2);
+    color: var(--text-dim);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.fuoc-ui .algo-sort-btn.active {
+    color: var(--text);
+}
+.fuoc-ui .content-filter-btn {
+    padding: 6px 8px;
+    background: var(--surface-2);
+    border: none;
+    border-radius: var(--r2);
+    color: var(--text-dim);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+}
+.fuoc-ui .content-filter-btn.active {
+    color: var(--text);
+}
+
+/* ---- social feed: comments, threading, signal pills ---- */
+.fuoc-ui .sp-comment {
+    padding: var(--s3) var(--s4);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: var(--s3);
+}
+.fuoc-ui .sp-comment--reply {
+    margin-left: var(--s6);
+    border-left: 2px solid var(--border-strong);
+    background: var(--surface-2);
+    border-radius: 0 var(--r2) var(--r2) 0;
+}
+.fuoc-ui .sp-comment-h {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    margin-bottom: var(--s1);
+}
+.fuoc-ui .sp-comment-name {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+}
+.fuoc-ui .sp-comment-name.is-player {
+    color: var(--danger);
+}
+.fuoc-ui .sp-comment-handle {
+    color: var(--text-dim);
+    font-size: var(--fs-xs);
+}
+.fuoc-ui .sp-comment-time {
+    color: var(--text-mute);
+    font-size: var(--fs-xs);
+}
+.fuoc-ui .sp-reply-to {
+    color: var(--text-mute);
+    font-size: var(--fs-xs);
+    margin-bottom: var(--s1);
+}
+.fuoc-ui .sp-comment-body {
+    color: var(--text);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+}
+.fuoc-ui .sp-no-comments {
+    padding: var(--s5);
+    text-align: center;
+    color: var(--text-mute);
+    font-style: italic;
+}
+.fuoc-ui .sp-signal {
+    background: var(--accent-dim);
+    color: var(--accent-ink);
+    border-radius: var(--rpill);
+    padding: 2px 8px;
+    font-size: var(--fs-xs);
+    white-space: nowrap;
+}
+.fuoc-ui .sp-filter-details > summary {
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+    padding: var(--s2) 0;
+    user-select: none;
+    list-style: none;
+}
+.fuoc-ui .sp-filter-details[open] > summary {
+    color: var(--text);
+}
+
+/* ---- filter button group (active state) ---- */
+.fuoc-ui .journal-filter-btn {
+    padding: 6px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r2);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: var(--fs-xs);
+}
+.fuoc-ui .journal-filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ---- thin progress bar (data-driven width/color via inline) ---- */
+.fuoc-ui .bar {
+    height: 4px;
+    background: var(--surface);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.fuoc-ui .bar-fill {
+    height: 100%;
+    transition: width 0.3s;
+}
+
+/* ---- info bullet list ---- */
+.fuoc-ui .bullets {
+    margin: var(--s2) 0 0 var(--s5);
+    padding: 0;
+}
+
+/* ---- distribution chips (data-driven color via inline --c) ---- */
+.fuoc-ui .dist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: var(--s2);
+}
+.fuoc-ui .dist-chip {
+    text-align: center;
+    padding: var(--s2);
+    background: var(--surface);
+    border-radius: var(--r2);
+    border-left: 3px solid var(--c, var(--border));
+}
+.fuoc-ui .dist-chip .pct {
+    color: var(--c, var(--text));
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+.fuoc-ui .dist-chip .lbl {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+}
+
+/* ---- rows / stat lines ---- */
+.fuoc-ui .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.fuoc-ui .stat-row + .stat-row {
+    margin-top: var(--s2);
+}
+.fuoc-ui .list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--s2) var(--s3);
+    background: var(--surface-2);
+    border-radius: var(--r1);
+    margin-bottom: var(--s1);
+}
+
+/* ---- pills / badges ---- */
+.fuoc-ui .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s1);
+    padding: var(--s1) var(--s3);
+    border-radius: var(--rpill);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    background: var(--surface-3);
+    color: var(--text-dim);
+}
+.fuoc-ui .pill--accent { background: var(--accent-dim); color: var(--accent-ink); }
+.fuoc-ui .pill--pos { background: var(--positive-dim); color: var(--l-green-lt); }
+.fuoc-ui .pill--neg { background: var(--danger-dim); color: var(--l-x-red-pale); }
+.fuoc-ui .pill--warn { background: var(--warning-dim); color: var(--l-gold-lt); }
+.fuoc-ui .pill--gold { background: var(--accent-gold-dim); color: var(--accent-gold); }
+
+/* ---- divider ---- */
+.fuoc-ui .divider {
+    height: 1px;
+    background: var(--border);
+    margin: var(--s4) 0;
+    border: none;
+}
+
+/* ---- raise negotiation modal ---- */
+.fuoc-ui.neg-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--l-veil-70);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s4);
+}
+.fuoc-ui .neg-modal {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r3);
+    box-shadow: var(--sheet-shadow);
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: var(--s5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
+}
+.fuoc-ui .neg-head { display: flex; align-items: center; gap: var(--s3); }
+.fuoc-ui .neg-id { flex: 1; min-width: 0; }
+.fuoc-ui .neg-name { font-weight: 600; color: var(--text); }
+.fuoc-ui .neg-meta { font-size: var(--fs-xs); color: var(--text-dim); }
+.fuoc-ui .neg-x { min-width: 44px; min-height: 44px; }
+.fuoc-ui .neg-quote {
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    font-style: italic;
+    background: var(--surface-2);
+    border-left: 2px solid var(--accent-dim);
+    padding: var(--s2) var(--s3);
+    border-radius: 0 var(--r1) var(--r1) 0;
+}
+.fuoc-ui .neg-refs { display: flex; gap: var(--s2); }
+.fuoc-ui .neg-ref {
+    flex: 1;
+    min-width: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: var(--s2) var(--s3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.fuoc-ui .neg-inputs { display: flex; gap: var(--s3); }
+.fuoc-ui .neg-field { flex: 1; display: flex; flex-direction: column; gap: var(--s1); }
+.fuoc-ui .neg-field input {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r2);
+    color: var(--text);
+    padding: 0 var(--s3);
+    box-sizing: border-box;
+}
+.fuoc-ui .neg-field input:focus { outline: none; border-color: var(--accent); }
+.fuoc-ui .neg-select {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r2);
+    color: var(--text);
+    padding: 0 var(--s3);
+    box-sizing: border-box;
+}
+.fuoc-ui .neg-select:focus { outline: none; border-color: var(--accent); }
+.fuoc-ui .acct-pool {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--s3);
+}
+.fuoc-ui .acct-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: var(--s3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+}
+.fuoc-ui .neg-preview {
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border-radius: var(--r2);
+    padding: var(--s3);
+    min-height: 40px;
+    line-height: 1.5;
+}
+.fuoc-ui .neg-preview .pos { color: var(--positive); }
+.fuoc-ui .neg-preview .neg { color: var(--danger); }
+.fuoc-ui .neg-preview .mid { color: var(--warning); }
+.fuoc-ui .neg-actions { display: flex; gap: var(--s2); }
+.fuoc-ui .neg-actions .btn { flex: 1; min-height: 44px; }
+#payrollTab.fuoc-ui .btn,
+.fuoc-ui .neg-modal .btn { min-height: 44px; }
+@media (max-width: 768px) {
+    .fuoc-ui .neg-refs { flex-wrap: wrap; }
+    .fuoc-ui .neg-ref { min-width: 40%; }
+    #payrollTab.fuoc-ui .grid-2 { grid-template-columns: 1fr; }
+    /* bottom-sheet presentation for payroll modals */
+    .fuoc-ui.neg-overlay { align-items: flex-end; padding: 0; }
+    .fuoc-ui .neg-modal {
+        max-width: 100%;
+        max-height: 85vh;
+        border-radius: var(--r3) var(--r3) 0 0;
+        border-bottom: none;
+    }
+}

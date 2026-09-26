@@ -1,0 +1,405 @@
+/* ============================================================================
+ * 20-groups — Groups sidebar, participant portraits, recipient chips, group layout
+ * ----------------------------------------------------------------------------
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* GROUPS TAB - RESPONSIVE STYLES */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Groups Sidebar Collapse Animation */
+#groupsSidebar {
+    transition:
+        width 0.3s ease,
+        min-width 0.3s ease,
+        transform 0.3s ease,
+        opacity 0.3s ease;
+}
+
+#groupsSidebar.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.sidebar-toggle-btn {
+    background: linear-gradient(135deg, var(--l-indigo) 0%, var(--l-indigo-deep) 100%);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: var(--l-ink-on-fill);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.sidebar-toggle-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+}
+
+/* Group Attachment Menu Styles */
+.group-attach-menu-item:hover {
+    background: rgba(102, 126, 234, 0.2) !important;
+}
+
+#groupAttachBtn:hover {
+    background: var(--l-line) !important;
+    border-color: var(--l-indigo) !important;
+}
+
+/* Target Selector Styles */
+.target-selector-item:hover {
+    background: rgba(102, 126, 234, 0.1) !important;
+}
+
+/* Recipient Chip Animations */
+.recipient-chip {
+    animation: chipAppear 0.2s ease;
+}
+
+@keyframes chipAppear {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Visualization participant chips */
+.vis-participant-chip {
+    transition: all 0.2s ease;
+}
+
+.vis-participant-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--l-veil-30);
+}
+
+/* Group gift option styles */
+.group-gift-option:hover {
+    background: rgba(255, 107, 157, 0.1) !important;
+    border-color: rgba(255, 107, 157, 0.5) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 157, 0.2);
+}
+
+/* Groups container base styles */
+.groups-container {
+    display: flex;
+    gap: 15px;
+    height: calc(100vh - 160px);
+    min-height: 400px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Groups participant portraits */
+.participant-portrait-container {
+    transition: all 0.2s ease;
+}
+
+.participant-portrait-container:hover .participant-portrait {
+    transform: scale(1.08);
+}
+
+.participant-portrait-container:active .participant-portrait {
+    transform: scale(0.95);
+}
+
+.participant-portrait {
+    transition: all 0.2s ease;
+}
+
+/* Desktop (1200px and above) */
+@media (min-width: 1200px) {
+    .groups-container {
+        gap: 20px;
+        height: calc(100vh - 180px);
+    }
+
+    #groupsSidebar {
+        width: 300px !important;
+        min-width: 300px !important;
+    }
+}
+
+/* Tablet (1024px and below) */
+@media (max-width: 1024px) {
+    .groups-container {
+        gap: 12px;
+    }
+
+    #groupsSidebar {
+        width: 220px !important;
+        min-width: 220px !important;
+    }
+
+    #groupsSidebar.collapsed {
+        width: 0 !important;
+        min-width: 0 !important;
+    }
+}
+
+/* Mobile/Small Tablet (768px and below) */
+@media (max-width: 768px) {
+    .groups-container {
+        flex-direction: column;
+        height: calc(100vh - 100px);
+        min-height: 350px;
+        gap: 0;
+        position: relative;
+    }
+
+    /* Mobile: Show EITHER sidebar OR chat view, not both */
+    #groupsSidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-height: none !important;
+        height: 100% !important;
+        order: 1;
+        flex: 1;
+        border-radius: 15px;
+    }
+
+    #groupsSidebar.mobile-hidden {
+        display: none !important;
+    }
+
+    #groupsSidebar.collapsed {
+        display: none !important;
+    }
+
+    #groupChatView {
+        order: 2;
+        min-height: 0;
+        flex: 1;
+        height: 100%;
+        width: 100%;
+    }
+
+    #groupChatView.mobile-hidden {
+        display: none !important;
+    }
+
+    #activeGroupChat {
+        height: 100%;
+    }
+
+    /* Back button visible on mobile */
+    #groupBackBtn {
+        display: block !important;
+    }
+
+    #groupHeader {
+        padding: 7px 10px !important;
+    }
+
+    #groupParticipantAvatars > div {
+        width: 28px !important;
+        height: 28px !important;
+        margin-left: -8px !important;
+    }
+
+    #groupParticipantAvatars > div:first-child {
+        margin-left: 0 !important;
+    }
+
+    #participantBar {
+        padding: 8px 12px 10px 12px !important;
+    }
+
+    #participantSelector {
+        gap: 12px !important;
+        justify-content: flex-start;
+    }
+
+    .participant-portrait-container .participant-portrait {
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+    .participant-portrait-container span {
+        font-size: 0.65rem !important;
+    }
+
+    #groupMessages {
+        padding: 12px !important;
+        flex: 1;
+        min-height: 0;
+    }
+
+    #groupInput {
+        font-size: 16px !important; /* Prevent iOS zoom */
+    }
+
+    /* Hide sidebar toggle on mobile - we use back button instead */
+    #sidebarToggleBtn {
+        display: none !important;
+    }
+
+    #collapseSidebarBtn {
+        display: none !important;
+    }
+}
+
+/* Small Mobile (480px and below) */
+@media (max-width: 480px) {
+    .groups-container {
+        height: calc(100vh - 90px);
+    }
+
+    /* On small mobile, sidebar should still be full-height when visible */
+    #groupsSidebar {
+        max-height: none !important;
+        height: 100% !important;
+    }
+
+    #groupsSidebar.collapsed {
+        display: none !important;
+    }
+
+    .group-item {
+        padding: 8px !important;
+    }
+
+    #groupHeader h3 {
+        font-size: 0.9rem !important;
+    }
+
+    .participant-portrait-container .participant-portrait {
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+    #sendGroupMessageBtn {
+        padding: 10px 14px !important;
+    }
+
+    /* Message bubbles */
+    #groupMessages > div > div:last-child {
+        max-width: 90% !important;
+    }
+
+    /* Input area compact */
+    #groupInput {
+        padding: 10px 12px !important;
+    }
+
+    #groupAttachBtn {
+        padding: 10px !important;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .participant-portrait-container .participant-portrait {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    #sendGroupMessageBtn,
+    #createGroupBtn,
+    .sidebar-toggle-btn {
+        min-height: 44px;
+    }
+
+    .group-item {
+        min-height: 56px;
+    }
+
+    /* Better tap targets */
+    #groupSettingsBtn,
+    #deleteGroupBtn {
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+}
+
+/* Robust touch targets for hybrid / touchscreen-laptop devices that report a
+ fine primary pointer but still support touch (the hover:none query above
+ misses these). */
+@media (any-pointer: coarse) {
+    #sendGroupMessageBtn,
+    #groupAttachBtn,
+    #groupActionsBtn,
+    #groupSettingsBtn,
+    #deleteGroupBtn,
+    #groupBackBtn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    .participant-portrait-container .participant-portrait {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Ultra-small phones (400px and below) — the common iPhone SE / mini band */
+@media (max-width: 400px) {
+    #groupMessages {
+        padding: 10px 10px !important;
+        gap: 8px !important;
+    }
+    #groupHeader {
+        padding: 6px 8px !important;
+    }
+    #groupHeader h3 {
+        font-size: 0.82rem !important;
+    }
+    #participantBar {
+        padding: 4px 8px 5px 8px !important;
+    }
+    #participantSelector {
+        gap: 8px !important;
+    }
+    #participantBarHint {
+        font-size: 0.62rem !important;
+    }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 900px) and (orientation: landscape) {
+    .groups-container {
+        flex-direction: row !important;
+        height: calc(100vh - 100px);
+    }
+
+    #groupsSidebar {
+        width: 180px !important;
+        min-width: 180px !important;
+        max-height: none !important;
+    }
+
+    #groupsSidebar.collapsed {
+        width: 0 !important;
+        min-width: 0 !important;
+    }
+
+    #groupChatView {
+        flex: 1;
+    }
+
+    #groupMessages {
+        max-height: calc(100vh - 320px);
+    }
+
+    #participantBar {
+        padding: 8px 12px 16px 12px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* END GROUPS TAB - RESPONSIVE STYLES */
+/* ═══════════════════════════════════════════════════════════════════════════ */

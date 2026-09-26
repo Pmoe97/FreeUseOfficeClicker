@@ -1,0 +1,351 @@
+/* ============================================================================
+ * 10-business — Business tab: locations, products, production actions, hiring/candidates, generic cards/modals/buttons
+ * ----------------------------------------------------------------------------
+ */
+
+/* ===== BUSINESS TAB — migrated to .fuoc-ui (Proposal A: Grid-Dominant) ===== */
+.fuoc-ui .biz { max-width: 1480px; }
+
+/* Bulk-buy control in the page header */
+.fuoc-ui .biz-mult-wrap { margin-left: auto; display: flex; align-items: center; gap: var(--s2); }
+.fuoc-ui .biz-mult-lbl { font-size: 10px; letter-spacing: 0.9px; text-transform: uppercase; color: var(--text-mute); font-weight: 700; }
+.fuoc-ui .biz-mult {
+    min-width: 58px; max-width: 58px; text-align: center;
+    padding: var(--s2) var(--s3);
+    background: var(--surface-2); border: 1px solid var(--accent); border-radius: var(--r1);
+    color: var(--accent-ink); font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-weight: 700; cursor: pointer;
+}
+.fuoc-ui .biz-mult:hover { background: var(--accent-dim); }
+
+/* Location bar (reskinned subtabs) */
+.fuoc-ui .biz-locbar {
+    display: flex; gap: var(--s2); overflow-x: auto;
+    padding-bottom: var(--s2); margin-bottom: var(--s4);
+    border-bottom: 1px solid var(--border); scrollbar-width: thin;
+}
+.fuoc-ui .biz-loc {
+    flex: 0 0 auto; display: flex; flex-direction: column; gap: 1px;
+    padding: var(--s2) var(--s4);
+    background: transparent; border: 1px solid transparent; border-radius: var(--r2) var(--r2) 0 0;
+    color: var(--text-dim); font-size: var(--fs-sm); font-weight: 600;
+    white-space: nowrap; cursor: pointer; transition: color .15s, background .15s, border-color .15s;
+}
+.fuoc-ui .biz-loc .sub { font-size: var(--fs-xs); font-weight: 500; color: var(--text-mute); }
+.fuoc-ui .biz-loc:hover:not(.locked) { color: var(--accent-ink); background: var(--surface-2); }
+.fuoc-ui .biz-loc.active { color: var(--accent-ink); background: var(--surface-2); border-color: var(--border); border-bottom: 2px solid var(--accent); }
+.fuoc-ui .biz-loc.locked { color: var(--text-mute); opacity: .6; cursor: not-allowed; }
+.fuoc-ui .biz-loc.unlockable { color: var(--positive); border-color: var(--positive); animation: softPulse 1.6s infinite; }
+.fuoc-ui .biz-loc.unlockable .sub { color: var(--positive); }
+.fuoc-ui .biz-loc.boss { color: var(--danger); border-color: var(--danger); animation: softPulse 1.6s infinite; }
+
+/* Location info strip */
+.fuoc-ui .biz-locinfo {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: var(--s2) var(--s4); margin-bottom: var(--s4);
+    background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--r2);
+}
+.fuoc-ui .biz-locinfo .ico { font-size: 1.5rem; line-height: 1; }
+.fuoc-ui .biz-locinfo .nm { font-weight: 700; font-size: var(--fs-md); }
+.fuoc-ui .biz-locinfo .desc { color: var(--text-dim); font-size: var(--fs-sm); }
+.fuoc-ui .biz-locinfo .nsfw { color: var(--danger); font-weight: 700; }
+
+/* Product grid */
+.fuoc-ui .biz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: var(--s3); align-items: start; }
+.fuoc-ui .biz-empty { grid-column: 1 / -1; text-align: center; color: var(--text-dim); padding: var(--s6); }
+
+/* Product tile */
+.fuoc-ui .prod {
+    display: flex; flex-direction: column; gap: var(--s2);
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r3);
+    box-shadow: var(--shadow-1); padding: var(--s3) var(--s4);
+}
+.fuoc-ui .prod.running { border-color: var(--border-strong); }
+.fuoc-ui .prod.locked { border-style: dashed; opacity: .9; }
+.fuoc-ui .prod-h { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); }
+.fuoc-ui .prod-h .nm { font-weight: 700; font-size: var(--fs-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fuoc-ui .prod-h .lvl { flex: 0 0 auto; font-size: var(--fs-xs); color: var(--text-mute); white-space: nowrap; }
+.fuoc-ui .prod-stat { display: flex; align-items: baseline; gap: var(--s2); min-width: 0; }
+.fuoc-ui .prod-stat .v { font-size: var(--fs-lg); font-weight: 700; }
+.fuoc-ui .prod-stat .unit { font-size: var(--fs-xs); color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fuoc-ui .prod-lock-note { color: var(--text-mute); font-size: var(--fs-sm); }
+
+/* Progress bar */
+.fuoc-ui .prod .bar { height: 6px; background: var(--surface-2); border-radius: var(--rpill); overflow: hidden; }
+.fuoc-ui .prod .bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: var(--rpill); }
+
+/* Action row — fixed 3-track grid; cost lives in its own cell so digits never move boundaries */
+.fuoc-ui .prod-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s2); }
+.fuoc-ui .prod-actions.locked-row { grid-template-columns: 1fr; }
+.fuoc-ui .act {
+    min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    padding: var(--s2); border: 1px solid transparent; border-radius: var(--r1);
+    color: var(--text); font-weight: 600; font-size: var(--fs-sm); line-height: 1.15; cursor: pointer; overflow: hidden;
+}
+.fuoc-ui .act > .lbl, .fuoc-ui .act > .num { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fuoc-ui .act > .num { font-size: var(--fs-xs); font-weight: 600; opacity: 0.82; }
+/* Ink on the two saturated action fills. It follows the FILL, not the page: on a
+   #4c8dff Sell button the inherited white text sat at 2.7:1 in every theme. */
+.fuoc-ui .act.sell,
+.fuoc-ui .act.unlock,
+.fuoc-ui .act.sell > .num,
+.fuoc-ui .act.unlock > .num { color: var(--l-on-accent); }
+.fuoc-ui .act.sell { background: var(--accent); }
+.fuoc-ui .act.up { background: var(--surface-3); border-color: var(--border-strong); }
+.fuoc-ui .act.mgr { background: var(--accent-dim); border-color: var(--accent); color: var(--accent-ink); }
+.fuoc-ui .act.mgr > .num { color: var(--accent-ink); }
+.fuoc-ui .act.unlock { background: var(--positive); }
+.fuoc-ui .act:hover:not(:disabled) { filter: brightness(1.12); }
+.fuoc-ui .act:disabled { background: var(--surface-2); border-color: var(--border); color: var(--text-mute); cursor: not-allowed; }
+.fuoc-ui .act:disabled > .num { color: var(--text-mute); }
+.fuoc-ui .act.is-onboarding { background: var(--warning-dim); border-color: var(--warning); color: var(--warning); cursor: progress; }
+.fuoc-ui .act.is-optimized { background: var(--positive-dim); border-color: var(--positive); color: var(--positive); cursor: default; }
+
+/* Constant-stream pill (replaces Sell) */
+.fuoc-ui .prod-stream { display: flex; align-items: center; justify-content: center; padding: var(--s2); border-radius: var(--r1); background: var(--positive-dim); color: var(--positive); font-weight: 700; font-size: var(--fs-sm); }
+
+/* Staff status footer */
+.fuoc-ui .prod-staff { font-size: var(--fs-xs); color: var(--text-dim); }
+.fuoc-ui .prod-staff.warn { color: var(--danger); }
+.fuoc-ui .prod-staff.ok { color: var(--positive); }
+.fuoc-ui .prod-staff.chain { color: var(--accent-gold); }
+
+/* Requirements-not-met callout (locked products) */
+.fuoc-ui .prod-req { padding: var(--s2) var(--s3); background: var(--danger-dim); border-left: 3px solid var(--danger); border-radius: var(--r1); }
+.fuoc-ui .prod-req .t { font-size: var(--fs-xs); color: var(--danger); font-weight: 700; }
+.fuoc-ui .prod-req .r { font-size: var(--fs-xs); color: var(--text-dim); margin-top: 2px; }
+.fuoc-ui .prod .strike { text-decoration: line-through; color: var(--text-mute); }
+.fuoc-ui .prod .disc { color: var(--accent-gold); }
+
+/* Mobile */
+@media (max-width: 768px) {
+    .fuoc-ui .biz-locinfo { flex-wrap: wrap; }
+    .fuoc-ui .prod-h .nm { white-space: normal; }
+}
+
+/* ===== HIRING MODAL — Compact Profile candidate cards ===== */
+.fuoc-ui .hire-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--s3); }
+.fuoc-ui .cand {
+    display: flex; flex-direction: column; gap: var(--s3);
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r3);
+    box-shadow: var(--shadow-1); padding: var(--s3) var(--s4); position: relative;
+}
+.fuoc-ui .cand--rehire { border-color: var(--accent-gold); }
+.fuoc-ui .cand-h { display: flex; align-items: center; gap: var(--s3); }
+.fuoc-ui .cand-av {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--rpill);
+    background: var(--accent-dim); color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; text-transform: uppercase;
+}
+.fuoc-ui .cand-id { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.fuoc-ui .cand-id .nm { font-weight: 700; font-size: var(--fs-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fuoc-ui .cand-id .role { font-size: var(--fs-xs); color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fuoc-ui .cand-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+.fuoc-ui .cand-stats .tile { background: var(--surface-2); padding: var(--s2) var(--s3); }
+.fuoc-ui .cand-stats .tile .big { font-size: 16px; }
+.fuoc-ui .cand-skills { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
+.fuoc-ui .cand .meta { font-size: var(--fs-xs); color: var(--text-dim); }
+
+/* Business tab - prevent text selection for better mobile UX */
+#businessTab,
+#businessTab * {
+    -webkit-touch-callout: none;
+}
+#businessTab button,
+#businessTab .product-card {
+    touch-action: manipulation;
+}
+
+/* Card styling */
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 6px 30px rgba(102, 126, 234, 0.5) !important;
+}
+
+/* Custom scrollbar for dashboard sections */
+#dashRecentMessages::-webkit-scrollbar,
+#dashSocialMentions::-webkit-scrollbar,
+#dashTopPerformers::-webkit-scrollbar,
+#newsFeed::-webkit-scrollbar,
+#contextList::-webkit-scrollbar,
+#gossipList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#dashRecentMessages::-webkit-scrollbar-track,
+#dashSocialMentions::-webkit-scrollbar-track,
+#dashTopPerformers::-webkit-scrollbar-track,
+#newsFeed::-webkit-scrollbar-track,
+#contextList::-webkit-scrollbar-track,
+#gossipList::-webkit-scrollbar-track {
+    background: var(--surface-2);
+    border-radius: 3px;
+}
+
+#dashRecentMessages::-webkit-scrollbar-thumb,
+#dashSocialMentions::-webkit-scrollbar-thumb,
+#dashTopPerformers::-webkit-scrollbar-thumb,
+#newsFeed::-webkit-scrollbar-thumb,
+#contextList::-webkit-scrollbar-thumb,
+#gossipList::-webkit-scrollbar-thumb {
+    background: var(--l-cyan);
+    border-radius: 3px;
+}
+
+#dashRecentMessages::-webkit-scrollbar-thumb:hover,
+#dashSocialMentions::-webkit-scrollbar-thumb:hover,
+#dashTopPerformers::-webkit-scrollbar-thumb:hover,
+#newsFeed::-webkit-scrollbar-thumb:hover,
+#contextList::-webkit-scrollbar-thumb:hover,
+#gossipList::-webkit-scrollbar-thumb:hover {
+    background: #00a8cc;
+}
+
+/* Button styling */
+button {
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* Tab active styling */
+.tab-btn.active {
+    border-bottom: 3px solid var(--danger);
+}
+
+/* Modal styling */
+.modal {
+    animation: fadeIn 0.3s;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+}
+/* Modal component layer (inner chrome; overlay backdrop/z-index stay inline per-modal) */
+.fuoc-ui .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r3);
+    box-shadow: var(--shadow-2);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.fuoc-ui .modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s3);
+    padding: var(--s4) var(--s5);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.fuoc-ui .modal-title {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+}
+.fuoc-ui .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+}
+.fuoc-ui .modal-close:hover {
+    color: var(--danger);
+}
+.fuoc-ui .modal-body {
+    padding: var(--s5);
+    overflow-y: auto;
+}
+.fuoc-ui .modal-foot {
+    display: flex;
+    gap: var(--s3);
+    padding: var(--s4) var(--s5);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+/* ---- chat bubbles: thin gradient outline, color-coded by sender ----
+   Gradient border via double background (padding-box fill + border-box gradient).
+   Layout (max-width/padding/margin/align/radius) stays inline per message;
+   these classes only own the fill + the ~1px gradient outline. */
+.fuoc-ui .chat-bubble {
+    border: 1px solid transparent;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+}
+.fuoc-ui .chat-bubble--other {
+    background:
+        linear-gradient(var(--surface-2), var(--surface-2)) padding-box,
+        linear-gradient(135deg, var(--chat-other), var(--chat-other-2)) border-box;
+}
+.fuoc-ui .chat-bubble--self {
+    background:
+        linear-gradient(var(--chat-self-fill), var(--chat-self-fill)) padding-box,
+        linear-gradient(135deg, var(--chat-self), var(--chat-self-2)) border-box;
+}
+.fuoc-ui .chat-bubble--narrator {
+    background:
+        linear-gradient(var(--surface-2), var(--surface-2)) padding-box,
+        linear-gradient(135deg, var(--chat-narrator), var(--chat-narrator-2)) border-box;
+}
+.fuoc-ui .chat-bubble--memory {
+    background:
+        linear-gradient(var(--surface-2), var(--surface-2)) padding-box,
+        linear-gradient(135deg, var(--chat-memory), var(--chat-memory-2)) border-box;
+}
+
+/* ============================================================
+ FUOC COMPONENTS — PEOPLE TAB + CORPORATE LADDER (overhaul · Step 1)
+ Additive only. Token-driven; per-level accent via inline `--lvl`
+ (set from hierarchyLevels[n].color at render time). Reuses the
+ existing .card/.card-h/.card-b/.t/.num/.btn* baseline.
+ ============================================================ */
+
+/* --- People Tab: Segmented Toggle (List ⇄ Cards) --- */
+.fuoc-ui .seg {
+    display: inline-flex;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    overflow: hidden;
+}
+.fuoc-ui .seg button {
+    min-height: 44px;
+    padding: 0 var(--s4);
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s2);
+}
+.fuoc-ui .seg button.is-active {
+    background: var(--surface-3);
+    color: var(--accent-ink);
+}

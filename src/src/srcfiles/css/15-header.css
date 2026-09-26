@@ -1,0 +1,89 @@
+/* ============================================================================
+ * 15-header — Header collapse: topbar/news ticker, tab-nav icons-only, mainContent.header-collapsed
+ * ----------------------------------------------------------------------------
+ */
+
+/* ========== COLLAPSIBLE HEADER STYLES ========== */
+/* Base max-heights so collapse can animate via transition:all */
+#topBar {
+    max-height: 300px;
+}
+#newsTicker {
+    max-height: 80px;
+}
+
+#topBar.collapsed {
+    position: relative !important;
+    top: 0 !important;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#newsTicker.collapsed {
+    position: relative !important;
+    top: 0 !important;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* tabNav never collapses — shrinks to icon-only instead */
+#tabNav.icons-only .tab-btn {
+    padding: 8px 10px;
+}
+#tabNav.icons-only .tab-label {
+    display: none;
+}
+
+/* top position managed by JS */
+#toggleHeaderBtn:hover {
+    background: var(--surface-3);
+    color: var(--text);
+    border-color: var(--border-strong);
+}
+
+#toggleHeaderBtn:active {
+    transform: scale(0.9);
+}
+
+/* Main content expansion when header collapsed */
+#mainContent.header-collapsed {
+    min-height: calc(100vh - 20px) !important;
+}
+
+/* Meetings tab gets extra space when header collapsed */
+#mainContent.header-collapsed #meetingsTab > div:last-child {
+    height: calc(100vh - 40px) !important;
+}
+
+/* Meeting chat view expands fully when header collapsed */
+#mainContent.header-collapsed #meetingChatView {
+    height: 100% !important;
+}
+
+/* Meeting chat container expands when header collapsed */
+#mainContent.header-collapsed #meetingChatContainer {
+    height: 100% !important;
+    max-height: calc(100vh - 60px) !important;
+}
+
+/* Social tab fills viewport when header collapsed */
+#mainContent.header-collapsed #socialTab > div:first-child {
+    height: calc(100vh - 80px) !important;
+}
+#mainContent.header-collapsed #socialFeedSidebar {
+    max-height: calc(100vh - 80px) !important;
+}
+
+/* Groups container fills viewport when header collapsed (overrides all media queries) */
+#mainContent.header-collapsed .groups-container {
+    height: calc(100vh - 80px) !important;
+    min-height: 0 !important;
+}

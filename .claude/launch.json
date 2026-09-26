@@ -4,7 +4,7 @@
     {
       "name": "office-clicker",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "./FreeUseOfficeClicker", "-l", "3000", "--no-clipboard"],
+      "runtimeArgs": ["serve", ".", "-l", "3000", "--no-clipboard"],
       "port": 3000
     },
     {
