@@ -128,7 +128,11 @@ function flushPendingSave() {
     saveDebounceTimer && (clearTimeout(saveDebounceTimer), (saveDebounceTimer = null)),
         savePending && ((savePending = !1), saveGame(!1), console.log("[SaveManager] Pending save flushed"));
 }
-async function saveGame(e = !0) {
+// force: a save the player asked for (the Save button) or one a big transition can't lose
+// (prestige). Everything else is an automatic save and is skipped while the player has
+// turned Autosave off in Settings.
+async function saveGame(e = !0, force = !1) {
+    if (!force && !1 === gameState.settings?.autosave) return;
     if (!isResetting)
         try {
             await saveGameToSlot("autosave", "auto", e);
@@ -176,7 +180,12 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
                     employees: gameState.employees?.length || 0,
                     prestigeLevel: gameState.prestigeLevel || 0,
                 },
-                gameState: gameState,
+                // A shallow copy, so the fields below can be left out of the save without
+                // touching the live game. The open chat would otherwise be saved as a second
+                // full copy of that employee; the tick counters used to be deleted from the
+                // live state on every 5 s autosave, which meant the 30–60 s story, dynamic-event
+                // and group-idle ticks never fired.
+                gameState: { ...gameState, activeChat: null },
             },
             i = [];
         try {
@@ -238,6 +247,13 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
                 delete e._cashCacheCounter;
         } catch (e) {
             console.warn("[SaveManager] Pre-save trimming error (non-fatal):", e);
+        }
+        // Images go to the shared image store (54-image-store.js); the save keeps a short
+        // reference to each. Nothing awaits between this and the kv write below.
+        try {
+            o.gameState = await externalizeImagesForSave(o.gameState);
+        } catch (e) {
+            console.warn("[ImageStore] Couldn't store images separately — saving them inline:", e);
         }
         (o.meta.bytes = estimateSize(o)), // stamp serialized size for manifest + size logging
             "auto" === t &&
@@ -316,9 +332,13 @@ async function loadGameFromSlot(e) {
     try {
         console.log(`[SaveManager] Loading from slot: ${e}`);
         const t = await kv.gameSave.get(`fuoc_save_${e}`);
+        t?.gameState && (await internalizeImages(t.gameState)); // references → images
         return t
             ? t.gameState
                 ? (await loadSaveData(t.gameState),
+                  // Loading a named save makes it the one you're playing; an autosave, snapshot
+                  // or quick save belongs to whichever save it was taken from.
+                  (gameState.currentSaveSlot = "manual" === t.meta?.saveType ? e : t.gameState.currentSaveSlot || null),
                   console.log(`[SaveManager] Successfully loaded from slot: ${e}`),
                   showNotification(`✅ Loaded save: ${e}`, "success"),
                   !0)
@@ -362,6 +382,7 @@ async function deleteSaveSlot(e) {
         const t = `fuoc_save_${e}`;
         return (
             await kv.gameSave.delete(t),
+            scheduleImageGc("save deleted"),
             console.log(`[SaveManager] Deleted slot: ${e}`),
             showNotification(`🗑️ Deleted save: ${e}`),
             !0
@@ -404,6 +425,12 @@ async function renameSaveSlot(e, t) {
 // containers (employees, chatHistory, social posts) element-by-element means no
 // single JSON.stringify call ever has to hold more than one item's worth of data —
 // the resulting parts array is safe to pass straight to `new Blob(parts)`.
+// JSON has no Set/Map: without this, usedEmployeeNames / blockedProactiveMessages exported
+// as {} and the name-uniqueness history was lost on import. The loaders turn these arrays
+// and objects back into a Set/Map.
+function saveJsonReplacer(k, v) {
+    return v instanceof Set ? [...v] : v instanceof Map ? Object.fromEntries(v) : v;
+}
 function chunkObjectParts(obj, arrayKeys, mapKeys) {
     const parts = ["{"],
         keys = Object.keys(obj);
@@ -413,19 +440,19 @@ function chunkObjectParts(obj, arrayKeys, mapKeys) {
         if (arrayKeys.includes(k) && Array.isArray(v)) {
             parts.push("[");
             v.forEach((item, i) => {
-                parts.push(JSON.stringify(item)), i < v.length - 1 && parts.push(",");
+                parts.push(JSON.stringify(item, saveJsonReplacer)), i < v.length - 1 && parts.push(",");
             }),
                 parts.push("]");
         } else if (mapKeys.includes(k) && v && "object" == typeof v && !Array.isArray(v)) {
             const mk = Object.keys(v);
             parts.push("{"),
                 mk.forEach((id, i) => {
-                    parts.push(JSON.stringify(id) + ":" + JSON.stringify(v[id])), i < mk.length - 1 && parts.push(",");
+                    parts.push(JSON.stringify(id) + ":" + JSON.stringify(v[id], saveJsonReplacer)), i < mk.length - 1 && parts.push(",");
                 }),
                 parts.push("}");
         } else if ("socialNetwork" === k && v && "object" == typeof v) {
             parts.push(...chunkObjectParts(v, ["posts"], []));
-        } else parts.push(JSON.stringify(v));
+        } else parts.push(JSON.stringify(v, saveJsonReplacer));
         idx < keys.length - 1 && parts.push(",");
     }),
         parts.push("}");
@@ -440,7 +467,7 @@ function buildSaveBlobParts(payload) {
                 ? parts.push(
                       ...chunkObjectParts(payload[k], ["employees", "formerEmployees", "groups"], ["chatHistory"])
                   )
-                : parts.push(JSON.stringify(payload[k])),
+                : parts.push(JSON.stringify(payload[k], saveJsonReplacer)),
             idx < keys.length - 1 && parts.push(",");
     }),
         parts.push("}");
@@ -450,6 +477,7 @@ async function exportSaveSlot(e) {
     try {
         const t = await kv.gameSave.get(`fuoc_save_${e}`);
         if (!t) return void showNotification(`❌ Save slot "${e}" not found!`, "error");
+        await internalizeImages(t.gameState || t); // an exported file carries its images
         const n = buildSaveBlobParts(t),
             a = new Blob(n, { type: "application/json" }),
             o = URL.createObjectURL(a),
@@ -478,6 +506,7 @@ async function importSaveToSlot(e, t = null) {
             (e.meta.saveName = n),
             (e.meta.saveType = "manual"),
             (e.meta.importedAt = new Date().toISOString()),
+            (e.gameState = await externalizeImagesForSave(e.gameState)),
             await kv.gameSave.set(`fuoc_save_${n}`, e),
             console.log(`[SaveManager] Imported to slot: ${n}`),
             showNotification(`📥 Imported save: ${n}`, "success"),
@@ -1010,6 +1039,12 @@ async function migrateLegacySave() {
     try {
         const e = await kv.gameSave.get("gameState");
         if (!e) return void console.log("[SaveManager] No legacy save to migrate");
+        // Only a save from before multi-slot saves has "gameState" and no autosave slot.
+        // Save Manager loads used to write a copy of the loaded game here too; migrating
+        // that copy overwrote the autosave, so every reload after a Save Manager load threw
+        // away all the progress made since. With an autosave present it is that stale copy.
+        if (await kv.gameSave.get("fuoc_save_autosave"))
+            return void (await kv.gameSave.delete("gameState"), console.log("[SaveManager] Removed stale legacy \"gameState\" copy"));
         console.log("[SaveManager] Found legacy save, migrating...");
         const t = {
             version: "250116200000",
@@ -1070,6 +1105,32 @@ function saveTier(e) {
     const t = saveAgeMs(e);
     return SAVE_TIER_BUCKETS.find((e) => t <= e.maxAge) || SAVE_TIER_BUCKETS[SAVE_TIER_BUCKETS.length - 1];
 }
+// Save names double as slot keys (fuoc_save_<name>), so keep them short and free of
+// characters that break the HTML attributes they end up in. The prefixes below belong to
+// the automatic slots.
+const RESERVED_SAVE_NAME = /^(autosave|quick_|prevsession$|gamestate$)/i;
+function cleanSaveName(e) {
+    return String(e || "")
+        .replace(/[\u0000-\u001f"'<>\\`]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 60);
+}
+function defaultSaveName() {
+    const e = gameState.playerProfile?.companyName || "My Company",
+        t = new Date(gameNow());
+    return cleanSaveName(`${e} – ${t.toLocaleDateString([], { month: "short", day: "numeric" })}`);
+}
+function smEsc(e) {
+    return String(null == e ? "" : e).replace(/[&<>"']/g, (e) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[e]);
+}
+// The in-game date a save was made at (meta.gameTime), for the list's "In-game" column.
+// (It used to show meta.gameDay, which nothing ever set, so every save read "Day 0".)
+function formatSaveGameTime(e) {
+    return e.gameTime
+        ? new Date(e.gameTime).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+        : "—";
+}
 class SaveManager {
     constructor() {
         (this.view = { tab: "manual", sortKey: "savedAt", sortDir: "desc", query: "", selectedId: null }),
@@ -1101,7 +1162,7 @@ class SaveManager {
         return (
             (e.className = "save-manager-modal"),
             (e.innerHTML =
-                '\n        <div class="save-manager-container">\n          \n          \x3c!-- Header --\x3e\n          <div class="save-manager-header">\n            <div class="save-manager-title">\n              <div class="save-manager-logo">💾</div>\n              <div>\n                <h2>Save Manager</h2>\n                <div class="save-manager-subtitle">Manage your game saves • Quick Save (F5) • Quick Load (F9)</div>\n              </div>\n            </div>\n            <button class="save-manager-close" id="sm-close">✕</button>\n          </div>\n\n          \x3c!-- Actions --\x3e\n          <div class="save-manager-actions">\n            <button class="sm-btn accent" id="sm-continue">▶ Continue</button>\n            <button class="sm-btn success" id="sm-quick-save">⏺ Quick Save</button>\n            <button class="sm-btn primary" id="sm-quick-load">⏮ Quick Load</button>\n            <button class="sm-btn" id="sm-export-all">📤 Export</button>\n            <button class="sm-btn" id="sm-import">📥 Import</button>\n            <input type="file" id="sm-import-file" accept=".json" style="display: none;">\n          </div>\n\n          \x3c!-- Toolbar --\x3e\n          <div class="save-manager-toolbar">\n            <div class="save-tab-group">\n              <button class="save-tab active" id="sm-tab-manual">Manual Saves</button>\n              <button class="save-tab" id="sm-tab-auto">Autosaves & Quick Saves</button>\n            </div>\n            <div class="save-search-box">\n              <span class="save-search-icon">🔍</span>\n              <input type="text" id="sm-search" placeholder="Search saves..." />\n            </div>\n          </div>\n\n          \x3c!-- Save List --\x3e\n          <div class="save-list-container">\n            <table class="save-table">\n              <thead>\n                <tr>\n                  <th class="sortable" data-sort="name">Name <span class="sort-arrow">▾</span></th>\n                  <th class="sortable" data-sort="day">Day</th>\n                  <th class="sortable" data-sort="savedAt">Saved At <span class="sort-arrow">▾</span></th>\n                  <th>Money</th>\n                  <th>Employees</th>\n                  <th class="sortable" data-sort="playTime">Playtime</th>\n                  <th style="width: 250px;">Actions</th>\n                </tr>\n              </thead>\n              <tbody id="sm-tbody">\n                \x3c!-- Populated by render() --\x3e\n              </tbody>\n            </table>\n            \n            \x3c!-- Mobile Card Container --\x3e\n            <div class="save-card-container" id="sm-card-container">\n              \x3c!-- Populated by render() --\x3e\n            </div>\n          </div>\n\n          \x3c!-- Footer --\x3e\n          <div class="save-manager-footer">\n            <div class="save-footer-hint">\n              <span>Tips:</span>\n              <span><span class="kbd">F5</span> Quick Save</span>\n              <span><span class="kbd">F9</span> Quick Load</span>\n              <span><span class="kbd">Esc</span> Close</span>\n            </div>\n            <div class="save-count" id="sm-count">\n              Loading saves...\n            </div>\n          </div>\n          \n        </div>\n      '),
+                '\n        <div class="save-manager-container">\n          \n          \x3c!-- Header --\x3e\n          <div class="save-manager-header">\n            <div class="save-manager-title">\n              <div class="save-manager-logo">💾</div>\n              <div>\n                <h2>Save Manager</h2>\n                <div class="save-manager-subtitle" id="sm-subtitle">Manage your game saves • Quick Save (F5) • Quick Load (F9)</div>\n              </div>\n            </div>\n            <button class="save-manager-close" id="sm-close">✕</button>\n          </div>\n\n          \x3c!-- Actions --\x3e\n          <div class="save-manager-actions">\n            <button class="sm-btn accent" id="sm-continue">▶ Continue</button>\n            <button class="sm-btn success" id="sm-save-current" style="display:none;">💾 Save</button>\n            <button class="sm-btn success" id="sm-quick-save">⏺ Quick Save</button>\n            <button class="sm-btn primary" id="sm-quick-load">⏮ Quick Load</button>\n            <button class="sm-btn" id="sm-export-all">📤 Export</button>\n            <button class="sm-btn" id="sm-import">📥 Import</button>\n            <input type="file" id="sm-import-file" accept=".json" style="display: none;">\n          </div>\n\n          \x3c!-- Toolbar --\x3e\n          <div class="save-manager-toolbar">\n            <div class="save-tab-group">\n              <button class="save-tab active" id="sm-tab-manual">Manual Saves</button>\n              <button class="save-tab" id="sm-tab-auto">Autosaves & Quick Saves</button>\n            </div>\n            <div class="save-search-box">\n              <span class="save-search-icon">🔍</span>\n              <input type="text" id="sm-search" placeholder="Search saves..." />\n            </div>\n          </div>\n\n          \x3c!-- Save List --\x3e\n          <div class="save-list-container">\n            <table class="save-table">\n              <thead>\n                <tr>\n                  <th class="sortable" data-sort="name">Name <span class="sort-arrow">▾</span></th>\n                  <th class="sortable" data-sort="day">In-game</th>\n                  <th class="sortable" data-sort="savedAt">Saved At <span class="sort-arrow">▾</span></th>\n                  <th>Money</th>\n                  <th>Employees</th>\n                  <th class="sortable" data-sort="playTime">Playtime</th>\n                  <th style="width: 260px;">Actions</th>\n                </tr>\n              </thead>\n              <tbody id="sm-tbody">\n                \x3c!-- Populated by render() --\x3e\n              </tbody>\n            </table>\n            \n            \x3c!-- Mobile Card Container --\x3e\n            <div class="save-card-container" id="sm-card-container">\n              \x3c!-- Populated by render() --\x3e\n            </div>\n          </div>\n\n          \x3c!-- Footer --\x3e\n          <div class="save-manager-footer">\n            <div class="save-footer-hint">\n              <span>Tips:</span>\n              <span><span class="kbd">F5</span> Quick Save</span>\n              <span><span class="kbd">F9</span> Quick Load</span>\n              <span><span class="kbd">Esc</span> Close</span>\n            </div>\n            <div class="save-count" id="sm-count">\n              Loading saves...\n            </div>\n          </div>\n          \n        </div>\n      '),
             e
         );
     }
@@ -1117,6 +1178,9 @@ class SaveManager {
             }),
             document.addEventListener("keydown", this._escHandler),
             e.querySelector("#sm-continue").addEventListener("click", () => this.handleContinue()),
+            e.querySelector("#sm-save-current").addEventListener("click", () => {
+                gameState.currentSaveSlot && this.handleOverwrite(gameState.currentSaveSlot);
+            }),
             e.querySelector("#sm-quick-save").addEventListener("click", () => this.handleQuickSave()),
             e.querySelector("#sm-quick-load").addEventListener("click", () => this.handleQuickLoad()),
             e.querySelector("#sm-export-all").addEventListener("click", () => this.handleExportSelected());
@@ -1130,7 +1194,7 @@ class SaveManager {
         e.querySelector("#sm-search").addEventListener("input", (e) => {
             (this.view.query = e.target.value.toLowerCase()),
                 clearTimeout(a),
-                (a = setTimeout(() => this.render(), 150));
+                (a = setTimeout(() => this.render(!1), 150));
         }),
             e.querySelectorAll("th.sortable").forEach((e) => {
                 e.addEventListener("click", () => {
@@ -1138,7 +1202,7 @@ class SaveManager {
                     this.view.sortKey === t
                         ? (this.view.sortDir = "asc" === this.view.sortDir ? "desc" : "asc")
                         : ((this.view.sortKey = t), (this.view.sortDir = "desc")),
-                        this.render();
+                        this.render(!1);
                 });
             });
     }
@@ -1149,15 +1213,19 @@ class SaveManager {
         "manual" === e
             ? (t.classList.add("active"), n.classList.remove("active"))
             : (n.classList.add("active"), t.classList.remove("active")),
-            await this.render();
+            await this.render(!1);
         const a = this.modal.querySelector(".save-list-container");
         a && (a.scrollTop = 0);
     }
-    async render() {
+    // reload: re-read the saves from storage. Every save is read in full to get its meta, so
+    // only do that on open and after a change — searching, sorting and selecting reuse it.
+    async render(reload = !0) {
+        (reload || !this.saves) && (this.saves = await listAllSaves());
         const e = this.modal.querySelector("#sm-tbody"),
             t = this.modal.querySelector("#sm-card-container"),
             n = this.modal.querySelector("#sm-count"),
-            a = await listAllSaves();
+            a = this.saves;
+        this.renderCurrent(a);
         let o = a.filter((e) =>
             "manual" === this.view.tab ? "manual" === e.saveType : "auto" === e.saveType || "quick" === e.saveType
         );
@@ -1169,7 +1237,7 @@ class SaveManager {
                         (n = e.saveName.toLowerCase()), (a = t.saveName.toLowerCase());
                         break;
                     case "day":
-                        (n = e.gameDay || 0), (a = t.gameDay || 0);
+                        (n = e.gameTime || 0), (a = t.gameTime || 0);
                         break;
                     case "savedAt":
                         (n = new Date(e.saveDate).getTime()), (a = new Date(t.saveDate).getTime());
@@ -1238,18 +1306,31 @@ class SaveManager {
         }
         this.attachRowListeners(), this.updateSortArrows();
     }
+    // "Playing: <name>" in the header, plus a one-click save back into that slot.
+    renderCurrent(e) {
+        const t = gameState.currentSaveSlot,
+            n = t && e.find((e) => e.slotName === t && "manual" === e.saveType),
+            a = this.modal.querySelector("#sm-subtitle"),
+            o = this.modal.querySelector("#sm-save-current");
+        a &&
+            (a.innerHTML = n
+                ? `Playing: <strong style="color:var(--accent);">${smEsc(t)}</strong> • last saved ${smEsc(new Date(n.saveDate).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}`
+                : "Not saved to a named save yet — use <strong>+ Create New Save</strong> • Quick Save (F5) • Quick Load (F9)"),
+            o && ((o.style.display = n ? "" : "none"), (o.textContent = n ? `💾 Save to "${t}"` : "💾 Save"));
+    }
     buildRowHTML(e) {
         const t = new Date(e.saveDate).toLocaleString("en-US", {
                 month: "short",
                 day: "numeric",
-                year: "numeric",
+                ...(new Date(e.saveDate).getFullYear() !== new Date().getFullYear() && { year: "numeric" }),
                 hour: "numeric",
                 minute: "2-digit",
                 hour12: !0,
             }),
             n = formatCash(e.money || 0),
             a = this.formatPlaytime(e.playTime || 0),
-            o = this.view.selectedId === e.slotName;
+            o = this.view.selectedId === e.slotName,
+            c = "manual" === e.saveType && e.slotName === gameState.currentSaveSlot;
         let i = e.saveName;
         if ("autosave" === e.slotName) i = "Latest Autosave";
         else if (e.slotName.startsWith("autosave_")) i = `Autosave — ${formatAgo(saveAgeMs(e))}`;
@@ -1261,21 +1342,22 @@ class SaveManager {
         const s =
             "auto" === e.saveType
                 ? `<span class="save-name-display" style="color:var(--accent);font-weight:600;">${i}</span>`
-                : `<input type="text" class="save-name-input" value="${i}" data-slot="${e.slotName}" data-original="${e.saveName}" />`;
-        return `\n        <tr data-slot="${e.slotName}" ${o ? 'class="selected"' : ""}>\n          <td>\n            <div class="save-name-cell">\n              ${s}\n              <span class="save-tag ${e.saveType}">${e.saveType}</span>\n            </div>\n          </td>\n          <td class="meta">Day ${e.gameDay || 0}</td>\n          <td class="meta">${t}</td>\n          <td>${n}</td>\n          <td>${e.employees || 0}</td>\n          <td class="meta">${a}</td>\n          <td>\n            <div class="save-row-actions">\n              <button class="save-action-btn load" data-action="load" data-slot="${e.slotName}">Load</button>\n              <button class="save-action-btn export" data-action="export" data-slot="${e.slotName}">Export</button>\n              ${"auto" !== e.saveType ? `<button class="save-action-btn delete" data-action="delete" data-slot="${e.slotName}">✕</button>` : ""}\n            </div>\n          </td>\n        </tr>\n      `;
+                : `<input type="text" class="save-name-input" value="${smEsc(i)}" data-slot="${smEsc(e.slotName)}" data-original="${smEsc(e.saveName)}" />`;
+        return `\n        <tr data-slot="${smEsc(e.slotName)}" class="${o ? "selected" : ""}${c ? " is-current" : ""}">\n          <td>\n            <div class="save-name-cell">\n              ${s}\n              <span class="save-tag ${e.saveType}">${e.saveType}</span>${c ? '<span class="save-tag current" title="The save you loaded or last saved to">Playing</span>' : ""}\n            </div>\n          </td>\n          <td class="meta">${formatSaveGameTime(e)}</td>\n          <td class="meta">${t}</td>\n          <td>${n}</td>\n          <td>${e.employees || 0}</td>\n          <td class="meta">${a}</td>\n          <td>\n            <div class="save-row-actions">\n              <button class="save-action-btn load" data-action="load" data-slot="${smEsc(e.slotName)}">Load</button>\n              <button class="save-action-btn export" data-action="export" data-slot="${smEsc(e.slotName)}" title="Export to a file">📤</button>${"manual" === e.saveType ? `<button class="save-action-btn overwrite" data-action="overwrite" data-slot="${smEsc(e.slotName)}" title="Replace this save with your current game">Overwrite</button>` : ""}\n              ${"auto" !== e.saveType ? `<button class="save-action-btn delete" data-action="delete" data-slot="${smEsc(e.slotName)}">✕</button>` : ""}\n            </div>\n          </td>\n        </tr>\n      `;
     }
     buildCardHTML(e) {
         const t = new Date(e.saveDate).toLocaleString("en-US", {
                 month: "short",
                 day: "numeric",
-                year: "numeric",
+                ...(new Date(e.saveDate).getFullYear() !== new Date().getFullYear() && { year: "numeric" }),
                 hour: "numeric",
                 minute: "2-digit",
                 hour12: !0,
             }),
             n = formatCash(e.money || 0),
             a = this.formatPlaytime(e.playTime || 0),
-            o = this.view.selectedId === e.slotName;
+            o = this.view.selectedId === e.slotName,
+            c = "manual" === e.saveType && e.slotName === gameState.currentSaveSlot;
         let i = e.saveName;
         if ("autosave" === e.slotName) i = "Latest Autosave";
         else if (e.slotName.startsWith("autosave_")) i = `Autosave — ${formatAgo(saveAgeMs(e))}`;
@@ -1287,8 +1369,8 @@ class SaveManager {
         const s =
             "auto" === e.saveType
                 ? `<span style="color:var(--accent);font-size:0.95rem;font-weight:700;">${i}</span>`
-                : `<input type="text" class="save-name-input" value="${i}" data-slot="${e.slotName}" data-original="${e.saveName}" style="background:transparent;border:none;color:var(--accent);font-size:0.95rem;font-weight:700;padding:0;width:100%;" />`;
-        return `\n        <div class="save-card ${o ? "selected" : ""}" data-slot="${e.slotName}">\n          <div class="save-card-header">\n            <div class="save-card-title">\n              <div class="save-card-name">\n                ${s}\n              </div>\n              <span class="save-tag ${e.saveType}">${e.saveType}</span>\n            </div>\n          </div>\n          \n          <div class="save-card-meta">\n            <div class="save-card-meta-item">\n              <span>📅</span>\n              <span>Day ${e.gameDay || 0}</span>\n            </div>\n            <div class="save-card-meta-item">\n              <span>🕒</span>\n              <span>${t}</span>\n            </div>\n            <div class="save-card-meta-item">\n              <span>💰</span>\n              <span>${n}</span>\n            </div>\n            <div class="save-card-meta-item">\n              <span>👥</span>\n              <span>${e.employees || 0}</span>\n            </div>\n            <div class="save-card-meta-item">\n              <span>⏱️</span>\n              <span>${a}</span>\n            </div>\n          </div>\n          \n          <div class="save-card-actions">\n            <button class="save-action-btn load" data-action="load" data-slot="${e.slotName}">Load</button>\n            <button class="save-action-btn export" data-action="export" data-slot="${e.slotName}">Export</button>\n            ${"auto" !== e.saveType ? `<button class="save-action-btn delete" data-action="delete" data-slot="${e.slotName}">Delete</button>` : ""}\n          </div>\n        </div>\n      `;
+                : `<input type="text" class="save-name-input" value="${smEsc(i)}" data-slot="${smEsc(e.slotName)}" data-original="${smEsc(e.saveName)}" style="background:transparent;border:none;color:var(--accent);font-size:0.95rem;font-weight:700;padding:0;width:100%;" />`;
+        return `\n        <div class="save-card ${o ? "selected" : ""}${c ? " is-current" : ""}" data-slot="${smEsc(e.slotName)}">\n          <div class="save-card-header">\n            <div class="save-card-title">\n              <div class="save-card-name">\n                ${s}\n              </div>\n              <span class="save-tag ${e.saveType}">${e.saveType}</span>${c ? '<span class="save-tag current" title="The save you loaded or last saved to">Playing</span>' : ""}\n            </div>\n          </div>\n          \n          <div class="save-card-meta">\n            <div class="save-card-meta-item">\n              <span>📅</span>\n              <span>${formatSaveGameTime(e)}</span>\n            </div>\n            <div class="save-card-meta-item">\n              <span>🕒</span>\n              <span>${t}</span>\n            </div>\n            <div class="save-card-meta-item">\n              <span>💰</span>\n              <span>${n}</span>\n            </div>\n            <div class="save-card-meta-item">\n              <span>👥</span>\n              <span>${e.employees || 0}</span>\n            </div>\n            <div class="save-card-meta-item">\n              <span>⏱️</span>\n              <span>${a}</span>\n            </div>\n          </div>\n          \n          <div class="save-card-actions">\n            <button class="save-action-btn load" data-action="load" data-slot="${smEsc(e.slotName)}">Load</button>\n            <button class="save-action-btn export" data-action="export" data-slot="${smEsc(e.slotName)}" title="Export to a file">📤</button>${"manual" === e.saveType ? `<button class="save-action-btn overwrite" data-action="overwrite" data-slot="${smEsc(e.slotName)}" title="Replace this save with your current game">Overwrite</button>` : ""}\n            ${"auto" !== e.saveType ? `<button class="save-action-btn delete" data-action="delete" data-slot="${smEsc(e.slotName)}">Delete</button>` : ""}\n          </div>\n        </div>\n      `;
     }
     attachRowListeners() {
         const e = this.modal.querySelector("#sm-tbody"),
@@ -1299,7 +1381,9 @@ class SaveManager {
                     n = e.target.dataset.slot;
                 "load" === t
                     ? this.handleLoad(n)
-                    : "export" === t
+                    : "overwrite" === t
+                      ? this.handleOverwrite(n)
+                      : "export" === t
                       ? this.handleExport(n)
                       : "delete" === t && this.handleDelete(n);
             });
@@ -1321,14 +1405,14 @@ class SaveManager {
                 e.addEventListener("click", (t) => {
                     "INPUT" !== t.target.tagName &&
                         "BUTTON" !== t.target.tagName &&
-                        ((this.view.selectedId = e.dataset.slot), this.render());
+                        ((this.view.selectedId = e.dataset.slot), this.render(!1));
                 });
             }),
             t.querySelectorAll(".save-card[data-slot]").forEach((e) => {
                 e.addEventListener("click", (t) => {
                     "INPUT" !== t.target.tagName &&
                         "BUTTON" !== t.target.tagName &&
-                        ((this.view.selectedId = e.dataset.slot), this.render());
+                        ((this.view.selectedId = e.dataset.slot), this.render(!1));
                 });
             });
     }
@@ -1363,8 +1447,39 @@ class SaveManager {
             : showNotification("❌ No quick saves found!", "error");
     }
     async handleCreateSave() {
-        const e = `manual_${Date.now()}`;
-        await saveGameToSlot(e, "manual", !0), await this.render();
+        const e = defaultSaveName(),
+            t = await showPrompt("Name this save. You can overwrite it later with the Overwrite button.", "💾 New Save", {
+                defaultValue: e,
+                placeholder: e,
+            });
+        if (null === t) return;
+        const n = cleanSaveName(t) || e;
+        if (RESERVED_SAVE_NAME.test(n)) return void showNotification("❌ That name is reserved — pick another.", "error");
+        if (
+            (await kv.gameSave.keys()).includes(`fuoc_save_${n}`) &&
+            !(await showConfirm(`A save named "${n}" already exists.\n\nOverwrite it with your current game?`, "Overwrite Save", {
+                type: "warning",
+                confirmText: "Overwrite",
+            }))
+        )
+            return;
+        await this.writeManualSave(n);
+    }
+    async handleOverwrite(e) {
+        (await showConfirm(
+            `Overwrite "${e}" with your current game?\n\nWhat's in that save now will be replaced.`,
+            "Overwrite Save",
+            { type: "warning", confirmText: "Overwrite" }
+        )) && (await this.writeManualSave(e));
+    }
+    // Writing a named save makes it the one you're "playing": the header shows it and the
+    // Save button targets it. The field travels inside the save, so autosaves, snapshots
+    // and reloads remember it too.
+    async writeManualSave(e) {
+        const t = gameState.currentSaveSlot;
+        gameState.currentSaveSlot = e;
+        if (!(await saveGameToSlot(e, "manual", !0))) return void (gameState.currentSaveSlot = t);
+        (this.view.selectedId = e), saveGame(!1), await this.render();
     }
     async handleLoad(e) {
         !1 !== (await loadGameFromSlot(e)) && this.hide();
@@ -1381,16 +1496,26 @@ class SaveManager {
         (await showConfirm(`Delete save "${e}"?\n\nThis cannot be undone!`, "Delete Save", {
             type: "danger",
             confirmText: "Delete",
-        })) && (await deleteSaveSlot(e), await this.render());
+        })) &&
+            (await deleteSaveSlot(e)) &&
+            (gameState.currentSaveSlot === e && ((gameState.currentSaveSlot = null), saveGame(!1)), await this.render());
     }
     async handleRename(e) {
         const t = e.target,
             n = t.dataset.slot,
-            a = t.value.trim();
+            a = cleanSaveName(t.value);
         if (a === n || "" === a || a === t.dataset.original)
             return (t.value = t.dataset.original), void (this.editingNameId = null);
+        if (RESERVED_SAVE_NAME.test(a))
+            return (
+                showNotification("❌ That name is reserved — pick another.", "error"),
+                (t.value = t.dataset.original),
+                void (this.editingNameId = null)
+            );
         (await renameSaveSlot(n, a))
-            ? (this.view.selectedId === n && (this.view.selectedId = a), await this.render())
+            ? (this.view.selectedId === n && (this.view.selectedId = a),
+              gameState.currentSaveSlot === n && ((gameState.currentSaveSlot = a), saveGame(!1)),
+              await this.render())
             : (t.value = t.dataset.original),
             (this.editingNameId = null);
     }
@@ -1427,6 +1552,22 @@ class SaveManager {
 let saveManagerInstance = null;
 function getSaveManager() {
     return saveManagerInstance || (saveManagerInstance = new SaveManager()), saveManagerInstance;
+}
+// Loads used to reset every salary to its level's flat baseSalary, wiping raises and
+// leaving anyone above garage tier "underpaid" against the market model. A salary sitting
+// exactly on that base is the reset's fingerprint: move it up to the market rate, once per
+// save. Only ever raises pay.
+function repairFlatSalaries() {
+    if (gameState.salaryResetRepaired || !Array.isArray(gameState.employees)) return;
+    let n = 0;
+    gameState.employees.forEach((e) => {
+        const b = gameState.hierarchyLevels?.[e.career?.level || 1]?.baseSalary;
+        if (!e.career || "active" !== e.employmentStatus || !b || e.career.salary !== b) return;
+        const m = getMarketRate(e);
+        m > b && ((e.career.salary = m), n++);
+    });
+    (gameState.salaryResetRepaired = !0),
+        n > 0 && console.log(`[LoadGame Migration] Restored market-rate salaries for ${n} employee(s)`);
 }
 async function loadGame() {
     try {
@@ -1471,6 +1612,11 @@ async function loadGame() {
         if (e) {
             bootLog(`KV read OK ← slot "${__primarySlot}" (${estimateSize(e)} bytes)`), await backupPreviousSession(e);
             const t = e.gameState || e;
+            {
+                // After the backup (which keeps the references): put the images back.
+                const r = await internalizeImages(t);
+                r.refs && bootLog(`Images restored from the image store: ${r.refs} reference(s), ${r.missing} missing`);
+            }
             bootLog("Parse OK — incoming save summary", gameStateSummary(t));
             if (
                 (t.usedEmployeeNames &&
@@ -1634,19 +1780,14 @@ async function loadGame() {
                                 `[LoadGame Migration] Updated ${e.name}'s title from "Entry Level" to "Staff" (Level 1)`
                             );
                     }
-                    if (e.career) {
-                        const t = e.career.level || 1,
-                            n = gameState.hierarchyLevels?.[t],
-                            a = n?.baseSalary || 1e5;
-                        if (e.career.salary !== a) {
-                            const o = e.career.salary || 0;
-                            (e.career.salary = a),
-                                o !== a &&
-                                    console.log(
-                                        `[LoadGame Migration] Salary synced for ${e.name}: $${o.toLocaleString()} -> $${a.toLocaleString()} (Level ${t} ${n?.title || "Staff"})`
-                                    );
-                        }
-                    }
+                    // Salaries follow the market model (market rate + any negotiated raises), so a
+                    // load must never reset them to the level's flat baseSalary — that used to wipe
+                    // raises on every reload and flag everyone above garage tier as underpaid.
+                    // Only fill in a salary that is missing or invalid.
+                    e.career &&
+                        !(e.career.salary > 0) &&
+                        ((e.career.salary = getMarketRate(e)),
+                        console.log(`[LoadGame Migration] Set missing salary for ${e.name}: $${e.career.salary.toLocaleString()}`));
                     if (e.career && e.career.title) {
                         const t = Object.keys(gameState.hierarchyLevels || {}).find((t) => {
                             const n = gameState.hierarchyLevels[t];
@@ -1660,6 +1801,7 @@ async function loadGame() {
                             ));
                     }
                 });
+            repairFlatSalaries();
             // Hotfix 2: self-heal legacy saves where a group message's imageDesc was corrupted with a
             // DOM node (pre-DataCloneError-fix). Reset any non-string imageDesc to "" so loads don't throw.
             Array.isArray(gameState.groups) &&
@@ -1671,7 +1813,17 @@ async function loadGame() {
                 });
             let a = 0;
             gameState.employees.forEach((e) => {
-                if (e.position && /Manager\s*[–-]\s*(.+)/.test(e.position)) {
+                // Legacy saves recorded a manager only as position "Manager – <product>". Current
+                // saves also write that title, so only trust it for someone the save doesn't
+                // already place: no product names them as manager and they hold no ladder seat.
+                // (position/productManaged are live fields now — hiring, accountants and AI
+                // prompts read them — so they are no longer deleted here.)
+                const placed =
+                    gameState.products.some((p) => p.managerId === e.id) ||
+                    Object.values(gameState.corporatePyramid?.positions || {}).some(
+                        (l) => Array.isArray(l) && l.some((p) => p.employeeId === e.id)
+                    );
+                if (!placed && "active" === e.employmentStatus && e.position && /Manager\s*[–-]\s*(.+)/.test(e.position)) {
                     const t = e.position.match(/Manager\s*[–-]\s*(.+?)(?:\s*•|$)/);
                     if (t) {
                         const n = t[1].trim();
@@ -1693,16 +1845,6 @@ async function loadGame() {
                               : console.log(`[LoadGame Migration] ⚠ Product "${n}" not found`);
                     }
                 }
-                e.position &&
-                    (console.log(
-                        `[LoadGame Migration] Cleaning up old position field for ${e.name}: "${e.position}"`
-                    ),
-                    delete e.position),
-                    e.productManaged &&
-                        (console.log(
-                            `[LoadGame Migration] Cleaning up old productManaged field for ${e.name}: "${e.productManaged}"`
-                        ),
-                        delete e.productManaged);
             }),
                 a > 0 &&
                     (console.log(
@@ -1855,6 +1997,7 @@ async function loadGame() {
         } else await migrateFromLocalStorage();
         // Mark the save system ready. migrateFromLocalStorage may have recursively
         // loaded a save (which already set the flag) — in that case don't override.
+        loadFailedNoOverwrite || scheduleImageGc("startup", 6e4);
         if (!loadFailedNoOverwrite && !saveSystemReady) {
             e ||
                 ((intentionalNewGame = !0),
@@ -1934,7 +2077,7 @@ function checkAfkIncome(awayMs = Date.now() - getLastPresentRealTime()) {
         y && (y.textContent = `$${formatNumber(a)}/sec`),
         f && (f.textContent = `$${formatNumber(c)}`),
         b && (b.textContent = `$${formatNumber(d)}`),
-        v && (v.textContent = 100 * r + "%"),
+        v && (v.textContent = Math.round(100 * r)), // the markup supplies the "%"
         g && (g.style.display = "flex"),
         w &&
             (w.onclick = () => {
@@ -2899,7 +3042,7 @@ function executePrestige() {
         "function" == typeof initializeBossImages && initializeBossImages();
     const E = document.getElementById("prestigeModal");
     E && (E.style.display = "none"),
-        saveGame(!1),
+        saveGame(!1, !0),
         updateUI(),
         updatePrestigeUI(),
         renderInfluenceUpgrades(),
@@ -3042,7 +3185,7 @@ async function pruneSnapshots() {
             } catch (t) {
                 console.warn(`[Snapshot] Failed to delete evicted slot ${e.slot}:`, t);
             }
-        gameState.autosaveTracking.snapshots = e.filter((e) => !t.has(e.slot));
+        (gameState.autosaveTracking.snapshots = e.filter((e) => !t.has(e.slot))), scheduleImageGc("snapshot rotation");
     }
     return n.map((e) => e.slot);
 }
@@ -3229,7 +3372,7 @@ function handleImportedFile(e) {
             const a = n.date ? new Date(n.date).toLocaleString() : "Unknown",
                 o = n.gameState.cash ? formatCash(n.gameState.cash) : "Unknown",
                 i = n.gameState.employees ? n.gameState.employees.length : 0,
-                s = `� Money: ${o}\n👥 Employees: ${i}\n✨ Prestige Level: ${n.gameState.prestigeLevel || 0}\n📅 Save Date: ${a}\n\n⚠️ This will overwrite your current progress!`;
+                s = `💰 Money: ${o}\n👥 Employees: ${i}\n✨ Prestige Level: ${n.gameState.prestigeLevel || 0}\n📅 Save Date: ${a}\n\n⚠️ This will overwrite your current progress!`;
             (await showConfirm(s, "📥 Import Save File?", { type: "warning" })) &&
                 (await loadSaveData(n.gameState), showNotification("✅ Save imported successfully!", "success"));
         } catch (e) {
@@ -3301,12 +3444,10 @@ async function loadSaveData(e) {
                                 managerId: null,
                             }),
                         e.career)
-                    ) {
-                        const t = e.career.level || 1,
-                            n = gameState.hierarchyLevels?.[t];
-                        n && (e.career.salary = n.baseSalary);
-                    }
+                    )
+                        e.career.salary > 0 || (e.career.salary = getMarketRate(e)); // see loadGame: never reset to baseSalary
                 }),
+            repairFlatSalaries(),
             console.log("[LoadSave] Merged save data with default state (migration-safe)"),
             gameState.autosaveTracking ||
                 ((gameState.autosaveTracking = {
@@ -3371,11 +3512,6 @@ async function loadSaveData(e) {
                       totalGenerated: 0,
                   }),
                   console.log("[LoadSave] Added missing autoVisualization settings"));
-        try {
-            await kv.gameSave.set("gameState", gameState);
-        } catch (e) {
-            console.warn("[LoadSave] Storage save failed, but load continuing:", e);
-        }
         // A player-initiated load (Save Manager / import) is an explicit, trusted
         // populate of gameState — clear any boot-time failure hold and re-arm autosave.
         (saveSystemReady = !0),
@@ -3383,6 +3519,14 @@ async function loadSaveData(e) {
             (intentionalNewGame = !1),
             (sessionBackupDone = !0),
             bootLog("Save loaded via Save Manager / import — save system READY", gameStateSummary());
+        // Make the loaded game the live one right away, so a reload continues from it.
+        try {
+            // Not skippable like a timer autosave: wait out one in flight and the throttle.
+            for (; saveInProgress; ) await new Promise((e) => setTimeout(e, 50));
+            (lastSaveTime = 0), await saveGameToSlot("autosave", "auto", !1);
+        } catch (e) {
+            console.warn("[LoadSave] Storage save failed, but load continuing:", e);
+        }
         return (
             updateUI(),
             updatePrestigeUI(),
@@ -3480,28 +3624,6 @@ async function resetGame() {
                 showNotification("Error resetting game. Please try again."),
                 (isResetting = !1);
         }
-}
-function unlockLocation(e) {
-    const t = gameState.locations.find((t) => t.id === e);
-    if (!t) return showNotification("Location not found!");
-    if (t.unlocked) return showNotification("Location already unlocked!");
-    if (!checkLocationUnlockable(e)) return showNotification("Complete all products in previous locations first!");
-    if (gameState.cash < t.cost) return showNotification(`Need $${formatNumber(t.cost)} to unlock ${t.name}!`);
-    (gameState.cash -= t.cost),
-        (t.unlocked = !0),
-        (t.owned = !0),
-        initializeHierarchicalPyramid(),
-        (gameState.activeLocationId = e);
-    const n = gameState.products.find((t) => t.locationId === e);
-    n && 0 === n.unlockCost && (n.unlocked = !0), "function" == typeof onLocationUnlocked && onLocationUnlocked(e);
-    const a = gameState.locations.findIndex((t) => t.id === e);
-    if (a >= 0 && a < gameState.locations.length - 1) {
-        const e = gameState.locations[a + 1];
-        "function" != typeof generateUniqueBoss ||
-            gameState.bossFights?.generatedBosses?.[e.id] ||
-            generateUniqueBoss(e.id).catch((e) => console.warn("[Boss] Failed to pre-generate next boss:", e));
-    }
-    showNotification(`${t.name} unlocked!`), updateBusinessTab(), updateUI();
 }
 function purchaseLocation(e) {
     unlockLocation(e);

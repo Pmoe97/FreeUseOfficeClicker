@@ -6,38 +6,6 @@
 // (function hoisting does not cross files). Do not reorder these files.
 // ============================================================================
 
-async function quickSendCash(e) {
-    const t = gameState.employees.find((t) => t.id === e);
-    if (!t) return void showNotification("❌ Employee not found!", "error");
-    const n = await showPrompt("How much do you want to send?", `💵 Send Money to ${t.name}`, {
-        defaultValue: "1000",
-        type: "number",
-        placeholder: "Enter amount...",
-    });
-    if (!n) return;
-    const a = parseInt(n);
-    if (isNaN(a) || a <= 0) return void showNotification("❌ Invalid amount!", "error");
-    if (gameState.cash < a)
-        return void showNotification(`❌ Not enough cash! You have $${formatCash(gameState.cash)}`, "error");
-    (gameState.cash -= a), t.bankBalance || (t.bankBalance = 0), (t.bankBalance += a);
-    const o = Math.min(20, Math.floor(a / 1e3)),
-        i = Math.min(10, Math.floor(a / 2e3)),
-        s = Math.min(12, Math.floor(a / 1500));
-    (t.stats.affection = Math.min(100, (t.stats.affection || 0) + o)),
-        (t.stats.trust = Math.min(100, (t.stats.trust || 0) + i)),
-        (t.stats.desire = Math.min(100, (t.stats.desire || 0) + s)),
-        updateUI(),
-        showNotification(`💰 Sent $${formatCash(a)} to ${t.name}\n+${o} Affection, +${i} Trust`, "success");
-}
-function openGiftModal(e) {
-    const t = gameState.employees.find((t) => t.id === e);
-    t
-        ? ((gameState.activeChat = t),
-          "function" == typeof window.openGiftSelectionModal
-              ? window.openGiftSelectionModal()
-              : showNotification("❌ Gift system not available!", "error"))
-        : showNotification("❌ Employee not found!", "error");
-}
 let openPostActionsMenuId = null;
 function togglePostActionsMenu(e) {
     const t = document.getElementById(`postActionsMenu_${e}`);
@@ -1328,8 +1296,10 @@ async function updateEmployeeStatsFromChat(e, t, n) {
                             console.log(
                                 `[Stat Bonus] ${e.name}'s ${o}: Amplifying gain to ${n.toFixed(1)} (NPC enthusiastic)`
                             ));
+                    // Cheat multipliers boost gains only (a 5× loss was never the point).
                     const d = gameState.cheatMultipliers?.[o.toLowerCase()] || 1;
                     1 !== d &&
+                        n > 0 &&
                         ((n *= d),
                         console.log(`[Cheat Multiplier] ${e.name}'s ${o}: ${d.toFixed(1)}x multiplier applied`));
                     let p = t + n;

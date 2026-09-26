@@ -23,7 +23,7 @@ function updateBusinessTab() {
             if (((c.className = "location-subtab biz-loc"), (c.dataset.locationId = t.id), a))
                 if (l)
                     (c.classList.add("locked")),
-                        (c.innerHTML = `�️ ${t.name}<br><span style="font-size:0.8em;">Requires ${t.requiresPrestiges} Prestige</span>`),
+                        (c.innerHTML = `🔒 ${t.name}<br><span style="font-size:0.8em;">Requires ${t.requiresPrestiges} Prestige</span>`),
                         (c.disabled = !0);
                 else if (r)
                     if (i)
@@ -104,12 +104,19 @@ function checkLocationUnlockable(e) {
     }
     return !0;
 }
+// The one unlock path (there used to be a second copy in 51-save-system.js that won, and
+// it built the ladder but skipped the theme and the save). Seats the new site on the
+// corporate ladder, switches to it and its theme, and saves.
 function unlockLocation(e) {
     const t = gameState.locations.find((t) => t.id === e);
-    if (!t || t.unlocked) return;
-    if (!checkLocationUnlockable(e)) return void showNotification("Cannot unlock this location yet!", "error");
-    if (gameState.cash < t.cost) return void showNotification("Not enough cash to unlock this location!", "error");
+    if (!t) return void showNotification("Location not found!", "error");
+    if (t.unlocked) return void showNotification(`${t.name} is already unlocked!`, "info");
+    if (t.requiresPrestiges && gameState.prestigeLevel < t.requiresPrestiges)
+        return void showNotification(`${t.name} requires ${t.requiresPrestiges} Prestige!`, "error");
+    if (gameState.cash < t.cost) return void showNotification(`Need $${formatNumber(t.cost)} to unlock ${t.name}!`, "error");
+    if (!checkLocationUnlockable(e)) return void showNotification("Unlock the previous location first!", "error");
     (gameState.cash -= t.cost), (t.unlocked = !0), (t.owned = !0);
+    "function" == typeof initializeHierarchicalPyramid && initializeHierarchicalPyramid();
     const n = gameState.products.find((t) => t.locationId === e && 0 === t.unlockCost);
     n && (n.unlocked = !0),
         (gameState.activeLocationId = e),
@@ -122,7 +129,10 @@ function unlockLocation(e) {
             gameState.bossFights?.generatedBosses?.[e.id] ||
             generateUniqueBoss(e.id).catch((e) => console.warn("[Boss] Failed to pre-generate next boss:", e));
     }
-    showNotification(`${t.name} unlocked!`, "success"), updateUI(), saveGame();
+    showNotification(`${t.name} unlocked!`, "success"),
+        "function" == typeof updateBusinessTab && updateBusinessTab(),
+        updateUI(),
+        saveGame();
 }
 function applyLocationTheme(e) {
     if (!e || !e.theme) return;

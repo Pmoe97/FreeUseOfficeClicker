@@ -42,8 +42,9 @@ In document order (`index.html`):
    `window.root` onto `window`. The code used to be one inline `<script>`, where Perchance
    resolves those bare names itself; external files don't get that. **If you add an
    `{import:…}` to `main.pjs`, add its name to the bridge list too.**
-4. `js/00-bootstrap.js` … `js/53-exports.js`, in order. The last one registers
-   `DOMContentLoaded → initGame`.
+4. `js/00-bootstrap.js` … `js/56-patch-notes.js`, in order. `53-exports.js` registers
+   `DOMContentLoaded → initGame`; 54–56 load after it, which is fine because nothing in
+   them runs until the game has booted (a save, a click).
 5. A tiny inline script (`cycleCashDisplay`), then `css/01-theme.css` … `css/22-story.css`.
    The stylesheet stays *after* the scripts on purpose: that's where the old `<style>` block
    sat, so `<style>` elements the scripts inject while loading keep their cascade position.
@@ -148,11 +149,14 @@ theme:picker | codemod:colors | colors:inventory`. All of them read the whole so
 | `46-chat.js` | 175 KB | Chat UI: chat history, addChatMessage, sendChatMessage, npc action bar, counter-offer flow, image/photo requests. |
 | `47-chat-ai.js` | 79 KB | Chat AI: response generation, proactive DMs, money requests, image generation, scene visualization, stats updates. |
 | `48-relationships.js` | 17 KB | Relationship batch engine: relationship queue, friendship/drama updates between NPCs. |
-| `49-social-autonomy.js` | 508 KB | Social autonomy: news, mentions, player post composer, autonomous posts/comments/likes, test post generation. |
+| `49-social-autonomy.js` | 243 KB | Social autonomy: news, mentions, player post composer, autonomous posts/comments/likes, test post generation. |
 | `50-notifications.js` | 9 KB | Notifications: showNotification, confirm/input/prompt dialogs + export chain. |
-| `51-save-system.js` | 182 KB | Save system: debounced save, SaveManager class, slots, snapshots, autosave, export/import, reset, prestige, initial employees. |
+| `51-save-system.js` | 188 KB | Save system: debounced save, SaveManager class (named saves, overwrite, "Playing" badge), slots, snapshots, autosave, export/import, reset, prestige, initial employees. |
 | `52-encounters.js` | 251 KB | Encounter system: act catalog SexualActsDB, activeEncounter, skills, positions, combat acts, narration, image gen, request flow. |
 | `53-exports.js` | 11 KB | Final window.* export chain + DOMContentLoaded boot listener (initGame). |
+| `54-image-store.js` | 16 KB | Image store: every image kept once in its own kv entry (`fuoc_img_<id>`, content-hashed); saves hold `fuocimg:<id>` references. Save/load/export hooks, garbage collection, Settings → Data storage report. |
+| `55-cheats.js` | 23 KB | Cheats & Debugging panel, rendered into `#cheatsModal` on open (`openCheatPanel`). |
+| `56-patch-notes.js` | 275 KB | `PATCH_NOTES` (newest first — add releases at the top) + the collapsible renderer `loadPatchNotes`. |
 
 ## CSS files (cascade order)
 
@@ -181,6 +185,19 @@ theme:picker | codemod:colors | colors:inventory`. All of them read the whole so
 | `20-groups.css` | Groups sidebar, participant portraits, recipient chips, group layout |
 | `21-bossfight-modal.css` | Boss fight modal layout: portrait, HP bars, combat log, victory/defeat panels |
 | `22-story.css` | Story mode: story modal, choices, timeline/journal, faction strength |
+| `23-cheats.css` | Cheats & Debugging panel (55-cheats.js) |
+| `24-patch-notes.css` | Collapsible patch notes (56-patch-notes.js) |
+
+## Saves and images
+
+A save (`fuoc_save_<slot>` in `kv.gameSave`) no longer contains images. `saveGameToSlot`
+passes the state through `externalizeImagesForSave`, which writes any new image to
+`fuoc_img_<id>` first and returns a copy-on-write copy with `fuocimg:<id>` references; loads
+(`loadGame`, `loadGameFromSlot`) and `exportSaveSlot` run `internalizeImages` to put them
+back. The live `gameState` always holds real `data:` URLs, so rendering code never sees a
+reference. Unreferenced images are removed by `collectImageGarbage` (after a save is deleted,
+snapshot rotation, a gallery delete, and a minute after boot), which never deletes an image
+written in the last 10 minutes. `fuoc_img_index` caches each image's size for the report.
 
 ## History
 
@@ -196,3 +213,6 @@ theme:picker | codemod:colors | colors:inventory`. All of them read the whole so
   load-time forward references; and an in-browser A/B against the monolith (identical CSS
   rule count, global function set, `typeof` of all 1,360 top-level names, and computed
   styles).
+- **2026-09-26 (later):** the bug-fix pass from `ref/wip/game-audit-2026-09-26.md` — image
+  store, Save Manager overwrite, cheats and patch notes moved into their own files (54–56,
+  css 23–24). Every file reference bumped to `?v=2`.

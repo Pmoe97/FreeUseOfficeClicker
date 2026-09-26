@@ -491,10 +491,16 @@ function assignEmployeeToPosition(e, t, n = !0) {
                     (a.career.title = t.title),
                     (a.career.salary = getMarketRate(a, e) + premium),
                     n
-                        ? console.log(`   📈 Promoted: ${c} (Lv.${l}) → ${t.title} (Lv.${e})`)
+                        ? (console.log(`   📈 Promoted: ${c} (Lv.${l}) → ${t.title} (Lv.${e})`),
+                          // They announce it on the feed (only the retired auto-promotion path did).
+                          "function" == typeof generatePromotionPost &&
+                              generatePromotionPost(a, e).catch((e) => console.warn("[Promotion Post]", e)))
                         : o && console.log(`   📉 Demoted: ${c} (Lv.${l}) → ${t.title} (Lv.${e})`);
             }
-        } else console.log(`   ➡️  Lateral move (Level ${a.career.level} stays same)`);
+        } else
+            // Same level, but a new site/product can have a different market rate.
+            (a.career.salary = getMarketRate(a, e) + premium),
+                console.log(`   ➡️  Lateral move (Level ${a.career.level} stays same)`);
     }
     if (
         (console.log("\n✅ ASSIGNMENT SUCCESSFUL!"),
@@ -989,7 +995,7 @@ function showPositionDetailsModal(e) {
                           return a
                               ? `\n                  <div style="margin-bottom:20px; padding:12px; background:linear-gradient(135deg, var(--l-green) 0%, #3ba882 100%); border-radius:8px; border:2px solid var(--positive);">\n                    <div style="font-size:0.9rem; font-weight:600; color:var(--l-on-accent); margin-bottom:4px; display:flex; align-items:center; gap:8px;">\n                      <span style="font-size:1.2rem;">⬆️</span>\n                      Ready for Promotion!\n                    </div>\n                    <div style="font-size:0.75rem; color:var(--l-on-accent); margin-bottom:8px;">\n                      ${n.name} can be promoted to <strong>${i.title}</strong> (Level ${e})\n                    </div>\n                    <div style="font-size:0.7rem; color:var(--l-on-accent);">\n                      ✓ Productivity: ${s}% (needs ${o.minProductivity}%)<br>\n                      ${o.minManagement ? `✓ Management: Level ${r} (needs ${o.minManagement})` : ""}\n                    </div>\n                  </div>\n                `
                               : `\n                  <div style="margin-bottom:20px; padding:12px; background:rgba(233,69,96,0.2); border-radius:8px; border:2px solid var(--danger);">\n                    <div style="font-size:0.9rem; font-weight:600; color:var(--danger); margin-bottom:4px; display:flex; align-items:center; gap:8px;">\n                      <span style="font-size:1.2rem;">📋</span>\n                      Promotion Requirements\n                    </div>\n                    <div style="font-size:0.75rem; color:var(--l-ink); margin-bottom:8px;">\n                      For promotion to <strong>${i.title}</strong> (Level ${e}):\n                    </div>\n                    <div style="font-size:0.7rem; color:var(--l-ink);">\n                      ${l ? "✓" : "✗"} Productivity: ${s}% ${l ? '<span style="color:var(--positive);">(met!)</span>' : `<span style="color:var(--danger);">(needs ${o.minProductivity}%)</span>`}<br>\n                      ${o.minManagement ? `\n                        ${c ? "✓" : "✗"} Management: Level ${r} ${c ? '<span style="color:var(--positive);">(met!)</span>' : `<span style="color:var(--danger);">(needs ${o.minManagement})</span>`}\n                      ` : ""}\n                    </div>\n                  </div>\n                `;
-                      })()}\n            \n            \x3c!-- Action Buttons --\x3e\n            <div style="display:flex; gap:10px; margin-bottom:10px;">\n              <button id="transferEmployeeBtn" style="flex:1; padding:12px; background:var(--l-cyan); border:none; border-radius:8px; color:var(--l-on-accent); cursor:pointer; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;" title="Transfer to another position at the same level">\n                <span>🔄</span> Transfer\n              </button>\n              <button id="promoteEmployeeBtn" ${canPromote(n) ? "" : "disabled"} style="flex:1; padding:12px; background:${canPromote(n) ? "var(--l-green)" : "var(--l-neutral-3)"}; border:none; border-radius:8px; color:${canPromote(n) ? "var(--l-bg)" : "var(--l-neutral-6)"}; cursor:${canPromote(n) ? "pointer" : "not-allowed"}; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; opacity:${canPromote(n) ? "1" : "0.5"};" title="${canPromote(n) ? "Promote to next level" : "Not eligible for promotion yet"}">\n                <span>⬆️</span> Promote\n              </button>\n            </div>\n            \n            <button id="terminateEmployeeBtn" style="width:100%; padding:12px; background:var(--l-red); border:none; border-radius:8px; color:var(--l-ink-on-fill); cursor:pointer; font-weight:600; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:6px;">\n              <span>🚫</span> Terminate Employment\n            </button>\n          `
+                      })()}\n            \n            \x3c!-- Action Buttons --\x3e\n            <div style="display:flex; gap:10px; margin-bottom:10px;">\n              <button id="transferEmployeeBtn" style="flex:1; padding:12px; background:var(--l-cyan); border:none; border-radius:8px; color:var(--l-on-accent); cursor:pointer; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;" title="Transfer to another position at the same level">\n                <span>🔄</span> Transfer\n              </button>\n              <button id="promoteEmployeeBtn" ${canPromote(n) ? "" : "disabled"} style="flex:1; padding:12px; background:${canPromote(n) ? "var(--l-green)" : "var(--l-neutral-3)"}; border:none; border-radius:8px; color:${canPromote(n) ? "var(--l-bg)" : "var(--l-neutral-6)"}; cursor:${canPromote(n) ? "pointer" : "not-allowed"}; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; opacity:${canPromote(n) ? "1" : "0.5"};" title="${canPromote(n) ? "Promote to next level" : "Not eligible for promotion yet"}">\n                <span>⬆️</span> Promote\n              </button>\n              <button id="unassignEmployeeBtn" style="flex:1; padding:12px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; color:var(--l-ink); cursor:pointer; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;" title="Take them off this seat (they stay employed)">\n                <span>↩️</span> Unassign\n              </button>\n            </div>\n            \n            <button id="terminateEmployeeBtn" style="width:100%; padding:12px; background:var(--l-red); border:none; border-radius:8px; color:var(--l-ink-on-fill); cursor:pointer; font-weight:600; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:6px;">\n              <span>🚫</span> Terminate Employment\n            </button>\n          `
                     : '\n            <div style="text-align:center; padding:40px 20px;">\n              <div style="font-size:3rem; opacity:0.3; margin-bottom:12px;">👤</div>\n              <div style="font-size:1.1rem; color:var(--text-dim); margin-bottom:8px;">Position Vacant</div>\n              <div style="font-size:0.85rem; color:var(--text-mute);">Go to People tab and click "Promote" on an employee to assign them here.</div>\n            </div>\n          '
             }\n          \n          <button id="closeDetailsBtn" style="width:100%; padding:12px; background:var(--surface-2); border:none; border-radius:8px; color:var(--l-ink); cursor:pointer; font-weight:600;">\n            Close\n          </button>\n        </div>\n      </div>\n    `),
         document.body.appendChild(l),
@@ -1014,6 +1020,11 @@ function showPositionDetailsModal(e) {
             !a.disabled &&
             a.addEventListener("click", () => {
                 l.remove(), openCorporatePyramidModal(n.id);
+            });
+        const u = l.querySelector("#unassignEmployeeBtn");
+        u &&
+            u.addEventListener("click", () => {
+                l.remove(), removeEmployeeFromPosition(t, n.id);
             });
         const o = l.querySelector("#terminateEmployeeBtn");
         o &&
@@ -1106,8 +1117,13 @@ function showTransferModal(e, t) {
                         l = r ? "Demote" : "Transfer",
                         c = gameState.hierarchyLevels[a.level];
                     let d = `${l} ${e.name} to ${a.title}?\n\nCost: $${formatNumber(i)}\nRemaining cash: $${formatNumber(gameState.cash - i)}`;
+                    const ns = estimateSalaryForPosition(e, a),
+                        cs = e.career?.salary || 0;
                     if (
-                        (r && c && (d += `\n\n⚠️ This is a demotion!\nNew salary: about $${formatNumber(estimateSalaryForPosition(e, a))}`),
+                        (r
+                            ? c && (d += `\n\n⚠️ This is a demotion!\nNew salary: about $${formatNumber(ns)}`)
+                            : Math.abs(ns - cs) > 0.01 * cs &&
+                              (d += `\n\nSalary: $${formatNumber(cs)} → about $${formatNumber(ns)} (what the new seat pays)`),
                         await showConfirm(d, r ? "Confirm Demotion" : "Confirm Transfer", {
                             type: r ? "warning" : "info",
                             confirmText: l,
@@ -1147,14 +1163,16 @@ async function removeEmployeeFromPosition(e, t) {
     const n = gameState.employees.find((e) => e.id === t);
     if (
         n &&
-        (await showConfirm(`Remove ${n.name} from this position?`, "Remove from Position", {
-            type: "warning",
-            confirmText: "Remove",
-        }))
+        (await showConfirm(
+            `Take ${n.name} off this seat?\n\nThey stay employed and paid, but stop managing anything (including any product this seat runs) until you give them a seat again.`,
+            "Unassign",
+            { type: "warning", confirmText: "Unassign" }
+        ))
     ) {
         removeEmployeeFromPyramid(t)
-            ? (showNotification(`${n.name} removed from position`, "success"),
-              closeCorporatePyramidModal(),
+            ? (showNotification(`${n.name} is unassigned`, "success"),
+              saveGame(!1),
+              "function" == typeof closeCorporatePyramidModal && closeCorporatePyramidModal(),
               setTimeout(() => openCorporatePyramidModal(), 100))
             : showNotification("Failed to remove employee", "error");
     }

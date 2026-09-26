@@ -1,8 +1,49 @@
 # Game audit — 2026-09-26
 
-> **Status: findings only, nothing fixed yet.** Written after the file-tree restructure,
-> before the three queued player reports. Paths are `src/src/srcfiles/js/…` unless noted;
-> line numbers are as of this date.
+> **Status: resolved (2026-09-26 bug-fix pass) — see "Resolution" below.** Written after the
+> file-tree restructure, before the three queued player reports. Paths are
+> `src/src/srcfiles/js/…` unless noted; line numbers are as of the audit, not the fixes.
+
+## Resolution
+
+Answers to the questions at the end: images (a) store once + (b) delete/favourite controls,
+no forced caps; offline time fixed to "since you left", clock at ½× while away; dead features
+restored where they still fit; cheats fixed and rebuilt.
+
+- **H1–H5, M1–M13, L1–L9:** all fixed. L3 by rebuilding the cheat panel (`55-cheats.js`); H5 by
+  the image store (`54-image-store.js`) plus gallery ★/🗑 and Settings → Data → Storage.
+- **QoL 1–8:** done (Save Manager overwrite / name prompt / Playing badge; gallery controls;
+  storage readout; location filter; location theme; policy default; placeholders; cheats).
+- **Incomplete / unwired:**
+  1. `considerMoneyRequest` — implemented: a money ask inside an NPC's reply gets the
+     Accept / Counter / Deny card (one open request, 6 game-hour cooldown).
+  2. People field-visibility / card collapse — **removed, not restored.** They configured
+     sections of the large employee cards the UI overhaul replaced with the compact roster;
+     nothing is left for them to control.
+  3. Posts-per-page — markup restored (Settings → AI & Performance).
+  4. `quickSendCash` / `openGiftModal` and `sendGroupMessageWithInstruction` removed as
+     superseded (chat's Send Money / Give Gift and the inline group command path); ✏️ Custom
+     action wired to its modal (1-on-1) and to `/do` (groups); `showGroupCommandsHelp` got a ❔
+     button and `/help`; `removeEmployeeFromPosition` got an Unassign button; ladder promotions
+     now post `generatePromotionPost`; `cleanupExpiredFlags` runs daily; `wasTopicRecentlyUsed`
+     re-rolls a repeated organic post once. **Left unwired on purpose:** `checkForPromotions`
+     (auto-promotion via `promoteEmployee` desyncs level from ladder seat), the coworker-
+     awareness builders and `getCompanyWideContextString` (the chat prompt deliberately tells
+     NPCs to stop bringing up coworkers, and already includes recent office posts),
+     `getSkillXPFromAction` (unused lookup table), `showCompanyEventModal` (hands off to the
+     event panel, which is the live path).
+  5. Messages tab references removed. 6. Dead DOM lookups left (null-guarded).
+- **Found during the fixes (not in the audit):** Save Manager loads wrote a legacy
+  `gameState` copy that `migrateLegacySave` then restored over the autosave on the next boot
+  (progress lost on every reload after a load); every load reset salaries to the level's flat
+  base; `gameState.currentDay` was never written, so no day-based effect ever expired (and
+  `processOngoingEffects` returned early without a story-effects list); autosave deleted the
+  story / dynamic-event / group-idle tick counters every 5 s so those never fired; group idle
+  compared real time to game-clock stamps; the settings Quick Save wrote the autosave slot;
+  load deleted live `position`/`productManaged` fields; same-level transfers kept the old
+  site's pay; time-skip cheats skipped hour/day processing; the AFK modal showed "25%%".
+- **Still open:** social posts are stamped on two clocks — `createPost` uses `Date.now()`,
+  `createSocialPost` uses the game clock — so feed order and recency mix them.
 
 ## How this was done
 

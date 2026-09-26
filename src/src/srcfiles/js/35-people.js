@@ -76,41 +76,6 @@ function getLastMessageTimestamp(e) {
             }
     return n;
 }
-function collapseAllEmployeeCards() {
-    const e = gameState.peopleSorting,
-        t = gameState.employees.filter((t) =>
-            e.showAlumni ? "active" !== t.employmentStatus : "active" === t.employmentStatus
-        ),
-        n = t.every((t) => e.collapsedCards.includes(t.id));
-    (e.collapsedCards = n ? [] : t.map((e) => e.id)), updatePeopleTab();
-}
-function toggleCardCollapse(e) {
-    const t = gameState.peopleSorting.collapsedCards,
-        n = t.indexOf(e);
-    -1 === n ? t.push(e) : t.splice(n, 1);
-    const a = document.querySelector(`[data-collapse-id="${e}"]`);
-    if (a) {
-        const e = a.closest(".employee-card").querySelector(".card-body"),
-            t = -1 === n;
-        e && (e.style.display = t ? "none" : ""),
-            (a.textContent = t ? "▶" : "▼"),
-            (a.title = t ? "Expand" : "Collapse");
-    }
-}
-function syncFieldCheckboxes() {
-    const e = gameState.peopleSorting && gameState.peopleSorting.fieldVisibility,
-        t = gameState.peopleSorting && gameState.peopleSorting.visibleStats;
-    e &&
-        t &&
-        (["bio", "demographics", "stats", "career", "flags", "skills", "relationships", "actions"].forEach((t) => {
-            const n = document.getElementById(`fv_${t}`);
-            n && (n.checked = !!e[t]);
-        }),
-        ["affection", "comfort", "trust", "desire", "obedience", "productivity"].forEach((e) => {
-            const n = document.getElementById(`vs_${e}`);
-            n && (n.checked = !!t[e]);
-        }));
-}
 function updatePeopleTab() {
     if (!employeesList) return;
     (employeesList.innerHTML = ""),
@@ -120,28 +85,7 @@ function updatePeopleTab() {
         void 0 === gameState.peopleSorting.searchText && (gameState.peopleSorting.searchText = ""),
         void 0 === gameState.peopleSorting.filterDept && (gameState.peopleSorting.filterDept = "all"),
         void 0 === gameState.peopleSorting.filterLevel && (gameState.peopleSorting.filterLevel = "all"),
-        void 0 === gameState.peopleSorting.viewMode && (gameState.peopleSorting.viewMode = "list"),
-        gameState.peopleSorting.collapsedCards || (gameState.peopleSorting.collapsedCards = []),
-        gameState.peopleSorting.fieldVisibility ||
-            (gameState.peopleSorting.fieldVisibility = {
-                bio: !0,
-                demographics: !0,
-                stats: !0,
-                career: !0,
-                flags: !0,
-                skills: !0,
-                relationships: !0,
-                actions: !0,
-            }),
-        gameState.peopleSorting.visibleStats ||
-            (gameState.peopleSorting.visibleStats = {
-                affection: !0,
-                comfort: !0,
-                trust: !0,
-                desire: !0,
-                obedience: !0,
-                productivity: !0,
-            });
+        void 0 === gameState.peopleSorting.viewMode && (gameState.peopleSorting.viewMode = "list");
     const e = $("employeeCount"),
         t = gameState.employees.filter((e) => "active" === e.employmentStatus),
         n = gameState.employees.filter((e) => "active" !== e.employmentStatus);
@@ -425,68 +369,4 @@ function updatePeopleTab() {
         (b.onchange = (e) => {
             (gameState.peopleSorting.filterLevel = e.target.value), updatePeopleTab(), saveGame();
         }));
-    const v = document.getElementById("collapseAllCards");
-    if (v) {
-        const e = m.map((e) => e.id),
-            t = e.length > 0 && e.every((e) => gameState.peopleSorting.collapsedCards.includes(e));
-        (v.textContent = t ? "▼ Expand All" : "▶ Collapse All"),
-            (v.style.color = t ? "var(--l-cyan)" : "var(--l-ink-dim-2)"),
-            (v.style.borderColor = t ? "var(--l-cyan)" : "var(--l-neutral-8)"),
-            (v.onclick = () => {
-                collapseAllEmployeeCards();
-            });
-    }
-    const w = document.getElementById("toggleFieldsPanel");
-    w &&
-        (w.onclick = () => {
-            const e = document.getElementById("fieldVisibilityPanel");
-            if (!e) return;
-            const t = "none" !== e.style.display;
-            (e.style.display = t ? "none" : "block"),
-                (w.style.background = t ? "var(--l-purple-deep)" : "#7b4fa8"),
-                t || syncFieldCheckboxes();
-        }),
-        ["bio", "demographics", "stats", "career", "flags", "skills", "relationships", "actions"].forEach((e) => {
-            const t = document.getElementById(`fv_${e}`);
-            t &&
-                ((t.checked = !(
-                    !gameState.peopleSorting.fieldVisibility || !gameState.peopleSorting.fieldVisibility[e]
-                )),
-                (t.onchange = (t) => {
-                    (gameState.peopleSorting.fieldVisibility[e] = t.target.checked), updatePeopleTab(), saveGame();
-                }));
-        }),
-        ["affection", "comfort", "trust", "desire", "obedience", "productivity"].forEach((e) => {
-            const t = document.getElementById(`vs_${e}`);
-            t &&
-                ((t.checked = !(!gameState.peopleSorting.visibleStats || !gameState.peopleSorting.visibleStats[e])),
-                (t.onchange = (t) => {
-                    (gameState.peopleSorting.visibleStats[e] = t.target.checked), updatePeopleTab(), saveGame();
-                }));
-        });
-    const x = document.getElementById("resetFieldDefaults");
-    x &&
-        (x.onclick = () => {
-            (gameState.peopleSorting.fieldVisibility = {
-                bio: !0,
-                demographics: !0,
-                stats: !0,
-                career: !0,
-                flags: !0,
-                skills: !0,
-                relationships: !0,
-                actions: !0,
-            }),
-                (gameState.peopleSorting.visibleStats = {
-                    affection: !0,
-                    comfort: !0,
-                    trust: !0,
-                    desire: !0,
-                    obedience: !0,
-                    productivity: !0,
-                }),
-                syncFieldCheckboxes(),
-                updatePeopleTab(),
-                saveGame();
-        });
 }

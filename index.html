@@ -2768,7 +2768,8 @@
                             <span>Enable Autosave</span>
                         </label>
                         <p style="color: var(--text-mute); font-size: 0.8rem; margin: 0">
-                            Game automatically saves every few minutes
+                            Saves every few seconds and after important actions. When off, only the Save
+                            button saves, so reloading returns you to your last manual save.
                         </p>
                     </div>
 
@@ -3322,6 +3323,48 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Social feed paging (wired in setupEventListeners; saved in settings.performance) -->
+                    <div style="background: var(--surface-2); border-radius: 12px; padding: 20px">
+                        <h3 style="margin: 0 0 10px 0; color: var(--accent)">📱 Social Feed</h3>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin: 0 0 12px 0">
+                            Fewer posts per page keeps the feed quick on phones and big companies.
+                        </p>
+                        <div
+                            style="
+                                display: flex;
+                                flex-direction: column;
+                                gap: 6px;
+                                padding: 10px;
+                                background: var(--l-veil-20);
+                                border-radius: 8px;
+                            "
+                        >
+                            <label style="color: var(--text-dim); font-size: 0.85rem"
+                                >Posts per page:
+                                <span id="postsPerPageValue" style="color: var(--accent); font-weight: 600">20</span></label
+                            >
+                            <input
+                                type="range"
+                                id="postsPerPageSlider"
+                                min="5"
+                                max="50"
+                                step="5"
+                                value="20"
+                                style="width: 100%; cursor: pointer"
+                            />
+                            <div
+                                style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    font-size: 0.75rem;
+                                    color: var(--text-mute);
+                                "
+                            >
+                                <span>5</span><span>25</span><span>50</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -3765,6 +3808,31 @@
                         </div>
                     </div>
 
+                    <!-- Storage (rendered by renderStorageReport, 54-image-store.js) -->
+                    <div style="background: var(--surface-2); border-radius: 12px; padding: 20px">
+                        <h3 style="margin: 0 0 10px 0; color: var(--accent)">📦 Storage</h3>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin: 0 0 12px 0">
+                            Images are stored once and shared by every save. Delete photos from a character's
+                            Gallery, or old saves from the Save Manager, to free space.
+                        </p>
+                        <div id="storageReport" style="font-size: 0.85rem; margin-bottom: 12px"></div>
+                        <div style="display: flex; gap: 8px">
+                            <button
+                                onclick="renderStorageReport()"
+                                style="flex: 1; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; font-weight: 600"
+                            >
+                                ↻ Refresh
+                            </button>
+                            <button
+                                onclick="cleanUpStoredImages()"
+                                title="Remove stored images that no save uses any more"
+                                style="flex: 1; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; font-weight: 600"
+                            >
+                                🧹 Clean up
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Reset Game -->
                     <div
                         style="
@@ -3776,7 +3844,8 @@
                     >
                         <h3 style="margin: 0 0 15px 0; color: var(--danger)">⚠️ Reset Game</h3>
                         <p style="color: var(--text-dim); font-size: 0.9rem; margin: 0 0 15px 0">
-                            Warning: This will erase ALL your progress permanently!
+                            Starts a fresh game. Your current progress, autosave and snapshots are erased; named and
+                            quick saves stay in the Save Manager.
                         </p>
                         <button
                             id="resetBtn"
@@ -7031,7 +7100,7 @@ I've been thinking about you... want to find somewhere private?</textarea
 </div>
 
 <!-- Boss-fight keyframes (was the first inline <style>) -->
-<link rel="stylesheet" href="src/src/srcfiles/css/00-keyframes.css?v=1">
+<link rel="stylesheet" href="src/src/srcfiles/css/00-keyframes.css?v=2">
 
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 <!-- SEX SCENE ENCOUNTER MODAL -->
@@ -8921,6 +8990,7 @@ I've been thinking about you... want to find somewhere private?</textarea
 </div>
 
 <!-- Cheats Modal -->
+<!-- Cheats & Debugging — contents rendered by openCheatPanel() (55-cheats.js, 23-cheats.css) -->
 <div
     id="cheatsModal"
     class="modal fuoc-ui"
@@ -8930,1104 +9000,8 @@ I've been thinking about you... want to find somewhere private?</textarea
         z-index: 10000;
         justify-content: center;
         align-items: center;
-        overflow-y: auto;
     "
->
-    <div
-        style="
-            background: linear-gradient(135deg, var(--l-panel) 0%, var(--l-panel-2) 100%);
-            width: 95%;
-            max-width: 900px;
-            max-height: 90vh;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(233, 69, 96, 0.4);
-            border: 2px solid var(--danger);
-            overflow-y: auto;
-            margin: 20px;
-        "
-    >
-        <div
-            style="
-                position: sticky;
-                top: 0;
-                background: linear-gradient(135deg, var(--l-panel-2) 0%, var(--l-line) 100%);
-                padding: 20px;
-                border-bottom: 2px solid var(--danger);
-                z-index: 10;
-                border-radius: 20px 20px 0 0;
-            "
-        >
-            <div style="display: flex; justify-content: space-between; align-items: center">
-                <div style="display: flex; align-items: center; gap: 12px">
-                    <span style="font-size: 2rem">⚡</span>
-                    <h2 style="margin: 0; color: var(--danger); text-shadow: 0 0 10px rgba(233, 69, 96, 0.5)">
-                        Cheats & Debugging
-                    </h2>
-                </div>
-                <button
-                    id="closeCheatsBtn"
-                    style="
-                        background: transparent;
-                        border: 2px solid var(--danger);
-                        color: var(--danger);
-                        font-size: 1.5rem;
-                        cursor: pointer;
-                        width: 40px;
-                        height: 40px;
-                        border-radius: 50%;
-                        transition: all 0.3s;
-                    "
-                    onmouseenter="this.style.background='var(--l-red)'; this.style.color='var(--l-ink)'"
-                    onmouseleave="this.style.background='transparent'; this.style.color='var(--l-red)'"
-                >
-                    ✕
-                </button>
-            </div>
-        </div>
-
-        <div style="padding: 25px">
-            <!-- Money Setter -->
-            <div
-                style="
-                    background: var(--surface-2);
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin-bottom: 20px;
-                    border: 1px solid var(--accent);
-                "
-            >
-                <h3 style="margin: 0 0 15px 0; color: var(--accent); display: flex; align-items: center; gap: 10px">
-                    <span style="font-size: 1.5rem">💰</span> Set Money
-                </h3>
-                <div style="display: flex; gap: 15px; align-items: end">
-                    <div style="flex: 1">
-                        <label style="display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem"
-                            >Base Number (1-999)</label
-                        >
-                        <input
-                            type="number"
-                            id="cheatMoneyBase"
-                            min="1"
-                            max="999"
-                            value="100"
-                            style="
-                                width: 100%;
-                                padding: 12px;
-                                background: var(--surface);
-                                border: 1px solid var(--accent);
-                                border-radius: 8px;
-                                color: var(--l-ink);
-                                font-size: 1.2rem;
-                                font-weight: 600;
-                            "
-                        />
-                    </div>
-                    <div style="flex: 1">
-                        <label style="display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem"
-                            >Magnitude</label
-                        >
-                        <select
-                            id="cheatMoneyMagnitude"
-                            style="
-                                width: 100%;
-                                padding: 12px;
-                                background: var(--surface);
-                                border: 1px solid var(--accent);
-                                border-radius: 8px;
-                                color: var(--l-ink);
-                                font-size: 1.1rem;
-                                cursor: pointer;
-                            "
-                        >
-                            <option value="1">Ones (1)</option>
-                            <option value="1000">Thousand (K)</option>
-                            <option value="1000000" selected>Million (M)</option>
-                            <option value="1000000000">Billion (B)</option>
-                            <option value="1000000000000">Trillion (T)</option>
-                            <option value="1000000000000000">Quadrillion (Q)</option>
-                            <option value="1000000000000000000">Quintillion (Qi)</option>
-                        </select>
-                    </div>
-                    <button
-                        id="cheatSetMoneyBtn"
-                        style="
-                            padding: 12px 24px;
-                            background: var(--l-red);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                            font-size: 1rem;
-                            transition: all 0.3s;
-                            white-space: nowrap;
-                        "
-                        onmouseenter="this.style.background='var(--l-crimson)'"
-                        onmouseleave="this.style.background='var(--l-red)'"
-                    >
-                        Set Balance
-                    </button>
-                </div>
-                <div
-                    style="
-                        margin-top: 12px;
-                        padding: 12px;
-                        background: var(--surface);
-                        border-radius: 8px;
-                        border-left: 3px solid var(--accent);
-                    "
-                >
-                    <span style="color: var(--text-dim); font-size: 0.9rem">Preview: $</span
-                    ><span id="cheatMoneyPreview" style="color: var(--accent); font-weight: 600; font-size: 1.1rem"
-                        >100,000,000</span
-                    >
-                </div>
-            </div>
-
-            <!-- Stat Multipliers -->
-            <div
-                style="
-                    background: var(--surface-2);
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin-bottom: 20px;
-                    border: 1px solid var(--accent);
-                "
-            >
-                <h3 style="margin: 0 0 15px 0; color: var(--accent); display: flex; align-items: center; gap: 10px">
-                    <span style="font-size: 1.5rem">📊</span> Stat Gain Multipliers
-                </h3>
-                <p style="color: var(--text-dim); font-size: 0.85rem; margin: 0 0 15px 0">
-                    Multiply how fast stats increase. 1x = normal, 10x = 10 times faster
-                </p>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px">
-                    <!-- Affection -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--l-pink-3)">💖 Affection</span>
-                            <span id="affectionMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="affectionMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-
-                    <!-- Trust -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--l-teal)">🤝 Trust</span>
-                            <span id="trustMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="trustMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-
-                    <!-- Comfort -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--l-x-teal-pale)">🛋️ Comfort</span>
-                            <span id="comfortMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="comfortMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-
-                    <!-- Desire -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--l-red-lt)">🔥 Desire</span>
-                            <span id="desireMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="desireMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-
-                    <!-- Productivity -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--l-yellow)">⚡ Productivity</span>
-                            <span id="productivityMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="productivityMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-
-                    <!-- Confidence -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--accent)">💪 Confidence</span>
-                            <span id="confidenceMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="confidenceMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-
-                    <!-- Obedience -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--l-violet-lt)">🙇 Obedience</span>
-                            <span id="obedienceMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="obedienceMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-
-                    <!-- Flirtiness -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--l-pink-lt)">😘 Flirtiness</span>
-                            <span id="flirtinessMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="flirtinessMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-
-                    <!-- Professionalism -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--l-x-blue-pale-2)">💼 Professionalism</span>
-                            <span id="professionalismMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="professionalismMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-
-                    <!-- Humor -->
-                    <div>
-                        <label style="display: flex; justify-content: space-between; margin-bottom: 6px">
-                            <span style="color: var(--l-x-yellow-pale)">😂 Humor</span>
-                            <span id="humorMultValue" style="color: var(--accent); font-weight: 600">1.0x</span>
-                        </label>
-                        <input
-                            type="range"
-                            id="humorMultSlider"
-                            min="0"
-                            max="50"
-                            value="10"
-                            step="1"
-                            style="width: 100%"
-                        />
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 15px">
-                    <button
-                        id="resetMultipliersBtn"
-                        style="
-                            flex: 1;
-                            padding: 10px;
-                            background: var(--l-purple-deep);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                        "
-                    >
-                        Reset All to 1x
-                    </button>
-                    <button
-                        id="maxMultipliersBtn"
-                        style="
-                            flex: 1;
-                            padding: 10px;
-                            background: var(--l-red);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                        "
-                    >
-                        Set All to 5x
-                    </button>
-                </div>
-            </div>
-
-            <!-- Set Stats Max -->
-            <div
-                style="
-                    background: var(--surface-2);
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin-bottom: 20px;
-                    border: 1px solid var(--danger);
-                "
-            >
-                <h3 style="margin: 0 0 15px 0; color: var(--danger); display: flex; align-items: center; gap: 10px">
-                    <span style="font-size: 1.5rem">🎯</span> Set All NPCs' Stats
-                </h3>
-                <p style="color: var(--text-dim); font-size: 0.85rem; margin: 0 0 15px 0">
-                    Instantly set a specific stat to a chosen value for ALL active employees
-                </p>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px">
-                    <div>
-                        <label style="display: block; margin-bottom: 6px; color: var(--text-dim); font-size: 0.9rem"
-                            >Stat Type</label
-                        >
-                        <select
-                            id="cheatStatType"
-                            style="
-                                width: 100%;
-                                padding: 10px;
-                                background: var(--surface);
-                                border: 1px solid var(--danger);
-                                border-radius: 8px;
-                                color: var(--l-ink);
-                                cursor: pointer;
-                            "
-                        >
-                            <option value="affection">💖 Affection</option>
-                            <option value="trust">🤝 Trust</option>
-                            <option value="comfort">🛋️ Comfort</option>
-                            <option value="desire">🔥 Desire</option>
-                            <option value="productivity">⚡ Productivity</option>
-                            <option value="confidence">💪 Confidence</option>
-                            <option value="obedience">🙇 Obedience</option>
-                            <option value="flirty">😘 Flirtiness</option>
-                            <option value="professional">💼 Professionalism</option>
-                            <option value="humor">😂 Humor</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label style="display: block; margin-bottom: 6px; color: var(--text-dim); font-size: 0.9rem"
-                            >Value (0-100)</label
-                        >
-                        <input
-                            type="number"
-                            id="cheatStatValue"
-                            min="0"
-                            max="100"
-                            value="100"
-                            style="
-                                width: 100%;
-                                padding: 10px;
-                                background: var(--surface);
-                                border: 1px solid var(--danger);
-                                border-radius: 8px;
-                                color: var(--l-ink);
-                                font-size: 1.1rem;
-                            "
-                        />
-                    </div>
-
-                    <div style="display: flex; align-items: end">
-                        <button
-                            id="cheatSetStatBtn"
-                            style="
-                                width: 100%;
-                                padding: 10px;
-                                background: var(--l-red);
-                                border: none;
-                                border-radius: 8px;
-                                color: var(--l-ink-on-fill);
-                                cursor: pointer;
-                                font-weight: 600;
-                                transition: all 0.3s;
-                            "
-                            onmouseenter="this.style.background='var(--l-crimson)'"
-                            onmouseleave="this.style.background='var(--l-red)'"
-                        >
-                            Set for All NPCs
-                        </button>
-                    </div>
-                </div>
-
-                <div
-                    style="
-                        margin-top: 15px;
-                        padding: 12px;
-                        background: var(--surface);
-                        border-radius: 8px;
-                        border-left: 3px solid var(--danger);
-                    "
-                >
-                    <span style="color: var(--text-dim); font-size: 0.85rem"
-                        >⚠️ This will affect all active employees at once</span
-                    >
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div style="background: var(--surface-2); border-radius: 12px; padding: 20px; border: 1px solid var(--accent)">
-                <h3 style="margin: 0 0 15px 0; color: var(--accent); display: flex; align-items: center; gap: 10px">
-                    <span style="font-size: 1.5rem">⚡</span> Quick Actions
-                </h3>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
-                    <button
-                        id="cheatMaxAllStatsBtn"
-                        style="
-                            padding: 12px;
-                            background: linear-gradient(135deg, var(--l-indigo) 0%, var(--l-indigo-deep) 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.3s;
-                        "
-                    >
-                        🌟 Max All Stats (All NPCs)
-                    </button>
-
-                    <button
-                        id="cheatUnlockAllLocationsBtn"
-                        style="
-                            padding: 12px;
-                            background: linear-gradient(135deg, var(--l-pink-pale) 0%, #f5576c 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.3s;
-                        "
-                    >
-                        🏢 Unlock All Locations
-                    </button>
-
-                    <button
-                        id="cheatUnlockAllProductsBtn"
-                        style="
-                            padding: 12px;
-                            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-on-accent);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.3s;
-                        "
-                    >
-                        📦 Unlock All Products
-                    </button>
-
-                    <button
-                        id="cheatHireAllBtn"
-                        style="
-                            padding: 12px;
-                            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-on-accent);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.3s;
-                        "
-                    >
-                        👥 Hire All Candidates
-                    </button>
-
-                    <button
-                        id="cheatClearPostsBtn"
-                        style="
-                            padding: 12px;
-                            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-on-accent);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.3s;
-                        "
-                        title="Clear all social posts - helps with performance if you have many posts"
-                    >
-                        🗑️ Clear All Posts
-                    </button>
-
-                    <button
-                        id="cheatSpawnPostsBtn"
-                        style="
-                            padding: 12px;
-                            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-on-accent);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.3s;
-                        "
-                    >
-                        📱 Spawn 10 NPC Posts
-                    </button>
-                </div>
-            </div>
-
-            <!-- Time Controls -->
-            <div
-                style="
-                    background: var(--surface-2);
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin-top: 20px;
-                    border: 1px solid var(--l-violet);
-                "
-            >
-                <h3 style="margin: 0 0 15px 0; color: var(--l-violet); display: flex; align-items: center; gap: 10px">
-                    <span style="font-size: 1.5rem">⏰</span> Time Controls
-                </h3>
-                <p style="color: var(--text-dim); font-size: 0.85rem; margin: 0 0 15px 0">
-                    Control the speed of in-game time progression. Default is 20:1 (20 game minutes = 1 real minute)
-                </p>
-
-                <!-- Time Scale Slider -->
-                <div style="margin-bottom: 20px">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px">
-                        <label style="color: var(--l-violet); font-weight: 600">Time Scale</label>
-                        <span id="timeScaleValue" style="color: var(--accent); font-weight: 600; font-size: 1.2rem">20x</span>
-                    </div>
-                    <input
-                        type="range"
-                        id="timeScaleSlider"
-                        min="1"
-                        max="100"
-                        value="20"
-                        step="1"
-                        style="width: 100%; margin-bottom: 10px"
-                    />
-                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-dim)">
-                        <span>1x (Slowest)</span>
-                        <span>50x (Fast)</span>
-                        <span>100x (Fastest)</span>
-                    </div>
-                    <div
-                        style="
-                            margin-top: 12px;
-                            padding: 10px;
-                            background: var(--surface);
-                            border-radius: 6px;
-                            border-left: 3px solid var(--l-violet);
-                        "
-                    >
-                        <div style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 4px">Current Speed:</div>
-                        <div id="timeScaleDescription" style="color: var(--text); font-size: 0.9rem">
-                            20 game minutes = 1 real minute
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Presets -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px">
-                    <button
-                        class="time-preset-btn"
-                        data-scale="1"
-                        style="
-                            padding: 10px;
-                            background: var(--bg);
-                            border: 1px solid var(--l-violet);
-                            border-radius: 6px;
-                            color: var(--l-violet);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.2s;
-                        "
-                    >
-                        🐌 1x (Real Time)
-                    </button>
-                    <button
-                        class="time-preset-btn"
-                        data-scale="20"
-                        style="
-                            padding: 10px;
-                            background: var(--bg);
-                            border: 1px solid var(--l-violet);
-                            border-radius: 6px;
-                            color: var(--l-violet);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.2s;
-                        "
-                    >
-                        ⚖️ 20x (Default)
-                    </button>
-                    <button
-                        class="time-preset-btn"
-                        data-scale="60"
-                        style="
-                            padding: 10px;
-                            background: var(--bg);
-                            border: 1px solid var(--l-violet);
-                            border-radius: 6px;
-                            color: var(--l-violet);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.2s;
-                        "
-                    >
-                        🚀 60x (Fast)
-                    </button>
-                </div>
-
-                <!-- Time Control Buttons -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
-                    <button
-                        id="pauseTimeBtn"
-                        style="
-                            padding: 12px;
-                            background: linear-gradient(135deg, var(--l-red) 0%, var(--l-pink) 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.3s;
-                        "
-                    >
-                        ⏸️ Pause Time
-                    </button>
-                    <button
-                        id="skipTimeBtn"
-                        style="
-                            padding: 12px;
-                            background: linear-gradient(135deg, var(--l-indigo) 0%, var(--l-indigo-deep) 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                            transition: all 0.3s;
-                        "
-                    >
-                        ⏭️ Skip 1 Day
-                    </button>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px">
-                    <button
-                        id="skipTime1HrBtn"
-                        style="
-                            padding: 10px;
-                            background: linear-gradient(135deg, #4a6cf7 0%, var(--l-indigo) 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                            font-size: 0.85rem;
-                            transition: all 0.3s;
-                        "
-                    >
-                        ⏩ +1 Hour
-                    </button>
-                    <button
-                        id="skipTime3HrBtn"
-                        style="
-                            padding: 10px;
-                            background: linear-gradient(135deg, #5a7cf7 0%, var(--l-indigo-deep) 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                            font-size: 0.85rem;
-                            transition: all 0.3s;
-                        "
-                    >
-                        ⏩ +3 Hours
-                    </button>
-                    <button
-                        id="skipTime8HrBtn"
-                        style="
-                            padding: 10px;
-                            background: linear-gradient(135deg, #6a3cf7 0%, #864ba2 100%);
-                            border: none;
-                            border-radius: 8px;
-                            color: var(--l-ink-on-fill);
-                            cursor: pointer;
-                            font-weight: 600;
-                            font-size: 0.85rem;
-                            transition: all 0.3s;
-                        "
-                    >
-                        ⏩ +8 Hours
-                    </button>
-                </div>
-
-                <!-- Current Time Display -->
-                <div
-                    style="
-                        margin-top: 15px;
-                        padding: 12px;
-                        background: var(--surface);
-                        border-radius: 8px;
-                        border-left: 3px solid var(--accent);
-                    "
-                >
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px">
-                        <span style="color: var(--text-dim); font-size: 0.85rem">Game Time:</span>
-                        <span id="cheatGameTime" style="color: var(--accent); font-weight: 600">Loading...</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center">
-                        <span style="color: var(--text-dim); font-size: 0.85rem">Time Status:</span>
-                        <span id="cheatTimeStatus" style="color: var(--positive); font-weight: 600">Running</span>
-                    </div>
-                </div>
-
-                <!-- Time Dilation (Context-Aware Speed) -->
-                <div
-                    style="
-                        margin-top: 20px;
-                        padding: 15px;
-                        background: var(--surface);
-                        border-radius: 8px;
-                        border: 1px solid var(--positive);
-                    "
-                >
-                    <h4 style="margin: 0 0 12px 0; color: var(--positive); font-size: 0.95rem">
-                        ⏳ Context-Aware Time Dilation
-                    </h4>
-                    <p style="color: var(--text-mute); font-size: 0.8rem; margin: 0 0 15px 0">
-                        Time flows differently based on what you're doing. Conversations slow down time so you can
-                        properly interact.
-                    </p>
-
-                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer">
-                        <input
-                            type="checkbox"
-                            id="timeDilationEnabled"
-                            checked
-                            style="width: 18px; height: 18px; cursor: pointer"
-                        />
-                        <span style="color: var(--text)">Enable context-aware time dilation</span>
-                    </label>
-
-                    <div id="timeDilationSettings" style="display: grid; gap: 12px">
-                        <div style="display: flex; justify-content: space-between; align-items: center">
-                            <span style="color: var(--text-dim); font-size: 0.85rem">💬 During 1-on-1 Conversations:</span>
-                            <div style="display: flex; align-items: center; gap: 5px">
-                                <input
-                                    type="number"
-                                    id="conversationTimeScale"
-                                    value="1"
-                                    min="1"
-                                    max="20"
-                                    style="
-                                        width: 50px;
-                                        padding: 4px 8px;
-                                        background: var(--surface-2);
-                                        border: 1px solid var(--positive);
-                                        border-radius: 4px;
-                                        color: var(--l-ink);
-                                        text-align: center;
-                                    "
-                                />
-                                <span style="color: var(--positive); font-weight: 600">x</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center">
-                            <span style="color: var(--text-dim); font-size: 0.85rem">👥 During Group Chats:</span>
-                            <div style="display: flex; align-items: center; gap: 5px">
-                                <input
-                                    type="number"
-                                    id="groupChatTimeScale"
-                                    value="2"
-                                    min="1"
-                                    max="20"
-                                    style="
-                                        width: 50px;
-                                        padding: 4px 8px;
-                                        background: var(--surface-2);
-                                        border: 1px solid var(--l-indigo);
-                                        border-radius: 4px;
-                                        color: var(--l-ink);
-                                        text-align: center;
-                                    "
-                                />
-                                <span style="color: var(--l-indigo); font-weight: 600">x</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center">
-                            <span style="color: var(--text-dim); font-size: 0.85rem">📱 Browsing Social Media:</span>
-                            <div style="display: flex; align-items: center; gap: 5px">
-                                <input
-                                    type="number"
-                                    id="socialBrowsingTimeScale"
-                                    value="10"
-                                    min="1"
-                                    max="50"
-                                    style="
-                                        width: 50px;
-                                        padding: 4px 8px;
-                                        background: var(--surface-2);
-                                        border: 1px solid var(--accent);
-                                        border-radius: 4px;
-                                        color: var(--l-ink);
-                                        text-align: center;
-                                    "
-                                />
-                                <span style="color: var(--accent); font-weight: 600">x</span>
-                            </div>
-                        </div>
-                        <div style="color: var(--text-mute); font-size: 0.75rem; font-style: italic; margin-top: 5px">
-                            💡 Lower values = slower time. 1x is real-time. Idle time uses the slider above.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- NPC Scheduled Events / Promise Keeping -->
-                <div
-                    style="
-                        margin-top: 20px;
-                        padding: 15px;
-                        background: var(--surface);
-                        border-radius: 8px;
-                        border: 1px solid var(--l-pink-3);
-                    "
-                >
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px"
-                    >
-                        <h4
-                            style="
-                                margin: 0;
-                                color: var(--l-pink-3);
-                                font-size: 0.95rem;
-                                display: flex;
-                                align-items: center;
-                                gap: 8px;
-                            "
-                        >
-                            📅 NPC Scheduled Events
-                            <span id="scheduledEventsCount" style="font-size: 0.85rem; color: var(--text-dim); font-weight: normal"
-                                >(0 pending)</span
-                            >
-                        </h4>
-                        <button
-                            id="refreshScheduledEventsBtn"
-                            style="
-                                padding: 4px 10px;
-                                background: var(--l-pink-3);
-                                border: none;
-                                border-radius: 4px;
-                                color: var(--l-on-accent);
-                                cursor: pointer;
-                                font-size: 0.8rem;
-                            "
-                        >
-                            🔄 Refresh
-                        </button>
-                    </div>
-                    <p style="color: var(--text-mute); font-size: 0.8rem; margin: 0 0 12px 0">
-                        NPCs remember commitments like "I'll text you tomorrow" or "See you at lunch"
-                    </p>
-                    <div
-                        id="scheduledEventsList"
-                        style="
-                            max-height: 200px;
-                            overflow-y: auto;
-                            background: var(--surface-2);
-                            border-radius: 6px;
-                            padding: 8px;
-                        "
-                    >
-                        <p style="color: var(--text-mute); text-align: center; margin: 10px 0; font-size: 0.85rem">
-                            No pending events
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Context Windows -->
-            <div
-                style="
-                    background: var(--surface-2);
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin-top: 20px;
-                    border: 1px solid var(--accent-gold);
-                "
-            >
-                <h3 style="margin: 0 0 15px 0; color: var(--accent-gold); display: flex; align-items: center; gap: 10px">
-                    <span style="font-size: 1.5rem">🧠</span> Context Windows
-                </h3>
-                <p style="color: var(--text-dim); font-size: 0.85rem; margin: 0 0 15px 0">
-                    View and edit what NPCs "know" - Company-Wide Context and Gossip Engine data
-                </p>
-
-                <!-- Company-Wide Context -->
-                <div style="margin-bottom: 20px">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px"
-                    >
-                        <h4 style="margin: 0; color: var(--accent); display: flex; align-items: center; gap: 8px">
-                            <span style="font-size: 1.2rem">🏢</span> Company-Wide Context
-                            <span id="contextCountLabel" style="font-size: 0.9rem; color: var(--text-dim); font-weight: normal"
-                                >(0/40)</span
-                            >
-                        </h4>
-                        <div style="display: flex; gap: 8px">
-                            <button
-                                id="cheatRefreshContextBtn"
-                                style="
-                                    padding: 6px 12px;
-                                    background: var(--l-cyan);
-                                    border: none;
-                                    border-radius: 6px;
-                                    color: var(--l-on-accent);
-                                    cursor: pointer;
-                                    font-weight: 600;
-                                    font-size: 0.85rem;
-                                "
-                            >
-                                🔄 Refresh
-                            </button>
-                            <button
-                                id="cheatClearContextBtn"
-                                style="
-                                    padding: 6px 12px;
-                                    background: var(--l-red);
-                                    border: none;
-                                    border-radius: 6px;
-                                    color: var(--l-ink-on-fill);
-                                    cursor: pointer;
-                                    font-weight: 600;
-                                    font-size: 0.85rem;
-                                "
-                            >
-                                🗑️ Clear All
-                            </button>
-                        </div>
-                    </div>
-                    <div
-                        id="contextList"
-                        style="
-                            max-height: 300px;
-                            overflow-y: auto;
-                            background: var(--surface);
-                            border-radius: 8px;
-                            padding: 10px;
-                        "
-                    >
-                        <p style="color: var(--text-dim); text-align: center; margin: 20px 0">Loading context...</p>
-                    </div>
-                </div>
-
-                <!-- Gossip Engine -->
-                <div>
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px"
-                    >
-                        <h4 style="margin: 0; color: var(--l-pink-3); display: flex; align-items: center; gap: 8px">
-                            <span style="font-size: 1.2rem">💬</span> Gossip Engine
-                            <span id="gossipCountLabel" style="font-size: 0.9rem; color: var(--text-dim); font-weight: normal"
-                                >(0 NPCs)</span
-                            >
-                        </h4>
-                        <div style="display: flex; gap: 8px">
-                            <button
-                                id="cheatRefreshGossipBtn"
-                                style="
-                                    padding: 6px 12px;
-                                    background: var(--l-pink-3);
-                                    border: none;
-                                    border-radius: 6px;
-                                    color: var(--l-on-accent);
-                                    cursor: pointer;
-                                    font-weight: 600;
-                                    font-size: 0.85rem;
-                                "
-                            >
-                                🔄 Refresh
-                            </button>
-                            <button
-                                id="cheatClearGossipBtn"
-                                style="
-                                    padding: 6px 12px;
-                                    background: var(--l-red);
-                                    border: none;
-                                    border-radius: 6px;
-                                    color: var(--l-ink-on-fill);
-                                    cursor: pointer;
-                                    font-weight: 600;
-                                    font-size: 0.85rem;
-                                "
-                            >
-                                🗑️ Clear All
-                            </button>
-                        </div>
-                    </div>
-                    <div
-                        id="gossipList"
-                        style="
-                            max-height: 300px;
-                            overflow-y: auto;
-                            background: var(--surface);
-                            border-radius: 8px;
-                            padding: 10px;
-                        "
-                    >
-                        <p style="color: var(--text-dim); text-align: center; margin: 20px 0">Loading gossip...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+></div>
 
 <!-- Create Group Modal -->
 <div
@@ -12292,7 +11266,7 @@ I've been thinking about you... want to find somewhere private?</textarea
         var root = window.root;
         if (!root) return;
         var names = ["generateImage", "generatorStats", "generateText", "date", "favicon", "commentsPlugin",
-            "fullscreenButton", "speak", "literal", "remember", "kv", "backgroundImage", "ceoChatOptions"];
+            "fullscreenButton", "speak", "literal", "kv", "backgroundImage", "ceoChatOptions"];
         for (var i = 0; i < names.length; i++) {
             var n = names[i];
             if (typeof window[n] === "undefined") {
@@ -12308,60 +11282,63 @@ I've been thinking about you... want to find somewhere private?</textarea
 <!-- GAME SCRIPT — src/src/srcfiles/js/, loaded in this exact order; the files share one
      global scope (see the header of any of them). Bump ?v= on a file you change so
      browsers do not keep serving a stale copy. -->
-<script src="src/src/srcfiles/js/00-bootstrap.js?v=1"></script>
-<script src="src/src/srcfiles/js/01-core.js?v=1"></script>
-<script src="src/src/srcfiles/js/02-ai-queues.js?v=1"></script>
-<script src="src/src/srcfiles/js/03-game-state.js?v=1"></script>
-<script src="src/src/srcfiles/js/04-boss-generation.js?v=1"></script>
-<script src="src/src/srcfiles/js/05-utils.js?v=1"></script>
-<script src="src/src/srcfiles/js/06-social-model.js?v=1"></script>
-<script src="src/src/srcfiles/js/07-time.js?v=1"></script>
-<script src="src/src/srcfiles/js/08-scheduler.js?v=1"></script>
-<script src="src/src/srcfiles/js/09-payroll.js?v=1"></script>
-<script src="src/src/srcfiles/js/10-loans.js?v=1"></script>
-<script src="src/src/srcfiles/js/11-accountants.js?v=1"></script>
-<script src="src/src/srcfiles/js/12-raises.js?v=1"></script>
-<script src="src/src/srcfiles/js/13-story-engine.js?v=1"></script>
-<script src="src/src/srcfiles/js/14-story-events.js?v=1"></script>
-<script src="src/src/srcfiles/js/15-company-events.js?v=1"></script>
-<script src="src/src/srcfiles/js/16-npc-schedule.js?v=1"></script>
-<script src="src/src/srcfiles/js/17-flags-detection.js?v=1"></script>
-<script src="src/src/srcfiles/js/18-skills.js?v=1"></script>
-<script src="src/src/srcfiles/js/19-appearance.js?v=1"></script>
-<script src="src/src/srcfiles/js/20-ai-context.js?v=1"></script>
-<script src="src/src/srcfiles/js/21-gifts.js?v=1"></script>
-<script src="src/src/srcfiles/js/22-social-networking.js?v=1"></script>
-<script src="src/src/srcfiles/js/23-npc-psychology.js?v=1"></script>
-<script src="src/src/srcfiles/js/24-chat-context.js?v=1"></script>
-<script src="src/src/srcfiles/js/25-init.js?v=1"></script>
-<script src="src/src/srcfiles/js/26-employee-gen.js?v=1"></script>
-<script src="src/src/srcfiles/js/27-employee-create.js?v=1"></script>
-<script src="src/src/srcfiles/js/28-hiring.js?v=1"></script>
-<script src="src/src/srcfiles/js/29-event-listeners.js?v=1"></script>
-<script src="src/src/srcfiles/js/30-gifts-ui.js?v=1"></script>
-<script src="src/src/srcfiles/js/31-dashboard.js?v=1"></script>
-<script src="src/src/srcfiles/js/32-business.js?v=1"></script>
-<script src="src/src/srcfiles/js/33-programs.js?v=1"></script>
-<script src="src/src/srcfiles/js/34-corporate.js?v=1"></script>
-<script src="src/src/srcfiles/js/35-people.js?v=1"></script>
-<script src="src/src/srcfiles/js/36-products.js?v=1"></script>
-<script src="src/src/srcfiles/js/37-upgrades.js?v=1"></script>
-<script src="src/src/srcfiles/js/38-groups.js?v=1"></script>
-<script src="src/src/srcfiles/js/39-social-feed.js?v=1"></script>
-<script src="src/src/srcfiles/js/40-stories.js?v=1"></script>
-<script src="src/src/srcfiles/js/41-social-utils.js?v=1"></script>
-<script src="src/src/srcfiles/js/42-social-comments-ai.js?v=1"></script>
-<script src="src/src/srcfiles/js/43-game-loop.js?v=1"></script>
-<script src="src/src/srcfiles/js/44-boss-fights.js?v=1"></script>
-<script src="src/src/srcfiles/js/45-onboarding-profile.js?v=1"></script>
-<script src="src/src/srcfiles/js/46-chat.js?v=1"></script>
-<script src="src/src/srcfiles/js/47-chat-ai.js?v=1"></script>
-<script src="src/src/srcfiles/js/48-relationships.js?v=1"></script>
-<script src="src/src/srcfiles/js/49-social-autonomy.js?v=1"></script>
-<script src="src/src/srcfiles/js/50-notifications.js?v=1"></script>
-<script src="src/src/srcfiles/js/51-save-system.js?v=1"></script>
-<script src="src/src/srcfiles/js/52-encounters.js?v=1"></script>
-<script src="src/src/srcfiles/js/53-exports.js?v=1"></script>
+<script src="src/src/srcfiles/js/00-bootstrap.js?v=2"></script>
+<script src="src/src/srcfiles/js/01-core.js?v=2"></script>
+<script src="src/src/srcfiles/js/02-ai-queues.js?v=2"></script>
+<script src="src/src/srcfiles/js/03-game-state.js?v=2"></script>
+<script src="src/src/srcfiles/js/04-boss-generation.js?v=2"></script>
+<script src="src/src/srcfiles/js/05-utils.js?v=2"></script>
+<script src="src/src/srcfiles/js/06-social-model.js?v=2"></script>
+<script src="src/src/srcfiles/js/07-time.js?v=2"></script>
+<script src="src/src/srcfiles/js/08-scheduler.js?v=2"></script>
+<script src="src/src/srcfiles/js/09-payroll.js?v=2"></script>
+<script src="src/src/srcfiles/js/10-loans.js?v=2"></script>
+<script src="src/src/srcfiles/js/11-accountants.js?v=2"></script>
+<script src="src/src/srcfiles/js/12-raises.js?v=2"></script>
+<script src="src/src/srcfiles/js/13-story-engine.js?v=2"></script>
+<script src="src/src/srcfiles/js/14-story-events.js?v=2"></script>
+<script src="src/src/srcfiles/js/15-company-events.js?v=2"></script>
+<script src="src/src/srcfiles/js/16-npc-schedule.js?v=2"></script>
+<script src="src/src/srcfiles/js/17-flags-detection.js?v=2"></script>
+<script src="src/src/srcfiles/js/18-skills.js?v=2"></script>
+<script src="src/src/srcfiles/js/19-appearance.js?v=2"></script>
+<script src="src/src/srcfiles/js/20-ai-context.js?v=2"></script>
+<script src="src/src/srcfiles/js/21-gifts.js?v=2"></script>
+<script src="src/src/srcfiles/js/22-social-networking.js?v=2"></script>
+<script src="src/src/srcfiles/js/23-npc-psychology.js?v=2"></script>
+<script src="src/src/srcfiles/js/24-chat-context.js?v=2"></script>
+<script src="src/src/srcfiles/js/25-init.js?v=2"></script>
+<script src="src/src/srcfiles/js/26-employee-gen.js?v=2"></script>
+<script src="src/src/srcfiles/js/27-employee-create.js?v=2"></script>
+<script src="src/src/srcfiles/js/28-hiring.js?v=2"></script>
+<script src="src/src/srcfiles/js/29-event-listeners.js?v=2"></script>
+<script src="src/src/srcfiles/js/30-gifts-ui.js?v=2"></script>
+<script src="src/src/srcfiles/js/31-dashboard.js?v=2"></script>
+<script src="src/src/srcfiles/js/32-business.js?v=2"></script>
+<script src="src/src/srcfiles/js/33-programs.js?v=2"></script>
+<script src="src/src/srcfiles/js/34-corporate.js?v=2"></script>
+<script src="src/src/srcfiles/js/35-people.js?v=2"></script>
+<script src="src/src/srcfiles/js/36-products.js?v=2"></script>
+<script src="src/src/srcfiles/js/37-upgrades.js?v=2"></script>
+<script src="src/src/srcfiles/js/38-groups.js?v=2"></script>
+<script src="src/src/srcfiles/js/39-social-feed.js?v=2"></script>
+<script src="src/src/srcfiles/js/40-stories.js?v=2"></script>
+<script src="src/src/srcfiles/js/41-social-utils.js?v=2"></script>
+<script src="src/src/srcfiles/js/42-social-comments-ai.js?v=2"></script>
+<script src="src/src/srcfiles/js/43-game-loop.js?v=2"></script>
+<script src="src/src/srcfiles/js/44-boss-fights.js?v=2"></script>
+<script src="src/src/srcfiles/js/45-onboarding-profile.js?v=2"></script>
+<script src="src/src/srcfiles/js/46-chat.js?v=2"></script>
+<script src="src/src/srcfiles/js/47-chat-ai.js?v=2"></script>
+<script src="src/src/srcfiles/js/48-relationships.js?v=2"></script>
+<script src="src/src/srcfiles/js/49-social-autonomy.js?v=2"></script>
+<script src="src/src/srcfiles/js/50-notifications.js?v=2"></script>
+<script src="src/src/srcfiles/js/51-save-system.js?v=2"></script>
+<script src="src/src/srcfiles/js/52-encounters.js?v=2"></script>
+<script src="src/src/srcfiles/js/53-exports.js?v=2"></script>
+<script src="src/src/srcfiles/js/54-image-store.js?v=2"></script>
+<script src="src/src/srcfiles/js/55-cheats.js?v=2"></script>
+<script src="src/src/srcfiles/js/56-patch-notes.js?v=2"></script>
 <script>
     function cycleCashDisplay() {
         if (window.innerWidth > 768) return;
@@ -12373,25 +11350,27 @@ I've been thinking about you... want to find somewhere private?</textarea
 <!-- STYLESHEET — src/src/srcfiles/css/, in cascade order. Kept after the game scripts on
      purpose: the monolith had this <style> block here, and styles the scripts inject while
      loading must stay ahead of it in the cascade. -->
-<link rel="stylesheet" href="src/src/srcfiles/css/01-theme.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/02-base.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/03-dashboard.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/04-panels.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/05-gifts.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/06-capital.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/07-social.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/08-utilities.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/09-encounters.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/10-business.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/11-people.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/12-chat.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/13-bossfight.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/14-chat-edit.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/15-header.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/16-save-manager.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/17-settings.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/18-stories.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/19-save-cards.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/20-groups.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/21-bossfight-modal.css?v=1">
-<link rel="stylesheet" href="src/src/srcfiles/css/22-story.css?v=1">
+<link rel="stylesheet" href="src/src/srcfiles/css/01-theme.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/02-base.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/03-dashboard.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/04-panels.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/05-gifts.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/06-capital.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/07-social.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/08-utilities.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/09-encounters.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/10-business.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/11-people.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/12-chat.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/13-bossfight.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/14-chat-edit.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/15-header.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/16-save-manager.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/17-settings.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/18-stories.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/19-save-cards.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/20-groups.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/21-bossfight-modal.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/22-story.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/23-cheats.css?v=2">
+<link rel="stylesheet" href="src/src/srcfiles/css/24-patch-notes.css?v=2">

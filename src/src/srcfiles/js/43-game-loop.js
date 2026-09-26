@@ -8,6 +8,7 @@
 
 let lastPlayTickReal = Date.now();
 function gameTick() {
+    gameState.time && (gameState.currentDay = gameDayNumber());
     // Accumulate real gameplay time (the clock used for snapshot ages). Only counts
     // while the tab is visible and game time isn't paused; per-tick delta is clamped
     // so background throttling / sleep gaps don't inflate it.

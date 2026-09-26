@@ -202,7 +202,7 @@ function openChatAndScrollTo(e, t) {
     n
         ? (openChat(n),
           setTimeout(() => {
-              const e = $("chatHistory");
+              const e = $("chatMessages");
               if (!e) return void console.warn("[openChatAndScrollTo] Chat history container not found");
               const n = e.querySelector(`[data-timestamp="${t}"]`);
               n
@@ -847,83 +847,7 @@ function openUnifiedProfile(e, t = "overview") {
                         return `\n        <h3 style="margin:0 0 15px 0; color:var(--accent);">Physical Appearance ${a ? '<span style="color:var(--accent-gold); font-size:0.8rem;">(Edit Mode)</span>' : ""}</h3>\n        \n        <div style="text-align:center; margin-bottom:20px;">\n          <img src="${n.profileImage || placeholderImage(200, 200)}" \n            style="width:200px; height:200px; border-radius:10px; object-fit:cover; box-shadow:0 4px 15px var(--l-veil-30);">\n          <div style="margin-top:10px;">\n            <button onclick="openGalleryForProfileUpdate('${n.id}')" \n              style="padding:8px 16px; background:var(--l-cyan); border:none; border-radius:6px; color:var(--l-on-accent); font-weight:600; cursor:pointer;">\n              📷 Update Profile Picture\n            </button>\n          </div>\n        </div>\n        \n        \x3c!-- Basic Information --\x3e\n        <div style="background:var(--surface-2); padding:15px; border-radius:8px; margin-bottom:15px;">\n          <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">Basic Info</h4>\n          ${a ? `\n            <div style="display:grid; gap:10px;">\n              <div>\n                <label style="color:var(--text-dim); font-size:0.85rem; display:block; margin-bottom:4px;">Height & Build:</label>\n                <input type="text" value="${e.heightBuild || (e.height && e.build ? e.height + ", " + e.build : "")}" \n                  onchange="if (!window.profileEditState.editedData.physical) window.profileEditState.editedData.physical = {}; window.profileEditState.editedData.physical.heightBuild = this.value; ${c}"\n                  style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:8px; border-radius:4px;"\n                  placeholder="e.g., 5'7&quot;, athletic build">\n              </div>\n              <div>\n                <label style="color:var(--text-dim); font-size:0.85rem; display:block; margin-bottom:4px;">Gender:</label>\n                <input type="text" value="${n.gender || ""}" \n                  onchange="window.profileEditState.editedData.gender = this.value; ${c}"\n                  style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:8px; border-radius:4px;"\n                  placeholder="e.g., Female, Male, Non-binary, Trans Woman, Trans Man">\n              </div>\n              <div>\n                <label style="color:var(--text-dim); font-size:0.85rem; display:block; margin-bottom:4px;">Age (18+):</label>\n                <input type="number" min="18" max="99" value="${n.age || 18}" \n                  onchange="const age = Math.max(18, Math.min(99, parseInt(this.value) || 18)); this.value = age; window.profileEditState.editedData.age = age; ${c}"\n                  style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:8px; border-radius:4px;"\n                  placeholder="Minimum age 18">\n              </div>\n              <div>\n                <label style="color:var(--text-dim); font-size:0.85rem; display:block; margin-bottom:4px;">Race/Species:</label>\n                <select id="editRaceSelect" onchange="window.profileEditState.editedData.race = this.value; const ethSection = document.getElementById('editEthnicitySection'); if (ethSection) ethSection.style.display = this.value === 'human' ? 'block' : 'none'; const customSection = document.getElementById('editCustomRaceSection'); if (customSection) customSection.style.display = this.value === 'custom' ? 'block' : 'none'; ${c}"\n                  style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:8px; border-radius:4px; cursor:pointer;">\n                  <optgroup label="Standard">\n                    <option value="human" ${"human" === (n.race || "human") ? "selected" : ""}>Human</option>\n                  </optgroup>\n                  <optgroup label="Fantasy - Fae">\n                    <option value="elf" ${"elf" === n.race ? "selected" : ""}>Elf</option>\n                    <option value="fairy" ${"fairy" === n.race ? "selected" : ""}>Fairy</option>\n                    <option value="dryad" ${"dryad" === n.race ? "selected" : ""}>Dryad</option>\n                  </optgroup>\n                  <optgroup label="Fantasy - Beastfolk">\n                    <option value="catgirl" ${"catgirl" === n.race ? "selected" : ""}>Catgirl</option>\n                    <option value="catboy" ${"catboy" === n.race ? "selected" : ""}>Catboy</option>\n                    <option value="cat" ${"cat" === n.race ? "selected" : ""}>Catkin (Generic)</option>\n                    <option value="foxgirl" ${"foxgirl" === n.race ? "selected" : ""}>Foxgirl</option>\n                    <option value="foxboy" ${"foxboy" === n.race ? "selected" : ""}>Foxboy</option>\n                    <option value="fox" ${"fox" === n.race ? "selected" : ""}>Foxkin (Generic)</option>\n                    <option value="wolfgirl" ${"wolfgirl" === n.race ? "selected" : ""}>Wolfgirl</option>\n                    <option value="wolfboy" ${"wolfboy" === n.race ? "selected" : ""}>Wolfboy</option>\n                    <option value="wolf" ${"wolf" === n.race ? "selected" : ""}>Wolfkin (Generic)</option>\n                    <option value="bunny" ${"bunny" === n.race ? "selected" : ""}>Bunnygirl/boy</option>\n                    <option value="rabbit" ${"rabbit" === n.race ? "selected" : ""}>Rabbitkin</option>\n                    <option value="werewolf" ${"werewolf" === n.race ? "selected" : ""}>Werewolf</option>\n                  </optgroup>\n                  <optgroup label="Fantasy - Infernal/Divine">\n                    <option value="succubus" ${"succubus" === n.race ? "selected" : ""}>Succubus</option>\n                    <option value="incubus" ${"incubus" === n.race ? "selected" : ""}>Incubus</option>\n                    <option value="demon" ${"demon" === n.race ? "selected" : ""}>Demon</option>\n                    <option value="tiefling" ${"tiefling" === n.race ? "selected" : ""}>Tiefling</option>\n                    <option value="angel" ${"angel" === n.race ? "selected" : ""}>Angel</option>\n                    <option value="vampire" ${"vampire" === n.race ? "selected" : ""}>Vampire</option>\n                  </optgroup>\n                  <optgroup label="Fantasy - Classic">\n                    <option value="orc" ${"orc" === n.race ? "selected" : ""}>Orc</option>\n                    <option value="goblin" ${"goblin" === n.race ? "selected" : ""}>Goblin</option>\n                    <option value="dwarf" ${"dwarf" === n.race ? "selected" : ""}>Dwarf</option>\n                    <option value="halfling" ${"halfling" === n.race ? "selected" : ""}>Halfling</option>\n                    <option value="dragonborn" ${"dragonborn" === n.race || "dragon" === n.race ? "selected" : ""}>Dragonborn</option>\n                  </optgroup>\n                  <optgroup label="Sci-Fi & Other">\n                    <option value="robot" ${"robot" === n.race ? "selected" : ""}>Robot/Android</option>\n                    <option value="cyborg" ${"cyborg" === n.race ? "selected" : ""}>Cyborg</option>\n                    <option value="alien" ${"alien" === n.race ? "selected" : ""}>Alien</option>\n                    <option value="slime" ${"slime" === n.race ? "selected" : ""}>Slime</option>\n                    <option value="ghost" ${"ghost" === n.race ? "selected" : ""}>Ghost</option>\n                  </optgroup>\n                  <optgroup label="Exotic Hybrids">\n                    <option value="mermaid" ${"mermaid" === n.race ? "selected" : ""}>Mermaid/Merman</option>\n                    <option value="lamia" ${"lamia" === n.race ? "selected" : ""}>Lamia (Snake)</option>\n                    <option value="centaur" ${"centaur" === n.race ? "selected" : ""}>Centaur</option>\n                    <option value="harpy" ${"harpy" === n.race ? "selected" : ""}>Harpy</option>\n                  </optgroup>\n                  <optgroup label="Custom">\n                    <option value="custom" ${n.customRace ? "selected" : ""}>✨ Custom Race...</option>\n                  </optgroup>\n                </select>\n                <div id="editCustomRaceSection" style="display:${n.customRace ? "block" : "none"}; margin-top:8px; padding:8px; background:var(--l-panel); border-radius:4px; border:1px solid var(--l-violet);">\n                  <input type="text" id="editCustomRaceName" value="${n.customRace?.name || n.race || ""}" placeholder="Custom race name..." \n                    onchange="window.profileEditState.editedData.customRaceName = this.value;"\n                    style="width:100%; background:var(--bg); border:1px solid var(--l-violet); color:var(--l-ink); padding:6px; border-radius:4px;">\n                </div>\n              </div>\n              <div id="editEthnicitySection" style="${"human" === (n.race || "human") ? "" : "display:none;"}">\n                <label style="color:var(--text-dim); font-size:0.85rem; display:block; margin-bottom:4px;">Ethnicity (for humans):</label>\n                <select onchange="window.profileEditState.editedData.ethnicity = this.value || null; ${c}"\n                  style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:8px; border-radius:4px; cursor:pointer;">\n                  <option value="" ${n.ethnicity ? "" : "selected"}>-- Not specified --</option>\n                  <option value="caucasian" ${"caucasian" === n.ethnicity ? "selected" : ""}>Caucasian/European</option>\n                  <option value="black" ${"black" === n.ethnicity ? "selected" : ""}>Black/African</option>\n                  <option value="latino" ${"latino" === n.ethnicity ? "selected" : ""}>Latino/Hispanic</option>\n                  <option value="eastAsian" ${"eastAsian" === n.ethnicity ? "selected" : ""}>East Asian</option>\n                  <option value="southeastAsian" ${"southeastAsian" === n.ethnicity ? "selected" : ""}>Southeast Asian</option>\n                  <option value="southAsian" ${"southAsian" === n.ethnicity ? "selected" : ""}>South Asian</option>\n                  <option value="middleEastern" ${"middleEastern" === n.ethnicity ? "selected" : ""}>Middle Eastern</option>\n                  <option value="pacificIslander" ${"pacificIslander" === n.ethnicity ? "selected" : ""}>Pacific Islander</option>\n                  <option value="nativeAmerican" ${"nativeAmerican" === n.ethnicity ? "selected" : ""}>Native American</option>\n                  <option value="mixed" ${"mixed" === n.ethnicity ? "selected" : ""}>Mixed Ethnicity</option>\n                </select>\n              </div>\n            </div>\n          ` : `\n            <div style="display:grid; gap:8px;">\n              <div style="display:flex; justify-content:space-between;">\n                <span style="color:var(--text-dim);">Height & Build:</span>\n                <span style="color:var(--l-ink); font-weight:600;">${e.heightBuild || (e.height && e.build ? e.height + ", " + e.build : "Not specified")}</span>\n              </div>\n              <div style="display:flex; justify-content:space-between;">\n                <span style="color:var(--text-dim);">Gender:</span>\n                <span style="color:var(--l-ink); font-weight:600;">${n.gender || "Not specified"}</span>\n              </div>\n              <div style="display:flex; justify-content:space-between;">\n                <span style="color:var(--text-dim);">Age:</span>\n                <span style="color:var(--l-ink); font-weight:600;">${n.age || "Not specified"}</span>\n              </div>\n              <div style="display:flex; justify-content:space-between;">\n                <span style="color:var(--text-dim);">Race/Species:</span>\n                <span style="color:var(--l-ink); font-weight:600;">${n.race ? n.race.charAt(0).toUpperCase() + n.race.slice(1) : "Human"}</span>\n              </div>\n              ${"human" === (n.race || "human") && n.ethnicity ? `\n              <div style="display:flex; justify-content:space-between;">\n                <span style="color:var(--text-dim);">Ethnicity:</span>\n                <span style="color:var(--l-ink); font-weight:600;">${formatEthnicity(n.ethnicity)}</span>\n              </div>\n              ` : ""}\n            </div>\n          `}\n        </div>\n        \n        \x3c!-- Hair Details --\x3e\n        <div style="background:var(--surface-2); padding:15px; border-radius:8px; margin-bottom:15px;">\n          <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">Hair</h4>\n          ${a ? `\n            <div style="display:grid; gap:10px;">\n              <div>\n                <label style="color:var(--text-dim); font-size:0.85rem; display:block; margin-bottom:4px;">Color:</label>\n                <input type="text" value="${t.color || ""}" \n                  onchange="if (!window.profileEditState.editedData.physical.hair) window.profileEditState.editedData.physical.hair = {}; window.profileEditState.editedData.physical.hair.color = this.value; ${c}"\n                  style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:8px; border-radius:4px;"\n                  placeholder="e.g., dark brown, blonde">\n              </div>\n              <div>\n                <label style="color:var(--text-dim); font-size:0.85rem; display:block; margin-bottom:4px;">Style:</label>\n                <input type="text" value="${t.style || ""}" \n                  onchange="if (!window.profileEditState.editedData.physical.hair) window.profileEditState.editedData.physical.hair = {}; window.profileEditState.editedData.physical.hair.style = this.value; ${c}"\n                  style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:8px; border-radius:4px;"\n                  placeholder="e.g., wavy, straight, curly">\n              </div>\n              <div>\n                <label style="color:var(--text-dim); font-size:0.85rem; display:block; margin-bottom:4px;">Length:</label>\n                <input type="text" value="${t.length || ""}" \n                  onchange="if (!window.profileEditState.editedData.physical.hair) window.profileEditState.editedData.physical.hair = {}; window.profileEditState.editedData.physical.hair.length = this.value; ${c}"\n                  style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:8px; border-radius:4px;"\n                  placeholder="e.g., shoulder-length, long">\n              </div>\n              <div>\n                <label style="color:var(--text-dim); font-size:0.85rem; display:block; margin-bottom:4px;">Texture:</label>\n                <input type="text" value="${t.texture || ""}" \n                  onchange="if (!window.profileEditState.editedData.physical.hair) window.profileEditState.editedData.physical.hair = {}; window.profileEditState.editedData.physical.hair.texture = this.value; ${c}"\n                  style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:8px; border-radius:4px;"\n                  placeholder="e.g., silky, thick">\n              </div>\n            </div>\n          ` : `\n            <div style="display:grid; gap:8px;">\n              <div style="display:flex; justify-content:space-between;">\n                <span style="color:var(--text-dim);">Color:</span>\n                <span style="color:var(--l-ink); font-weight:600;">${t.color || "Not specified"}</span>\n              </div>\n              <div style="display:flex; justify-content:space-between;">\n                <span style="color:var(--text-dim);">Style:</span>\n                <span style="color:var(--l-ink); font-weight:600;">${t.style || "Not specified"}</span>\n              </div>\n              <div style="display:flex; justify-content:space-between;">\n                <span style="color:var(--text-dim);">Length:</span>\n                <span style="color:var(--l-ink); font-weight:600;">${t.length || "Not specified"}</span>\n              </div>\n              <div style="display:flex; justify-content:space-between;">\n                <span style="color:var(--text-dim);">Texture:</span>\n                <span style="color:var(--l-ink); font-weight:600;">${t.texture || "Not specified"}</span>\n              </div>\n            </div>\n          `}\n        </div>\n        \n        \x3c!-- Face & Eyes --\x3e\n        <div style="background:var(--surface-2); padding:15px; border-radius:8px; margin-bottom:15px;">\n          <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">Face & Eyes</h4>\n          ${a ? `\n            <div style="display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Eye Color:</label><input type="text" value="${o.color || ""}" onchange="if (!window.profileEditState.editedData.physical.eyes) window.profileEditState.editedData.physical.eyes = {}; window.profileEditState.editedData.physical.eyes.color = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Eye Shape:</label><input type="text" value="${o.shape || ""}" onchange="if (!window.profileEditState.editedData.physical.eyes) window.profileEditState.editedData.physical.eyes = {}; window.profileEditState.editedData.physical.eyes.shape = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Face Shape:</label><input type="text" value="${i.shape || ""}" onchange="if (!window.profileEditState.editedData.physical.face) window.profileEditState.editedData.physical.face = {}; window.profileEditState.editedData.physical.face.shape = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Nose:</label><input type="text" value="${i.nose || ""}" onchange="if (!window.profileEditState.editedData.physical.face) window.profileEditState.editedData.physical.face = {}; window.profileEditState.editedData.physical.face.nose = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Lips:</label><input type="text" value="${i.lips || ""}" onchange="if (!window.profileEditState.editedData.physical.face) window.profileEditState.editedData.physical.face = {}; window.profileEditState.editedData.physical.face.lips = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Cheekbones:</label><input type="text" value="${i.cheekbones || ""}" onchange="if (!window.profileEditState.editedData.physical.face) window.profileEditState.editedData.physical.face = {}; window.profileEditState.editedData.physical.face.cheekbones = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Jawline:</label><input type="text" value="${i.jawline || ""}" onchange="if (!window.profileEditState.editedData.physical.face) window.profileEditState.editedData.physical.face = {}; window.profileEditState.editedData.physical.face.jawline = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n            </div>\n          ` : `\n            <div style="display:grid; gap:8px;">\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Eye Color:</span><span style="color:var(--l-ink); font-weight:600;">${o.color || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Eye Shape:</span><span style="color:var(--l-ink); font-weight:600;">${o.shape || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Face Shape:</span><span style="color:var(--l-ink); font-weight:600;">${i.shape || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Nose:</span><span style="color:var(--l-ink); font-weight:600;">${i.nose || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Lips:</span><span style="color:var(--l-ink); font-weight:600;">${i.lips || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Cheekbones:</span><span style="color:var(--l-ink); font-weight:600;">${i.cheekbones || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Jawline:</span><span style="color:var(--l-ink); font-weight:600;">${i.jawline || "Not specified"}</span></div>\n            </div>\n          `}\n        </div>\n        \n        \x3c!-- Skin, Body, Intimate, Style all editable... --\x3e\n        <div style="background:var(--surface-2); padding:15px; border-radius:8px; margin-bottom:15px;">\n          <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">Skin & Body</h4>\n          ${a ? `\n            <div style="display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Skin Tone:</label><input type="text" value="${s.tone || e.skinTone || ""}" onchange="if (!window.profileEditState.editedData.physical.skin) window.profileEditState.editedData.physical.skin = {}; window.profileEditState.editedData.physical.skin.tone = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Body Shape:</label><input type="text" value="${r.shape || e.bodyShape || ""}" onchange="if (!window.profileEditState.editedData.physical.body) window.profileEditState.editedData.physical.body = {}; window.profileEditState.editedData.physical.body.shape = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Chest/Breast Size:</label><input type="text" value="${r.chestSize || r.breastSize || ""}" onchange="if (!window.profileEditState.editedData.physical.body) window.profileEditState.editedData.physical.body = {}; window.profileEditState.editedData.physical.body.chestSize = this.value; window.profileEditState.editedData.physical.body.breastSize = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Butt Size:</label><input type="text" value="${r.buttSize || ""}" onchange="if (!window.profileEditState.editedData.physical.body) window.profileEditState.editedData.physical.body = {}; window.profileEditState.editedData.physical.body.buttSize = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Legs:</label><input type="text" value="${r.legs || ""}" onchange="if (!window.profileEditState.editedData.physical.body) window.profileEditState.editedData.physical.body = {}; window.profileEditState.editedData.physical.body.legs = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Genitals Type:</label><input type="text" value="${l.type || ""}" onchange="if (!window.profileEditState.editedData.physical.genitals) window.profileEditState.editedData.physical.genitals = {}; window.profileEditState.editedData.physical.genitals.type = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Genitals Size:</label><input type="text" value="${l.size || ""}" onchange="if (!window.profileEditState.editedData.physical.genitals) window.profileEditState.editedData.physical.genitals = {}; window.profileEditState.editedData.physical.genitals.size = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Grooming:</label><input type="text" value="${l.characteristics || ""}" onchange="if (!window.profileEditState.editedData.physical.genitals) window.profileEditState.editedData.physical.genitals = {}; window.profileEditState.editedData.physical.genitals.characteristics = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Fashion Style:</label><input type="text" value="${e.fashion || ""}" onchange="if (!window.profileEditState.editedData.physical) window.profileEditState.editedData.physical = {}; window.profileEditState.editedData.physical.fashion = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n              <div><label style="color:var(--text-dim); font-size:0.85rem;">Accessories:</label><input type="text" value="${e.accessories || ""}" onchange="if (!window.profileEditState.editedData.physical) window.profileEditState.editedData.physical = {}; window.profileEditState.editedData.physical.accessories = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;" placeholder="e.g., glasses, earrings, necklace (or leave empty)"></div>\n              <div style="grid-column: 1 / -1;"><label style="color:var(--text-dim); font-size:0.85rem;">Distinguishing Feature:</label><input type="text" value="${e.distinguishingFeature || ""}" onchange="if (!window.profileEditState.editedData.physical) window.profileEditState.editedData.physical = {}; window.profileEditState.editedData.physical.distinguishingFeature = this.value; ${c}" style="width:100%; background:var(--surface); border:1px solid var(--accent); color:var(--l-ink); padding:6px; border-radius:4px;"></div>\n            </div>\n          ` : `\n            <div style="display:grid; gap:8px;">\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Skin Tone:</span><span style="color:var(--l-ink); font-weight:600;">${s.tone || e.skinTone || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Body Shape:</span><span style="color:var(--l-ink); font-weight:600;">${r.shape || e.bodyShape || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Chest/Breast Size:</span><span style="color:var(--l-ink); font-weight:600;">${r.chestSize || r.breastSize || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Butt Size:</span><span style="color:var(--l-ink); font-weight:600;">${r.buttSize || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Legs:</span><span style="color:var(--l-ink); font-weight:600;">${r.legs || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Genitals:</span><span style="color:var(--l-ink); font-weight:600;">${l.type || "Not specified"}, ${l.size || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Grooming:</span><span style="color:var(--l-ink); font-weight:600;">${l.characteristics || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Fashion:</span><span style="color:var(--l-ink); font-weight:600;">${e.fashion || "Not specified"}</span></div>\n              <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Accessories:</span><span style="color:var(--l-ink); font-weight:600;">${e.accessories || "None"}</span></div>\n              ${e.distinguishingFeature ? `<div style="padding-top:8px; border-top:1px solid var(--l-sheen-10);"><div style="color:var(--text-dim); font-size:0.85rem;">Distinguishing Feature:</div><div style="color:var(--accent); font-style:italic;">${e.distinguishingFeature}</div></div>` : ""}\n            </div>\n          `}\n        </div>\n        \n        \x3c!-- Auto-Generated Complete Description --\x3e\n        <div style="background:var(--surface-2); padding:15px; border-radius:8px;">\n          <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">Complete Description ${a ? '<span style="color:var(--positive); font-size:0.75rem;">(Auto-Updates)</span>' : ""}</h4>\n          <p id="appearanceDescPreview" style="margin:0; line-height:1.6; color:var(--text);">${e.fullDescription || "Edit fields above to generate description"}</p>\n        </div>\n      `;
                     })();
                 case "gallery":
-                    return (() => {
-                        const e = gameState.employees.find((e) => e.id === n.id);
-                        if (!e) return '<p style="color:var(--danger);">Employee not found</p>';
-                        e.photos;
-                        const t = [];
-                        gameState.socialNetwork &&
-                            gameState.socialNetwork.posts &&
-                            gameState.socialNetwork.posts
-                                .filter((t) => t.authorId === e.id && t.imageUrl)
-                                .forEach((e) => {
-                                    t.find((t) => t.url === e.imageUrl) ||
-                                        t.push({
-                                            url: e.imageUrl,
-                                            source: "social",
-                                            caption: e.caption || "",
-                                            timestamp: e.timestamp,
-                                            likes: e.likes || 0,
-                                        });
-                                });
-                        const a = [];
-                        (gameState.chatHistory[e.id] || [])
-                            .filter((e) => e.imageUrl)
-                            .forEach((e) => {
-                                a.find((t) => t.url === e.imageUrl) ||
-                                    a.push({
-                                        url: e.imageUrl,
-                                        source: "chat",
-                                        caption: e.caption || e.content || "",
-                                        timestamp: e.timestamp,
-                                    });
-                            });
-                        const o = (e.generatedImages || []).map((e) => ({
-                                url: "string" == typeof e ? e : e.url,
-                                source: "generated",
-                                caption: "object" == typeof e ? e.caption : "",
-                                timestamp: "object" == typeof e ? e.timestamp : Date.now(),
-                            })),
-                            i = (e.photos || []).map((e) => ({
-                                url: "string" == typeof e ? e : e.url,
-                                source: e.source || "profile",
-                                caption: "object" == typeof e ? e.caption : "",
-                                timestamp: "object" == typeof e ? e.timestamp : Date.now(),
-                            })),
-                            s = [...i, ...o, ...t, ...a],
-                            r = [],
-                            l = new Set();
-                        s.forEach((e) => {
-                            l.has(e.url) || (l.add(e.url), r.push(e));
-                        }),
-                            r.sort((e, t) => (t.timestamp || 0) - (e.timestamp || 0));
-                        const c = e.profileImage;
-                        return `\n        <h3 style="margin:0 0 15px 0; color:var(--accent);">Photo Gallery</h3>\n        \n        \x3c!-- Current Profile Picture --\x3e\n        <div style="background:var(--surface-2); padding:15px; border-radius:8px; margin-bottom:20px;">\n          <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">Current Profile Picture</h4>\n          <div style="text-align:center;">\n            <img src="${c || placeholderImage(200, 200)}" \n              style="width:200px; height:200px; border-radius:10px; object-fit:cover; box-shadow:0 4px 15px var(--l-veil-30); border:3px solid var(--accent-gold);">\n            <div style="margin-top:10px; color:var(--text-dim); font-size:0.9rem;">\n              Click any photo below to set as profile picture\n            </div>\n            \x3c!-- Generate New Profile Picture Button --\x3e\n            <button onclick="generateNewProfilePicture('${e.id}')" \n              style="margin-top:12px; padding:10px 20px; background:linear-gradient(135deg, var(--l-violet) 0%, var(--l-violet-deep-2) 100%); border:none; border-radius:8px; color:var(--l-on-accent); cursor:pointer; font-weight:600; transition:all 0.2s;"\n              onmouseover="this.style.transform='scale(1.05)'"\n              onmouseout="this.style.transform='scale(1)'">\n              🎨 Generate New Profile Picture\n            </button>\n          </div>\n        </div>\n        \n        \x3c!-- Photo Collection --\x3e\n        <div style="background:var(--surface-2); padding:15px; border-radius:8px;">\n          <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">\n            All Photos (${r.length})\n            ${r.length > 0 ? `\n              <span style="font-size:0.8rem; color:var(--text-dim); margin-left:10px;">\n                (${t.length} social, ${a.length} chat, ${i.filter((e) => "auto-vis" === e.source).length} auto-vis, ${o.length} generated)\n              </span>\n            ` : ""}\n          </h4>\n          \n          ${
-                                r.length > 0
-                                    ? `\n            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px;">\n              ${r
-                                          .map((t, n) => {
-                                              const a =
-                                                      "social" === t.source
-                                                          ? "📱"
-                                                          : "chat" === t.source
-                                                            ? "💬"
-                                                            : "auto-vis" === t.source
-                                                              ? "🎬"
-                                                              : "🖼️",
-                                                  o =
-                                                      "social" === t.source
-                                                          ? "var(--l-cyan)"
-                                                          : "chat" === t.source
-                                                            ? "var(--l-pink)"
-                                                            : "auto-vis" === t.source
-                                                              ? "var(--l-red)"
-                                                              : "var(--l-green)";
-                                              return `\n                <div style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; border:${t.url === c ? "3px solid var(--accent-gold)" : "2px solid transparent"};"\n                  onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0,212,255,0.4)';"\n                  onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';"\n                  onclick="setProfilePicture('${e.id}', '${t.url}')">\n                  <img src="${t.url}" \n                    style="width:100%; height:100%; object-fit:cover;">\n                  ${t.url === c ? '\n                    <div style="position:absolute; top:5px; right:5px; background:rgba(255,215,0,0.9); color:var(--l-on-accent); padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">\n                      ✓ CURRENT\n                    </div>\n                  ' : '\n                    <div style="position:absolute; inset:0; background:var(--l-veil-70); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s;"\n                      onmouseover="this.style.opacity=\'1\';"\n                      onmouseout="this.style.opacity=\'0\';">\n                      <span style="color:var(--l-ink); font-size:0.85rem; font-weight:600;">Set as Profile</span>\n                    </div>\n                  '}\n                  <div style="position:absolute; top:5px; left:5px; background:${o}; color:var(--l-ink); padding:3px 6px; border-radius:4px; font-size:0.7rem; font-weight:600;">\n                    ${a} ${t.source}\n                  </div>\n                  <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, var(--l-veil-90), transparent); padding:8px; color:var(--l-ink-on-fill); font-size:0.75rem;">\n                    ${t.caption ? `<div style="margin-bottom:4px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${t.caption}</div>` : ""}\n                    ${t.likes ? `<div style="color:var(--accent-gold); font-size:0.7rem;">❤️ ${t.likes}</div>` : ""}\n                    ${t.timestamp ? `<div style="color:var(--text-dim); font-size:0.7rem;">${new Date(t.timestamp).toLocaleDateString()}</div>` : ""}\n                  </div>\n                </div>\n              `;
-                                          })
-                                          .join("")}\n            </div>\n          `
-                                    : '\n            <div style="text-align:center; padding:40px 20px; color:var(--text-dim);">\n              <div style="font-size:3rem; margin-bottom:10px;">📷</div>\n              <p style="margin:0;">No photos yet</p>\n              <p style="margin:5px 0 0 0; font-size:0.85rem;">Photos will appear here as they are generated through chats, social posts, and other interactions</p>\n            </div>\n          '
-                            }\n        </div>\n        \n        \x3c!-- Stats --\x3e\n        ${r.length > 0 ? `\n          <div style="background:var(--surface-2); padding:15px; border-radius:8px; margin-top:15px;">\n            <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">Gallery Stats</h4>\n            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; text-align:center;">\n              <div>\n                <div style="font-size:1.5rem; color:var(--positive);">${o.length}</div>\n                <div style="font-size:0.8rem; color:var(--text-dim);">Generated</div>\n              </div>\n              <div>\n                <div style="font-size:1.5rem; color:var(--accent);">${t.length}</div>\n                <div style="font-size:0.8rem; color:var(--text-dim);">Social Posts</div>\n              </div>\n              <div>\n                <div style="font-size:1.5rem; color:var(--l-pink);">${a.length}</div>\n                <div style="font-size:0.8rem; color:var(--text-dim);">Chat Photos</div>\n              </div>\n            </div>\n          </div>\n        ` : ""}\n      `;
-                    })();
+                    return renderProfileGallery(n.id);
             }
         };
     var c;
@@ -970,6 +894,13 @@ function openUnifiedProfile(e, t = "overview") {
                 "function" == typeof upgradeUnifiedAppearanceEdit &&
                 upgradeUnifiedAppearanceEdit();
     };
+    // Gallery buttons (★ / 🗑 / filters / set as profile) — one delegated listener.
+    p.addEventListener("click", (e) => {
+        const t = e.target.closest("[data-gal-action]");
+        t &&
+            (e.stopPropagation(),
+            handleGalleryAction(n.id, t.dataset.galAction, t.dataset.idx).then((e) => e && f("gallery")));
+    });
     u.addEventListener("click", () => {
         (a = !a),
             (window.profileEditState.isEditMode = a),
@@ -1186,6 +1117,159 @@ function setProfilePicture(e, t) {
         }
     }
     updatePeopleTab();
+}
+// ── Photo gallery ───────────────────────────────────────────────────────────
+// Everything the gallery shows: the employee's own photos, plus images from their social
+// posts and their chat with the player. Favourites first, then newest. Cards carry an
+// index into galleryView.items (the image itself used to be inlined into each card's
+// onclick, a second copy of every 50–150 KB image in the page).
+let galleryView = { empId: null, items: [], filter: "all" };
+function isGalleryImage(e) {
+    return "string" == typeof e && e.length > 0 && !e.startsWith("data:image/svg"); // not a placeholder tile
+}
+function buildGalleryItems(e) {
+    const t = new Set(e.galleryFavorites || []),
+        n = [],
+        a = new Set(),
+        o = (e) => {
+            isGalleryImage(e.url) && !a.has(e.url) && (a.add(e.url), n.push({ ...e, favorite: t.has(e.url) }));
+        };
+    (e.photos || []).forEach((e) =>
+        o({
+            url: "string" == typeof e ? e : e?.url,
+            source: e?.source || "profile",
+            caption: e?.caption || "",
+            timestamp: e?.timestamp || 0,
+        })
+    ),
+        (e.generatedImages || []).forEach((e) =>
+            o({ url: "string" == typeof e ? e : e?.url, source: "generated", caption: e?.caption || "", timestamp: e?.timestamp || 0 })
+        ),
+        (gameState.socialNetwork?.posts || []).forEach(
+            (t) =>
+                t.authorId === e.id &&
+                t.imageUrl &&
+                o({
+                    url: t.imageUrl,
+                    source: "social",
+                    caption: t.caption || t.content || "",
+                    timestamp: t.timestamp || 0,
+                    likes: Array.isArray(t.likes) ? t.likes.length : t.likes || 0,
+                })
+        ),
+        (gameState.chatHistory[e.id] || []).forEach(
+            (e) => e.imageUrl && o({ url: e.imageUrl, source: "chat", caption: e.caption || e.content || "", timestamp: e.timestamp || 0 })
+        );
+    return n.sort((e, t) => t.favorite - e.favorite || (t.timestamp || 0) - (e.timestamp || 0));
+}
+function renderProfileGallery(e) {
+    const t = gameState.employees.find((t) => t.id === e);
+    if (!t) return '<p style="color:var(--danger);">Employee not found</p>';
+    galleryView.empId !== e && (galleryView.filter = "all");
+    const n = buildGalleryItems(t),
+        a = n.filter((e) => e.favorite).length,
+        o = "fav" === galleryView.filter ? n.filter((e) => e.favorite) : n,
+        i = t.profileImage,
+        s = (e) => n.filter((t) => t.source === e).length,
+        r = n.reduce((e, t) => e + t.url.length, 0),
+        l = r >= 1048576 ? `${(r / 1048576).toFixed(1)} MB` : `${Math.round(r / 1024)} KB`,
+        c = { social: ["📱", "var(--l-cyan)"], chat: ["💬", "var(--l-pink)"], "auto-vis": ["🎬", "var(--l-red)"] };
+    galleryView = { empId: e, items: o, filter: galleryView.filter };
+    const d = o
+        .map((e, t) => {
+            const [n, a] = c[e.source] || ["🖼️", "var(--l-green)"],
+                o = e.url === i;
+            return `
+            <div class="gal-card${o ? " is-current" : ""}" data-gal-action="profile" data-idx="${t}" title="${o ? "Current profile picture" : "Set as profile picture"}">
+              <img src="${e.url}" loading="lazy" alt="">
+              <span class="gal-source" style="background:${a};">${n} ${e.source}</span>
+              <div class="gal-btns">
+                <button class="gal-btn gal-fav${e.favorite ? " on" : ""}" data-gal-action="fav" data-idx="${t}" title="${e.favorite ? "Remove from favourites" : "Favourite"}">${e.favorite ? "★" : "☆"}</button>
+                ${o ? "" : `<button class="gal-btn gal-del" data-gal-action="delete" data-idx="${t}" title="Delete photo">🗑</button>`}
+              </div>
+              ${o ? "" : '<div class="gal-set">Set as Profile</div>'}
+              <div class="gal-foot">
+                ${o ? '<span class="gal-current">✓ CURRENT</span>' : ""}
+                ${e.caption ? `<div class="gal-caption">${escapeHtml(String(e.caption))}</div>` : ""}
+                ${e.likes ? `<div style="color:var(--accent-gold); font-size:0.7rem;">❤️ ${e.likes}</div>` : ""}
+                ${e.timestamp ? `<div style="color:var(--text-dim); font-size:0.7rem;">${new Date(e.timestamp).toLocaleDateString()}</div>` : ""}
+              </div>
+            </div>`;
+        })
+        .join("");
+    return `
+        <h3 style="margin:0 0 15px 0; color:var(--accent);">Photo Gallery</h3>
+        <div style="background:var(--surface-2); padding:15px; border-radius:8px; margin-bottom:20px;">
+          <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">Current Profile Picture</h4>
+          <div style="text-align:center;">
+            <img src="${i || placeholderImage(200, 200)}" style="width:200px; height:200px; border-radius:10px; object-fit:cover; box-shadow:0 4px 15px var(--l-veil-30); border:3px solid var(--accent-gold);">
+            <div style="margin-top:10px; color:var(--text-dim); font-size:0.9rem;">Click any photo below to set as profile picture</div>
+            <button onclick="generateNewProfilePicture('${t.id}')" class="gal-generate">🎨 Generate New Profile Picture</button>
+          </div>
+        </div>
+        <div style="background:var(--surface-2); padding:15px; border-radius:8px;">
+          <h4 style="margin:0 0 10px 0; color:var(--accent-gold);">
+            All Photos (${n.length})
+            ${n.length ? `<span style="font-size:0.8rem; color:var(--text-dim); margin-left:10px;">(${s("social")} social, ${s("chat")} chat, ${s("auto-vis")} auto-vis, ${s("generated")} generated)</span>` : ""}
+          </h4>
+          ${
+              n.length
+                  ? `<div class="gal-toolbar">
+              <button class="gal-chip${"fav" !== galleryView.filter ? " on" : ""}" data-gal-action="filter-all">All ${n.length}</button>
+              <button class="gal-chip${"fav" === galleryView.filter ? " on" : ""}" data-gal-action="filter-fav">★ Favourites ${a}</button>
+              <span class="gal-note">${l} of images · ★ pins a photo to the top · 🗑 deletes it</span>
+            </div>`
+                  : ""
+          }
+          ${
+              o.length
+                  ? `<div class="gal-grid">${d}</div>`
+                  : n.length
+                    ? '<div class="gal-empty">No favourites yet — tap ☆ on a photo to add it.</div>'
+                    : '<div class="gal-empty"><div style="font-size:3rem; margin-bottom:10px;">📷</div><p style="margin:0;">No photos yet</p><p style="margin:5px 0 0 0; font-size:0.85rem;">Photos will appear here as they are generated through chats, social posts, and other interactions</p></div>'
+          }
+        </div>`;
+}
+// Returns true when the gallery tab should re-render.
+async function handleGalleryAction(e, t, n) {
+    const a = gameState.employees.find((t) => t.id === e);
+    if (!a) return !1;
+    if ("filter-all" === t || "filter-fav" === t) return (galleryView.filter = "filter-fav" === t ? "fav" : "all"), !0;
+    const o = galleryView.empId === e ? galleryView.items[+n] : null;
+    if (!o) return !1;
+    if ("profile" === t) return o.url !== a.profileImage && setProfilePicture(e, o.url), !1;
+    if ("fav" === t) {
+        const e = new Set(a.galleryFavorites || []);
+        return e.has(o.url) ? e.delete(o.url) : e.add(o.url), (a.galleryFavorites = [...e]), saveGame(!1), !0;
+    }
+    if ("delete" !== t) return !1;
+    if (o.url === a.profileImage) return showNotification("That's the profile picture — set a different one first.", "info"), !1;
+    const i =
+        { social: "\n\nIt will also be removed from the social post it was on.", chat: "\n\nIt will also be removed from the chat message it came with." }[
+            o.source
+        ] || "";
+    return (
+        !!(await showConfirm(
+            `Delete this photo from ${a.name}'s gallery?${i}${o.favorite ? "\n\n★ It's one of your favourites." : ""}\n\nSaves and snapshots made before now keep their copy until they're replaced.`,
+            "Delete Photo",
+            { type: "danger", confirmText: "Delete" }
+        )) && (deleteGalleryImage(a, o.url), showNotification("🗑️ Photo deleted", "success"), saveGame(!1), !0)
+    );
+}
+function deleteGalleryImage(e, t) {
+    const n = (e) => ("string" == typeof e ? e : e?.url) !== t;
+    e.photos && (e.photos = e.photos.filter(n)),
+        e.generatedImages && (e.generatedImages = e.generatedImages.filter(n)),
+        e.galleryFavorites && (e.galleryFavorites = e.galleryFavorites.filter((e) => e !== t)),
+        (gameState.socialNetwork?.posts || []).forEach(
+            (n) => n.authorId === e.id && n.imageUrl === t && ((n.imageUrl = null), (n.imageDeleted = !0))
+        ),
+        // A chat message just loses its picture; a scene image becomes a plain message.
+        (gameState.chatHistory[e.id] || []).forEach(
+            (e) => e.imageUrl === t && ((e.imageUrl = null), "scene" === e.imageType && delete e.imageType)
+        ),
+        // The stored image goes once no save or snapshot still uses it.
+        "function" == typeof scheduleImageGc && scheduleImageGc("gallery delete", 12e4);
 }
 async function generateNewProfilePicture(e) {
     const t = gameState.employees.find((t) => t.id === e);

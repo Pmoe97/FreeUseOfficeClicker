@@ -1333,6 +1333,8 @@ function getAvailableActionButtons(e) {
     });
 }
 async function handleNpcActionButtonClick(e, t) {
+    // "✏️ Custom" asks what they should do (same as typing "/do <action>").
+    if ("custom" === t.id) return void showCustomActionInputModal(e);
     const n = document.getElementById("chatInput");
     if (!n) return;
     const a = t.id,
@@ -2156,7 +2158,46 @@ async function detectImageRequest(e, t, n) {
         2e3 + 4e3 * Math.random()
     );
 }
-async function considerMoneyRequest(e, t, n) {}
+// e = employee, t = the player's message, n = the NPC's reply. When the reply itself asks
+// the player for money ("could you spot me $200 for rent?"), attach the same money-request
+// card (Accept / Counter / Deny) that unprompted requests get. One open request at a time,
+// and at most one every 6 game-hours, so a chatty NPC doesn't turn into a billing system.
+const MONEY_ASK_PATTERN =
+    /\b(?:lend|loan|spot|send|give|venmo|transfer|front|wire)\s+me\s+(?:\S+\s+){0,3}?(?:\$\s?\d|(?:cash|money|funds|bucks|dollars|grand)\b)|\bvenmo\s+me\b|\bborrow\s+(?:\S+\s+){0,2}?(?:\$\s?\d|cash|money|funds|bucks|dollars)|\bi\s+(?:really\s+)?need\s+(?:some\s+|a\s+little\s+)?(?:\$\s?\d|cash|money)/i;
+async function considerMoneyRequest(e, t, n) {
+    if (!e || "string" != typeof n || !MONEY_ASK_PATTERN.test(n)) return;
+    const a = e.proactiveMessages || (e.proactiveMessages = {}),
+        o = gameState.time?.currentTime || Date.now();
+    if (a.hasUnrepliedMoneyRequest || (a.lastMoneyRequestTime && o - a.lastMoneyRequestTime < 216e5)) return;
+    // The amount they named, else about a week of their spending.
+    const i = n.match(/\$\s?(\d[\d,]*(?:\.\d+)?)\s*(k|thousand|grand|m|million)?\b/i),
+        s = i
+            ? parseFloat(i[1].replace(/,/g, "")) * ({ k: 1e3, thousand: 1e3, grand: 1e3, m: 1e6, million: 1e6 }[(i[2] || "").toLowerCase()] || 1)
+            : 7 * (e.spendingRate || calculateScaledSpendingRate()),
+        r = 50 * Math.max(1, Math.round(Math.min(s, Math.max(500, 0.15 * gameState.cash)) / 50)),
+        // The sentence doing the asking, as the card's reason line.
+        l = (n.match(/[^.!?\n]*[.!?]?/g) || []).find((e) => MONEY_ASK_PATTERN.test(e))?.trim() || "Could you help me out with some money?";
+    gameState.chatHistory[e.id] || (gameState.chatHistory[e.id] = []);
+    const c = gameState.chatHistory[e.id].length;
+    gameState.chatHistory[e.id].push({
+        sender: e.name,
+        content: l,
+        isPlayer: !1,
+        timestamp: o,
+        isMoneyRequest: !0,
+        amount: r,
+        reason: l.slice(0, 200),
+        fromConversation: !0,
+    }),
+        (a.lastMoneyRequestTime = o),
+        (a.hasUnrepliedMoneyRequest = !0),
+        (e.lastMoneyRequest = Date.now()),
+        gameState.activeChat?.id === e.id &&
+            chatMessages &&
+            (addMoneyRequestMessage(e, r, l.slice(0, 200), c), (chatMessages.scrollTop = chatMessages.scrollHeight)),
+        saveGame(!1),
+        console.log(`[Money Request] ${e.name} asked for $${formatCash(r)} in conversation`);
+}
 // The post type a free-text request is asking for (shared by 1-on-1 and group requests).
 function inferPostRequestType(text, fallback = "text") {
     return /\b(masturbat|dildo|toy|vibrator|orgasm|cum|ejaculat|finger.*yourself|play.*with.*yourself|spread.*legs|degradation|body.*writing|explicit.*act)\b/i.test(
@@ -2840,10 +2881,8 @@ async function sendMoneyToNPC(e, t = "", n = null) {
             // request tucked into the money note still triggers the NPC's image/post
             // (mirrors sendChatMessage/regenerateMessage/resendPlayerMessage's identical
             // fix). Skipped when there's no note since there's nothing to detect.
-            t &&
-                (detectPostRequest(o, t, m),
-                detectImageRequest(o, t, m),
-                considerMoneyRequest(o, t, m));
+            // (No money-request check here: they were just given money.)
+            t && (detectPostRequest(o, t, m), detectImageRequest(o, t, m));
             remember(
                 o,
                 t

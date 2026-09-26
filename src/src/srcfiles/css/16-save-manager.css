@@ -322,12 +322,14 @@
 .save-table td.meta {
     color: var(--text-dim);
     font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .save-name-cell {
     display: flex;
+    flex-wrap: wrap; /* tags drop under a long name instead of widening the table */
     align-items: center;
-    gap: 10px;
+    gap: 6px 10px;
 }
 
 .save-name-input {
@@ -378,9 +380,34 @@
     color: var(--l-x-green-pale);
 }
 
+/* The save you're playing (loaded or last saved to a named slot). */
+.save-tag.current {
+    margin-left: 6px;
+    white-space: nowrap;
+    background: var(--l-panel-deep-2);
+    border-color: var(--positive);
+    color: var(--positive);
+}
+
+.save-table tr.is-current td:first-child,
+.save-card.is-current {
+    box-shadow: inset 3px 0 0 var(--positive);
+}
+
 .save-row-actions {
     display: flex;
     gap: 8px;
+}
+
+.save-action-btn.overwrite {
+    background: var(--l-panel-deep-2);
+    border-color: var(--l-panel-3);
+    color: var(--positive);
+}
+
+.save-action-btn.overwrite:hover {
+    background: var(--l-panel-2);
+    border-color: var(--positive);
 }
 
 .save-action-btn {

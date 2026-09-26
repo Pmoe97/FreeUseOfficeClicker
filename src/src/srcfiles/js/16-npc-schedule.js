@@ -1048,8 +1048,10 @@ function tryEnrichStatusLabel(e) {
     generateText(a, { maxTokens: 30 })
         .then((a) => {
             if (a && e.npcStatus?.current === n) {
+                // Leading emoji(s), whole: variation selectors, skin tones and ZWJ sequences
+                // (🏋️‍♀️) included, so no stray U+FE0F/U+200D is left on the text.
                 const o = t.match(
-                        /^[\u{1F000}-\u{1FFFF}☀️🌙💼📚🎮🍳🍽️🚶🐕🧘🏋️💪🛒✈️🏖️🤒😷🧛⚰️🌿✨😴☕🚿🚌🚗💻⚡💕❤️🌹🎉🎊🎭🎬🍻🥂📊🗣️🥗☕🌙]+/u
+                        /^(?:\p{Extended_Pictographic}[\uFE0F\u{1F3FB}-\u{1F3FF}]*(?:\u200D\p{Extended_Pictographic}[\uFE0F\u{1F3FB}-\u{1F3FF}]*)*\s*)+/u
                     ),
                     i = o ? o[0].trim() : "",
                     s = a.trim().replace(/^["']|["']$/g, "");

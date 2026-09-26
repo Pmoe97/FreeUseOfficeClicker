@@ -555,8 +555,7 @@ const StoryEngine = {
             return void console.log(`[StoryEngine] Event type '${e}' is on cooldown, skipping`);
         if (
             document.getElementById("storyEventModal") ||
-            document.getElementById("actTransitionCinematic") ||
-            document.getElementById("multiStepEventModal")
+            document.getElementById("actTransitionCinematic")
         )
             return void console.log(`[StoryEngine] Modal already open, deferring event: ${e}`);
         gameState.story.eventTypeCooldowns || (gameState.story.eventTypeCooldowns = {}),
@@ -565,7 +564,6 @@ const StoryEngine = {
         if (n) {
             !document.getElementById("storyEventModal") &&
             !document.getElementById("actTransitionCinematic") &&
-            !document.getElementById("multiStepEventModal") &&
             !gameState.story.activeSpineEvent
                 ? ((gameState.story.activeSpineEvent = n), this.showStoryEventModal(n))
                 : (console.log(`[StoryEngine] Queueing event '${e}' - another event is active`),
@@ -4088,10 +4086,15 @@ const StoryEngine = {
         saveGame(!1);
     },
     processOngoingEffects() {
-        if (!gameState.story?.ongoingEffects) return;
+        // No effects list yet must not skip the product/employee expiry further down.
+        if (!gameState.story) return;
+        gameState.story.ongoingEffects || (gameState.story.ongoingEffects = []);
         const e = gameState.currentDay,
             t = [];
         gameState.story.ongoingEffects.forEach((n) => {
+            // Effects started while currentDay was never set carry no usable startDay: start
+            // their clock now rather than letting them run forever.
+            "number" == typeof n.startDay || (n.startDay = e);
             if (e - n.startDay >= n.duration) t.push(n);
             else
                 switch (n.type) {

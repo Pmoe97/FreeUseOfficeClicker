@@ -48,7 +48,8 @@ function onHourChange(e, t) {
 }
 function onDayChange(e) {
     gameState.employees.forEach((e) => {
-        e.schedule && ((e.schedule.hoursWorkedToday = 0), e.schedule.lastClockOut && (e.schedule.daysWorked += 1));
+        e.schedule && ((e.schedule.hoursWorkedToday = 0), e.schedule.lastClockOut && (e.schedule.daysWorked += 1)),
+            cleanupExpiredFlags(e); // expired flags were hidden but never removed from the save
     }),
         5 === e && generateWeekendPlans(),
         5 === e &&
@@ -68,6 +69,7 @@ function onDayChange(e) {
         processFlagChains(),
         processNpcRelationshipLifecycle(),
         updateAllNPCStatuses(),
+        (gameState.currentDay = gameDayNumber()), // fast-forward runs day changes between ticks
         void 0 !== StoryEngine && StoryEngine.processOngoingEffects && StoryEngine.processOngoingEffects(),
         updateTimeDisplay();
 }

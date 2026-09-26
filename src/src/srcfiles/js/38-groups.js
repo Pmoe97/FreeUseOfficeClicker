@@ -381,6 +381,7 @@ async function sendGroupMessage() {
     if (!e || !t) return;
     const n = e.value.trim();
     if (!(n || (gameState.groupSpeakerQueue && 0 !== gameState.groupSpeakerQueue.length))) return;
+    if (/^\/(help|\?)$/i.test(n)) return (e.value = ""), void showGroupCommandsHelp();
     if (
         ("function" == typeof resetGroupAutocompleteState && resetGroupAutocompleteState(),
         n && n.toLowerCase().startsWith("/do "))
@@ -2799,10 +2800,24 @@ function renderGroupActionButtons(e) {
         i.addEventListener("click", (t) => {
             t.stopPropagation(), showGroupActionButtonConfigModal(e);
         }),
-        o.appendChild(i),
+        o.appendChild(i);
+    const h = i.cloneNode(!0);
+    (h.textContent = "❔"),
+        (h.title = "Group commands (/help)"),
+        h.addEventListener("click", (e) => {
+            e.stopPropagation(), showGroupCommandsHelp();
+        }),
+        o.appendChild(h),
         t.appendChild(o);
 }
 async function handleGroupActionButtonClick(e, t) {
+    // "✏️ Custom" asks what should happen, then runs it like "/do <action>".
+    if ("custom" === t.id) {
+        const t = await showPrompt("Describe what happens (e.g. \"Sarah pulls Mike aside\").", "✏️ Custom Action", {
+            placeholder: "Someone does something…",
+        });
+        return void (t && t.trim() && (await executeGroupDoCommand(e, t.trim())));
+    }
     const n = $("groupInput");
     if (!n) return;
     const a = t.id,
@@ -3023,29 +3038,6 @@ async function generateDoCharacterResponse(e, t, n) {
         console.error("Error generating character /do response:", e), removeGroupTypingIndicator();
     }
 }
-async function sendGroupMessageWithInstruction(e, t, n) {
-    const a = $("groupInput");
-    t &&
-        (e.messages.push({
-            sender: "You",
-            content: t,
-            isPlayer: !0,
-            timestamp: gameState.time?.currentTime || Date.now(),
-            intent: classifyBossIntent(t, e),
-        }),
-        (e.lastMessageAt = gameState.time?.currentTime || Date.now()),
-        a && (a.value = ""),
-        renderGroupMessages(e));
-    const o = [...(gameState.groupSpeakerQueue || [])];
-    (gameState.groupSpeakerQueue = []), updateQueueDisplay(), renderParticipantSelectorBar(e);
-    for (const t of o)
-        if ("__narrator__" === t) await generateNarratorResponseWithInstruction(e, n);
-        else {
-            const a = gameState.employees.find((e) => e.id === t);
-            a && (await generateGroupResponseWithInstruction(e, a, n));
-        }
-    saveGame(!1);
-}
 async function generateNarratorResponseWithInstruction(e, t) {
     addNarratorTypingIndicator();
     try {
@@ -3128,7 +3120,7 @@ function showGroupCommandsHelp() {
             "\n      position: fixed; top: 0; left: 0; width: 100%; height: 100%;\n      background: var(--l-veil-85); z-index: 1000000;\n      display: flex; justify-content: center; align-items: center; padding: 20px;\n    ");
     const t = () => e.remove();
     (e.innerHTML =
-        '\n      <div style="background: linear-gradient(135deg, var(--l-panel-2) 0%, var(--l-panel) 100%);\n                  border-radius: 15px; max-width: 550px; width: 100%; max-height: 90vh;\n                  overflow-y: auto; padding: 25px;">\n        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">\n          <h2 style="margin:0; color:var(--positive);">🎬 Group Commands</h2>\n          <button id="closeGroupCommandsHelp" style="background:transparent; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer;">×</button>\n        </div>\n        \n        <div style="margin-bottom:25px;">\n          <h3 style="color:var(--danger); margin:0 0 10px 0; font-size:1rem;">🎭 /do Command</h3>\n          <p style="color:var(--text-mute); font-size:0.85rem; margin:0 0 15px 0;">\n            Direct control over characters and narrator. Type in the message input:\n          </p>\n          <div style="background:var(--bg); padding:12px; border-radius:8px; font-family:monospace; font-size:0.85rem;">\n            <div style="color:var(--l-orange); margin-bottom:8px;"><code>/do [Character] does something</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem; margin-bottom:12px;">Example: <code style="color:var(--positive);">/do Sarah leans over and whispers to Mike</code></div>\n            \n            <div style="color:var(--l-violet); margin-bottom:8px;"><code>/do The scene changes...</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem;">Triggers narrator if no character specified</div>\n          </div>\n        </div>\n        \n        <div style="margin-bottom:25px;">\n          <h3 style="color:var(--l-violet); margin:0 0 10px 0; font-size:1rem;">📜 /narrator Command</h3>\n          <p style="color:var(--text-mute); font-size:0.85rem; margin:0 0 10px 0;">\n            Trigger narrator with optional custom instructions:\n          </p>\n          <div style="background:var(--bg); padding:12px; border-radius:8px; font-family:monospace; font-size:0.85rem;">\n            <div style="color:var(--l-violet); margin-bottom:6px;"><code>/narrator</code> or <code>/n</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem; margin-bottom:10px;">→ Narrator describes the current scene</div>\n            \n            <div style="color:var(--l-violet); margin-bottom:6px;"><code>/narrator &lt;Focus on the tension in the room&gt;</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem;">→ Narrator follows your specific instruction</div>\n          </div>\n        </div>\n        \n        <div style="margin-bottom:25px;">\n          <h3 style="color:var(--l-indigo); margin:0 0 10px 0; font-size:1rem;">📝 Response Style Commands</h3>\n          <p style="color:var(--text-mute); font-size:0.85rem; margin:0 0 10px 0;">\n            Use /<em>style</em> {your message} to control how characters respond:\n          </p>\n          <div style="background:var(--bg); padding:12px; border-radius:8px; font-family:monospace; font-size:0.85rem;">\n            <div style="color:var(--positive); margin-bottom:6px;"><code>/action {Let\'s see what happens}</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem; margin-bottom:10px;">→ Characters respond with physical actions only</div>\n            \n            <div style="color:var(--positive); margin-bottom:6px;"><code>/interact {}</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem;">→ Characters talk to each other, not the player</div>\n          </div>\n        </div>\n        \n        <div style="margin-bottom:25px;">\n          <h3 style="color:var(--l-indigo); margin:0 0 10px 0; font-size:1rem;">⚙️ Group Settings</h3>\n          <ul style="color:var(--text-mute); font-size:0.85rem; padding-left:20px; margin:0;">\n            <li style="margin-bottom:8px;"><strong style="color:var(--danger);">Player Not Present</strong> - Watch NPCs interact without you</li>\n            <li style="margin-bottom:8px;"><strong style="color:var(--l-indigo);">Inter-Character Chat</strong> - NPCs address each other</li>\n            <li style="margin-bottom:8px;"><strong style="color:var(--positive);">Idle Conversations</strong> - NPCs chat when you\'re away</li>\n            <li><strong style="color:var(--l-violet);">Narrator</strong> - Third-person scene descriptions</li>\n          </ul>\n        </div>\n        \n        <div style="margin-bottom:15px;">\n          <h3 style="color:var(--positive); margin:0 0 10px 0; font-size:1rem;">🎬 Action Buttons</h3>\n          <p style="color:var(--text-mute); font-size:0.85rem; margin:0;">\n            Click action buttons to insert commands. Click ⚙️ to customize buttons - \n            add, remove, rename, or change instructions to match your style.\n          </p>\n        </div>\n        \n        <button id="closeGroupCommandsHelpBtn" style="width:100%; padding:12px; background:var(--l-green); border:none; border-radius:8px;\n                       color:var(--l-on-accent); font-weight:600; cursor:pointer; margin-top:10px;">\n          Got it!\n        </button>\n      </div>\n    '),
+        '\n      <div style="background: linear-gradient(135deg, var(--l-panel-2) 0%, var(--l-panel) 100%);\n                  border-radius: 15px; max-width: 550px; width: 100%; max-height: 90vh;\n                  overflow-y: auto; padding: 25px;">\n        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">\n          <h2 style="margin:0; color:var(--positive);">🎬 Group Commands</h2>\n          <button id="closeGroupCommandsHelp" style="background:transparent; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer;">×</button>\n        </div>\n        \n        <div style="margin-bottom:25px;">\n          <h3 style="color:var(--danger); margin:0 0 10px 0; font-size:1rem;">🎭 /do Command</h3>\n          <p style="color:var(--text-mute); font-size:0.85rem; margin:0 0 15px 0;">\n            Direct control over characters and narrator. Type in the message input:\n          </p>\n          <div style="background:var(--bg); padding:12px; border-radius:8px; font-family:monospace; font-size:0.85rem;">\n            <div style="color:var(--l-orange); margin-bottom:8px;"><code>/do [Character] does something</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem; margin-bottom:12px;">Example: <code style="color:var(--positive);">/do Sarah leans over and whispers to Mike</code></div>\n            \n            <div style="color:var(--l-violet); margin-bottom:8px;"><code>/do The scene changes...</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem;">Triggers narrator if no character specified</div>\n          </div>\n        </div>\n        \n        <div style="margin-bottom:25px;">\n          <h3 style="color:var(--l-violet); margin:0 0 10px 0; font-size:1rem;">📜 /narrator Command</h3>\n          <p style="color:var(--text-mute); font-size:0.85rem; margin:0 0 10px 0;">\n            Trigger narrator with optional custom instructions:\n          </p>\n          <div style="background:var(--bg); padding:12px; border-radius:8px; font-family:monospace; font-size:0.85rem;">\n            <div style="color:var(--l-violet); margin-bottom:6px;"><code>/narrator</code> or <code>/n</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem; margin-bottom:10px;">→ Narrator describes the current scene</div>\n            \n            <div style="color:var(--l-violet); margin-bottom:6px;"><code>/narrator &lt;Focus on the tension in the room&gt;</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem;">→ Narrator follows your specific instruction</div>\n          </div>\n        </div>\n        \n        <div style="margin-bottom:25px;">\n          <h3 style="color:var(--l-indigo); margin:0 0 10px 0; font-size:1rem;">📝 Response Style Commands</h3>\n          <p style="color:var(--text-mute); font-size:0.85rem; margin:0 0 10px 0;">\n            Use /<em>style</em> {your message} to control how characters respond:\n          </p>\n          <div style="background:var(--bg); padding:12px; border-radius:8px; font-family:monospace; font-size:0.85rem;">\n            <div style="color:var(--positive); margin-bottom:6px;"><code>/action {Let\'s see what happens}</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem; margin-bottom:10px;">→ Characters respond with physical actions only</div>\n            \n            <div style="color:var(--positive); margin-bottom:6px;"><code>/interact {}</code></div>\n            <div style="color:var(--text-mute); font-size:0.75rem;">→ Characters talk to each other, not the player</div>\n          </div>\n        </div>\n        \n        <div style="margin-bottom:25px;">\n          <h3 style="color:var(--l-indigo); margin:0 0 10px 0; font-size:1rem;">⚙️ Group Settings</h3>\n          <ul style="color:var(--text-mute); font-size:0.85rem; padding-left:20px; margin:0;">\n            <li style="margin-bottom:8px;"><strong style="color:var(--danger);">Player Not Present</strong> - Watch NPCs interact without you</li>\n            <li style="margin-bottom:8px;"><strong style="color:var(--l-indigo);">Inter-Character Chat</strong> - NPCs address each other</li>\n            <li style="margin-bottom:8px;"><strong style="color:var(--positive);">Idle Conversations</strong> - NPCs chat when you\'re away</li>\n            <li><strong style="color:var(--l-violet);">Narrator</strong> - Third-person scene descriptions</li>\n          </ul>\n        </div>\n        \n        <div style="margin-bottom:15px;">\n          <h3 style="color:var(--positive); margin:0 0 10px 0; font-size:1rem;">🎬 Action Buttons</h3>\n          <p style="color:var(--text-mute); font-size:0.85rem; margin:0;">\n            Click action buttons to insert commands. Click ⚙️ to customize buttons - \n            add, remove, rename, or change instructions to match your style. Type <code>/help</code> (or tap ❔) to open this list again.\n          </p>\n        </div>\n        \n        <button id="closeGroupCommandsHelpBtn" style="width:100%; padding:12px; background:var(--l-green); border:none; border-radius:8px;\n                       color:var(--l-on-accent); font-weight:600; cursor:pointer; margin-top:10px;">\n          Got it!\n        </button>\n      </div>\n    '),
         document.body.appendChild(e),
         e.querySelector("#closeGroupCommandsHelp").addEventListener("click", t),
         e.querySelector("#closeGroupCommandsHelpBtn").addEventListener("click", t),
@@ -3138,7 +3130,7 @@ function showGroupCommandsHelp() {
 }
 function checkGroupIdleConversations() {
     if (!gameState.groups) return;
-    const e = Date.now();
+    const e = gameNow(); // lastMessageAt is stamped on the game clock, so measure on it too
     gameState.groups.forEach((t) => {
         const n = t.settings?.idleConversations;
         if (!n?.enabled) return;

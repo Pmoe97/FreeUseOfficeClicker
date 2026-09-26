@@ -170,14 +170,17 @@ function setupEventListeners() {
                 const n = $("settingsTab-" + t);
                 n && (n.style.display = "block"),
                     "logging" === t && window.renderLoggingSettings && window.renderLoggingSettings(),
-                    "display" === t && window.renderDisplaySettings && window.renderDisplaySettings();
+                    "display" === t && window.renderDisplaySettings && window.renderDisplaySettings(),
+                    "data" === t && window.renderStorageReport && window.renderStorageReport();
             });
         });
     const b = $("quickSaveBtn"),
         v = $("quickLoadBtn"),
         w = $("openCheatsQuickBtn"),
         x = $("openPatchNotesQuickBtn");
-    b && b.addEventListener("click", () => saveGame(!0)),
+    // Same as F5: a quick-save slot, which is what Quick Load (F9) looks for. (It used to
+    // write the autosave slot, so Quick Save + Quick Load never found each other.)
+    b && b.addEventListener("click", () => saveGameToSlot(`quick_${Date.now()}`, "quick", !0)),
         v &&
             v.addEventListener("click", async () => {
                 const e = await listAllSaves();
@@ -191,10 +194,7 @@ function setupEventListeners() {
                 })) && loadGameFromSlot(n.slotName);
             }),
         w &&
-            w.addEventListener("click", () => {
-                const e = $("cheatsModal");
-                e && (e.style.display = "flex");
-            }),
+            w.addEventListener("click", () => openCheatPanel()),
         x &&
             x.addEventListener("click", () => {
                 const e = $("patchNotesModal");
@@ -225,6 +225,7 @@ function setupEventListeners() {
             g = $("autoVisualizeStatus"),
             h = $("autoVisualizeCount");
         m && g && (m.textContent = g.textContent), u && h && (u.textContent = h.textContent);
+        autosaveToggle && (autosaveToggle.checked = !1 !== gameState.settings?.autosave);
     }
     S &&
         ((S.checked = gameState.settings?.sfwMode || !1),
@@ -241,9 +242,11 @@ function setupEventListeners() {
         })),
         (window.syncSettingsModalDisplays = k),
         autosaveToggle &&
+            ((autosaveToggle.checked = !1 !== gameState.settings?.autosave),
             autosaveToggle.addEventListener("change", (e) => {
-                (gameState.settings.autosave = e.target.checked), setupAutosave();
-            });
+                // Save the choice itself, so it survives a reload either way.
+                (gameState.settings.autosave = e.target.checked), setupAutosave(), saveGame(!1, !0);
+            }));
     const T = $("enableStreamingToggle");
     function C() {
         const e = $("streamingStatusText");
@@ -662,37 +665,10 @@ function setupEventListeners() {
                     gameState.settings?.autoVisualization &&
                     (t.textContent = gameState.settings.autoVisualization.totalGenerated || 0);
         }),
-        window.updateAutoVisualizeStatus(),
-        gameState.cheatMultipliers ||
-            (gameState.cheatMultipliers = {
-                affection: 1,
-                trust: 1,
-                comfort: 1,
-                desire: 1,
-                productivity: 1,
-                confidence: 1,
-                obedience: 1,
-                flirty: 1,
-                professional: 1,
-                humor: 1,
-            });
-    const ve = $("openCheatsBtn"),
-        we = $("closeCheatsBtn"),
-        xe = $("cheatsModal");
-    ve &&
-        xe &&
-        ve.addEventListener("click", () => {
-            (xe.style.display = "flex"), lt(), ct();
-        }),
-        we &&
-            xe &&
-            we.addEventListener("click", () => {
-                xe.style.display = "none";
-            }),
-        xe &&
-            xe.addEventListener("click", (e) => {
-                e.target === xe && (xe.style.display = "none");
-            });
+        window.updateAutoVisualizeStatus();
+    // Cheats & Debugging: rendered and wired by openCheatPanel (55-cheats.js).
+    const ve = $("openCheatsBtn");
+    ve && ve.addEventListener("click", () => openCheatPanel());
     const Se = $("openPatchNotesBtn"),
         ke = $("closePatchNotesBtn"),
         Te = $("patchNotesModal");
@@ -710,517 +686,6 @@ function setupEventListeners() {
             Te.addEventListener("click", (e) => {
                 e.target === Te && (Te.style.display = "none");
             });
-    const Ce = $("cheatMoneyBase"),
-        Ee = $("cheatMoneyMagnitude"),
-        $e = $("cheatMoneyPreview"),
-        Ie = $("cheatSetMoneyBtn");
-    function Me() {
-        if (!Ce || !Ee || !$e) return;
-        const e = (parseInt(Ce.value) || 100) * (parseInt(Ee.value) || 1e6);
-        $e.textContent = e.toLocaleString();
-    }
-    Ce && Ce.addEventListener("input", Me),
-        Ee && Ee.addEventListener("change", Me),
-        Ie &&
-            Ce &&
-            Ee &&
-            Ie.addEventListener("click", () => {
-                const e = (parseInt(Ce.value) || 100) * (parseInt(Ee.value) || 1e6);
-                (gameState.cash = e),
-                    showNotification(`💰 Money set to $${e.toLocaleString()}!`, "success"),
-                    updateUI();
-            });
-    const Pe = [
-        "affection",
-        "trust",
-        "comfort",
-        "desire",
-        "productivity",
-        "confidence",
-        "obedience",
-        "flirtiness",
-        "professionalism",
-        "humor",
-    ];
-    Pe.forEach((e) => {
-        const t = $(`${e}MultSlider`),
-            n = $(`${e}MultValue`);
-        if (t && n) {
-            t.addEventListener("input", (t) => {
-                const a = parseFloat(t.target.value) / 10;
-                (gameState.cheatMultipliers[e] = a), (n.textContent = `${a.toFixed(1)}x`);
-            });
-            const a = gameState.cheatMultipliers[e] || 1;
-            (t.value = 10 * a), (n.textContent = `${a.toFixed(1)}x`);
-        }
-    });
-    const Ae = $("resetMultipliersBtn");
-    Ae &&
-        Ae.addEventListener("click", () => {
-            Pe.forEach((e) => {
-                gameState.cheatMultipliers[e] = 1;
-                const t = $(`${e}MultSlider`),
-                    n = $(`${e}MultValue`);
-                t && (t.value = 10), n && (n.textContent = "1.0x");
-            }),
-                showNotification("🔄 All multipliers reset to 1x", "info");
-        });
-    const Ne = $("maxMultipliersBtn");
-    Ne &&
-        Ne.addEventListener("click", () => {
-            Pe.forEach((e) => {
-                gameState.cheatMultipliers[e] = 5;
-                const t = $(`${e}MultSlider`),
-                    n = $(`${e}MultValue`);
-                t && (t.value = 50), n && (n.textContent = "5.0x");
-            }),
-                showNotification("⚡ All multipliers set to 5x!", "success");
-        });
-    const Le = $("cheatStatType"),
-        _e = $("cheatStatValue"),
-        Re = $("cheatSetStatBtn");
-    Re &&
-        Le &&
-        _e &&
-        Re.addEventListener("click", () => {
-            const e = Le.value,
-                t = parseInt(_e.value);
-            if (t < 0 || t > 100) return void showNotification("⚠️ Value must be between 0 and 100", "error");
-            let n = 0;
-            gameState.employees.forEach((a) => {
-                "active" === a.employmentStatus &&
-                    (["affection", "trust", "comfort", "desire", "productivity"].includes(e)
-                        ? (a.stats || (a.stats = {}), (a.stats[e] = t), n++)
-                        : ["confidence", "obedience", "flirty", "professional", "humor"].includes(e) &&
-                          (a.personality || (a.personality = {}), (a.personality[e] = t), n++));
-            }),
-                showNotification(`✅ Set ${e} to ${t} for ${n} employees!`, "success");
-        });
-    const De = $("cheatMaxAllStatsBtn");
-    De &&
-        De.addEventListener("click", () => {
-            let e = 0;
-            gameState.employees.forEach((t) => {
-                "active" === t.employmentStatus &&
-                    (t.stats || (t.stats = {}),
-                    (t.stats.affection = 100),
-                    (t.stats.trust = 100),
-                    (t.stats.comfort = 100),
-                    (t.stats.desire = 100),
-                    (t.stats.productivity = 100),
-                    t.personality || (t.personality = {}),
-                    (t.personality.confidence = 100),
-                    (t.personality.obedience = 100),
-                    (t.personality.flirty = 100),
-                    (t.personality.professional = 100),
-                    (t.personality.humor = 100),
-                    e++);
-            }),
-                showNotification(`🌟 Maxed all stats for ${e} employees!`, "success");
-        });
-    const Fe = $("cheatUnlockAllLocationsBtn");
-    Fe &&
-        Fe.addEventListener("click", () => {
-            let e = 0;
-            gameState.locations.forEach((t) => {
-                t.owned || ((t.owned = !0), (t.unlocked = !0), e++);
-            }),
-                showNotification(`🏢 Unlocked ${e} locations!`, "success"),
-                renderLocations();
-        });
-    const Ge = $("cheatUnlockAllProductsBtn");
-    Ge &&
-        Ge.addEventListener("click", () => {
-            let e = 0;
-            gameState.products.forEach((t) => {
-                t.unlocked || ((t.unlocked = !0), e++);
-            }),
-                showNotification(`📦 Unlocked ${e} products!`, "success"),
-                renderProducts();
-        });
-    const Be = $("cheatHireAllBtn");
-    Be &&
-        Be.addEventListener("click", () => {
-            if (!gameState.candidates || 0 === gameState.candidates.length)
-                return void showNotification("⚠️ No candidates available to hire!", "error");
-            const e = gameState.candidates.filter((e) => !e.hired);
-            e.forEach((e) => {
-                (e.hired = !0),
-                    (e.employmentStatus = "active"),
-                    (e.hireDate = gameNow()),
-                    (e.bioComplete = !0),
-                    (e.onboarding = !1),
-                    initializeEmployeeSocialData(e),
-                    gameState.employees.push(e),
-                    generateRandomRelationships(e.id);
-            }),
-                (gameState.candidates = gameState.candidates.filter((e) => e.hired)),
-                showNotification(`👥 Hired ${e.length} candidates!`, "success"),
-                updateCompanyAwareness();
-        });
-    const Oe = $("cheatClearPostsBtn");
-    Oe &&
-        Oe.addEventListener("click", () => {
-            const e = gameState.socialNetwork.posts.length;
-            (gameState.socialNetwork.posts = []),
-                (gameState.socialNetwork.postIdCounter = 0),
-                (gameState.socialNetwork.lastPostGeneration = 0),
-                (gameState.socialNetwork.recentPostTypes = []),
-                (gameState.socialNetwork.globalEvents = []),
-                gameState.socialNetwork.playerDraft &&
-                    (gameState.socialNetwork.playerDraft = {
-                        caption: "",
-                        imagePrompt: "",
-                        altText: "",
-                        imageUrl: null,
-                    }),
-                (gameState.socialFeed = []),
-                (gameState.socialStats = { totalPosts: 0, totalLikes: 0, totalComments: 0 }),
-                void 0 !== feedPaginationState &&
-                    ((feedPaginationState.currentPage = 1),
-                    (feedPaginationState.totalPages = 1),
-                    (feedPaginationState.allPosts = []),
-                    feedPaginationState.pendingUpdates.clear()),
-                saveGame(!1),
-                showNotification(`🗑️ Cleared ${e} posts! Social feed reset.`, "info"),
-                "social" === gameState.activeTab && renderSocialFeed(!0);
-        });
-    const qe = $("cheatSpawnPostsBtn");
-    qe &&
-        qe.addEventListener("click", async () => {
-            const e = gameState.employees.filter((e) => "active" === e.employmentStatus);
-            if (0 === e.length) return void showNotification("⚠️ No active employees to create posts!", "error");
-            showNotification("📱 Generating 10 NPC posts...", "info");
-            const t = [
-                "Coffee break! ☕",
-                "Busy day at work 💼",
-                "Finally done with that project! 🎉",
-                "Anyone else tired? 😴",
-                "Looking forward to the weekend! 🌴",
-                "Great teamwork today! 👏",
-                "Just finished a meeting 📊",
-                "Time flies when you're working hard ⏰",
-                "Loving the office vibes today! 💯",
-                "Can't believe it's already this late! 😅",
-                "Productive day! ✅",
-                "Office life be like... 🤷",
-                "Happy to be here! 😊",
-                "Made some progress today 📈",
-                "Working on something exciting! 🚀",
-                "Team lunch was great! 🍔",
-                "Another milestone reached! 🎯",
-                "Feeling accomplished today 💪",
-                "Good vibes only! ✨",
-                "Grateful for this team! 🙏",
-                "Accidentally said 'you too' when the delivery guy said 'enjoy your food' 💀",
-                "That 3pm slump is REAL today 😩",
-                "Someone brought donuts and I have zero self-control 🍩",
-                "Just had the best idea in the shower... forgot it by the time I got out 🚿😢",
-                "Why does my to-do list keep getting longer instead of shorter 📝",
-                "New playlist, new energy, new me (until tomorrow) 🎵",
-                "Overheard the funniest conversation in the break room today 😂",
-                "Started a book last night and accidentally stayed up until 3am 📚",
-                "My plant is still alive after 2 months, basically a green thumb now 🌱",
-                "That feeling when your code works on the first try 🤯",
-                "Trying a new recipe tonight, pray for my kitchen 🙏🍳",
-                "The sunset from my window right now is unreal 🌅",
-                "Just found out we have a nap room and my life is changed forever 😴",
-                "Motivation levels: exists, but barely 📉",
-                "Had the weirdest dream last night and I need to talk about it 😂",
-                "Sometimes you just need a long walk and a good podcast 🎧",
-                "Counting down to vacation like my life depends on it ✈️",
-                "The audacity of my alarm clock this morning... 😤⏰",
-                "Personal growth is realizing I don't have to reply to that email right now 💅",
-                "Comfort food and a good show = perfect evening 🛋️🍕",
-            ];
-            for (let n = 0; n < 10; n++) {
-                const n = e[Math.floor(Math.random() * e.length)],
-                    a = t[Math.floor(Math.random() * t.length)];
-                createSocialPost({
-                    authorId: n.id,
-                    authorName: n.name,
-                    type: "life_update",
-                    content: a,
-                    timestamp: gameState.time.currentTime,
-                    likes: [],
-                    comments: [],
-                    mentions: [],
-                });
-            }
-            showNotification("✅ Generated 10 NPC posts!", "success"),
-                "social" === gameState.activeTab && renderSocialFeed(!0);
-        });
-    const ze = $("timeScaleSlider"),
-        je = $("timeScaleValue"),
-        He = $("timeScaleDescription");
-    if (ze && je && He) {
-        const Ba = (e) => {
-                je.textContent = `${e}x`;
-                let t = "";
-                (t =
-                    1 === e
-                        ? "Real-time (1:1) - Extremely slow!"
-                        : e <= 10
-                          ? `${e} game minutes = 1 real minute (Slow)`
-                          : e <= 30
-                            ? `${e} game minutes = 1 real minute (Normal)`
-                            : e <= 60
-                              ? `${e} game minutes = 1 real minute (Fast)`
-                              : `${e} game minutes = 1 real minute (Very Fast!)`),
-                    (He.textContent = t);
-            },
-            Oa = gameState.time.baseTimeScale || gameState.time.timeScale || 20;
-        Ba(Oa),
-            (ze.value = Oa),
-            ze.addEventListener("input", (e) => {
-                const t = parseInt(e.target.value);
-                Ba(t),
-                    (gameState.time.timeScale = t),
-                    (gameState.time.baseTimeScale = t),
-                    gameState.time.timeDilation && (gameState.time.timeDilation.idleScale = t),
-                    showNotification(`⏰ Base time scale set to ${t}x (slower during conversations)`, "info");
-            });
-    }
-    document.querySelectorAll(".time-preset-btn").forEach((e) => {
-        e.addEventListener("click", () => {
-            const t = parseInt(e.dataset.scale);
-            ze && ((ze.value = t), ze.dispatchEvent(new Event("input")));
-        });
-    });
-    const Ue = $("pauseTimeBtn");
-    Ue &&
-        Ue.addEventListener("click", () => {
-            (gameState.time.paused = !gameState.time.paused),
-                gameState.time.paused
-                    ? ((Ue.innerHTML = "▶️ Resume Time"),
-                      (Ue.style.background = "linear-gradient(135deg, var(--l-green) 0%, var(--l-cyan) 100%)"),
-                      showNotification("⏸️ Time paused", "info"))
-                    : ((Ue.innerHTML = "⏸️ Pause Time"),
-                      (Ue.style.background = "linear-gradient(135deg, var(--l-red) 0%, var(--l-pink) 100%)"),
-                      showNotification("▶️ Time resumed", "info")),
-                et();
-        });
-    const Ye = $("skipTimeBtn");
-    Ye &&
-        Ye.addEventListener("click", () => {
-            (gameState.time.currentTime += 864e5),
-                window.onDayChange && window.onDayChange(),
-                showNotification("⏭️ Skipped forward 1 day!", "success"),
-                et(),
-                updateTimeDisplay();
-        });
-    Object.entries({ skipTime1HrBtn: 1, skipTime3HrBtn: 3, skipTime8HrBtn: 8 }).forEach(([e, t]) => {
-        const n = $(e);
-        n &&
-            n.addEventListener("click", () => {
-                const e = 60 * t * 60 * 1e3;
-                if (((gameState.time.currentTime += e), window.onHourChange))
-                    for (let e = 0; e < t; e++) window.onHourChange();
-                showNotification(`⏩ Skipped forward ${t} hour${t > 1 ? "s" : ""}!`, "success"),
-                    et(),
-                    updateTimeDisplay();
-            });
-    });
-    const We = $("timeDilationEnabled"),
-        Ve = $("timeDilationSettings");
-    We &&
-        gameState.time &&
-        gameState.time.timeDilation &&
-        ((We.checked = !1 !== gameState.time.timeDilation.enabled),
-        Ve &&
-            ((Ve.style.opacity = We.checked ? "1" : "0.5"),
-            (Ve.style.pointerEvents = We.checked ? "auto" : "none"))),
-        We &&
-            We.addEventListener("change", (e) => {
-                const t = e.target.checked;
-                gameState.time && gameState.time.timeDilation && (gameState.time.timeDilation.enabled = t),
-                    Ve && ((Ve.style.opacity = t ? "1" : "0.5"), (Ve.style.pointerEvents = t ? "auto" : "none")),
-                    showNotification(
-                        t
-                            ? "⏳ Time dilation enabled - time slows during conversations"
-                            : "⏳ Time dilation disabled - constant time speed",
-                        "info"
-                    );
-            });
-    const Ke = $("conversationTimeScale");
-    Ke &&
-        gameState.time &&
-        gameState.time.timeDilation &&
-        ((Ke.value = gameState.time.timeDilation.conversationScale || 1),
-        Ke.addEventListener("change", (e) => {
-            const t = Math.max(1, Math.min(20, parseInt(e.target.value) || 1));
-            (e.target.value = t),
-                (gameState.time.timeDilation.conversationScale = t),
-                showNotification(`💬 Conversation time scale: ${t}x`, "info");
-        }));
-    const Qe = $("groupChatTimeScale");
-    Qe &&
-        gameState.time &&
-        gameState.time.timeDilation &&
-        ((Qe.value = gameState.time.timeDilation.groupChatScale || 2),
-        Qe.addEventListener("change", (e) => {
-            const t = Math.max(1, Math.min(20, parseInt(e.target.value) || 2));
-            (e.target.value = t),
-                (gameState.time.timeDilation.groupChatScale = t),
-                showNotification(`👥 Group chat time scale: ${t}x`, "info");
-        }));
-    const Je = $("socialBrowsingTimeScale");
-    function Xe() {
-        const e = $("scheduledEventsList"),
-            t = $("scheduledEventsCount");
-        if (!e) return;
-        const n = (gameState.npcScheduledEvents || []).filter((e) => "pending" === e.status);
-        if (
-            (n.sort((e, t) => e.triggerTime - t.triggerTime),
-            t && (t.textContent = `(${n.length} pending)`),
-            0 === n.length)
-        )
-            return void (e.innerHTML =
-                '<p style="color:var(--text-mute); text-align:center; margin:10px 0; font-size:0.85rem;">No pending events</p>');
-        const a = gameState.time?.currentTime || Date.now();
-        e.innerHTML = n
-            .map((e) => {
-                new Date(e.triggerTime);
-                const t = e.triggerTime - a,
-                    n = Math.floor(t / 36e5),
-                    o = Math.floor((t % 36e5) / 6e4);
-                let i = "";
-                if (n > 24) {
-                    const e = Math.floor(n / 24);
-                    i = `in ${e} day${e > 1 ? "s" : ""}`;
-                } else i = n > 0 ? `in ${n}h ${o}m` : o > 0 ? `in ${o}m` : "soon!";
-                const s =
-                        {
-                            future_contact: "💬",
-                            same_day_meet: "🤝",
-                            lunch_meet: "🍽️",
-                            confirm_plans: "✅",
-                            scheduled_visit: "🏢",
-                            conditional_contact: "❓",
-                            relative_time: "⏰",
-                            weekend_plans: "🎉",
-                            next_week: "📆",
-                        }[e.type] || "📅",
-                    r = "player" === e.source ? "👤" : "🤖";
-                return `\n          <div style="padding:8px; margin-bottom:6px; background:var(--surface); border-radius:6px; border-left:3px solid ${"player" === e.source ? "var(--l-green)" : "var(--l-pink-3)"};">\n            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">\n              <span style="color:var(--l-ink); font-weight:600; font-size:0.85rem;">${s} ${e.npcName}</span>\n              <span style="color:var(--text-dim); font-size:0.75rem;">${r} ${i}</span>\n            </div>\n            <div style="color:var(--text-mute); font-size:0.8rem; margin-bottom:4px;">${e.type.replace(/_/g, " ")}</div>\n            <div style="color:var(--text-mute); font-size:0.75rem; font-style:italic; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">"${e.originalPhrase}"</div>\n            <button onclick="cancelScheduledEvent('${e.id}'); refreshScheduledEventsPanel();" style="margin-top:6px; padding:2px 8px; background:var(--l-red); border:none; border-radius:4px; color:var(--l-ink-on-fill); cursor:pointer; font-size:0.7rem;">\n              ❌ Cancel\n            </button>\n          </div>\n        `;
-            })
-            .join("");
-    }
-    Je &&
-        gameState.time &&
-        gameState.time.timeDilation &&
-        ((Je.value = gameState.time.timeDilation.socialBrowsingScale || 10),
-        Je.addEventListener("change", (e) => {
-            const t = Math.max(1, Math.min(50, parseInt(e.target.value) || 10));
-            (e.target.value = t),
-                (gameState.time.timeDilation.socialBrowsingScale = t),
-                showNotification(`📱 Social browsing time scale: ${t}x`, "info");
-        })),
-        (window.refreshScheduledEventsPanel = Xe);
-    const Ze = $("refreshScheduledEventsBtn");
-    function et() {
-        const e = $("cheatGameTime"),
-            t = $("cheatTimeStatus");
-        if (e && gameState.time) {
-            const t = new Date(gameState.time.currentTime);
-            e.textContent = t.toLocaleString();
-        }
-        t &&
-            gameState.time &&
-            (gameState.time.paused
-                ? ((t.textContent = "Paused"), (t.style.color = "var(--l-red)"))
-                : ((t.textContent = `Running (${gameState.time.timeScale}x)`), (t.style.color = "var(--l-green)")));
-    }
-    Ze && Ze.addEventListener("click", Xe);
-    let tt = null;
-    const nt = $("openCheatsBtn"),
-        at = $("closeCheatsBtn");
-    nt &&
-        nt.addEventListener("click", () => {
-            setTimeout(() => {
-                et(), Xe(), (tt = setInterval(et, 1e3));
-            }, 100);
-        }),
-        at &&
-            at.addEventListener("click", () => {
-                tt && (clearInterval(tt), (tt = null));
-            });
-    const ot = $("cheatRefreshContextBtn");
-    ot &&
-        ot.addEventListener("click", () => {
-            lt();
-        });
-    const it = $("cheatClearContextBtn");
-    it &&
-        it.addEventListener("click", async () => {
-            (await showConfirm(
-                "Clear all Company-Wide Context items? NPCs will forget all recent company events.",
-                "Clear Context",
-                { type: "warning", confirmText: "Clear All" }
-            )) &&
-                ((gameState.companyWideContext.currentBuzz = []),
-                lt(),
-                showNotification("🗑️ Company-Wide Context cleared!", "info"));
-        });
-    const st = $("cheatRefreshGossipBtn");
-    st &&
-        st.addEventListener("click", () => {
-            ct();
-        });
-    const rt = $("cheatClearGossipBtn");
-    function lt() {
-        const e = $("contextList"),
-            t = $("contextCountLabel");
-        if (!e || !t) return;
-        const n = gameState.companyWideContext?.currentBuzz || [];
-        if (((t.textContent = `(${n.length}/${gameState.companyWideContext?.maxItems || 40})`), 0 === n.length))
-            return void (e.innerHTML =
-                '<p style="color:var(--text-dim); text-align:center; margin:20px 0;">No context items yet</p>');
-        const a = [...n].sort((e, t) => t.timestamp - e.timestamp);
-        e.innerHTML = a
-            .map((e, t) => {
-                const n = dt(e.timestamp),
-                    a = e.juiciness || 0;
-                return `\n          <div style="background:var(--surface-2); border-radius:8px; padding:12px; margin-bottom:8px; border-left:3px solid ${a > 70 ? "var(--l-red)" : a > 40 ? "var(--l-gold)" : "var(--l-cyan)"};">\n            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:6px;">\n              <div style="flex:1;">\n                <div style="color:var(--text); font-size:0.95rem; line-height:1.4; margin-bottom:6px;">${e.info}</div>\n                <div style="display:flex; gap:12px; font-size:0.8rem; color:var(--text-dim);">\n                  <span>🔥 ${a}/100</span>\n                  <span>⏰ ${n}</span>\n                  ${e.involvedEmployees ? `<span>👥 ${e.involvedEmployees.length}</span>` : ""}\n                </div>\n              </div>\n              <button onclick="removeContextItem(${t})" style="background:var(--l-red); border:none; padding:6px 10px; border-radius:6px; color:var(--l-ink-on-fill); cursor:pointer; font-size:0.8rem; margin-left:8px;">\n                🗑️\n              </button>\n            </div>\n          </div>\n        `;
-            })
-            .join("");
-    }
-    function ct() {
-        const e = $("gossipList"),
-            t = $("gossipCountLabel");
-        if (!e || !t) return;
-        const n = gameState.employees
-            .filter((e) => "active" === e.employmentStatus)
-            .filter((e) => e.gossip && e.gossip.knownGossip && e.gossip.knownGossip.length > 0);
-        (t.textContent = `(${n.length} NPCs)`),
-            0 !== n.length
-                ? (e.innerHTML = n
-                      .map((e) => {
-                          const t = e.gossip?.knownGossip || [],
-                              n = t.length;
-                          return `\n          <div style="background:var(--surface-2); border-radius:8px; padding:12px; margin-bottom:12px; border:1px solid var(--l-pink-3);">\n            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">\n              <div style="display:flex; align-items:center; gap:10px;">\n                <img src="${e.profileImage || placeholderImage(40, 40)}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">\n                <div>\n                  <div style="color:var(--l-ink); font-weight:600;">${e.name}</div>\n                  <div style="color:var(--text-dim); font-size:0.85rem;">${n} gossip item${1 !== n ? "s" : ""}</div>\n                </div>\n              </div>\n              <button onclick="clearEmployeeGossip('${e.id}')" style="background:var(--l-red); border:none; padding:6px 12px; border-radius:6px; color:var(--l-ink-on-fill); cursor:pointer; font-size:0.8rem;">\n                Clear\n              </button>\n            </div>\n            <div style="max-height:150px; overflow-y:auto;">\n              ${t
-                                  .slice(0, 5)
-                                  .map((e) => {
-                                      const t = dt(e.timestamp || e.heardAt || Date.now());
-                                      return `\n                  <div style="background:var(--surface); border-radius:6px; padding:8px; margin-bottom:6px; border-left:2px solid ${e.juiciness > 70 ? "var(--l-red)" : e.juiciness > 40 ? "var(--l-gold)" : "var(--l-cyan)"};">\n                    <div style="color:var(--text); font-size:0.9rem; margin-bottom:4px;">${e.content || e.info || e.description || "Unknown gossip"}</div>\n                    <div style="display:flex; gap:8px; font-size:0.75rem; color:var(--text-dim);">\n                      <span>🔥 ${e.juiciness || 0}</span>\n                      <span>⏰ ${t}</span>\n                      ${e.source ? `<span>📢 ${e.source}</span>` : ""}\n                    </div>\n                  </div>\n                `;
-                                  })
-                                  .join(
-                                      ""
-                                  )}\n              ${n > 5 ? `<p style="color:var(--text-dim); font-size:0.85rem; text-align:center; margin:8px 0 0 0;">+${n - 5} more...</p>` : ""}\n            </div>\n          </div>\n        `;
-                      })
-                      .join(""))
-                : (e.innerHTML = '<p style="color:var(--text-dim); text-align:center; margin:20px 0;">No gossip yet</p>');
-    }
-    function dt(e) {
-        const t = gameState.time?.currentTime || Date.now(),
-            n = Math.floor((t - e) / 1e3);
-        if (n < 60) return `${n}s ago`;
-        const a = Math.floor(n / 60);
-        if (a < 60) return `${a}m ago`;
-        const o = Math.floor(a / 60);
-        if (o < 24) return `${o}h ago`;
-        return `${Math.floor(o / 24)}d ago`;
-    }
     function pt() {
         const e = document.getElementById("statRangeControls");
         if (!e) return;
@@ -1246,36 +711,7 @@ function setupEventListeners() {
             })
             .join("");
     }
-    rt &&
-        rt.addEventListener("click", async () => {
-            (await showConfirm(
-                "Clear all gossip from all NPCs? This will reset their knowledge of company drama.",
-                "Clear Gossip",
-                { type: "warning", confirmText: "Clear All" }
-            )) &&
-                (gameState.employees.forEach((e) => {
-                    e.gossip && (e.gossip = []);
-                }),
-                ct(),
-                showNotification("🗑️ All gossip cleared!", "info"));
-        }),
-        (window.removeContextItem = async function (e) {
-            (await showConfirm("Remove this context item?", "Remove Item", {
-                type: "warning",
-                confirmText: "Remove",
-            })) &&
-                (gameState.companyWideContext.currentBuzz.splice(e, 1),
-                lt(),
-                showNotification("Context item removed", "info"));
-        }),
-        (window.clearEmployeeGossip = function (e) {
-            const t = gameState.employees.find((t) => t.id === e);
-            t &&
-                t.gossip &&
-                t.gossip.knownGossip &&
-                ((t.gossip.knownGossip = []), ct(), showNotification(`Cleared gossip for ${t.name}`, "info"));
-        }),
-        atmosphereSlider &&
+    atmosphereSlider &&
             atmosphereValue &&
             atmosphereSlider.addEventListener("input", (e) => {
                 gameState.settings.atmosphere = parseInt(e.target.value);

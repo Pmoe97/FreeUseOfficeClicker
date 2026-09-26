@@ -7,7 +7,6 @@ commentsPlugin = {import:comments-plugin} //allows you to embed a little comment
 fullscreenButton = {import:fullscreen-button-plugin} //fullscreen functionality        
 speak = {import:text-to-speech-plugin} //text to speech capabilit        
 literal = {import:literal-plugin} // automatically put backslashes in front of curly/square brackets in some text        
-remember = {import:unsafe-rememberchange} // allows you to save variables so they're not lost when the page is reloade        
 kv = {import:kv-plugin} //allows you to store data in a way that will remain accessible after page reload/close
 backgroundImage = {import:background-image-plugin} //allows you to easily set a background image for your generator
 

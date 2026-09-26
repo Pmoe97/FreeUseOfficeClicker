@@ -705,7 +705,6 @@ async function triggerCommentMentionResponse(e, t) {
                                             saveGame(!1),
                                             n.unreadMessages || (n.unreadMessages = 0),
                                             n.unreadMessages++,
-                                            "messages" === gameState.activeTab && renderMessagesList(),
                                             showNotification(
                                                 `💬 ${n.name} sent you a private message${m ? " with a photo" : ""}!`,
                                                 "info"
@@ -1062,7 +1061,7 @@ async function triggerAutomaticNPCReactions(e) {
                                     (!r || r.length < 3) && (r = "Here's what you asked for 😉");
                             } catch (e) {
                                 console.warn("[Social DM] Message generation failed, using fallback"),
-                                    (r = "As promised �");
+                                    (r = "As promised 😏");
                             }
                             console.log(`[Social DM] Generated message: "${r}"`);
                             const l = `Analyze this social media interaction and create an image prompt.\n\nPOST REQUEST: "${t}"\nNPC'S COMMENT: "${o}"\n\nThe NPC (${n.name}) is sending a private photo. What should it show?\n\nPERSON: ${a.substring(0, 300)}\n\nCreate a detailed, explicit image prompt showing ${n.name} doing/showing EXACTLY what was requested in the post.\n\nCRITICAL RULES:\n1. Show ONLY what was actually requested in the post - read it carefully\n2. Be EXPLICIT - describe nudity, body parts, sexual acts clearly if requested\n3. If request is explicit, image must be explicit (full nudity, visible genitals, etc.)\n4. Describe the specific activity mentioned in the post\n5. Include pose, expression, setting, lighting\n6. Include ${n.name}'s physical appearance from the description above\n\nGenerate ONLY the image prompt, no explanation:`;
@@ -1135,7 +1134,6 @@ async function triggerAutomaticNPCReactions(e) {
                                 saveGame(!1),
                                 n.unreadMessages || (n.unreadMessages = 0),
                                 n.unreadMessages++,
-                                "messages" === gameState.activeTab && renderMessagesList(),
                                 showNotification(
                                     `💬 ${n.name} sent you a private message${d ? " with a photo" : ""}!`,
                                     "info"

@@ -28,7 +28,7 @@ const FLAG_DETECTION_PATTERNS = {
         contextKeywords: ["work", "office", "always", "never wear"],
         requiredOccurrences: 2,
         suggestedFlag: {
-            emoji: "�",
+            emoji: "🫣",
             key: "no_clothes",
             desc: "No Clothes at Work",
             category: "agreement",

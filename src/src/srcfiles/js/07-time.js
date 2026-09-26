@@ -20,6 +20,13 @@ const OFFLINE_TIME_SCALE = 0.5,
 function gameNow() {
     return gameState.time?.currentTime || Date.now();
 }
+// Whole in-game days (local-midnight boundaries, like getDay()). This is the unit every
+// "for N days" effect uses — unavailableUntil, disabledUntil, expiresDay, story ongoing
+// effects — via gameState.currentDay, which gameTick keeps current. (Nothing used to
+// write currentDay, so those durations compared against undefined and never ended.)
+function gameDayNumber(t = gameNow()) {
+    return Math.floor((t - 6e4 * new Date(t).getTimezoneOffset()) / 864e5);
+}
 function markPlayerPresent(t = Date.now()) {
     gameState.offlineEarnings && (gameState.offlineEarnings.lastPlayedRealTime = t);
     gameState.lastPlayTime = t;
