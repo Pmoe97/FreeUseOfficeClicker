@@ -1,0 +1,290 @@
+/* ============================================================================
+ * 05-gifts — Gifts UI: gift grid/cards/inventory, recipient sheet, craft grid
+ * ----------------------------------------------------------------------------
+ */
+
+/* ---- gift cards (store / inventory / vault) — sleek modern grid ---- */
+.fuoc-ui .gift-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr));
+    gap: var(--s3);
+    align-items: start;
+}
+.fuoc-ui .gift-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r3);
+    overflow: hidden;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.fuoc-ui .gift-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-1);
+}
+.fuoc-ui .gift-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 11;
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.6rem;
+    overflow: hidden;
+    flex: 0 0 auto;
+}
+.fuoc-ui .gift-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.fuoc-ui .gift-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+    padding: var(--s3);
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.fuoc-ui .gift-name {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fuoc-ui .gift-cat {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--s1);
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+    min-height: 16px;
+}
+.fuoc-ui .gift-desc {
+    font-size: var(--fs-xs);
+    color: var(--text-mute);
+    font-style: italic;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.fuoc-ui .gift-price-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s2);
+}
+.fuoc-ui .gift-price {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--positive);
+}
+.fuoc-ui .gift-qty {
+    font-size: var(--fs-xs);
+    color: var(--text-mute);
+}
+.fuoc-ui .gift-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+    margin-top: auto;
+    padding-top: var(--s1);
+}
+.fuoc-ui .gift-actions .row {
+    display: flex;
+    gap: var(--s1);
+}
+.fuoc-ui .gift-actions .btn {
+    min-width: 0 !important;
+}
+/* thumbnail overlays: favorite, bulk-select, rarity badge */
+.fuoc-ui .gift-thumb-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 30px;
+    height: 30px;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0;
+    border: none;
+    border-radius: var(--rpill);
+    background: var(--l-veil-45);
+    color: var(--accent-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    cursor: pointer;
+    z-index: 1;
+}
+.fuoc-ui .gift-sel-box {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    z-index: 1;
+    display: flex;
+}
+.fuoc-ui .gift-sel-box input {
+    width: 22px;
+    height: 22px;
+}
+.fuoc-ui .gift-badge {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    z-index: 1;
+    padding: 1px var(--s2);
+    border-radius: var(--rpill);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    background: var(--l-veil-50);
+    color: var(--accent-gold);
+}
+.fuoc-ui .gift-card--unique {
+    border-color: var(--accent-gold);
+}
+.fuoc-ui .gift-card--vault {
+    border-color: var(--accent-gold);
+}
+.fuoc-ui .gift-card--vault .gift-thumb {
+    box-shadow: inset 0 0 0 2px var(--accent-gold);
+}
+.fuoc-ui .gift-card--inv.is-selected {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 2px var(--accent-dim);
+}
+/* ---- inventory controls ---- */
+.fuoc-ui .gift-inv-controls {
+    margin-bottom: var(--s4);
+}
+.fuoc-ui .gift-inv-bar {
+    display: flex;
+    gap: var(--s3);
+    flex-wrap: wrap;
+    margin-bottom: var(--s3);
+}
+.fuoc-ui .gift-inv-search {
+    flex: 1 1 200px;
+    min-width: 160px;
+}
+.fuoc-ui .gift-inv-select {
+    flex: 0 1 auto;
+}
+.fuoc-ui .gift-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--s2);
+    min-height: 28px;
+}
+.fuoc-ui .gift-fav {
+    font-size: 1.15rem;
+}
+.fuoc-ui .gift-sel input {
+    width: 20px;
+    height: 20px;
+}
+.fuoc-ui .gift-bulk-bar {
+    display: flex;
+    gap: var(--s3);
+    align-items: center;
+    flex-wrap: wrap;
+    padding: var(--s3);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    margin-bottom: var(--s3);
+}
+.fuoc-ui .gift-bulk-spacer {
+    flex: 1;
+}
+/* ---- gift recipient (targeting) modal ---- */
+.fuoc-ui .gift-recipient-sheet {
+    background: var(--surface);
+    width: 95%;
+    max-width: 640px;
+    max-height: 90vh;
+    border-radius: var(--r3);
+    box-shadow: var(--sheet-shadow, 0 5px 25px var(--l-veil-50));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.fuoc-ui .gift-recipient-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--s4);
+    border-bottom: 1px solid var(--border);
+}
+.fuoc-ui .gift-recipient-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--s3);
+    padding: var(--s4);
+    overflow-y: auto;
+}
+.fuoc-ui .gift-recipient-card {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    padding: var(--s3);
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-radius: var(--r2);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.fuoc-ui .gift-recipient-card:hover {
+    border-color: var(--accent-dim);
+}
+.fuoc-ui .gift-recipient-card.is-selected {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
+.fuoc-ui .gift-recipient-card .chip {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.fuoc-ui .grc-meta {
+    min-width: 0;
+}
+.fuoc-ui .grc-name {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fuoc-ui .gift-recipient-foot {
+    padding: var(--s4);
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+}
+/* ---- gift sub-tab panes ---- */
+.fuoc-ui .gift-pane-seg {
+    margin-bottom: var(--s4);
+}
+.fuoc-ui .gift-pane[hidden] {
+    display: none;
+}
+/* ---- gift workshop (crafting) ---- */
+.fuoc-ui .grid-2-craft {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s4);
+}
+@media (max-width: 768px) {
+    .fuoc-ui .grid-2-craft {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,326 @@
+/* ============================================================================
+ * 06-capital — Capital tab: atmosphere/comp sliders, stat blocks, upgrades, cap/prestige UI
+ * ----------------------------------------------------------------------------
+ */
+
+/* ---- HR culture sliders (44px-tall hit row, 24px thumb) ---- */
+#atmosphereSlider,
+#guidelinesSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    padding: 18px 0;
+    border-radius: var(--rpill);
+    background: var(--surface-3);
+    background-clip: content-box;
+    outline: none;
+    cursor: pointer;
+}
+#atmosphereSlider::-webkit-slider-thumb,
+#guidelinesSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--surface);
+    box-shadow: var(--shadow-1);
+    cursor: pointer;
+}
+#atmosphereSlider::-moz-range-thumb,
+#guidelinesSlider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--surface);
+    cursor: pointer;
+}
+/* ---- compact slider rows (HR stats + gender/race modal) ---- */
+.fuoc-ui .comp-slider-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--s2);
+}
+.fuoc-ui .comp-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px var(--s2);
+    background: var(--surface-2);
+    border-radius: var(--r1);
+    border-left: 3px solid var(--c, var(--accent));
+    min-height: 38px;
+    min-width: 0;
+}
+.fuoc-ui .comp-lbl {
+    flex: 0 1 78px;
+    min-width: 44px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fuoc-ui .comp-row input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1 1 40px;
+    min-width: 34px;
+    height: 6px;
+    background: var(--surface-3);
+    border-radius: var(--rpill);
+    cursor: pointer;
+}
+.fuoc-ui .comp-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--c, var(--accent));
+    border: 2px solid var(--surface);
+    cursor: pointer;
+}
+.fuoc-ui .comp-row input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--c, var(--accent));
+    border: 2px solid var(--surface);
+    cursor: pointer;
+}
+.fuoc-ui .comp-arrows {
+    display: inline-flex;
+    gap: 1px;
+    flex: 0 0 auto;
+}
+.fuoc-ui .comp-arrows button {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 17px;
+    height: 30px;
+    padding: 0;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--r1);
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.fuoc-ui .comp-arrows button:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+.fuoc-ui .comp-num {
+    flex: 0 0 38px;
+    width: 38px;
+    min-width: 0 !important;
+    height: 30px;
+    padding: 2px;
+    text-align: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r1);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+}
+.fuoc-ui .comp-num::-webkit-outer-spin-button,
+.fuoc-ui .comp-num::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.fuoc-ui .stat-block {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: var(--s2) var(--s3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+}
+
+/* ---- upgrade cards (influence / permanent upgrades) ---- */
+.fuoc-ui .upg-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--r3);
+    padding: var(--s5);
+    transition: all 0.3s;
+}
+.fuoc-ui .upg-card--ready {
+    border-color: var(--accent-gold);
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(245, 197, 66, 0.2);
+}
+.fuoc-ui .upg-card--ready:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(245, 197, 66, 0.3);
+}
+
+/* ---- Capital tab (merged Upgrades / Investments) ---- */
+.fuoc-ui .upg-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+}
+.fuoc-ui .upg-row {
+    display: grid;
+    grid-template-columns: 1fr auto 132px;
+    gap: var(--s4);
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: var(--s3) var(--s4);
+    min-height: 56px;
+}
+.fuoc-ui .upg-row.is-maxed {
+    opacity: 0.65;
+}
+.fuoc-ui .upg-name {
+    font-weight: 600;
+    font-size: var(--fs-md);
+    color: var(--text);
+}
+.fuoc-ui .upg-desc {
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+    line-height: 1.35;
+}
+.fuoc-ui .upg-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--s1);
+    white-space: nowrap;
+}
+.fuoc-ui .upg-eff {
+    color: var(--text-dim);
+    font-size: var(--fs-xs);
+}
+.fuoc-ui .upg-buy,
+.fuoc-ui .upg-max {
+    width: 132px;
+    min-height: 44px;
+    justify-self: end;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.fuoc-ui .upg-max {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--positive);
+    border: 1px solid var(--positive-dim);
+    border-radius: var(--r2);
+}
+.fuoc-ui .cap-locbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s2);
+    margin-bottom: var(--s3);
+}
+.fuoc-ui .cap-locbar button {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--rpill);
+    color: var(--text-dim);
+    padding: 0 var(--s4);
+    min-height: 44px;
+    cursor: pointer;
+    font-size: var(--fs-sm);
+}
+.fuoc-ui .cap-locbar button.is-active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+}
+.fuoc-ui .cap-note {
+    color: var(--text-mute);
+    font-size: var(--fs-xs);
+    margin-left: var(--s3);
+}
+.fuoc-ui .cap-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--s3);
+    margin-bottom: var(--s4);
+}
+.fuoc-ui .cap-stat {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: var(--s3);
+    text-align: center;
+}
+.fuoc-ui .cap-stat .num {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+}
+.fuoc-ui .cap-gold {
+    color: var(--accent-gold);
+}
+.fuoc-ui .cap-prestige-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s4);
+    flex-wrap: wrap;
+}
+.fuoc-ui .cap-prestige-gain {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s2);
+}
+.fuoc-ui .cap-prestige-gain .num {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+}
+.fuoc-ui .cap-req {
+    color: var(--warning);
+    font-size: var(--fs-sm);
+    margin-top: var(--s2);
+    min-height: 1em;
+}
+.fuoc-ui .biz-bulkbar {
+    margin-bottom: var(--s2);
+}
+.fuoc-ui .biz-bulkbar .btn {
+    min-height: 44px;
+}
+.fuoc-ui .cap-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    margin-left: var(--s2);
+    vertical-align: middle;
+}
+@media (max-width: 768px) {
+    .fuoc-ui .upg-row {
+        grid-template-columns: 1fr;
+    }
+    .fuoc-ui .upg-state {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .fuoc-ui .upg-buy,
+    .fuoc-ui .upg-max {
+        width: 100%;
+        justify-self: stretch;
+    }
+    .fuoc-ui .cap-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    #capitalSeg {
+        width: 100%;
+    }
+}

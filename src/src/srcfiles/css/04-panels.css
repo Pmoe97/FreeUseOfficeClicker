@@ -1,0 +1,183 @@
+/* ============================================================================
+ * 04-panels — Panel/subpanel layout, mini-cards, form fields, buttons, scroll areas
+ * ----------------------------------------------------------------------------
+ */
+
+/* ============================================================
+ FUOC COMPONENTS — TAB CONTENT, FORMS & UTILITIES
+ Inline-style extraction layer (scoped to .fuoc-ui). Reuses the
+ existing dashboard components above (card, tile, btn, band,
+ page-h, sev and sig variants); adds the general surfaces, form
+ controls, text/label helpers and layout utilities the rest of
+ the tabs need so their 4600+ inline styles can be replaced by
+ classes/tokens. A tab opts in by adding fuoc-ui to its container.
+ ============================================================ */
+
+/* ---- surfaces ---- */
+.fuoc-ui .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r3);
+    padding: var(--s5);
+    margin-bottom: var(--s4);
+}
+.fuoc-ui .panel:last-child {
+    margin-bottom: 0;
+}
+.fuoc-ui .subpanel {
+    background: var(--surface-2);
+    border-radius: var(--r2);
+    padding: var(--s4);
+    margin-bottom: var(--s3);
+}
+.fuoc-ui .subpanel:last-child {
+    margin-bottom: 0;
+}
+.fuoc-ui .subpanel--accent {
+    border-left: 3px solid var(--accent);
+}
+.fuoc-ui .subpanel--danger {
+    background: var(--danger-dim);
+    border: 1px solid var(--danger);
+}
+.fuoc-ui .subpanel--gold {
+    border-left: 3px solid var(--accent-gold);
+}
+.fuoc-ui .mini-card {
+    background: var(--surface);
+    border-radius: var(--r2);
+    padding: 8px;
+}
+.fuoc-ui .fv-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.fuoc-ui .cb-accent {
+    accent-color: var(--accent);
+}
+
+/* ---- buttons (extends .btn above) ---- */
+.fuoc-ui .btn--lg {
+    min-height: 42px;
+    padding: 0 18px;
+    font-size: var(--fs-sm);
+}
+.fuoc-ui .btn--pos {
+    background: var(--positive);
+    color: var(--l-on-accent);
+}
+.fuoc-ui .btn--pos:hover {
+    filter: brightness(1.08);
+}
+.fuoc-ui .btn--gold {
+    background: var(--accent-gold);
+    color: var(--l-on-accent);
+}
+.fuoc-ui .btn--gold:hover {
+    filter: brightness(1.08);
+}
+.fuoc-ui .btn--outline {
+    background: transparent;
+    border: 2px solid var(--btn-edge, var(--border-strong));
+    color: var(--text);
+}
+.fuoc-ui .policy-btn.active {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--l-ink-on-fill);
+}
+
+/* ---- scroll containers ---- */
+.fuoc-ui .scroll-y {
+    overflow-y: auto;
+    max-height: 300px;
+}
+.fuoc-ui .scroll-y--sm {
+    max-height: 200px;
+}
+
+/* ---- empty-state note ---- */
+.fuoc-ui .empty-note {
+    padding: var(--s5);
+    text-align: center;
+    color: var(--text-mute);
+    font-size: var(--fs-sm);
+    font-style: italic;
+}
+
+/* ---- headings & labels ---- */
+.fuoc-ui .section-title {
+    margin: 0 0 var(--s4);
+    color: var(--title-color, var(--accent-gold));
+    font-size: var(--fs-lg);
+    font-weight: 700;
+}
+.fuoc-ui .field-label {
+    display: block;
+    margin-bottom: var(--s2);
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+}
+.fuoc-ui .field-label--sm {
+    font-size: var(--fs-xs);
+    margin-bottom: var(--s1);
+}
+
+/* ---- form controls ---- */
+.fuoc-ui .input,
+.fuoc-ui .select,
+.fuoc-ui .textarea {
+    width: 100%;
+    padding: var(--s2) var(--s3);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r1);
+    color: var(--text);
+    font-size: var(--fs-sm);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.fuoc-ui .input:focus,
+.fuoc-ui .select:focus,
+.fuoc-ui .textarea:focus {
+    border-color: var(--accent);
+}
+.fuoc-ui .textarea {
+    resize: vertical;
+    min-height: 70px;
+}
+.fuoc-ui .input--lg {
+    padding: 15px;
+    font-size: 1.1rem;
+    border-radius: var(--r3);
+}
+.fuoc-ui .input-ghost {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    color: var(--text-mute);
+    font-size: 1.1rem;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.fuoc-ui .img-square {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--surface);
+    border-radius: var(--r3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+}
+.fuoc-ui .img-fill {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--r3);
+}

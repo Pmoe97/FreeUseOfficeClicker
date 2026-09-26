@@ -1,0 +1,59 @@
+/* ============================================================================
+ * 08-utilities — Layout & text utilities: rows/cols/grid, spacing, text sizes/colors
+ * ----------------------------------------------------------------------------
+ */
+
+/* ---- layout utilities ---- */
+.fuoc-ui .row { display: flex; align-items: center; gap: var(--s2); }
+.fuoc-ui .row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+.fuoc-ui .row-top { align-items: flex-start; }
+.fuoc-ui .col { display: flex; flex-direction: column; gap: var(--s3); }
+.fuoc-ui .wrap { flex-wrap: wrap; }
+.fuoc-ui .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5); }
+.fuoc-ui .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--s3); }
+.fuoc-ui .w-full { width: 100%; }
+.fuoc-ui .w-auto { width: auto; }
+.fuoc-ui .flex-1 { flex: 1; }
+.fuoc-ui .items-center { align-items: center; }
+.fuoc-ui .items-start { align-items: flex-start; }
+.fuoc-ui .justify-center { justify-content: center; }
+.fuoc-ui .text-center { text-align: center; }
+.fuoc-ui .text-right { text-align: right; }
+
+/* ---- spacing utilities (token scale) ---- */
+.fuoc-ui .mt-0 { margin-top: 0; }
+.fuoc-ui .mt-1 { margin-top: var(--s2); }
+.fuoc-ui .mt-2 { margin-top: var(--s4); }
+.fuoc-ui .mt-3 { margin-top: var(--s5); }
+.fuoc-ui .mb-0 { margin-bottom: 0; }
+.fuoc-ui .mb-1 { margin-bottom: var(--s2); }
+.fuoc-ui .mb-2 { margin-bottom: var(--s4); }
+.fuoc-ui .mb-3 { margin-bottom: var(--s5); }
+
+/* ---- text utilities ---- */
+.fuoc-ui .text-dim { color: var(--text-dim); }
+.fuoc-ui .text-mute { color: var(--text-mute); }
+.fuoc-ui .text-body { color: var(--text); }
+.fuoc-ui .text-accent { color: var(--accent); }
+.fuoc-ui .text-pos { color: var(--positive); }
+.fuoc-ui .text-neg { color: var(--danger); }
+.fuoc-ui .text-gold { color: var(--accent-gold); }
+.fuoc-ui .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fuoc-ui .italic { font-style: italic; }
+.fuoc-ui .fw-600 { font-weight: 600; }
+.fuoc-ui .fw-700 { font-weight: 700; }
+.fuoc-ui .fs-xs { font-size: var(--fs-xs); }
+.fuoc-ui .fs-sm { font-size: var(--fs-sm); }
+.fuoc-ui .fs-md { font-size: var(--fs-md); }
+.fuoc-ui .fs-lg { font-size: var(--fs-lg); }
+.fuoc-ui .fs-xl { font-size: var(--fs-xl); }
+
+/* General styles */
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--l-bg);
+    color: var(--l-ink);
+    overflow-x: hidden;
+    transition: background 1s ease-in-out;
+}

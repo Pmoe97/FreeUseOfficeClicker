@@ -1,0 +1,169 @@
+/* ============================================================================
+ * 00-keyframes — Global shared keyframes (pulse, shake, damageFloat, flash*) — was the first <style> block
+ * ----------------------------------------------------------------------------
+ */
+
+/* Boss Fight Animations */
+@keyframes pulse {
+    0%,
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+@keyframes shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes damageFloat {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(1.5);
+    }
+}
+
+@keyframes flashRed {
+    0%,
+    100% {
+        background: transparent;
+    }
+    50% {
+        background: rgba(233, 69, 96, 0.3);
+    }
+}
+
+@keyframes flashYellow {
+    0%,
+    100% {
+        background: transparent;
+    }
+    50% {
+        background: rgba(241, 196, 15, 0.3);
+    }
+}
+
+@keyframes flashPurple {
+    0%,
+    100% {
+        background: transparent;
+    }
+    50% {
+        background: rgba(155, 89, 182, 0.3);
+    }
+}
+
+@keyframes buttonPressAnim {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.95);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Button hover/active states */
+#combatActions button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+#combatActions button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+#combatActions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Special button ready state */
+#specialBtn.ready {
+    background: linear-gradient(135deg, var(--l-gold) 0%, var(--l-x-orange) 100%) !important;
+    color: var(--l-on-accent) !important;
+    cursor: pointer !important;
+    animation: pulse 1s infinite;
+}
+
+/* Attack indicator colors */
+.indicator-yellow {
+    color: var(--l-yellow-2);
+}
+.indicator-red {
+    color: var(--danger);
+}
+.indicator-purple {
+    color: var(--l-violet-2);
+}
+.indicator-green {
+    color: var(--l-green-3);
+}
+
+/* Correct/Wrong response flash */
+.correct-response {
+    animation: flashGreen 0.3s ease;
+}
+
+.wrong-response {
+    animation: flashRed 0.3s ease;
+}
+
+@keyframes flashGreen {
+    0%,
+    100% {
+        box-shadow: 0 0 0 transparent;
+    }
+    50% {
+        box-shadow: 0 0 30px var(--l-green-3);
+    }
+}
+
+/* Mobile touch feedback */
+@media (hover: none) {
+    #combatActions button:active {
+        transform: scale(0.92);
+        filter: brightness(0.9);
+    }
+}
+
+/* High contrast mode for accessibility */
+.high-contrast-indicators #attackTypeIcon {
+    font-size: 5rem;
+    -webkit-text-stroke: 2px white;
+}
+
+.high-contrast-indicators #reactionTimerBar {
+    background: var(--l-ink);
+}
+
+/* Larger buttons option */
+.larger-buttons #combatActions {
+    gap: 12px;
+}
+
+.larger-buttons #combatActions button {
+    padding: 20px 15px;
+    font-size: 1.1rem;
+}
+
+.larger-buttons #combatActions button span:first-child {
+    font-size: 2rem;
+}

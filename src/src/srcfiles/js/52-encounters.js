@@ -1,0 +1,5595 @@
+// ============================================================================
+// 52-encounters — Encounter system: act catalog SexualActsDB, activeEncounter, skills, positions, combat acts, narration, image gen, request flow.
+// ----------------------------------------------------------------------------
+// Loaded in order by index.html; every file shares one global scope. Code that
+// runs at LOAD time may only use names declared in this file or an earlier one
+// (function hoisting does not cross files). Do not reorder these files.
+// ============================================================================
+
+const SexualActsDB = {
+        Oral_Penis_G_Tease: {
+            label: "Tease With Mouth",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_penis",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 1, object: 8 },
+            preferenceTags: ["Oral_R", "Penis"],
+            inclinationTags: ["tease", "service"],
+            togglable: !0,
+        },
+        Oral_Penis_G_Suck: {
+            label: "Suck Their Cock",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_penis",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 2, object: 15 },
+            preferenceTags: ["Oral_R", "Penis"],
+            inclinationTags: ["submission", "service"],
+            togglable: !0,
+        },
+        Oral_Penis_G_Deepthroat: {
+            label: "Deepthroat",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_penis",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["penis"],
+            skillsRequired: { oral: 3 },
+            baseExcitement: { subject: 3, object: 20 },
+            preferenceTags: ["Oral_R", "Penis", "Throatplay"],
+            inclinationTags: ["submission", "service", "roughplay"],
+            togglable: !0,
+        },
+        Oral_Vagina_G_Tease: {
+            label: "Tease With Tongue",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_vagina",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 1, object: 10 },
+            preferenceTags: ["Oral_R", "Vagina"],
+            inclinationTags: ["tease", "service"],
+            togglable: !0,
+        },
+        Oral_Vagina_G: {
+            label: "Eat Them Out",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_vagina",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 2, object: 16 },
+            preferenceTags: ["Oral_R", "Vagina"],
+            inclinationTags: ["service"],
+            togglable: !0,
+        },
+        Oral_Anal_G: {
+            label: "Rimjob",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_anal",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 1, object: 12 },
+            preferenceTags: ["Oral_R", "AnalPlay"],
+            inclinationTags: ["service", "kink"],
+            togglable: !0,
+        },
+        FaceSit_G: {
+            label: "Sit On Their Face",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "facesit",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina", "anus"],
+            objectParts: ["mouth"],
+            baseExcitement: { subject: 12, object: 6 },
+            preferenceTags: ["Oral_G", "FaceSitting", "Dominance"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        Anal_G_Tease: {
+            label: "Tease Their Ass",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "anal_give",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis", "fingers"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 2, object: 6 },
+            preferenceTags: ["AnalPlay"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Anal_G_Penetrate: {
+            label: "Fuck Their Ass",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "anal_give",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["anus"],
+            canTakeVirginity: !0,
+            baseExcitement: { subject: 7, object: 10 },
+            preferenceTags: ["AnalPlay", "Penetration_R"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        Anal_G_Pound: {
+            label: "Pound Their Ass",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "anal_give",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["anus"],
+            canTakeVirginity: !0,
+            skillsRequired: { anal: 2 },
+            baseExcitement: { subject: 11, object: 14 },
+            preferenceTags: ["AnalPlay", "Penetration_R", "Roughplay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !0,
+        },
+        Vaginal_G_Tease: {
+            label: "Tease Their Pussy",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "vaginal_give",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 2, object: 8 },
+            preferenceTags: ["Penetration_R", "Vagina"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Vaginal_G_Penetrate: {
+            label: "Fuck Them",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "vaginal_give",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["vagina"],
+            canTakeVirginity: !0,
+            baseExcitement: { subject: 8, object: 14 },
+            preferenceTags: ["Penetration_R", "Vagina"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        Vaginal_G_Pound: {
+            label: "Pound Them Hard",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "vaginal_give",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["vagina"],
+            canTakeVirginity: !0,
+            skillsRequired: { penetration: 2 },
+            baseExcitement: { subject: 11, object: 18 },
+            preferenceTags: ["Penetration_R", "Vagina", "Roughplay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !0,
+        },
+        Handjob_Penis_G_Tease: {
+            label: "Tease Their Cock",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "hj_penis",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 1, object: 7 },
+            preferenceTags: ["Manual_R", "Penis"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Handjob_Penis_G: {
+            label: "Stroke Their Cock",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "hj_penis",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 1, object: 12 },
+            preferenceTags: ["Manual_R", "Penis"],
+            inclinationTags: ["service"],
+            togglable: !0,
+        },
+        Handjob_Clit_G_Tease: {
+            label: "Tease Their Clit",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "hj_clit",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["clitoris"],
+            baseExcitement: { subject: 1, object: 8 },
+            preferenceTags: ["Manual_R", "Vagina"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Handjob_Clit_G: {
+            label: "Rub Their Clit",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "hj_clit",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["clitoris"],
+            baseExcitement: { subject: 1, object: 14 },
+            preferenceTags: ["Manual_R", "Vagina"],
+            inclinationTags: ["service"],
+            togglable: !0,
+        },
+        Fingering_Vagina_G_Tease: {
+            label: "Finger-Tease Them",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "finger_vagina",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["fingers"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 1, object: 8 },
+            preferenceTags: ["Manual_R", "Vagina"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Fingering_Vagina_G: {
+            label: "Finger Them",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "finger_vagina",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["fingers"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 1, object: 14 },
+            preferenceTags: ["Manual_R", "Vagina"],
+            inclinationTags: ["service"],
+            togglable: !0,
+        },
+        Fingering_Anal_G: {
+            label: "Finger Their Ass",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "finger_anal",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["fingers"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 1, object: 10 },
+            preferenceTags: ["Manual_R", "AnalPlay"],
+            inclinationTags: ["kink"],
+            togglable: !0,
+        },
+        BreastPlay_G: {
+            label: "Play With Breasts",
+            category: "Breast",
+            actionType: "manual",
+            stageGroup: "breast_play",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands", "mouth"],
+            objectParts: ["breasts"],
+            baseExcitement: { subject: 2, object: 8 },
+            preferenceTags: ["BreastPlay"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        NipplePlay_G: {
+            label: "Tease Nipples",
+            category: "Breast",
+            actionType: "manual",
+            stageGroup: "nipple_play",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands", "mouth"],
+            objectParts: ["nipples"],
+            baseExcitement: { subject: 1, object: 10 },
+            preferenceTags: ["BreastPlay", "NipplePlay"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Boobjob_G_Tease: {
+            label: "Boobjob Tease",
+            category: "Breast",
+            actionType: "breast",
+            stageGroup: "boobjob",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["breasts"],
+            baseExcitement: { subject: 6, object: 3 },
+            preferenceTags: ["BreastPlay", "Penis"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Boobjob_G: {
+            label: "Boobjob",
+            category: "Breast",
+            actionType: "breast",
+            stageGroup: "boobjob",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["breasts"],
+            baseExcitement: { subject: 10, object: 4 },
+            preferenceTags: ["BreastPlay", "Penis"],
+            inclinationTags: ["service"],
+            togglable: !0,
+        },
+        Footjob_Penis_G_Tease: {
+            label: "Foot Tease (Cock)",
+            category: "Feet",
+            actionType: "feet",
+            stageGroup: "footjob_penis",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["feet"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["FootPlay", "Penis"],
+            inclinationTags: ["tease", "kink"],
+            togglable: !0,
+        },
+        Footjob_Penis_G: {
+            label: "Footjob",
+            category: "Feet",
+            actionType: "feet",
+            stageGroup: "footjob_penis",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["feet"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 3, object: 10 },
+            preferenceTags: ["FootPlay", "Penis"],
+            inclinationTags: ["kink", "service"],
+            togglable: !0,
+        },
+        Footjob_Vagina_G_Tease: {
+            label: "Foot Tease (Pussy)",
+            category: "Feet",
+            actionType: "feet",
+            stageGroup: "footjob_vagina",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["feet"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["FootPlay", "Vagina"],
+            inclinationTags: ["tease", "kink"],
+            togglable: !0,
+        },
+        Footjob_Vagina_G: {
+            label: "Footjob (Pussy)",
+            category: "Feet",
+            actionType: "feet",
+            stageGroup: "footjob_vagina",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["feet"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 3, object: 10 },
+            preferenceTags: ["FootPlay", "Vagina"],
+            inclinationTags: ["kink", "service"],
+            togglable: !0,
+        },
+        Dominate: {
+            label: "Dominate Them",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "domination",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 5, object: 6 },
+            preferenceTags: ["Dominance", "SubPlay"],
+            inclinationTags: ["dominance"],
+            togglable: !1,
+        },
+        Submit: {
+            label: "Submit To Them",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "submission",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 6, object: 5 },
+            preferenceTags: ["Submission", "DomPlay"],
+            inclinationTags: ["submission"],
+            togglable: !1,
+        },
+        Spank_G: {
+            label: "Spank Them",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "spanking",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["buttocks"],
+            baseExcitement: { subject: 4, object: 7 },
+            preferenceTags: ["Spanking", "SubPlay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !1,
+        },
+        HairPulling_G: {
+            label: "Pull Their Hair",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "hairpull",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["hair"],
+            baseExcitement: { subject: 3, object: 6 },
+            preferenceTags: ["HairPulling", "SubPlay", "Roughplay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !1,
+        },
+        Choke_G: {
+            label: "Choke Them (Light)",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "choking",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["throat"],
+            baseExcitement: { subject: 4, object: 8 },
+            preferenceTags: ["Choking", "SubPlay", "Roughplay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !1,
+        },
+        Bondage_G: {
+            label: "Bind Them",
+            category: "Bondage",
+            actionType: "bondage",
+            stageGroup: "bondage",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            objectParts: ["wrists"],
+            baseExcitement: { subject: 4, object: 5 },
+            preferenceTags: ["Bondage", "SubPlay"],
+            inclinationTags: ["dominance", "kink"],
+            togglable: !1,
+        },
+        Gag_G: {
+            label: "Gag Them",
+            category: "Bondage",
+            actionType: "bondage",
+            stageGroup: "gagging",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            objectParts: ["mouth"],
+            baseExcitement: { subject: 3, object: 4 },
+            preferenceTags: ["Gagging", "SubPlay"],
+            inclinationTags: ["dominance", "kink"],
+            togglable: !1,
+        },
+        Blindfold_G: {
+            label: "Blindfold Them",
+            category: "Bondage",
+            actionType: "bondage",
+            stageGroup: "blindfold",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            objectParts: ["eyes"],
+            baseExcitement: { subject: 3, object: 6 },
+            preferenceTags: ["Sensory", "SubPlay"],
+            inclinationTags: ["dominance", "kink"],
+            togglable: !1,
+        },
+        Toys_Use: {
+            label: "Use A Toy",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "toys",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["toy"],
+            objectParts: ["vagina", "anus"],
+            baseExcitement: { subject: 2, object: 12 },
+            preferenceTags: ["Toys"],
+            inclinationTags: ["kink"],
+            togglable: !0,
+        },
+        WaxPlay_G: {
+            label: "Drip Wax",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "waxplay",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["candle"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 3, object: 7 },
+            preferenceTags: ["WaxPlay", "PainPlay"],
+            inclinationTags: ["dominance", "kink"],
+            togglable: !1,
+        },
+        DirtyTalk_G: {
+            label: "Talk Dirty",
+            category: "Verbal",
+            actionType: "verbal",
+            stageGroup: "dirtytalk",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["DirtyTalk"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !1,
+        },
+        Praise_G: {
+            label: "Praise Them",
+            category: "Verbal",
+            actionType: "verbal",
+            stageGroup: "praise",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 1, object: 4 },
+            preferenceTags: ["Praise", "Emotional"],
+            inclinationTags: ["service", "emotional"],
+            togglable: !1,
+        },
+        Degrade_G: {
+            label: "Degrade Them",
+            category: "Verbal",
+            actionType: "verbal",
+            stageGroup: "degradation",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 3, object: 6 },
+            preferenceTags: ["Degradation", "SubPlay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !1,
+        },
+        Kissing: {
+            label: "Kiss Them",
+            category: "Emotional",
+            actionType: "emotional",
+            stageGroup: "kissing",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["mouth"],
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["Kissing", "Emotional"],
+            inclinationTags: ["emotional", "romantic"],
+            togglable: !1,
+        },
+        Cuddling: {
+            label: "Hold Them Close",
+            category: "Emotional",
+            actionType: "emotional",
+            stageGroup: "cuddling",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["body"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 2, object: 4 },
+            preferenceTags: ["Cuddling", "Emotional"],
+            inclinationTags: ["emotional", "romantic"],
+            togglable: !1,
+        },
+        Edge_G: {
+            label: "Edge Them",
+            category: "SceneControl",
+            actionType: "control",
+            stageGroup: "edging",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 2, object: -5 },
+            preferenceTags: ["Edging", "OrgasmControl"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !1,
+        },
+        Player_Cum_Anal_Inside: {
+            label: "Cum In Ass",
+            category: "Orgasm",
+            actionType: "orgasm",
+            stageGroup: "orgasm_player",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 25, object: 8 },
+            preferenceTags: ["Creampie", "AnalPlay"],
+            togglable: !1,
+        },
+        Player_Cum_Vaginal_Inside: {
+            label: "Cum Inside",
+            category: "Orgasm",
+            actionType: "orgasm",
+            stageGroup: "orgasm_player",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 25, object: 10 },
+            preferenceTags: ["Creampie", "Vagina"],
+            togglable: !1,
+        },
+        Player_Cum_On_Face: {
+            label: "Cum On Face",
+            category: "Orgasm",
+            actionType: "orgasm",
+            stageGroup: "orgasm_player",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["face"],
+            baseExcitement: { subject: 22, object: 5 },
+            preferenceTags: ["Facial", "SubPlay"],
+            inclinationTags: ["dominance"],
+            togglable: !1,
+        },
+        Player_Cum_On_Body: {
+            label: "Cum On Body",
+            category: "Orgasm",
+            actionType: "orgasm",
+            stageGroup: "orgasm_player",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 20, object: 4 },
+            preferenceTags: ["BodyCum"],
+            togglable: !1,
+        },
+        Player_Cum_In_Mouth: {
+            label: "Cum In Mouth",
+            category: "Orgasm",
+            actionType: "orgasm",
+            stageGroup: "orgasm_player",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["mouth"],
+            baseExcitement: { subject: 24, object: 6 },
+            preferenceTags: ["Oral_R", "Swallowing"],
+            inclinationTags: ["submission"],
+            togglable: !1,
+        },
+        Player_Orgasm_Riding: {
+            label: "Cum While Riding",
+            category: "Orgasm",
+            actionType: "orgasm",
+            stageGroup: "orgasm_player_f",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 25, object: 12 },
+            preferenceTags: ["Penetration_R", "Vagina"],
+            inclinationTags: ["dominance"],
+            togglable: !1,
+        },
+        Player_Orgasm_Oral: {
+            label: "Cum On Their Tongue",
+            category: "Orgasm",
+            actionType: "orgasm",
+            stageGroup: "orgasm_player_f",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina", "clitoris"],
+            objectParts: ["mouth"],
+            baseExcitement: { subject: 24, object: 6 },
+            preferenceTags: ["Oral_G", "Vagina"],
+            inclinationTags: ["dominance"],
+            togglable: !1,
+        },
+        Player_Orgasm_Fingered: {
+            label: "Cum On Their Fingers",
+            category: "Orgasm",
+            actionType: "orgasm",
+            stageGroup: "orgasm_player_f",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina", "clitoris"],
+            objectParts: ["fingers"],
+            baseExcitement: { subject: 22, object: 5 },
+            preferenceTags: ["Manual_G", "Vagina"],
+            inclinationTags: ["service"],
+            togglable: !1,
+        },
+        Player_Orgasm_Squirt: {
+            label: "Squirt",
+            category: "Orgasm",
+            actionType: "orgasm",
+            stageGroup: "orgasm_player_f",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 26, object: 8 },
+            preferenceTags: ["Vagina"],
+            inclinationTags: [],
+            togglable: !1,
+        },
+        Grind_G: {
+            label: "Grind Against Them",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "grind",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["body"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 3, object: 5 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Neck_Kiss_G: {
+            label: "Kiss Their Neck",
+            category: "Emotional",
+            actionType: "emotional",
+            stageGroup: "neck_kiss",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["neck"],
+            baseExcitement: { subject: 2, object: 6 },
+            preferenceTags: ["Kissing", "Emotional", "Tease"],
+            inclinationTags: ["romantic", "tease"],
+            togglable: !1,
+        },
+        Bite_Neck_G: {
+            label: "Bite Their Neck",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "bite_neck",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["neck"],
+            baseExcitement: { subject: 4, object: 7 },
+            preferenceTags: ["Roughplay", "PainPlay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !1,
+        },
+        Scratch_G: {
+            label: "Scratch Their Back",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "scratch",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["Roughplay", "PainPlay"],
+            inclinationTags: ["roughplay"],
+            togglable: !1,
+        },
+        Ass_Grope_G: {
+            label: "Grope Their Ass",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "ass_grope",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["buttocks"],
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["Tease", "Manual_R"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        Thigh_Tease_G: {
+            label: "Tease Their Thighs",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "thigh_tease",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands"],
+            objectParts: ["thighs"],
+            baseExcitement: { subject: 1, object: 5 },
+            preferenceTags: ["Tease", "Manual_R"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        Ear_Whisper_G: {
+            label: "Whisper In Their Ear",
+            category: "Verbal",
+            actionType: "verbal",
+            stageGroup: "ear_whisper",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["DirtyTalk", "Emotional", "Tease"],
+            inclinationTags: ["tease", "romantic"],
+            togglable: !1,
+        },
+        Beg_G: {
+            label: "Beg Them",
+            category: "Verbal",
+            actionType: "verbal",
+            stageGroup: "beg",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 3, object: 5 },
+            preferenceTags: ["Submission", "SubPlay", "Emotional"],
+            inclinationTags: ["submission"],
+            togglable: !1,
+        },
+        Command_G: {
+            label: "Command Them",
+            category: "Verbal",
+            actionType: "verbal",
+            stageGroup: "command",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 3, object: 5 },
+            preferenceTags: ["Dominance", "DomPlay"],
+            inclinationTags: ["dominance"],
+            togglable: !1,
+        },
+        Tease_Denial_G: {
+            label: "Tease & Deny",
+            category: "SceneControl",
+            actionType: "control",
+            stageGroup: "tease_denial",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 3, object: -3 },
+            preferenceTags: ["Tease", "OrgasmControl", "Edging"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !1,
+        },
+        Straddle_G: {
+            label: "Straddle Them",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "straddle",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["body"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["Tease", "Dominance"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !0,
+        },
+        Lap_Dance_G: {
+            label: "Lap Dance",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "lap_dance",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["body"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 3, object: 8 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Mark_Hickey_G: {
+            label: "Leave A Hickey",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "hickey",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["neck"],
+            baseExcitement: { subject: 3, object: 5 },
+            preferenceTags: ["Roughplay", "Tease"],
+            inclinationTags: ["dominance"],
+            togglable: !1,
+        },
+        Ice_Play_G: {
+            label: "Ice Play",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "ice_play",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            objectParts: ["body"],
+            baseExcitement: { subject: 2, object: 7 },
+            preferenceTags: ["Sensory", "PainPlay"],
+            inclinationTags: ["dominance", "kink"],
+            togglable: !1,
+        },
+        Mirror_Watch_G: {
+            label: "Watch In Mirror",
+            category: "Emotional",
+            actionType: "emotional",
+            stageGroup: "mirror",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 4, object: 5 },
+            preferenceTags: ["Tease", "Emotional"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        Neck_Kiss_NPC: {
+            label: "They Kiss Your Neck",
+            category: "Emotional",
+            actionType: "emotional",
+            stageGroup: "neck_kiss_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["mouth"],
+            objectParts: ["neck"],
+            baseExcitement: { subject: 2, object: 6 },
+            preferenceTags: ["Kissing", "Emotional"],
+            inclinationTags: ["romantic", "tease"],
+            togglable: !1,
+        },
+        Bite_Neck_NPC: {
+            label: "They Bite Your Neck",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "bite_neck_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["mouth"],
+            objectParts: ["neck"],
+            baseExcitement: { subject: 2, object: 7 },
+            preferenceTags: ["Roughplay", "DomPlay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !1,
+        },
+        Grind_NPC: {
+            label: "They Grind On You",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "grind_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["body"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 3, object: 5 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Straddle_NPC: {
+            label: "They Straddle You",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "straddle_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["body"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["Tease", "DomPlay"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !0,
+        },
+        Tease_Whisper_NPC: {
+            label: "They Whisper Filth",
+            category: "Verbal",
+            actionType: "verbal",
+            stageGroup: "whisper_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["DirtyTalk", "Tease"],
+            inclinationTags: ["tease", "dominance"],
+            togglable: !1,
+        },
+        Scratch_NPC: {
+            label: "They Scratch Your Back",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "scratch_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["hands"],
+            objectParts: ["body"],
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["Roughplay"],
+            inclinationTags: ["roughplay"],
+            togglable: !1,
+        },
+        Oral_Penis_NPC_Tease: {
+            label: "They Tease Your Cock",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_penis_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["mouth"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 2, object: 8 },
+            preferenceTags: ["Oral_G", "Penis"],
+            inclinationTags: ["service", "tease"],
+            togglable: !0,
+        },
+        Oral_Penis_NPC_Suck: {
+            label: "They Suck You Off",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_penis_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["mouth"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 3, object: 15 },
+            preferenceTags: ["Oral_G", "Penis"],
+            inclinationTags: ["service", "submission"],
+            togglable: !0,
+        },
+        Oral_Penis_NPC_Deepthroat: {
+            label: "They Take You Deep",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_penis_npc",
+            stageLevel: 2,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["mouth", "throat"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 4, object: 18 },
+            preferenceTags: ["Oral_G", "Penis", "DomPlay"],
+            inclinationTags: ["service", "dominance", "submission"],
+            togglable: !0,
+        },
+        Oral_Vagina_NPC_Tease: {
+            label: "They Tease You With Their Mouth",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_vagina_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["mouth"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 2, object: 8 },
+            preferenceTags: ["Oral_G", "Vagina", "Tease"],
+            inclinationTags: ["service", "tease"],
+            togglable: !0,
+        },
+        Oral_Vagina_NPC: {
+            label: "They Eat You Out",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_vagina_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["mouth"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 2, object: 16 },
+            preferenceTags: ["Oral_G", "Vagina"],
+            inclinationTags: ["service"],
+            togglable: !0,
+        },
+        FaceSit_NPC: {
+            label: "They Sit On Your Face",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "facesit_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["vagina", "anus"],
+            objectParts: ["mouth"],
+            baseExcitement: { subject: 12, object: 6 },
+            preferenceTags: ["FaceSitting", "DomPlay"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        Handjob_Penis_NPC_Tease: {
+            label: "They Tease Your Cock",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "hj_penis_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["hands"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 1, object: 7 },
+            preferenceTags: ["Manual_G", "Penis"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Handjob_Penis_NPC: {
+            label: "They Stroke You",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "hj_penis_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["hands"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 1, object: 12 },
+            preferenceTags: ["Manual_G", "Penis"],
+            inclinationTags: ["service"],
+            togglable: !0,
+        },
+        Fingering_Vagina_NPC: {
+            label: "They Finger You",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "finger_vagina_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["fingers"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 1, object: 14 },
+            preferenceTags: ["Manual_G", "Vagina"],
+            inclinationTags: ["service"],
+            togglable: !0,
+        },
+        Handjob_Clit_NPC: {
+            label: "They Rub Your Clit",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "hj_clit_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["hands"],
+            objectParts: ["clitoris"],
+            baseExcitement: { subject: 1, object: 14 },
+            preferenceTags: ["Manual_G", "Vagina"],
+            inclinationTags: ["service"],
+            togglable: !0,
+        },
+        BreastPlay_NPC: {
+            label: "They Play With You",
+            category: "Breast",
+            actionType: "manual",
+            stageGroup: "breast_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["hands", "mouth"],
+            objectParts: ["breasts"],
+            baseExcitement: { subject: 2, object: 8 },
+            preferenceTags: ["BreastPlay"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Anal_NPC_Penetrate: {
+            label: "They Fuck Your Ass",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "anal_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["anus"],
+            canTakeVirginity: !0,
+            baseExcitement: { subject: 7, object: 10 },
+            preferenceTags: ["AnalPlay", "Penetration_G"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        Vaginal_NPC_Penetrate: {
+            label: "They Fuck You",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "vaginal_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["vagina"],
+            canTakeVirginity: !0,
+            baseExcitement: { subject: 8, object: 14 },
+            preferenceTags: ["Penetration_G", "Vagina"],
+            togglable: !0,
+        },
+        Vaginal_NPC_Pound: {
+            label: "They Pound You Hard",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "vaginal_npc",
+            stageLevel: 2,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["vagina"],
+            canTakeVirginity: !1,
+            skillsRequired: {},
+            baseExcitement: { subject: 11, object: 18 },
+            preferenceTags: ["Penetration_G", "Vagina", "Roughplay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !0,
+        },
+        Anal_NPC_Pound: {
+            label: "They Pound Your Ass",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "anal_npc",
+            stageLevel: 2,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["anus"],
+            canTakeVirginity: !1,
+            skillsRequired: {},
+            baseExcitement: { subject: 11, object: 18 },
+            preferenceTags: ["AnalPlay", "Penetration_G", "Roughplay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !0,
+        },
+        Dominate_NPC: {
+            label: "They Dominate You",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "dom_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            baseExcitement: { subject: 5, object: 6 },
+            preferenceTags: ["DomPlay", "Dominance"],
+            inclinationTags: ["dominance"],
+            togglable: !1,
+        },
+        Spank_NPC: {
+            label: "They Spank You",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "spank_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["hands"],
+            objectParts: ["buttocks"],
+            baseExcitement: { subject: 4, object: 7 },
+            preferenceTags: ["Spanking", "DomPlay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !1,
+        },
+        HairPulling_NPC: {
+            label: "They Pull Your Hair",
+            category: "Power",
+            actionType: "power",
+            stageGroup: "hairpull_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["hands"],
+            objectParts: ["hair"],
+            baseExcitement: { subject: 3, object: 6 },
+            preferenceTags: ["HairPulling", "DomPlay", "Roughplay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !1,
+        },
+        DirtyTalk_NPC: {
+            label: "They Talk Dirty",
+            category: "Verbal",
+            actionType: "verbal",
+            stageGroup: "dirtytalk_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["DirtyTalk"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !1,
+        },
+        Undress_NPC_Top: {
+            label: "Remove Their Top",
+            category: "SceneControl",
+            actionType: "undress",
+            stageGroup: "undress_npc_top",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 1, object: 2 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        Undress_NPC_Bottom: {
+            label: "Remove Their Bottoms",
+            category: "SceneControl",
+            actionType: "undress",
+            stageGroup: "undress_npc_bottom",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            baseExcitement: { subject: 2, object: 2 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        Undress_Player_Top: {
+            label: "Take Off Your Top",
+            category: "SceneControl",
+            actionType: "undress",
+            stageGroup: "undress_player_top",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "player",
+            baseExcitement: { subject: 1, object: 2 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        Undress_Player_Bottom: {
+            label: "Take Off Your Bottoms",
+            category: "SceneControl",
+            actionType: "undress",
+            stageGroup: "undress_player_bottom",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "player",
+            baseExcitement: { subject: 1, object: 2 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        Undress_NPC_Top_NPC: {
+            label: "They Strip Their Top",
+            category: "SceneControl",
+            actionType: "undress",
+            stageGroup: "undress_npc_top_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "npc",
+            baseExcitement: { subject: 1, object: 2 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        Undress_NPC_Bottom_NPC: {
+            label: "They Strip Their Bottoms",
+            category: "SceneControl",
+            actionType: "undress",
+            stageGroup: "undress_npc_bottom_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "npc",
+            baseExcitement: { subject: 1, object: 2 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        Undress_Player_Top_NPC: {
+            label: "They Remove Your Top",
+            category: "SceneControl",
+            actionType: "undress",
+            stageGroup: "undress_player_top_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            baseExcitement: { subject: 1, object: 2 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease", "dominance"],
+            togglable: !1,
+        },
+        Undress_Player_Bottom_NPC: {
+            label: "They Remove Your Bottoms",
+            category: "SceneControl",
+            actionType: "undress",
+            stageGroup: "undress_player_bottom_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            baseExcitement: { subject: 1, object: 2 },
+            preferenceTags: ["Tease"],
+            inclinationTags: ["tease", "dominance"],
+            togglable: !1,
+        },
+        Scissor_Tease: {
+            label: "Scissor (Tease)",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "scissor",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 4, object: 6 },
+            preferenceTags: ["Vagina", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Scissor: {
+            label: "Scissor",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "scissor",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 9, object: 12 },
+            preferenceTags: ["Vagina", "Penetration_R"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        Tribbing: {
+            label: "Trib Against Them",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "tribbing",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["clitoris"],
+            objectParts: ["clitoris"],
+            baseExcitement: { subject: 7, object: 10 },
+            preferenceTags: ["Vagina", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        StrapOn_Tease: {
+            label: "Tease With Strap-On",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "strapon",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 4, object: 6 },
+            preferenceTags: ["Toys", "Penetration_R", "Vagina"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !0,
+        },
+        StrapOn_Penetrate: {
+            label: "Fuck Them (Strap-On)",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "strapon",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 4, object: 14 },
+            preferenceTags: ["Toys", "Penetration_R", "Vagina", "DomPlay"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        StrapOn_Pound: {
+            label: "Pound Them (Strap-On)",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "strapon",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 6, object: 18 },
+            preferenceTags: ["Toys", "Penetration_R", "Vagina", "Roughplay"],
+            inclinationTags: ["dominance", "roughplay"],
+            togglable: !0,
+        },
+        StrapOn_Anal_Tease: {
+            label: "Tease Ass (Strap-On)",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "strapon_anal",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            objectParts: ["anus"],
+            baseExcitement: { subject: 4, object: 5 },
+            preferenceTags: ["Toys", "AnalPlay"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !0,
+        },
+        StrapOn_Anal_Penetrate: {
+            label: "Fuck Their Ass (Strap-On)",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "strapon_anal",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            objectParts: ["anus"],
+            baseExcitement: { subject: 6, object: 12 },
+            preferenceTags: ["Toys", "AnalPlay", "DomPlay"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        DoubleDildo: {
+            label: "Double-Ended Dildo",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "double_dildo",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 12, object: 12 },
+            preferenceTags: ["Toys", "Vagina", "Penetration_R"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        MutualFinger: {
+            label: "Mutual Fingering",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "mutual_finger",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 10, object: 10 },
+            preferenceTags: ["Manual_G", "Manual_R", "Vagina"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        Scissor_NPC: {
+            label: "They Scissor You",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "scissor_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["vagina"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 12, object: 12 },
+            preferenceTags: ["Vagina", "Penetration_G"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        Tribbing_NPC: {
+            label: "They Trib Against You",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "tribbing_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["clitoris"],
+            objectParts: ["clitoris"],
+            baseExcitement: { subject: 10, object: 10 },
+            preferenceTags: ["Vagina", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        StrapOn_NPC: {
+            label: "They Strap-On Fuck You",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "strapon_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 6, object: 14 },
+            preferenceTags: ["Toys", "Penetration_G", "DomPlay"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        StrapOn_Anal_NPC: {
+            label: "They Strap-On Your Ass",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "strapon_anal_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            objectParts: ["anus"],
+            baseExcitement: { subject: 6, object: 12 },
+            preferenceTags: ["Toys", "AnalPlay", "DomPlay"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        Frot_Tease: {
+            label: "Frot (Tease)",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "frot",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 5, object: 5 },
+            preferenceTags: ["Penis", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Frot: {
+            label: "Frot",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "frot",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 10, object: 10 },
+            preferenceTags: ["Penis", "Manual_R"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        Intercrural_Tease: {
+            label: "Thigh Sex (Tease)",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "intercrural",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["thighs"],
+            baseExcitement: { subject: 5, object: 4 },
+            preferenceTags: ["Tease", "Penis"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Intercrural: {
+            label: "Thigh Sex",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "intercrural",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["thighs"],
+            baseExcitement: { subject: 10, object: 7 },
+            preferenceTags: ["Penis", "Tease"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        Prostate_Tease: {
+            label: "Tease Their Prostate",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "prostate",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["fingers"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 3, object: 8 },
+            preferenceTags: ["AnalPlay", "Tease"],
+            inclinationTags: ["tease", "dominance"],
+            togglable: !1,
+        },
+        Prostate_Massage: {
+            label: "Prostate Massage",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "prostate",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["fingers"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 4, object: 16 },
+            preferenceTags: ["AnalPlay", "Manual_R"],
+            inclinationTags: ["dominance"],
+            togglable: !1,
+        },
+        MutualStroke: {
+            label: "Mutual Stroking",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "mutual_stroke",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 10, object: 10 },
+            preferenceTags: ["Manual_G", "Manual_R", "Penis"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        Frot_NPC: {
+            label: "They Frot You",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "frot_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 10, object: 10 },
+            preferenceTags: ["Penis", "Manual_G"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        Intercrural_NPC: {
+            label: "They Thigh-Fuck You",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "intercrural_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["thighs"],
+            baseExcitement: { subject: 10, object: 7 },
+            preferenceTags: ["Penis", "Tease"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        Prostate_NPC: {
+            label: "They Massage Your Prostate",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "prostate_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["fingers"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 4, object: 16 },
+            preferenceTags: ["AnalPlay", "Manual_G"],
+            inclinationTags: ["dominance"],
+            togglable: !1,
+        },
+        FutaSelfSuck_G: {
+            label: "Self-Suck (Show Off)",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "futa_selfsuck",
+            stageLevel: 1,
+            giver: "player",
+            receiver: "player",
+            subjectParts: ["mouth"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 10, object: 6 },
+            preferenceTags: ["Oral_G", "Penis", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        FutaDPGive: {
+            label: "DP Them (Both Holes)",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "futa_dp_give",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["vagina", "anus"],
+            baseExcitement: { subject: 18, object: 20 },
+            preferenceTags: ["Penetration_R", "AnalPlay", "Vagina"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        FutaReceiveBoth: {
+            label: "Take It Both Holes",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "futa_receive_both",
+            stageLevel: 2,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["vagina", "anus"],
+            baseExcitement: { subject: 18, object: 20 },
+            preferenceTags: ["Penetration_G", "AnalPlay", "Vagina"],
+            inclinationTags: ["submission"],
+            togglable: !0,
+        },
+        FutaMutualPenetrate: {
+            label: "69 Penetration",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "futa_mutual",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis", "vagina"],
+            objectParts: ["penis", "vagina"],
+            baseExcitement: { subject: 16, object: 16 },
+            preferenceTags: ["Penetration_R", "Penetration_G", "Vagina", "Penis"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        FutaCockVag_G: {
+            label: "Fuck & Get Fucked",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "futa_cockvag",
+            stageLevel: 2,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis", "vagina"],
+            objectParts: ["vagina", "penis"],
+            baseExcitement: { subject: 18, object: 18 },
+            preferenceTags: ["Penetration_R", "Penetration_G", "Vagina", "Penis"],
+            inclinationTags: [],
+            togglable: !0,
+        },
+        FutaNPC_SelfSuck: {
+            label: "They Self-Suck (Show Off)",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "futa_selfsuck_npc",
+            stageLevel: 1,
+            giver: "npc",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 8, object: 6 },
+            preferenceTags: ["Oral_G", "Penis", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !1,
+        },
+        FutaNPC_DPYou: {
+            label: "They DP You (Both Holes)",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "futa_dp_npc",
+            stageLevel: 2,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["vagina", "anus"],
+            baseExcitement: { subject: 18, object: 20 },
+            preferenceTags: ["Penetration_G", "AnalPlay", "Vagina", "DomPlay"],
+            inclinationTags: ["dominance"],
+            togglable: !0,
+        },
+        Oral_Anal_G_Tease: {
+            label: "Lick Their Rim",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "oral_anal",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["mouth"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 1, object: 5 },
+            preferenceTags: ["Oral_R", "AnalPlay", "Tease"],
+            inclinationTags: ["tease", "service", "kink"],
+            togglable: !0,
+        },
+        Fingering_Anal_G_Tease: {
+            label: "Tease Their Hole",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "finger_anal",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["fingers"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 1, object: 4 },
+            preferenceTags: ["Manual_R", "AnalPlay", "Tease"],
+            inclinationTags: ["tease", "kink"],
+            togglable: !0,
+        },
+        NipplePlay_G_Tease: {
+            label: "Brush Their Nipples",
+            category: "Breast",
+            actionType: "manual",
+            stageGroup: "nipple_play",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["hands", "mouth"],
+            objectParts: ["nipples"],
+            baseExcitement: { subject: 1, object: 4 },
+            preferenceTags: ["BreastPlay", "NipplePlay", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        FaceSit_G_Tease: {
+            label: "Hover Over Their Face",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "facesit",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["vagina", "anus"],
+            objectParts: ["mouth"],
+            baseExcitement: { subject: 5, object: 2 },
+            preferenceTags: ["Oral_G", "FaceSitting", "Tease", "Dominance"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !0,
+        },
+        Tribbing_Tease: {
+            label: "Grind Clit On Clit",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "tribbing",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["clitoris"],
+            objectParts: ["clitoris"],
+            baseExcitement: { subject: 4, object: 4 },
+            preferenceTags: ["Vagina", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        MutualStroke_Tease: {
+            label: "Reach For Each Other",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "mutual_stroke",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["penis"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 3, object: 3 },
+            preferenceTags: ["Manual_G", "Manual_R", "Penis", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        MutualFinger_Tease: {
+            label: "Trade Slow Touches",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "mutual_finger",
+            stageLevel: 0,
+            giver: "player",
+            receiver: "npc",
+            subjectParts: ["fingers", "vagina"],
+            objectParts: ["vagina", "fingers"],
+            baseExcitement: { subject: 3, object: 3 },
+            preferenceTags: ["Manual_G", "Manual_R", "Vagina", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        FaceSit_NPC_Tease: {
+            label: "They Hover Over Your Face",
+            category: "Oral",
+            actionType: "oral",
+            stageGroup: "facesit_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["vagina", "anus"],
+            objectParts: ["mouth"],
+            baseExcitement: { subject: 5, object: 2 },
+            preferenceTags: ["FaceSitting", "Tease", "DomPlay"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !0,
+        },
+        Anal_NPC_Tease: {
+            label: "They Tease Your Ass",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "anal_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis", "fingers"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 3, object: 5 },
+            preferenceTags: ["AnalPlay", "Tease"],
+            inclinationTags: ["tease", "dominance"],
+            togglable: !0,
+        },
+        Vaginal_NPC_Tease: {
+            label: "They Tease Your Entrance",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "vaginal_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 4, object: 6 },
+            preferenceTags: ["Penetration_G", "Vagina", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Scissor_NPC_Tease: {
+            label: "They Slide Against You",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "scissor_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["vagina"],
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 4, object: 4 },
+            preferenceTags: ["Vagina", "Penetration_G", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Tribbing_NPC_Tease: {
+            label: "They Tease Clit-To-Clit",
+            category: "Vaginal",
+            actionType: "penetration",
+            stageGroup: "tribbing_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["clitoris"],
+            objectParts: ["clitoris"],
+            baseExcitement: { subject: 4, object: 4 },
+            preferenceTags: ["Vagina", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        StrapOn_NPC_Tease: {
+            label: "They Tease With Strap-On",
+            category: "Toys",
+            actionType: "toys",
+            stageGroup: "strapon_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            objectParts: ["vagina"],
+            baseExcitement: { subject: 3, object: 6 },
+            preferenceTags: ["Toys", "Penetration_G", "Tease", "DomPlay"],
+            inclinationTags: ["dominance", "tease"],
+            togglable: !0,
+        },
+        Frot_NPC_Tease: {
+            label: "They Frot-Tease You",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "frot_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["penis"],
+            baseExcitement: { subject: 3, object: 3 },
+            preferenceTags: ["Penis", "Manual_G", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Intercrural_NPC_Tease: {
+            label: "They Slide Between Your Thighs",
+            category: "Manual",
+            actionType: "manual",
+            stageGroup: "intercrural_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["penis"],
+            objectParts: ["thighs"],
+            baseExcitement: { subject: 3, object: 3 },
+            preferenceTags: ["Penis", "Tease"],
+            inclinationTags: ["tease"],
+            togglable: !0,
+        },
+        Prostate_NPC_Tease: {
+            label: "They Circle Your Rim",
+            category: "Anal",
+            actionType: "penetration",
+            stageGroup: "prostate_npc",
+            stageLevel: 0,
+            giver: "npc",
+            receiver: "player",
+            subjectParts: ["fingers"],
+            objectParts: ["anus"],
+            baseExcitement: { subject: 2, object: 5 },
+            preferenceTags: ["AnalPlay", "Tease"],
+            inclinationTags: ["tease", "dominance"],
+            togglable: !1,
+        },
+    },
+    SexSceneResponses = {
+        Oral_Penis_G_Tease: {
+            start: ["You brush your lips over their shaft, teasing with warm breath."],
+            Neutral: [
+                "You let your lips glide lazily along their length, maintaining just enough contact to keep them aching.",
+                "Your breath brushes over them as your lips close in a soft, teasing pull.",
+                "You hover just close enough to keep them aching, each denied moment sharpening their hunger.",
+            ],
+            Liked: [
+                "You tease every inch with slow licks and playful flicks, drawing moans from deep in their throat.",
+                "They groan and thrust toward you, desperate for more.",
+                "They whimper, desperate for more contact.",
+            ],
+            Disliked: [
+                "You lightly mouth their shaft, but they seem distracted, barely reacting.",
+                "They seem impatient, not enjoying the prolonged teasing.",
+            ],
+            climax: ["Their cock throbs against your lips, the teasing too much to bear."],
+        },
+        Oral_Penis_G_Suck: {
+            start: ["You take them into your mouth, lips sealing around their length."],
+            Neutral: [
+                "You work your mouth steadily, guided by the rhythm of their breath.",
+                "You swirl your tongue around the tip before sinking down again.",
+            ],
+            Liked: [
+                "You take them deeper, feeling them swell in your mouth as they moan your name.",
+                "Your rhythm is perfect — they can barely hold themselves together.",
+            ],
+            Disliked: [
+                "Your rhythm feels off, and they shift uncomfortably.",
+                "They gently try to guide you differently.",
+            ],
+            climax: ["They grip tight and gasp as pleasure overwhelms them inside your mouth."],
+            reaction: [
+                '"Your mouth is incredible," they breathe.',
+                '"Just like that — don\'t stop."',
+                '"I\'m so close," they warn.',
+            ],
+        },
+        Oral_Penis_G_Deepthroat: {
+            start: ["You relax your throat and take them all the way down."],
+            Neutral: [
+                "You push yourself further, throat tightening around them as you fight the reflex.",
+                "Your eyes water slightly as you hold them deep.",
+            ],
+            Liked: [
+                "They moan loudly as you swallow them completely, your throat massaging every inch.",
+                "They can barely form words, lost in the sensation.",
+            ],
+            Disliked: ["You gag slightly, the depth uncomfortable.", "The angle makes it difficult."],
+            climax: ["You feel them erupt deep in your throat, unable to hold back."],
+            reaction: [
+                '"My god..." they manage.',
+                '"You\'re incredible," they breathe, hand resting on your head.',
+                '"I can\'t hold back much longer."',
+            ],
+        },
+        Oral_Vagina_G_Tease: {
+            start: ["You trail your tongue slowly toward their center, breathing warm against their skin."],
+            Neutral: [
+                "You plant soft, lingering kisses along their inner thighs.",
+                "You exhale warm breath over their folds.",
+            ],
+            Liked: [
+                "Every slow lick drives them crazy, their hips writhing with impatience.",
+                "Your teasing has them panting, fingers twisting in the sheets.",
+            ],
+            Disliked: [
+                "They shift restlessly, the teasing not building the way you hoped.",
+                "The light touches don't seem to register.",
+            ],
+            climax: ["Your teasing tongue pushes them over the edge."],
+            reaction: [
+                '"You\'re killing me," they whimper.',
+                '"Please — more. I need more."',
+                '"Stop teasing and just taste me."',
+            ],
+        },
+        Oral_Vagina_G: {
+            start: ["You press your mouth to them, tongue parting their folds."],
+            Neutral: [
+                "You settle into a rhythm, tongue working steadily.",
+                "You alternate between broad strokes and focused flicks.",
+            ],
+            Liked: [
+                "They grab your hair and hold you against them, moaning with abandon.",
+                "Your tongue finds the perfect spot and their whole body arches.",
+            ],
+            Disliked: [
+                "Your technique doesn't seem to be hitting the mark.",
+                "They seem distracted, not fully engaged.",
+            ],
+            climax: ["They clamp around you as waves of pleasure crash through them."],
+            reaction: [
+                '"Right there — don\'t stop," they plead.',
+                '"God, your tongue—" they gasp, clutching you.',
+                'They press your face harder against them: "More."',
+            ],
+        },
+        Oral_Anal_G: {
+            start: ["You spread them and press your tongue against their tight entrance."],
+            Neutral: [
+                "You lap gently, feeling them tense and relax.",
+                "Your tongue traces circles around the rim.",
+            ],
+            Liked: [
+                "They gasp and push back against your mouth, clearly loving it.",
+                "Your tongue probes deeper and they moan loudly.",
+            ],
+            Disliked: ["They tense up, not comfortable with the sensation.", "They shift away slightly."],
+            climax: ["The rimming pushes them over an unexpected edge."],
+        },
+        FaceSit_G: {
+            start: ["You guide them down and settle onto their face."],
+            Neutral: ["You rock your hips gently over their mouth.", "They work their tongue as you grind slowly."],
+            Liked: [
+                "You ride their face with abandon, their eager tongue driving you wild.",
+                "They grip your thighs and pull you harder.",
+            ],
+            Disliked: ["The position feels awkward.", "They seem to be struggling beneath you."],
+            climax: ["You grind down hard as orgasm rips through you."],
+            reaction: [
+                '"Don\'t stop — please," they gasp from below.',
+                '"You taste incredible."',
+                '"Ride me harder," they demand.',
+            ],
+        },
+        Anal_G_Tease: {
+            start: ["You press a finger against their entrance, circling teasingly."],
+            Neutral: ["You apply gentle pressure, letting them adjust.", "Your fingertip traces the rim slowly."],
+            Liked: ["They push back, wanting more pressure.", "Their breath hitches."],
+            Disliked: ["They clench tight, not ready.", "The sensation makes them uncomfortable."],
+            climax: ["The teasing proves too much and they come undone."],
+        },
+        Anal_G_Penetrate: {
+            start: ["You press inside them slowly, feeling their tight heat grip you."],
+            Neutral: ["You push deeper inch by inch.", "A steady rhythm builds."],
+            Liked: [
+                "They moan as you fill them, pushing back to meet each thrust.",
+                "The tight grip is incredible as they beg for more.",
+            ],
+            Disliked: [
+                "They wince, the stretch too much.",
+                "They clutch at the surface, enduring more than enjoying.",
+            ],
+            climax: ["Their ass clenches rhythmically as orgasm takes them."],
+            reaction: ['"Slow... oh god," they breathe.', '"That\'s it — right there."', '"Fill me," they beg.'],
+        },
+        Anal_G_Pound: {
+            start: ["You grip their hips and drive into them hard."],
+            Neutral: [
+                "The relentless pace has them gasping.",
+                "You pound steadily, skin on skin filling the room.",
+            ],
+            Liked: ["They scream with pleasure as you rail them.", "Each brutal thrust drives a desperate moan."],
+            Disliked: [
+                "The intensity is too much — they grip at whatever they can.",
+                "They cry out in discomfort.",
+            ],
+            climax: ["One final deep thrust and they shatter, clenching hard."],
+            reaction: ['"Don\'t stop — more!"', '"Harder — I need it!"', 'They cry out: "Don\'t stop!"'],
+        },
+        Vaginal_G_Tease: {
+            start: ["You run the tip along their folds, not quite entering."],
+            Neutral: [
+                "You slide between their lips, coating yourself.",
+                "The head nudges their entrance then pulls away.",
+            ],
+            Liked: [
+                "They whimper and try to thrust onto you, desperate to be filled.",
+                "The teasing has them soaking, begging.",
+            ],
+            Disliked: [
+                "They seem frustrated, wanting commitment or nothing.",
+                "The half-measures aren't doing it.",
+            ],
+            climax: ["The teasing alone pushes them to a shuddering climax."],
+            reaction: [
+                '"Stop teasing me..." they breathe.',
+                '"I need you inside me."',
+                '"Please — just put it in."',
+            ],
+        },
+        Vaginal_G_Penetrate: {
+            start: ["You push inside them, feeling their warmth wrap around you."],
+            Neutral: ["You establish a steady rhythm, bodies moving in sync.", "Each thrust goes a little deeper."],
+            Liked: [
+                "They wrap around you, pulling you deeper.",
+                "Their moans fill the room as you hit the right spot.",
+            ],
+            Disliked: ["The rhythm is off, can't quite sync up.", "They seem disconnected."],
+            climax: ["Their walls clench in waves as they come hard."],
+            reaction: ['"God, you feel so good," they gasp.', '"Don\'t stop — deeper."', '"Yes — right there."'],
+        },
+        Vaginal_G_Pound: {
+            start: ["You grab their hips and slam in with full force."],
+            Neutral: ["The bed shakes as you drive in relentlessly.", "You pound with abandon, sweat dripping."],
+            Liked: [
+                "They scream your name as you rail them into oblivion.",
+                "Each powerful thrust makes them see stars.",
+            ],
+            Disliked: ["The rough pace is too much — they wince.", "They push at your chest, overwhelmed."],
+            climax: ["One final balls-deep thrust and they explode around you."],
+            reaction: ['"Harder — don\'t stop!"', '"Yes! Yes! Like that!"', '"Don\'t you dare stop," they cry.'],
+        },
+        Handjob_Penis_G_Tease: {
+            start: ["You wrap your fingers around them, giving a slow squeeze."],
+            Neutral: ["Your hand moves lazily, thumb grazing the tip.", "You stroke idly, palm warm."],
+            Liked: [
+                "They throb in your hand, desperate for more friction.",
+                "Each teasing stroke draws a whimper.",
+            ],
+            Disliked: ["The light grip barely registers.", "They seem bored."],
+            climax: ["Your teasing hand coaxes a sudden, gasping release."],
+        },
+        Handjob_Penis_G: {
+            start: ["You grip them firmly and start stroking with purpose."],
+            Neutral: ["Your rhythm is steady and practiced.", "You twist your wrist on the upstroke."],
+            Liked: [
+                "They thrust into your grip, your hand the perfect pressure.",
+                "Your skilled hand has them panting.",
+            ],
+            Disliked: ["Your grip is a bit off.", "They shift, trying to redirect."],
+            climax: ["They pulse in your hand and cum with a groan."],
+        },
+        Handjob_Clit_G_Tease: {
+            start: ["Your fingertip finds their clit, circling with feather-light pressure."],
+            Neutral: ["You trace gentle circles.", "Your finger drifts in lazy patterns."],
+            Liked: [
+                "Every light circle makes their thighs tremble.",
+                "They gasp, your barely-there touch driving them insane.",
+            ],
+            Disliked: ["The light touch irritates.", "They push your hand harder."],
+            climax: ["The delicate circles push them to a sudden peak."],
+        },
+        Handjob_Clit_G: {
+            start: ["You press firmly against their clit and begin rubbing in earnest."],
+            Neutral: ["Your fingers work in steady circles.", "You alternate between rubbing and tapping."],
+            Liked: ["They buck against your hand, every circle perfect.", "Their moans grow frantic."],
+            Disliked: ["The pressure isn't right.", "Can't find their rhythm."],
+            climax: ["Their clit pulses under your fingers as they come apart."],
+        },
+        Fingering_Vagina_G_Tease: {
+            start: ["You trace one finger around their entrance, barely dipping inside."],
+            Neutral: [
+                "Your fingertip explores just past the entrance.",
+                "You push in to the first knuckle and withdraw.",
+            ],
+            Liked: ["They clutch at you, desperate for deeper.", "Every shallow probe makes them wetter."],
+            Disliked: ["The teasing finger doesn't register.", "They seem indifferent."],
+            climax: ["Even the teasing fingertip sets them off."],
+        },
+        Fingering_Vagina_G: {
+            start: ["You slide two fingers inside them, curling upward."],
+            Neutral: ["Your fingers pump steadily.", "You curl and press, searching for the spot."],
+            Liked: ["They ride your fingers desperately.", "Your fingers hit the perfect angle."],
+            Disliked: ["They wince — the angle is off.", "Your fingers fumble."],
+            climax: ["They spasm around your fingers, soaking your hand."],
+        },
+        Fingering_Anal_G: {
+            start: ["You press a slick finger against their back entrance."],
+            Neutral: ["Your finger slides in slowly.", "You work gently in and out."],
+            Liked: [
+                "They moan deeply as your finger works inside.",
+                "The added sensation drives their arousal through the roof.",
+            ],
+            Disliked: ["They clench and shift away.", "The intrusion makes them tense."],
+            climax: ["Anal stimulation triggers a powerful, unexpected orgasm."],
+        },
+        BreastPlay_G: {
+            start: ["Your hands cup their breasts, thumbs brushing over the peaks."],
+            Neutral: ["You knead gently.", "Your mouth finds one peak while your hand works the other."],
+            Liked: ["They arch into your touch, moaning.", "Your mouth on their nipple makes them gasp."],
+            Disliked: ["They seem underwhelmed.", "The breast play doesn't do much."],
+            climax: ["The breast play alone pushes them over."],
+        },
+        NipplePlay_G: {
+            start: ["You focus on their nipples, pinching and rolling them."],
+            Neutral: ["You alternate between tugs and soothing circles.", "Your tongue flicks over one nipple."],
+            Liked: ["They gasp sharply as you pinch, nipples rock-hard.", "Every flick draws a whimper."],
+            Disliked: ["The nipple play doesn't register.", "They redirect your hands."],
+            climax: ["Their sensitive nipples send them crashing over."],
+        },
+        Boobjob_G_Tease: {
+            start: ["You nestle between their breasts, the soft skin warm."],
+            Neutral: ["You slide slowly between their pressed-together breasts.", "Their cleavage envelops you."],
+            Liked: [
+                "They squeeze tighter, licking at the tip each time.",
+                "The sight and sensation has you both moaning.",
+            ],
+            Disliked: ["The angle isn't great.", "They find it more silly than sexy."],
+            climax: ["You thrust between their breasts one last time and erupt."],
+        },
+        Boobjob_G: {
+            start: ["They press their breasts firmly around your length."],
+            Neutral: ["Their soft flesh envelops you as you thrust.", "You find a rhythm, the friction building."],
+            Liked: [
+                "They spit and squeeze tighter, the sensation incredible.",
+                "They watch with hungry, satisfied eyes.",
+            ],
+            Disliked: ["The motion feels mechanical.", "More for your benefit than mutual."],
+            climax: ["You erupt between their breasts with a groan."],
+        },
+        Footjob_Penis_G_Tease: {
+            start: ["Their foot traces along your length, toes curling playfully."],
+            Neutral: ["They run their sole along your shaft.", "Their toes grip and release."],
+            Liked: [
+                "Their dexterous feet have you harder than expected.",
+                "They know exactly how to use their feet.",
+            ],
+            Disliked: ["The foot play feels awkward.", "Neither of you can take it seriously."],
+            climax: ["Their skillful feet push you past the point of no return."],
+        },
+        Footjob_Penis_G: {
+            start: ["They wrap both feet around your cock and begin stroking."],
+            Neutral: ["Their soles work your shaft.", "The unusual grip creates intense sensation."],
+            Liked: [
+                "Their arched feet milk you with expertise.",
+                "You groan as their talented feet bring you close.",
+            ],
+            Disliked: ["The stimulation isn't doing much.", "They struggle with rhythm."],
+            climax: ["Their feet coax out a shuddering release."],
+        },
+        Footjob_Vagina_G_Tease: {
+            start: ["Your foot traces gently along their inner thigh."],
+            Neutral: ["Your toes brush against their warmth.", "You press your foot gently."],
+            Liked: ["They grind against your foot desperately.", "Your teasing foot drives them wild."],
+            Disliked: ["The contact feels weird for them.", "More confused than aroused."],
+            climax: ["The bizarre but effective stimulation tips them over."],
+        },
+        Footjob_Vagina_G: {
+            start: ["You press your foot firmly against them."],
+            Neutral: ["Your foot moves in deliberate circles.", "They rock against your sole."],
+            Liked: ["They ride your foot shamelessly.", "The pressure and motion hits exactly right."],
+            Disliked: ["Too unusual to be arousing.", "They grimace slightly."],
+            climax: ["They cum hard against your foot."],
+        },
+        Dominate: {
+            start: ["You take control, pressing them where you want them."],
+            Neutral: ["You assert yourself, guiding the pace.", "Your dominant energy shifts the dynamic."],
+            Liked: [
+                "They melt under your authority, surrendering completely.",
+                "A shiver runs through them — they love being controlled.",
+            ],
+            Disliked: ["They bristle, resisting your control.", "The power play makes them uncomfortable."],
+            climax: ["Your commanding presence drives them to a submissive orgasm."],
+        },
+        Submit: {
+            start: ["You let go of control, offering yourself to their will."],
+            Neutral: ["You follow their lead.", "Your submission empowers them."],
+            Liked: ["They light up as you submit, relishing their power.", "Your surrender makes them bolder."],
+            Disliked: ["Your submission confuses them.", "They flounder without your guidance."],
+            climax: ["Giving up all control sends you spiraling into bliss."],
+        },
+        Spank_G: {
+            start: ["Your palm cracks against their backside with a satisfying smack."],
+            Neutral: ["You deliver measured swats.", "Each slap reddens their skin."],
+            Liked: ["They cry out and push higher, begging for another.", "The sting makes them drip."],
+            Disliked: ["They flinch away from the pain.", "It kills the mood."],
+            climax: ["One hard smack sends them over with a yelp."],
+        },
+        HairPulling_G: {
+            start: ["You gather their hair and pull their head back."],
+            Neutral: ["You maintain a firm grip.", "The pull exposes their throat."],
+            Liked: [
+                "They moan wantonly, eyes rolling back.",
+                "The sharp tug sends electric pleasure down their spine.",
+            ],
+            Disliked: ["They reach back to pry your hand away.", "More painful than pleasurable."],
+            climax: ["A sharp pull sends them crashing into orgasm."],
+        },
+        Choke_G: {
+            start: ["Your hand wraps around their throat with measured pressure."],
+            Neutral: ["You squeeze lightly, watching carefully.", "Every sensation feels heightened."],
+            Liked: [
+                "Their eyes darken with lust as you tighten slightly.",
+                "They press into your grip, dizzy with pleasure.",
+            ],
+            Disliked: ["Fear flashes in their eyes — hard no.", "They push your hand away."],
+            climax: ["The lightheaded rush pushes them into explosive release."],
+        },
+        Bondage_G: {
+            start: ["You bind their wrists together, the restraint tightening."],
+            Neutral: ["They test the bonds.", "Every touch is heightened by restraint."],
+            Liked: ["Being bound makes every sensation electric.", "They pull against the restraints, wild."],
+            Disliked: ["Panic flickers — loss of control is too much.", "They ask to be untied."],
+            climax: ["Bound and helpless, orgasm rips through them."],
+        },
+        Gag_G: {
+            start: ["You press the gag into their mouth."],
+            Neutral: ["Muffled sounds escape, eyes wide.", "They drool slightly, adjusting."],
+            Liked: ["Muffled moans vibrate around the gag, eyes blazing.", "Being silenced amplifies everything."],
+            Disliked: ["They shake their head, wanting it removed.", "The gagging kills the mood."],
+            climax: ["They scream into the gag as they cum."],
+        },
+        Blindfold_G: {
+            start: ["You slip the blindfold over their eyes."],
+            Neutral: ["Without sight, they flinch at every touch.", "Their other senses sharpen."],
+            Liked: ["Every touch is a thrilling surprise.", "They tremble with anticipation."],
+            Disliked: ["The darkness makes them anxious.", "They keep reaching for the blindfold."],
+            climax: ["Unable to see it coming, orgasm blindsides them."],
+        },
+        Toys_Use: {
+            start: ["You press the toy against them, its vibration humming."],
+            Neutral: ["The toy buzzes against their sensitive spots.", "You move in slow circles."],
+            Liked: ["They cry out as the toy hits perfectly.", "Vibrations turn their legs to jelly."],
+            Disliked: ["The mechanical sensation can't replace human touch.", "More annoyed than turned on."],
+            climax: ["The relentless vibration forces an intense orgasm."],
+        },
+        WaxPlay_G: {
+            start: ["You tilt the candle, letting the first hot drop fall."],
+            Neutral: ["Each drop draws a sharp gasp.", "You paint trails of wax across their body."],
+            Liked: ["They arch into each burning drop.", "Their skin is a canvas, every drop makes them moan."],
+            Disliked: ["They jerk away from the heat.", "It burns more than expected."],
+            climax: ["A strategically placed drop triggers an explosive climax."],
+        },
+        DirtyTalk_G: {
+            start: ["You lean close and whisper exactly what you plan to do."],
+            Neutral: ["Your words paint vivid images.", "You describe in detail what you want."],
+            Liked: ["Every filthy word makes them wetter, harder, needier.", "They beg you to keep talking."],
+            Disliked: ["The dirty talk feels forced and awkward.", "They cringe at the words."],
+            climax: ["Your words alone push them over the edge."],
+        },
+        Praise_G: {
+            start: ["'You're so beautiful like this,' you murmur."],
+            Neutral: [
+                "You tell them how good they feel, how perfect they look.",
+                "Your praise wraps around them warmly.",
+            ],
+            Liked: ["Every compliment makes them glow and open up.", "They bloom under your praise."],
+            Disliked: ["The praise feels patronizing.", "They brush off the compliments."],
+            climax: ["'You're perfect' pushes them into tearful, overwhelmed bliss."],
+        },
+        Degrade_G: {
+            start: ["You call them a filthy name, watching closely."],
+            Neutral: ["Your degrading words hang in the air.", "You push the humiliation further."],
+            Liked: [
+                "They moan at every insult, degradation fueling arousal.",
+                "Being called those names makes them throb.",
+            ],
+            Disliked: ["Hurt flashes across their face.", "The degradation kills the mood."],
+            climax: ["A devastating insult sends them crashing into a shame-soaked orgasm."],
+        },
+        Kissing: {
+            start: ["Your lips meet theirs in a deep, hungry kiss."],
+            Neutral: ["Your mouths move together, warm and searching.", "The kiss deepens, tongues tangling."],
+            Liked: ["They kiss you like you're oxygen.", "Every kiss sends sparks through both of you."],
+            Disliked: ["The kiss feels mechanical.", "They turn slightly."],
+            climax: ["The passionate kiss brings a wave of whole-body bliss."],
+            reaction: [
+                '"I\'ve wanted this," they admit breathlessly.',
+                '"More," they murmur against your lips.',
+                '"You\'re a good kisser."',
+            ],
+        },
+        Cuddling: {
+            start: ["You pull them close, skin against skin."],
+            Neutral: ["You hold each other, the warmth comforting.", "Your bodies settle together."],
+            Liked: [
+                "They melt into you, the closeness making everything more intense.",
+                "Being held makes them feel safe.",
+            ],
+            Disliked: ["They seem restless, wanting action.", "Cuddling feels like a stall."],
+            climax: ["The emotional connection triggers a gentle, rolling orgasm."],
+        },
+        Edge_G: {
+            start: ["You pull back just as they're about to peak."],
+            Neutral: [
+                "You read their body perfectly, stopping right at the edge.",
+                "Their frustrated whimper tells you it's working.",
+            ],
+            Liked: ["They sob with denied pleasure.", "The torturous denial has them at your mercy."],
+            Disliked: ["The denial frustrates them — they just want to finish.", "They refuse to be edged."],
+            climax: ["After one edge too many, they explode uncontrollably."],
+        },
+        Player_Cum_Anal_Inside: {
+            start: ["You bury yourself deep and let go."],
+            Neutral: ["Your release fills them, warmth spreading deep.", "You shudder as you empty yourself."],
+            Liked: ["They clench, milking every last drop.", "Feeling you fill them triggers their own orgasm."],
+            Disliked: ["They tense, not thrilled about the mess.", "Not what they wanted."],
+            climax: ["You erupt deep inside with a guttural groan."],
+        },
+        Player_Cum_Vaginal_Inside: {
+            start: ["You thrust deep and release inside with a groan."],
+            Neutral: ["Warmth floods them as you finish.", "You hold yourself inside, panting."],
+            Liked: [
+                "They lock their legs around you, pulling you deeper.",
+                "Your warmth triggers their own orgasm.",
+            ],
+            Disliked: ["They stiffen — not what they agreed to.", "Not their preference."],
+            climax: ["You empty yourself completely, both shaking."],
+        },
+        Player_Cum_On_Face: {
+            start: ["You pull out and aim for their upturned face."],
+            Neutral: ["Your release paints across their cheeks.", "They close their eyes as you finish."],
+            Liked: [
+                "They open their mouth eagerly, catching what they can.",
+                "The look of satisfied depravity almost gets you going again.",
+            ],
+            Disliked: ["They flinch as the first shot hits.", "They wipe immediately."],
+            climax: ["You groan loudly as you paint their willing face."],
+        },
+        Player_Cum_On_Body: {
+            start: ["You pull out and release across their body."],
+            Neutral: ["Streaks across their stomach and chest.", "You shudder as you finish on their warm skin."],
+            Liked: [
+                "They watch you mark their body with hungry satisfaction.",
+                "They rub it in, savoring the feeling.",
+            ],
+            Disliked: ["They look down with mild distaste.", "Clean-up is on their mind."],
+            climax: ["You coat their body in thick ropes, spent."],
+        },
+        Player_Cum_In_Mouth: {
+            start: ["You push to their lips and release into their waiting mouth."],
+            Neutral: ["They accept your release, swallowing carefully.", "Your cum fills their mouth."],
+            Liked: [
+                "They swallow eagerly, sucking you dry with a satisfied hum.",
+                "They lick their lips, savoring every drop.",
+            ],
+            Disliked: ["They gag slightly, the taste unexpected.", "They turn away to spit."],
+            climax: ["You erupt into their eager mouth with a long, shuddering groan."],
+        },
+        Oral_Penis_NPC_Tease: {
+            start: ["They trail their lips along your shaft, breath hot."],
+            Neutral: ["Their mouth moves lazily, teasing without committing.", "Soft lips ghost over you."],
+            Liked: [
+                "Their teasing has you straining, desperate for more.",
+                "Every barely-there lick makes you throb harder.",
+            ],
+            Disliked: ["Their halfhearted teasing feels obligatory.", "Barely registers."],
+            climax: ["Their teasing lips push you past the point of no return."],
+        },
+        Oral_Penis_NPC_Suck: {
+            start: ["They take you into their mouth with enthusiasm."],
+            Neutral: ["Their head bobs steadily, maintaining rhythm.", "They suck with consistent pressure."],
+            Liked: [
+                "Their mouth is heaven — hot, wet, perfectly rhythmic.",
+                "They deepthroat you without prompting.",
+            ],
+            Disliked: ["Their technique is clumsy, teeth scraping.", "Unenthusiastic at best."],
+            climax: ["You grip their hair and cum hard into their skilled mouth."],
+            reaction: [
+                '"I\'ve wanted to do this to you," they murmur.',
+                'They come up for air: "You taste so good."',
+                '"I love having you in my mouth."',
+            ],
+        },
+        Oral_Penis_NPC_Deepthroat: {
+            start: ["They take a breath and push you all the way in — no hesitation."],
+            Neutral: [
+                "They hold you deep, throat working around you.",
+                "They drive down to the base again and again.",
+            ],
+            Liked: [
+                "The feeling of their throat opening around you is indescribable.",
+                "They look up at you with watering eyes and don't stop.",
+            ],
+            Disliked: ["They gag and pull back slightly.", "It's a struggle for them."],
+            climax: ["You explode down their throat as they swallow every last drop."],
+            reaction: ['"Give it all to me," they breathe.', '"I want you deep."', '"Don\'t hold back."'],
+        },
+        Oral_Vagina_NPC_Tease: {
+            start: ["They press their lips softly against your inner thigh, inching closer."],
+            Neutral: [
+                "Their breath ghosts over you, just barely there.",
+                "They nose along your folds without quite touching where you need them.",
+            ],
+            Liked: [
+                "The teasing is exquisite — they have you tilting your hips desperately.",
+                "Every near-miss makes you ache harder.",
+            ],
+            Disliked: [
+                "The teasing feels aimless rather than intentional.",
+                "You can't tell if they're building toward something.",
+            ],
+            climax: ["The teasing alone is enough to push you trembling to the edge."],
+            reaction: [
+                '"You\'re already so wet for me," they murmur.',
+                '"I\'m going to take my time with you."',
+                'They look up: "Tell me what you want."',
+            ],
+        },
+        Oral_Vagina_NPC: {
+            start: ["They kneel and press their mouth to your center."],
+            Neutral: ["Their tongue works steadily between your folds.", "They settle into a consistent rhythm."],
+            Liked: ["Their tongue finds your clit with expert precision.", "They eat you like they're starving."],
+            Disliked: ["Their technique misses the mark.", "Not hitting the right spots."],
+            climax: ["Their relentless tongue drives you into a screaming orgasm."],
+            reaction: [
+                '"You taste incredible," they breathe between licks.',
+                '"I could do this all night."',
+                'They look up with dark eyes: "Come for me."',
+            ],
+        },
+        FaceSit_NPC: {
+            start: ["They straddle your face and lower themselves."],
+            Neutral: ["Their warmth presses against your lips.", "You work your tongue as they grind."],
+            Liked: [
+                "They ride your face with abandon, moaning loudly.",
+                "Being smothered is exactly what you both needed.",
+            ],
+            Disliked: ["Hard to breathe comfortably.", "You struggle to find rhythm."],
+            climax: ["They grind down hard and cum on your face, shaking."],
+        },
+        Handjob_Penis_NPC_Tease: {
+            start: ["Their hand wraps around you, slow and exploratory."],
+            Neutral: ["They stroke lazily, thumb tracing the ridge.", "Idle curiosity along your length."],
+            Liked: ["Their teasing grip has you throbbing.", "Every light touch sends sparks."],
+            Disliked: ["Their halfhearted hold barely qualifies.", "Wrong grip, no rhythm."],
+            climax: ["Their teasing finally coaxes a sudden release."],
+        },
+        Handjob_Penis_NPC: {
+            start: ["They grip you firmly and start with clear intent."],
+            Neutral: ["Their hand pumps steadily.", "They squeeze and stroke with precision."],
+            Liked: ["Their hand knows exactly what you need.", "You thrust into their fist, perfect rhythm."],
+            Disliked: ["Too rough, too fast.", "Feels perfunctory."],
+            climax: ["Their skilled hand milks you dry."],
+        },
+        Fingering_Vagina_NPC: {
+            start: ["They slide fingers inside you, curling upward."],
+            Neutral: ["Their fingers pump steadily, searching.", "Two fingers work with steady rhythm."],
+            Liked: [
+                "Their fingers find your g-spot with surgical precision.",
+                "You ride their fingers desperately.",
+            ],
+            Disliked: ["Wrong angle, wrong pace.", "More uncomfortable than pleasurable."],
+            climax: ["Their fingers push you into a gushing orgasm."],
+        },
+        Handjob_Clit_NPC: {
+            start: ["Their fingers find your clit and begin circling."],
+            Neutral: ["They rub with steady, consistent pressure.", "Small circles over your sensitive nub."],
+            Liked: ["They know your body — every circle is perfect.", "Your hips buck against their hand."],
+            Disliked: ["Too rough or too random.", "Can't find your rhythm."],
+            climax: ["Their fingers send you into a trembling orgasm."],
+        },
+        BreastPlay_NPC: {
+            start: ["Their hands cup your breasts, kneading gently."],
+            Neutral: ["They alternate between squeezing and caressing.", "Their mouth finds one nipple."],
+            Liked: ["Their worship sends heat straight to your core.", "You arch into their hands."],
+            Disliked: ["Too rough — more painful than pleasurable.", "Feels perfunctory."],
+            climax: ["Their mouth and hands push you unexpectedly over."],
+        },
+        Anal_NPC_Penetrate: {
+            start: ["They press against your back entrance and push inside."],
+            Neutral: ["They fill you inch by inch.", "A steady rhythm builds."],
+            Liked: ["The fullness is incredible — you push back for more.", "They angle perfectly."],
+            Disliked: ["The stretch burns and you tense.", "More endurance than pleasure."],
+            climax: ["Their cock drives you to an earth-shattering anal orgasm."],
+            reaction: ['"So tight," they groan.', '"You feel amazing like this."', '"I want to stay inside you."'],
+        },
+        Vaginal_NPC_Penetrate: {
+            start: ["They push inside you, filling you with one smooth thrust."],
+            Neutral: ["They establish a rhythm, bodies moving together.", "Steady and purposeful thrusts."],
+            Liked: ["Every thrust fills you perfectly.", "You wrap your legs around them, pulling deeper."],
+            Disliked: ["Too fast or too shallow.", "Can't sync up."],
+            climax: ["A deep, angled thrust hits your spot and you come undone."],
+            reaction: [
+                '"You feel incredible," they breathe.',
+                '"God — so warm," they groan.',
+                '"I\'ve been thinking about this."',
+            ],
+        },
+        Vaginal_NPC_Pound: {
+            start: ["They grip your hips and slam in with full force — no more holding back."],
+            Neutral: [
+                "They drive into you relentlessly, the impact echoing through the room.",
+                "The pace is punishing. You hold on.",
+            ],
+            Liked: [
+                "You scream their name as they rail you into oblivion.",
+                "Every brutal thrust makes you see stars. You beg them not to stop.",
+            ],
+            Disliked: [
+                "The pace is overwhelming — you wince with each impact.",
+                "Too rough. You try to slow them down.",
+            ],
+            climax: ["One final deep thrust and you shatter completely around them."],
+            reaction: [
+                '"Take it — all of it."',
+                '"You\'re mine right now," they growl.',
+                '"Say my name," they command.',
+            ],
+        },
+        Anal_NPC_Pound: {
+            start: ["They grab your hips and start driving into you with real force."],
+            Neutral: [
+                "The relentless rhythm has you gasping into the sheets.",
+                "They pound without mercy, sweat slicking both your bodies.",
+            ],
+            Liked: [
+                "The intensity is exactly what you needed — you push back to meet every thrust.",
+                "They own you completely right now and you love it.",
+            ],
+            Disliked: [
+                "The rough pace burns — you grip whatever you can find.",
+                "They're going too hard, too fast.",
+            ],
+            climax: ["One final driving thrust and you come undone, clenching hard around them."],
+            reaction: [
+                '"You\'re taking me so well."',
+                '"I\'m not stopping," they growl.',
+                '"More — give me more."',
+            ],
+        },
+        Dominate_NPC: {
+            start: ["They take control, pinning you and calling the shots."],
+            Neutral: ["Their commanding presence makes you follow.", "They guide your body with firm hands."],
+            Liked: ["Their dominance makes you feel safe to let go.", "Being controlled by them is intoxicating."],
+            Disliked: ["Their attempt feels clumsy or too aggressive.", "You don't appreciate being pushed."],
+            climax: ["Their total control sends you into submissive bliss."],
+        },
+        Spank_NPC: {
+            start: ["Their hand cracks across your backside unexpectedly."],
+            Neutral: ["They spank firmly.", "The sting builds."],
+            Liked: ["Each spank sends a jolt of pleasure through you.", "You push higher, begging for another."],
+            Disliked: ["The pain outweighs any pleasure.", "Too hard."],
+            climax: ["A perfectly placed slap pushes you unexpectedly over."],
+        },
+        HairPulling_NPC: {
+            start: ["They grab your hair and pull your head back."],
+            Neutral: ["The firm grip controls your head.", "They maintain a steady pull."],
+            Liked: ["The sharp tug races pleasure down your spine.", "You push back into their grip."],
+            Disliked: ["Too sharp — painful rather than passionate.", "You wrench free."],
+            climax: ["A vicious yank sends you over the edge."],
+        },
+        DirtyTalk_NPC: {
+            start: ["They lean close and whisper filthy things."],
+            Neutral: ["Their words paint vivid pictures.", "They describe what they want, breath hot."],
+            Liked: ["Every dirty word makes you wetter, harder, needier.", "Their voice alone could make you cum."],
+            Disliked: ["Sounds rehearsed.", "Their words pull you out of the moment."],
+            climax: ["Their stream of filthy whispers pushes you over."],
+        },
+        Undress_NPC_Top: {
+            start: ["You reach up and slowly peel away their top, exposing their skin."],
+            Neutral: ["You tug their shirt off casually."],
+            Liked: ["They shiver as your hands brush their bare skin, top dropping away."],
+            Disliked: ["They flinch slightly as you pull their top away."],
+        },
+        Undress_NPC_Bottom: {
+            start: ["You hook your fingers into their waistband and slide their bottoms down."],
+            Neutral: ["Their bottoms come off, revealing everything underneath."],
+            Liked: ["They lift their hips eagerly to help you strip them."],
+            Disliked: ["They hesitate before letting you remove them."],
+        },
+        Undress_Player_Top: {
+            start: ["You pull your own top off, baring yourself."],
+            Neutral: ["Your shirt comes off."],
+            Liked: ["Their eyes light up as you reveal yourself."],
+            Disliked: ["They barely glance up."],
+        },
+        Undress_Player_Bottom: {
+            start: ["You slide your bottoms off, fully exposing yourself."],
+            Neutral: ["You step out of your clothes."],
+            Liked: ["Their gaze locks onto you as your bottoms hit the floor. They like what they see."],
+            Disliked: ["They seem indifferent as you undress."],
+        },
+        Undress_NPC_Top_NPC: {
+            start: ["They pull their own top off for you."],
+            Neutral: ["They casually remove their shirt."],
+            Liked: ["They slowly peel their top off, watching your reaction with a smirk."],
+            Disliked: ["They reluctantly remove their top."],
+        },
+        Undress_NPC_Bottom_NPC: {
+            start: ["They shimmy out of their bottoms."],
+            Neutral: ["They step out of their clothes."],
+            Liked: ["They slide their bottoms down with a teasing roll of their hips."],
+            Disliked: ["They awkwardly pull their bottoms off."],
+        },
+        Undress_Player_Top_NPC: {
+            start: ["They reach for your shirt and pull it off you."],
+            Neutral: ["They tug your top away."],
+            Liked: ["Their hands slide under your shirt, pulling it over your head with hungry eyes."],
+            Disliked: ["They impatiently yank your top off."],
+        },
+        Undress_Player_Bottom_NPC: {
+            start: ["They hook their fingers into your waistband and pull down."],
+            Neutral: ["They pull your bottoms off."],
+            Liked: ["They kneel down and slowly drag your bottoms off, kissing your skin as they go."],
+            Disliked: ["They pull your clothes away briskly."],
+        },
+        Player_Orgasm_Riding: {
+            start: ["You grind down hard, chasing your own peak."],
+            Neutral: ["Your body tenses as waves of pleasure crest.", "You shudder and clench around them."],
+            Liked: [
+                "You throw your head back and cry out as orgasm crashes through you.",
+                "They watch you come apart on top of them, mesmerized.",
+            ],
+            Disliked: ["You finish, but the connection feels hollow."],
+            climax: ["You ride them through a devastating, quaking orgasm."],
+        },
+        Player_Orgasm_Oral: {
+            start: ["Their tongue pushes you past the point of no return."],
+            Neutral: [
+                "You grip their hair as waves of pleasure wash over you.",
+                "Your thighs clench around their head.",
+            ],
+            Liked: [
+                "You cum on their eager tongue, their moaning vibrating through you.",
+                "They don't stop licking through your aftershocks.",
+            ],
+            Disliked: ["You finish, but they seem relieved it's over."],
+            climax: ["You flood their mouth with your release, body arching off the surface."],
+        },
+        Player_Orgasm_Fingered: {
+            start: ["Their fingers curl and hit the perfect spot."],
+            Neutral: [
+                "You clench around their fingers as you crest.",
+                "Your orgasm builds from their steady rhythm.",
+            ],
+            Liked: [
+                "You gush around their fingers, their smug smile worth everything.",
+                "They finger you through orgasm after orgasm.",
+            ],
+            Disliked: ["You manage to finish, but it takes effort."],
+            climax: ["Their fingers drive you to a screaming, soaking climax."],
+        },
+        Player_Orgasm_Squirt: {
+            start: ["The pressure builds and builds until you can't hold back."],
+            Neutral: ["You squirt, surprising both of you.", "Your release sprays as your body convulses."],
+            Liked: [
+                "You gush hard, soaking them — they look absolutely thrilled.",
+                "They push you through it, coaxing out every last drop.",
+            ],
+            Disliked: ["The mess seems to surprise them."],
+            climax: ["You squirt hard enough to see stars, body shaking uncontrollably."],
+        },
+        Grind_G: {
+            start: ["You press your body against theirs, hips rolling slowly."],
+            Neutral: [
+                "You grind against them, heat building between you.",
+                "Your bodies rock together, friction building.",
+            ],
+            Liked: [
+                "They match your rhythm, both of you breathing harder.",
+                "The grinding has you both desperate for more.",
+            ],
+            Disliked: ["The grinding feels forced.", "They shift uncomfortably beneath you."],
+            climax: ["The friction alone pushes one of you over the edge."],
+        },
+        Neck_Kiss_G: {
+            start: ["You press soft lips against the curve of their neck."],
+            Neutral: ["You trail kisses along their throat.", "Your lips explore the sensitive skin."],
+            Liked: [
+                "They tilt their head back, a breathy moan escaping as you kiss their neck.",
+                "Goosebumps rise under your lips.",
+            ],
+            Disliked: ["They pull away slightly.", "The neck kisses leave them indifferent."],
+            climax: ["A perfectly placed kiss on their pulse point sends them over."],
+        },
+        Bite_Neck_G: {
+            start: ["You sink your teeth gently into the side of their neck."],
+            Neutral: ["You nip at their skin, leaving a faint mark.", "Your teeth graze their neck."],
+            Liked: [
+                "They gasp and melt — the bite flips a switch in them.",
+                "The sharp sensation makes them grip you tighter.",
+            ],
+            Disliked: ["They jerk away with a hiss.", "Too much pain, not enough pleasure."],
+            climax: ["A well-placed bite triggers their release."],
+        },
+        Scratch_G: {
+            start: ["You drag your nails down their back."],
+            Neutral: ["Red lines trace your path.", "They arch under your scratching nails."],
+            Liked: [
+                "They moan at the stinging pleasure, back arching into your nails.",
+                "The scratches send shivers through their whole body.",
+            ],
+            Disliked: ["They wince — too sharp.", "The pain isn't sexy for them."],
+            climax: ["Your nails raking down their back triggers their orgasm."],
+        },
+        Ass_Grope_G: {
+            start: ["You grab a handful of their ass and squeeze."],
+            Neutral: ["You knead and grope appreciatively.", "Your hands explore their backside."],
+            Liked: [
+                "They push back into your grip, loving the attention.",
+                "They flex under your grip, clearly enjoying it.",
+            ],
+            Disliked: ["They swat your hand away.", "Not their thing."],
+            climax: ["A possessive squeeze sends them crashing over."],
+        },
+        Thigh_Tease_G: {
+            start: ["Your fingers trace along their inner thigh."],
+            Neutral: [
+                "You stroke higher, fingertips dancing on sensitive skin.",
+                "Feather-light touches along their thighs.",
+            ],
+            Liked: [
+                "Their thighs tremble under your touch, spreading wider.",
+                "Each upward stroke draws a soft whimper.",
+            ],
+            Disliked: ["They squirm, ticklish rather than aroused.", "Barely registers."],
+            climax: ["Your teasing fingers on their thighs set off a surprising climax."],
+        },
+        Ear_Whisper_G: {
+            start: ["You lean in close, lips barely touching their ear."],
+            Neutral: ["Your warm breath tickles their ear as you whisper.", "You murmur something provocative."],
+            Liked: [
+                "They shiver violently as your breath caresses their ear.",
+                "Your whispered words make them visibly weak.",
+            ],
+            Disliked: ["They lean away, not into the closeness.", "Your words don't land."],
+            climax: ["Your whispered words alone push them to orgasm."],
+        },
+        Beg_G: {
+            start: ["'Please,' you whisper, desperation in your voice."],
+            Neutral: [
+                "You plead with them for more, for harder, for everything.",
+                "Your begging makes them feel powerful.",
+            ],
+            Liked: ["Your begging drives them wild with power.", "Hearing you beg makes them throb."],
+            Disliked: ["Your begging makes them uneasy.", "They're not sure how to respond."],
+            climax: ["Your desperate pleading pushes them to finish."],
+        },
+        Command_G: {
+            start: ["'Do it. Now.' Your voice leaves no room for argument."],
+            Neutral: ["You issue firm directions.", "Your commanding tone shifts the dynamic."],
+            Liked: [
+                "They scramble to obey, the authority in your voice intoxicating.",
+                "Your command makes them tremble with eagerness.",
+            ],
+            Disliked: ["They bristle at being ordered.", "Not responding to commands."],
+            climax: ["Your barked order sends them into immediate orgasm."],
+        },
+        Tease_Denial_G: {
+            start: ["You pull back just as they arch toward you."],
+            Neutral: ["You deny them again and again.", "Every denial winds them tighter."],
+            Liked: [
+                "They whimper and beg, the denial exquisite torture.",
+                "The teasing has them at your complete mercy.",
+            ],
+            Disliked: [
+                "The denial frustrates rather than excites.",
+                "They reach for themselves, done being teased.",
+            ],
+            climax: ["After one denial too many, they can't hold back."],
+        },
+        Straddle_G: {
+            start: ["You swing a leg over and settle on top of them."],
+            Neutral: ["You straddle them, weight pressing down.", "You lean down, controlling the pace."],
+            Liked: ["They stare up at you, awestruck by the view.", "Being straddled by you makes them rock hard."],
+            Disliked: ["They shift under your weight.", "The position doesn't work for them."],
+            climax: ["The view of you on top pushes them over."],
+        },
+        Lap_Dance_G: {
+            start: ["You turn around and begin moving your hips."],
+            Neutral: [
+                "You roll your body against theirs in slow waves.",
+                "Your hips move in deliberate, teasing circles.",
+            ],
+            Liked: ["Their hands clench the armrests as you grind.", "They groan — your movement is perfect."],
+            Disliked: ["They seem amused rather than aroused.", "The dance feels awkward."],
+            climax: ["Your grinding performance makes them cum without being touched."],
+        },
+        Mark_Hickey_G: {
+            start: ["You press your mouth hard against their neck and suck."],
+            Neutral: ["A dark mark blooms on their skin.", "You leave your mark for the morning."],
+            Liked: ["They moan as you claim them, the suction intense.", "Being marked by you makes them melt."],
+            Disliked: ["They push you off — don't want visible marks.", "Not thrilled about evidence."],
+            climax: ["The intense suction on their neck pushes them unexpectedly over."],
+        },
+        Ice_Play_G: {
+            start: ["You trail a piece of ice across their heated skin."],
+            Neutral: ["They gasp at the cold contrast.", "The ice melts against their warm body."],
+            Liked: ["They arch and moan as ice traces their nipples.", "The cold makes every nerve sing."],
+            Disliked: ["They flinch away from the cold.", "More unpleasant than exciting."],
+            climax: ["Ice strategically placed triggers a full-body climax."],
+        },
+        Mirror_Watch_G: {
+            start: ["You angle them toward the mirror."],
+            Neutral: ["Watching yourselves is strangely intimate.", "The reflection adds a voyeuristic thrill."],
+            Liked: [
+                "Their eyes lock on the mirror, turned on by watching.",
+                "Seeing themselves in the act drives them wild.",
+            ],
+            Disliked: ["They look away, self-conscious.", "The mirror kills the mood."],
+            climax: ["Seeing themselves come undone in the mirror pushes them over."],
+        },
+        Neck_Kiss_NPC: {
+            start: ["They press warm lips against your neck."],
+            Neutral: ["Their mouth works along your throat.", "Soft kisses trail along your pulse."],
+            Liked: [
+                "Their lips find your sweet spot and you melt.",
+                "You tilt your head, giving them full access.",
+            ],
+            Disliked: ["Their kisses feel perfunctory.", "Barely registers."],
+            climax: ["Their lips on your neck send unexpected waves of pleasure."],
+        },
+        Bite_Neck_NPC: {
+            start: ["Their teeth sink into the curve of your neck."],
+            Neutral: ["A sharp nip followed by a soothing tongue.", "They mark you."],
+            Liked: ["The bite makes you gasp and grip them tighter.", "Pain and pleasure mix perfectly."],
+            Disliked: ["The bite is too hard.", "You jerk away."],
+            climax: ["Their teeth on your neck trigger an unexpected orgasm."],
+        },
+        Grind_NPC: {
+            start: ["They press against you and begin rolling their hips."],
+            Neutral: [
+                "They grind against you, building friction.",
+                "Their body moves against yours in slow waves.",
+            ],
+            Liked: ["Their grinding has you desperate, the friction perfect.", "They know exactly how to move."],
+            Disliked: ["The grinding feels uncoordinated.", "Awkward movement."],
+            climax: ["Their grinding pushes you right over the edge."],
+        },
+        Straddle_NPC: {
+            start: ["They climb on top of you and settle their weight."],
+            Neutral: ["They straddle you with confident ease.", "Their weight presses you down."],
+            Liked: ["The sight of them on top is breathtaking.", "They take control from above and you love it."],
+            Disliked: ["Their weight is uncomfortable.", "The position doesn't click."],
+            climax: ["Watching them take control from above finishes you."],
+        },
+        Tease_Whisper_NPC: {
+            start: ["They lean close and breathe filthy promises in your ear."],
+            Neutral: ["Their whispered words paint vivid pictures.", "Hot breath on your ear."],
+            Liked: ["Their whispered words alone make you weak.", "Every syllable drips with promise."],
+            Disliked: ["Their words feel rehearsed.", "Sounds silly rather than sexy."],
+            climax: ["Their whispered words push you over the edge."],
+        },
+        Scratch_NPC: {
+            start: ["Their nails drag down your back."],
+            Neutral: ["Red lines bloom in the wake of their nails.", "The scratching adds a sharp edge."],
+            Liked: ["You arch into the delicious sting.", "Their nails drive you wild."],
+            Disliked: ["Too sharp — hurts more than helps.", "You flinch."],
+            climax: ["Their nails raking your skin triggers your climax."],
+        },
+        Scissor_Tease: {
+            start: ["You hook your legs with theirs, pressing your heat close."],
+            Neutral: ["You grind your hips, barely touching.", "Slick skin slides against slick skin."],
+            Liked: [
+                "They gasp as your folds brush theirs, electricity between you.",
+                "The teasing contact has both of you trembling.",
+            ],
+            Disliked: ["The angle is awkward.", "The friction isn't quite right."],
+            climax: ["The teasing brush of your bodies sends shockwaves."],
+        },
+        Scissor: {
+            start: ["You lock legs and press together, hips rolling."],
+            Neutral: [
+                "You grind into each other in a steady rhythm.",
+                "Wet heat meets wet heat as you rock together.",
+            ],
+            Liked: [
+                "The friction is perfect — both of you moaning, clits sliding against each other.",
+                "They match your rhythm, both of you climbing fast.",
+            ],
+            Disliked: ["The position cramps your thigh.", "Hard to maintain the rhythm."],
+            climax: ["You grind together through a shared, shuddering climax."],
+        },
+        Tribbing: {
+            start: ["You press your clit against theirs and begin to move."],
+            Neutral: ["You rock against each other, building the friction.", "Your bodies find a rhythm."],
+            Liked: [
+                "Every stroke sends pulses through both of you.",
+                "They roll their hips to meet yours, both panting.",
+            ],
+            Disliked: ["The angle doesn't quite work.", "Not enough pressure."],
+            climax: ["Clit against clit, you push each other over the edge."],
+        },
+        StrapOn_Tease: {
+            start: ["You press the tip against their entrance, teasing."],
+            Neutral: ["You slide it along their folds, not quite entering.", "You nudge the head against them."],
+            Liked: ["They whimper, pushing their hips toward the toy.", "The anticipation has them soaking."],
+            Disliked: ["They tense, unsure about the toy.", "The silicone feels too impersonal."],
+            climax: ["Just the teasing alone pushes them to climax."],
+        },
+        StrapOn_Penetrate: {
+            start: ["You push the strap-on inside them, filling them slowly."],
+            Neutral: [
+                "You thrust steadily, the harness grinding against you too.",
+                "You find a rhythm, the toy sliding deep.",
+            ],
+            Liked: [
+                "They moan as you fill them, the sight of you on top driving them wild.",
+                "Every thrust hits just right — they're coming undone.",
+            ],
+            Disliked: ["The angle makes it uncomfortable.", "They shift, trying to find a better position."],
+            climax: ["You bury the toy deep as they come hard around it."],
+        },
+        StrapOn_Pound: {
+            start: ["You grip their hips and drive the strap-on hard."],
+            Neutral: ["The room fills with the sound of impact.", "You pound a relentless rhythm."],
+            Liked: [
+                "They scream with pleasure, hands clawing the sheets.",
+                "Every brutal thrust draws louder cries.",
+            ],
+            Disliked: ["Too much — they gasp for you to slow down.", "The intensity overwhelms them."],
+            climax: ["One final deep thrust and they shatter."],
+        },
+        StrapOn_Anal_Tease: {
+            start: ["You press the toy against their tight rear entrance."],
+            Neutral: ["You circle the tip around them, teasing.", "Gentle pressure, testing their readiness."],
+            Liked: ["They push back, eager for the penetration.", "The anticipation makes them tremble."],
+            Disliked: ["They tense immediately.", "Not ready for this."],
+            climax: ["The teasing sends them over unexpectedly."],
+        },
+        StrapOn_Anal_Penetrate: {
+            start: ["You ease the strap-on into their ass."],
+            Neutral: ["You push in slowly, letting them adjust.", "The toy slides deeper."],
+            Liked: ["They moan deeply as you fill them.", "The fullness drives them wild."],
+            Disliked: ["They wince at the stretch.", "Too much too fast."],
+            climax: ["The deep penetration triggers an intense orgasm."],
+        },
+        DoubleDildo: {
+            start: ["You slide one end in yourself and guide the other into them."],
+            Neutral: [
+                "You rock your hips, both ends working simultaneously.",
+                "Connected by the toy, you move together.",
+            ],
+            Liked: [
+                "Every thrust pushes into both of you — mutual, intense, incredible.",
+                "You find the perfect rhythm, both gasping, the toy buried in both of you.",
+            ],
+            Disliked: ["The toy keeps slipping.", "Hard to keep both ends in place."],
+            climax: ["Both ends drive home at once — you come together in a tangled, shaking heap."],
+        },
+        MutualFinger: {
+            start: ["Your fingers find each other simultaneously."],
+            Neutral: ["You explore each other in mirror rhythm.", "Fingers curling inside each other."],
+            Liked: [
+                "You match each other's pace, both climbing fast.",
+                "The intimacy of mutual fingering has you both breathless.",
+            ],
+            Disliked: ["Hard to focus on giving and receiving at once.", "The rhythm keeps breaking."],
+            climax: ["You bring each other to climax at nearly the same moment."],
+        },
+        Scissor_NPC: {
+            start: ["They hook their leg over yours and pull you close."],
+            Neutral: ["They grind against you, finding the angle.", "Your bodies press together."],
+            Liked: [
+                "Their rhythm is perfect — wet heat sliding on wet heat.",
+                "You moan together, legs intertwined.",
+            ],
+            Disliked: ["The position is uncomfortable.", "Can't find the right angle."],
+            climax: ["Their grinding pushes you both over the edge."],
+        },
+        Tribbing_NPC: {
+            start: ["They press their clit to yours and start moving."],
+            Neutral: ["They grind with focused determination.", "Clit meets clit in a slow roll."],
+            Liked: ["Every roll of their hips sends shockwaves through you.", "They know exactly how to move."],
+            Disliked: ["Their rhythm is off.", "Not quite connecting."],
+            climax: ["Their tribbing drives you to orgasm."],
+        },
+        StrapOn_NPC: {
+            start: ["They buckle the harness and press you down."],
+            Neutral: ["They thrust into you with the toy, finding their rhythm.", "The strap-on fills you."],
+            Liked: [
+                "They fuck you expertly, the toy hitting perfect spots.",
+                "You grip the sheets as they drive into you.",
+            ],
+            Disliked: ["The toy feels cold and impersonal.", "The angle is wrong."],
+            climax: ["They pound the toy deep and you come undone."],
+        },
+        StrapOn_Anal_NPC: {
+            start: ["They position the strap-on against your ass."],
+            Neutral: ["They push in slowly, the toy stretching you.", "They set a steady pace."],
+            Liked: [
+                "The fullness is incredible — you push back for more.",
+                "They know exactly how to angle the toy.",
+            ],
+            Disliked: ["You tense up.", "Uncomfortable."],
+            climax: ["The deep toy penetration triggers your climax."],
+        },
+        Frot_Tease: {
+            start: ["You press your cock against theirs, skin to heated skin."],
+            Neutral: ["You rock your hips, shafts sliding together.", "The friction builds slowly."],
+            Liked: [
+                "Both of you throb against each other, precum mixing.",
+                "The slick slide of cock-on-cock has you both panting.",
+            ],
+            Disliked: ["Can't quite find the rhythm.", "The friction isn't enough."],
+            climax: ["The teasing slide pushes one of you over."],
+        },
+        Frot: {
+            start: ["You wrap your hand around both shafts and start stroking."],
+            Neutral: ["You grind together, shafts sliding in tandem.", "The heat between you builds."],
+            Liked: [
+                "You thrust together, both cocks throbbing and slick.",
+                "The intimate grind has you both moaning, foreheads pressed together.",
+            ],
+            Disliked: ["The angle feels forced.", "Hard to maintain."],
+            climax: ["You erupt together, cum mixing between your bodies."],
+        },
+        Intercrural_Tease: {
+            start: ["You slide your cock between their thighs, teasing."],
+            Neutral: ["Their thighs squeeze around your shaft.", "You thrust gently between them."],
+            Liked: [
+                "They press their thighs tight, the perfect warm channel.",
+                "The slick friction has you both groaning.",
+            ],
+            Disliked: ["The position doesn't feel right.", "Not enough friction."],
+            climax: ["The teasing thigh-fuck pushes you over."],
+        },
+        Intercrural: {
+            start: ["You thrust between their closed thighs with purpose."],
+            Neutral: ["Steady rhythm between their thighs.", "Your cock slides through slick, warm skin."],
+            Liked: [
+                "They press their legs tighter, the friction incredible.",
+                "Each thrust brushes against their cock too, driving you both wild.",
+            ],
+            Disliked: ["The position cramps.", "Underwhelming."],
+            climax: ["You cum between their thighs, both of you gasping."],
+        },
+        Prostate_Tease: {
+            start: ["You press a lubed finger against their entrance, circling."],
+            Neutral: ["You apply gentle pressure inward.", "Your fingertip finds the spot."],
+            Liked: ["They gasp — you've found the button.", "They push back against your finger, desperate."],
+            Disliked: ["They clench tight, not comfortable.", "They flinch."],
+            climax: ["A perfectly angled press sends them over."],
+        },
+        Prostate_Massage: {
+            start: ["Your finger curls inside, pressing firmly against the prostate."],
+            Neutral: ["You maintain steady pressure, milking them.", "Rhythmic presses against the gland."],
+            Liked: [
+                "They moan uncontrollably — you've found the perfect pressure.",
+                "Their cock throbs with every press, leaking steadily.",
+            ],
+            Disliked: ["The pressure is uncomfortable.", "They shift away."],
+            climax: ["A sustained prostate press triggers a hands-free orgasm that wrecks them."],
+        },
+        MutualStroke: {
+            start: ["You reach for each other simultaneously."],
+            Neutral: ["You stroke each other in uneven rhythm.", "Hands wrapped around each other's shafts."],
+            Liked: [
+                "You match each other's pace perfectly, both leaking.",
+                "The intimacy of mutual stroking has you both edging.",
+            ],
+            Disliked: ["Your grips don't match.", "The angle is awkward."],
+            climax: ["You stroke each other to simultaneous release."],
+        },
+        Frot_NPC: {
+            start: ["They press their cock against yours."],
+            Neutral: ["They grind against you, shaft on shaft.", "The heat of their cock against yours."],
+            Liked: [
+                "Their rhythm is perfect — both cocks throbbing together.",
+                "You moan as they grind, precum slicking the way.",
+            ],
+            Disliked: ["Their movement is off.", "Awkward pressure."],
+            climax: ["Their grinding cock-on-cock pushes you to climax."],
+        },
+        Intercrural_NPC: {
+            start: ["They push your thighs together and slide between them."],
+            Neutral: ["They thrust between your thighs steadily.", "Their cock slides along your skin."],
+            Liked: [
+                "Every thrust brushes your sensitive areas too.",
+                "The warmth of their cock between your thighs is intoxicating.",
+            ],
+            Disliked: ["The angle isn't great.", "It mostly tickles."],
+            climax: ["Their thrusting between your legs finishes you off."],
+        },
+        Prostate_NPC: {
+            start: ["They slide a lubed finger inside you, searching."],
+            Neutral: ["They press against your prostate methodically.", "Steady, rhythmic pressure."],
+            Liked: [
+                "They find the exact spot and you nearly black out from pleasure.",
+                "Your cock twitches with every press — it's overwhelming.",
+            ],
+            Disliked: ["You clench — the intrusion isn't welcome.", "Uncomfortable pressure."],
+            climax: ["Their perfectly angled prostate massage triggers an explosive hands-free orgasm."],
+        },
+        FutaSelfSuck_G: {
+            start: ["You bend forward and take your own cock into your mouth."],
+            Neutral: ["You work your length without breaking eye contact.", "Your flexibility impresses them."],
+            Liked: [
+                "They watch in awe as you suck yourself — it's the hottest thing they've ever seen.",
+                "Their eyes go wide, arousal spiking just from the show.",
+            ],
+            Disliked: ["They seem unsure how to react.", "More bizarre than sexy to them."],
+            climax: ["You cum in your own mouth while they watch, stunned."],
+        },
+        FutaDPGive: {
+            start: ["You position yourself to fill both their holes at once."],
+            Neutral: [
+                "You thrust into both holes, finding a rhythm.",
+                "Filling them completely with every stroke.",
+            ],
+            Liked: [
+                "They scream with pleasure as you stretch them from both ends.",
+                "Being completely filled by you sends them into a frenzy.",
+            ],
+            Disliked: ["It's too much — they need you to stop.", "The double stretch overwhelms them."],
+            climax: ["The dual stimulation overwhelms them into a body-wracking orgasm."],
+        },
+        FutaReceiveBoth: {
+            start: ["They position to fill both your holes."],
+            Neutral: [
+                "You feel them in both places, overwhelmingly full.",
+                "Double penetration stretches you to the limit.",
+            ],
+            Liked: [
+                "The fullness is indescribable — you can barely form words.",
+                "Being completely filled sends endless waves of pleasure.",
+            ],
+            Disliked: ["It's too intense.", "You need a break."],
+            climax: ["Being filled in both holes drives you to a screaming, convulsing climax."],
+        },
+        FutaMutualPenetrate: {
+            start: ["You sink into each other simultaneously."],
+            Neutral: ["Mutual penetration — bodies locked together.", "You thrust and receive in perfect tandem."],
+            Liked: [
+                "The dual sensation of fucking and being fucked is transcendent.",
+                "You hold each other tight, lost in the give-and-take.",
+            ],
+            Disliked: ["Hard to coordinate.", "The sensation is overwhelming and disorienting."],
+            climax: ["Mutual penetration drives you both to simultaneous, shattering orgasm."],
+        },
+        FutaCockVag_G: {
+            start: ["Your cock slides into them as theirs fills you."],
+            Neutral: ["You move together, each thrust reciprocated.", "Connected from both ends."],
+            Liked: [
+                "The sensation of penetrating AND being penetrated is unlike anything else.",
+                "You can't tell whose pleasure is whose anymore.",
+            ],
+            Disliked: ["The complexity makes it hard to enjoy.", "Too many sensations at once."],
+            climax: ["Together you reach the most intense mutual climax imaginable."],
+        },
+        FutaNPC_SelfSuck: {
+            start: ["They bend forward and take their own cock into their mouth."],
+            Neutral: ["They work themselves while you watch.", "The show is mesmerizing."],
+            Liked: [
+                "Watching them pleasure themselves like that is incredibly arousing.",
+                "Your arousal spikes just from the display.",
+            ],
+            Disliked: ["It's a strange sight.", "Not sure what to do with yourself."],
+            climax: ["They cum in their own mouth, the sight pushing you close."],
+        },
+        FutaNPC_DPYou: {
+            start: ["They position to take both your holes at once."],
+            Neutral: ["They fill you from both ends, finding a rhythm.", "Completely stuffed by them."],
+            Liked: [
+                "Every thrust hits you in two places — you go completely nonverbal.",
+                "They fuck both holes masterfully as you melt.",
+            ],
+            Disliked: ["Way too intense.", "You need them to ease off."],
+            climax: ["Their double penetration triggers the most intense orgasm of your life."],
+        },
+        Oral_Anal_G_Tease: {
+            start: ["You drag the flat of your tongue slowly across their rim."],
+            Neutral: [
+                "You trace lazy circles, savoring the way they twitch.",
+                "Light flicks of your tongue keep them on edge.",
+            ],
+            Liked: [
+                "They shudder and push back against your mouth, hungry for more.",
+                "Each slow lick has them gasping in disbelief.",
+            ],
+            Disliked: [
+                "They tense and pull away, not sure they're ready for this.",
+                "The sensation seems to overwhelm them.",
+            ],
+            climax: ["Even your teasing is enough to push them dangerously close."],
+        },
+        Fingering_Anal_G_Tease: {
+            start: ["You rub a slick fingertip in slow circles around their entrance."],
+            Neutral: [
+                "You apply gentle pressure, never quite pushing in.",
+                "Your finger glides over their rim, teasing without committing.",
+            ],
+            Liked: [
+                "They moan and grind back, begging silently for you to push in.",
+                "The teasing has them aching, desperate for more.",
+            ],
+            Disliked: ["They flinch from the unfamiliar pressure.", "Not quite the touch they wanted."],
+            climax: ["The slow tease alone is almost enough to undo them."],
+        },
+        NipplePlay_G_Tease: {
+            start: ["Your fingertips brush feather-light over their nipples."],
+            Neutral: [
+                "You barely graze the sensitive peaks, watching them stiffen.",
+                "Soft circles around the areola, never quite touching the tip.",
+            ],
+            Liked: [
+                "They arch into your touch, nipples straining for more pressure.",
+                "Each whisper of contact makes their breath hitch.",
+            ],
+            Disliked: ["The light touch feels ticklish, not erotic.", "They want firmer contact."],
+            climax: ["The teasing alone has them squirming and flushed."],
+        },
+        FaceSit_G_Tease: {
+            start: ["You straddle their face but hover just out of reach."],
+            Neutral: [
+                "You lower yourself slowly, then pull back again.",
+                "Each near-miss has them straining upward to taste you.",
+            ],
+            Liked: [
+                "They grab your hips and pull you down, desperate to taste you.",
+                "Your control is driving them wild.",
+            ],
+            Disliked: ["The position feels awkward to maintain.", "They're not engaging the way you hoped."],
+            climax: ["Even hovering above them is enough to push you close."],
+        },
+        Tribbing_Tease: {
+            start: ["You bring your bodies together, clit just brushing clit."],
+            Neutral: ["You rock slowly, savoring the friction.", "Each slow grind builds heat between you."],
+            Liked: [
+                "You both moan as the friction builds in maddening slow rolls.",
+                "The slow buildup has you both shaking with anticipation.",
+            ],
+            Disliked: ["The angle won't quite line up.", "The contact feels too tentative."],
+            climax: ["The slow tease has you both close to losing it."],
+        },
+        MutualStroke_Tease: {
+            start: ["You reach for each other and start with light, exploratory strokes."],
+            Neutral: ["Slow hands trade soft attention.", "You match each other's rhythm, neither rushing."],
+            Liked: [
+                "You both groan as your hands find perfect pressure on each other.",
+                "Sharing the same slow rhythm feels electric.",
+            ],
+            Disliked: ["The rhythm keeps slipping out of sync.", "Neither of you can quite settle in."],
+            climax: ["The shared tease has both of you on the edge."],
+        },
+        MutualFinger_Tease: {
+            start: ["You reach between each other's thighs at the same time, fingertips barely brushing."],
+            Neutral: ["Each light touch is mirrored back to you.", "You explore each other in slow tandem."],
+            Liked: [
+                "The mutual teasing has you both gasping into each other's mouths.",
+                "Each shared touch sends a jolt through both of you.",
+            ],
+            Disliked: ["You can't quite get the angles right together.", "The coordination feels clumsy."],
+            climax: ["The shared tease almost tips you both over the edge."],
+        },
+        FaceSit_NPC_Tease: {
+            start: ["They straddle your face but hover just out of tongue's reach."],
+            Neutral: [
+                "They lower slowly, then pull back, denying you contact.",
+                "You strain upward, desperate for a taste.",
+            ],
+            Liked: [
+                "You grab their hips and pull them down, hungry for them.",
+                "Their control over you is intoxicating.",
+            ],
+            Disliked: ["The position is uncomfortable.", "You can't quite make it work."],
+            climax: ["Even being denied is enough to push you close."],
+        },
+        Anal_NPC_Tease: {
+            start: ["They press the tip against you, teasing but not entering."],
+            Neutral: ["They rub slowly against your entrance.", "You feel them right there, waiting."],
+            Liked: ["You push back, desperate for them to fill you.", "The anticipation has you trembling."],
+            Disliked: ["You tense up — not ready for what's coming.", "The pressure feels too foreign."],
+            climax: ["The teasing alone has you breathless on the edge."],
+        },
+        Vaginal_NPC_Tease: {
+            start: ["They rub slowly against your entrance, just barely parting you."],
+            Neutral: ["They tease the line between out and in.", "You feel them notch against you but not enter."],
+            Liked: ["You buck your hips, trying to take them in.", "Each near-miss has you whimpering."],
+            Disliked: ["The teasing is more frustrating than arousing.", "You want them now, not later."],
+            climax: ["The slow tease alone almost finishes you."],
+        },
+        Scissor_NPC_Tease: {
+            start: ["They slide a leg between yours and grind softly against you."],
+            Neutral: ["They glide slowly, finding the angle.", "Each soft slide builds the heat."],
+            Liked: ["You both moan as the slow friction builds.", "Their slow grind has you aching."],
+            Disliked: ["The angle keeps drifting.", "The contact is too light."],
+            climax: ["The slow buildup has you trembling."],
+        },
+        Tribbing_NPC_Tease: {
+            start: ["They bring their clit to brush against yours, slow and deliberate."],
+            Neutral: ["They rock gently, savoring each pass.", "The friction is barely there but maddening."],
+            Liked: ["You both shudder as the contact teases the edge.", "Their slow rhythm has you climbing fast."],
+            Disliked: ["The contact is too tentative.", "You need more pressure."],
+            climax: ["Just the tease has you trembling on the brink."],
+        },
+        StrapOn_NPC_Tease: {
+            start: ["They drag the tip of the strap-on slowly across your entrance."],
+            Neutral: [
+                "They tease you with the toy, not yet pushing in.",
+                "Each slow pass has you anticipating more.",
+            ],
+            Liked: [
+                "You buck your hips, desperate to be filled.",
+                "The anticipation is unbearable in the best way.",
+            ],
+            Disliked: ["The tease drags on too long.", "You want them inside already."],
+            climax: ["Even the teasing has you on the edge."],
+        },
+        Frot_NPC_Tease: {
+            start: ["They press their length against yours, soft and slow."],
+            Neutral: [
+                "Lengths sliding together in lazy strokes.",
+                "They tease you with friction, building slow heat.",
+            ],
+            Liked: ["You both groan as your cocks slide together perfectly.", "The shared friction is electric."],
+            Disliked: ["The angle won't quite line up.", "The contact stays too light."],
+            climax: ["The slow grind is almost enough on its own."],
+        },
+        Intercrural_NPC_Tease: {
+            start: ["They slip between your thighs, sliding slowly."],
+            Neutral: [
+                "They tease the space between your legs.",
+                "Each slow stroke builds heat without committing.",
+            ],
+            Liked: ["You squeeze your thighs around them, drawing out a groan.", "The friction has them gasping."],
+            Disliked: ["The angle won't work right.", "Hard to find the rhythm."],
+            climax: ["The slow tease has them close to bursting."],
+        },
+        Prostate_NPC_Tease: {
+            start: ["They rub the pad of one slick finger in slow circles around you."],
+            Neutral: ["Light pressure traces around your rim.", "They tease the spot without pushing in."],
+            Liked: ["You shudder and push back, hungry for more.", "The anticipation has you trembling."],
+            Disliked: ["The unfamiliar sensation makes you tense.", "You're not sure you're ready."],
+            climax: ["Even the teasing has you on the edge."],
+        },
+    },
+    EncounterPositions = {
+        standing: {
+            label: "Standing",
+            emoji: "🧍",
+            description: "You stand together, face to face",
+            available: ["Oral", "Manual", "Breast", "Verbal", "Emotional", "Power", "Kissing"],
+        },
+        missionary: {
+            label: "Missionary",
+            emoji: "🛏️",
+            description: "You lie together face to face",
+            available: ["Vaginal", "Anal", "Manual", "Breast", "Verbal", "Emotional", "Power", "Kissing"],
+        },
+        doggy: {
+            label: "Doggy Style",
+            emoji: "🐕",
+            description: "They're on hands and knees, you behind them",
+            available: ["Vaginal", "Anal", "Power", "Verbal", "Manual"],
+        },
+        cowgirl: {
+            label: "Cowgirl",
+            emoji: "🤠",
+            description: "They straddle you from above",
+            available: ["Vaginal", "Manual", "Breast", "Kissing", "Emotional"],
+        },
+        sixtynine: {
+            label: "69",
+            emoji: "♋",
+            description: "You pleasure each other simultaneously",
+            available: ["Oral", "Manual"],
+        },
+        kneeling: {
+            label: "Kneeling",
+            emoji: "🧎",
+            description: "You kneel before them",
+            available: ["Oral", "Manual", "Breast", "Feet", "Verbal", "Power"],
+        },
+        npc_kneeling: {
+            label: "They Kneel",
+            emoji: "🙇",
+            description: "They kneel before you, ready to please",
+            available: ["Oral", "Manual", "Feet", "Verbal", "Power", "Breast"],
+        },
+        bent_over: {
+            label: "Bent Over",
+            emoji: "📐",
+            description: "They bend over, presenting themselves to you",
+            available: ["Vaginal", "Anal", "Power", "Manual", "Verbal"],
+        },
+        seated: {
+            label: "Seated",
+            emoji: "💺",
+            description: "You sit together, close and intimate",
+            available: ["Oral", "Manual", "Breast", "Vaginal", "Kissing", "Emotional", "Verbal"],
+        },
+    },
+    EncounterCategories = {
+        Oral: { emoji: "👄", color: "var(--l-pink)" },
+        Vaginal: { emoji: "🔥", color: "var(--l-red)" },
+        Anal: { emoji: "🍑", color: "var(--l-red-dim)" },
+        Manual: { emoji: "✋", color: "var(--l-indigo)" },
+        Breast: { emoji: "🫧", color: "var(--l-x-red-pale-3)" },
+        Feet: { emoji: "🦶", color: "var(--l-violet-2)" },
+        Power: { emoji: "⛓️", color: "var(--l-red-3)" },
+        Bondage: { emoji: "🔗", color: "var(--l-violet-4)" },
+        Toys: { emoji: "🎲", color: "var(--l-orange-4)" },
+        Verbal: { emoji: "💬", color: "var(--l-blue)" },
+        Emotional: { emoji: "💕", color: "#e91e90" },
+        SceneControl: { emoji: "🎯", color: "var(--l-amber)" },
+        Orgasm: { emoji: "💥", color: "var(--l-gold)" },
+    };
+let activeEncounter = null;
+const SKILL_TYPES = {
+    oral: { label: "Oral", actionTypes: ["oral"] },
+    penetration: { label: "Penetration", actionTypes: ["penetration"] },
+    manual: { label: "Manual", actionTypes: ["manual"] },
+    breast: { label: "Breast Play", actionTypes: ["breast"] },
+    feet: { label: "Footwork", actionTypes: ["feet"] },
+    power: { label: "Dominance", actionTypes: ["power"] },
+    verbal: { label: "Dirty Talk", actionTypes: ["verbal"] },
+    emotional: { label: "Intimacy", actionTypes: ["emotional"] },
+    bondage: { label: "Bondage", actionTypes: ["bondage"] },
+    toys: { label: "Toys", actionTypes: ["toys"] },
+    edging: { label: "Edging", actionTypes: ["control"] },
+};
+function getPlayerSkills() {
+    return gameState.playerSkills || (gameState.playerSkills = {}), gameState.playerSkills;
+}
+function getSkillLevel(e) {
+    const t = getPlayerSkills(),
+        n = Object.entries(SKILL_TYPES).find(([, t]) => t.actionTypes.includes(e));
+    if (!n) return { key: "general", xp: 0, level: 1, label: "General" };
+    const a = n[0],
+        o = t[a] || 0,
+        i = [0, 10, 30, 60, 100, 150, 210, 280, 360, 450];
+    let s = 1;
+    for (let e = i.length - 1; e >= 0; e--)
+        if (o >= i[e]) {
+            s = e + 1;
+            break;
+        }
+    return { key: a, xp: o, level: Math.min(s, 10), label: n[1].label, nextXp: i[Math.min(s, 9)] || 999 };
+}
+function addSkillXP(e, t) {
+    const n = getPlayerSkills(),
+        a = Object.entries(SKILL_TYPES).find(([, t]) => t.actionTypes.includes(e));
+    if (!a) return;
+    const o = a[0],
+        i = getSkillLevel(e);
+    n[o] = (n[o] || 0) + t;
+    const s = getSkillLevel(e);
+    s.level > i.level && showNarration(`🎯 Your ${s.label} skill improved to Level ${s.level}!`);
+}
+function rollSkillQuality(e) {
+    const { level: t } = getSkillLevel(e),
+        n = 100 * Math.random(),
+        a = Math.max(2, 42 - 4.5 * t),
+        o = a + Math.max(13, 37 - 2.5 * t),
+        i = o + Math.max(20, 30 - 1 * t);
+    return n < a ? "poor" : n < o ? "decent" : n < i ? "good" : "excellent";
+}
+function qualityMultiplier(e) {
+    return { poor: 0.4, decent: 0.85, good: 1.15, excellent: 1.5 }[e] || 1;
+}
+const DESIRE_TYPES = [
+    { key: "wantOral", label: "wants oral", emoji: "👄", matchCategories: ["Oral"], matchActionTypes: ["oral"] },
+    {
+        key: "wantPenetration",
+        label: "wants penetration",
+        emoji: "🔥",
+        matchCategories: ["Vaginal", "Anal"],
+        matchActionTypes: ["penetration"],
+    },
+    {
+        key: "wantManual",
+        label: "wants your hands",
+        emoji: "✋",
+        matchCategories: ["Manual", "Breast"],
+        matchActionTypes: ["manual", "breast"],
+    },
+    {
+        key: "wantRough",
+        label: "wants it rough",
+        emoji: "⛓️",
+        matchCategories: ["Power"],
+        matchActionTypes: ["power"],
+        matchTags: ["roughplay", "dominance"],
+    },
+    {
+        key: "wantGentle",
+        label: "wants it gentle",
+        emoji: "💕",
+        matchCategories: ["Emotional", "Verbal"],
+        matchActionTypes: ["emotional", "verbal"],
+        matchTags: ["emotional", "romantic"],
+    },
+    { key: "wantFaster", label: "wants it faster", emoji: "⚡", matchStageLevel: [1, 2] },
+    { key: "wantSlower", label: "wants it slow", emoji: "🌊", matchStageLevel: [0] },
+    { key: "wantPosition", label: "wants a new position", emoji: "🔀", matchActionTypes: ["position_change"] },
+];
+function generateNPCDesire(e) {
+    const t = [];
+    for (const n of DESIRE_TYPES) {
+        let a = 10;
+        n.matchTags &&
+            n.matchTags.forEach((t) => {
+                e.npcPrefs[t] && (a += 5 * e.npcPrefs[t]);
+            }),
+            n.matchCategories &&
+                n.matchCategories.forEach((t) => {
+                    e.history.slice(-6).some((e) => SexualActsDB[e.actKey]?.category === t && "Liked" === e.tier) &&
+                        (a += 4);
+                }),
+            e.npcExcitement > 65 && ("wantFaster" === n.key || "wantRough" === n.key) && (a += 8),
+            e.npcExcitement < 30 && ("wantGentle" === n.key || "wantSlower" === n.key) && (a += 8),
+            e.npcLibido < 40 && ("wantGentle" === n.key || "wantSlower" === n.key) && (a += 10),
+            e.currentDesire && e.currentDesire.key === n.key && (a = Math.floor(0.3 * a)),
+            "wantPosition" === n.key && e.roundsSincePositionChange < 3 && (a = 0),
+            t.push({ ...n, weight: a });
+    }
+    const n = t.reduce((e, t) => e + t.weight, 0);
+    let a = Math.random() * n;
+    for (const e of t) if (((a -= e.weight), a <= 0)) return e;
+    return t[0];
+}
+function doesActMatchDesire(e, t) {
+    const n = e.currentDesire;
+    if (!n) return !0;
+    const a = SexualActsDB[t];
+    if (!a) return !1;
+    if (n.matchCategories && n.matchCategories.includes(a.category)) return !0;
+    if (n.matchActionTypes && n.matchActionTypes.includes(a.actionType)) return !0;
+    if (n.matchTags) {
+        const e = [...(a.preferenceTags || []), ...(a.inclinationTags || [])];
+        if (n.matchTags.some((t) => e.includes(t))) return !0;
+    }
+    return !(!n.matchStageLevel || !n.matchStageLevel.includes(a.stageLevel));
+}
+function updateDesireSatisfaction(e, t, n) {
+    const a = doesActMatchDesire(e, t);
+    if (a) (e.desireSatisfaction = Math.min(100, e.desireSatisfaction + 8)), (e.desireStreakMismatch = 0);
+    else if (
+        (e.desireStreakMismatch++,
+        e.desireStreakMismatch >= 2 &&
+            (e.desireSatisfaction = Math.max(0, e.desireSatisfaction - (3 + 2 * e.desireStreakMismatch))),
+        "excellent" === n || "good" === n)
+    ) {
+        const t = "excellent" === n ? 5 : 2;
+        if (
+            ((e.desireSatisfaction = Math.min(100, e.desireSatisfaction + t)),
+            "excellent" === n && e.desireStreakMismatch >= 2)
+        )
+            return e.convincedCount++, "convinced";
+    }
+    e.desireRoundsActive++;
+    return (
+        (e.desireRoundsActive >= e.desireShiftInterval ||
+            e.desireSatisfaction >= 90 ||
+            (e.desireSatisfaction <= 20 && e.desireRoundsActive >= 2)) &&
+            ((e.currentDesire = generateNPCDesire(e)),
+            (e.desireRoundsActive = 0),
+            (e.desireShiftInterval = 3 + Math.floor(4 * Math.random())),
+            (e.desireStreakMismatch = 0)),
+        a ? "matched" : "mismatched"
+    );
+}
+function getLibidoMultiplier(e) {
+    return 0.2 + (e / 100) * 1.2;
+}
+function tickLibido(e, t) {
+    const n = SexualActsDB[t];
+    if (!n) return;
+    const a = 0 === n.stageLevel || ["emotional", "verbal", "manual", "breast"].includes(n.actionType),
+        o = a ? 4 : 2;
+    (e.npcLibido = Math.min(100, e.npcLibido + o)),
+        (e.playerLibido = Math.min(100, e.playerLibido + (a ? 3 : 1.5)));
+}
+function postOrgasmLibidoDip(e, t) {
+    "npc" === t
+        ? ((e.npcLibido = Math.max(5, e.npcLibido - 40 - 10 * e.orgasmsNPC)),
+          (e.npcExcitement = Math.max(0, Math.floor(0.3 * e.npcLibido))))
+        : ((e.playerLibido = Math.max(5, e.playerLibido - 35 - 10 * e.orgasmsPlayer)),
+          (e.playerExcitement = Math.max(0, Math.floor(0.3 * e.playerLibido))));
+}
+function applyExcitementDecay(e) {
+    if (![...e.activeToggles].some((e) => "npc" === SexualActsDB[e]?.giver) && e.playerExcitement > 10) {
+        const t = e.playerExcitement > 70 ? 2 : 1;
+        e.playerExcitement = Math.max(5, e.playerExcitement - t);
+    }
+    if (![...e.activeToggles].some((e) => "player" === SexualActsDB[e]?.giver) && e.npcExcitement > 10) {
+        const t = e.npcExcitement > 70 ? 2 : 1,
+            n = e.desireSatisfaction < 30 ? 1 : 0;
+        e.npcExcitement = Math.max(5, e.npcExcitement - t - n);
+    }
+}
+const KINK_TAG_MAP = {
+    Exhibitionism: ["Tease", "DirtyTalk"],
+    Bondage: ["Bondage", "DomPlay", "SubPlay"],
+    Roleplay: ["DomPlay", "SubPlay", "Emotional"],
+    Dominance: ["Dominance", "DomPlay", "Roughplay"],
+    Submission: ["Submission", "SubPlay"],
+    Voyeurism: ["Tease", "Emotional"],
+    Teasing: ["Tease", "Edging", "OrgasmControl"],
+    Spanking: ["Spanking", "Roughplay", "PainPlay"],
+    "Dom/sub": ["Dominance", "Submission", "DomPlay", "SubPlay"],
+    Praise: ["Praise", "Emotional"],
+    "Dirty talk": ["DirtyTalk", "Tease"],
+    "Public play": ["Tease", "DirtyTalk"],
+    Costumes: ["Tease"],
+    "Sensory play": ["Sensory", "PainPlay"],
+    Blindfolds: ["Sensory", "Bondage"],
+    Massage: ["Emotional", "Tease", "Manual_R"],
+    "Hair pulling": ["HairPulling", "Roughplay"],
+    Choking: ["Choking", "Roughplay", "Dominance"],
+    "Anal play": ["AnalPlay"],
+    Fantasies: ["Emotional", "Tease"],
+    "Power exchange": ["Dominance", "Submission", "DomPlay", "SubPlay"],
+    "Oral fixation": ["Oral_R", "Oral_G"],
+    "Foot fetish": ["FootPlay"],
+    "Light impact": ["Spanking", "PainPlay"],
+    Restraints: ["Bondage"],
+    "Temperature play": ["Sensory", "PainPlay"],
+    Tickling: ["Sensory", "Tease"],
+    "Group play": ["Tease"],
+    Threesomes: ["Tease"],
+    Cuddling: ["Emotional", "Kissing", "Cuddling"],
+    "Erotic humiliation": ["Degradation", "DomPlay"],
+    "Sensation play": ["Sensory", "PainPlay"],
+    "Mutual masturbation": ["Manual_R", "Manual_G", "Tease"],
+};
+function mapKinkToTags(e) {
+    return KINK_TAG_MAP[e] || KINK_TAG_MAP[e.replace(/\s+/g, "")] || [];
+}
+const ACT_BASE_MAP = {
+    emotional: 0,
+    verbal: 0,
+    undress: 0,
+    power: 0,
+    control: 0,
+    orgasm: 0,
+    manual: 1,
+    breast: 1,
+    feet: 1,
+    oral: 2,
+    bondage: 2,
+    toys: 2,
+    penetration: 3,
+};
+function getActBase(e) {
+    const t = SexualActsDB[e];
+    return t ? (ACT_BASE_MAP[t.actionType] ?? 0) : 0;
+}
+function getNPCBaseReached(e) {
+    const t = e.sexHistory;
+    if (!t || !t.encounterCount) return 0;
+    let n = 0;
+    const a = t.actTypesUsed || {};
+    return (
+        (a.manual || a.breast || a.feet) && (n = Math.max(n, 1)),
+        a.oral && (n = Math.max(n, 2)),
+        (a.penetration || a.anal) && (n = Math.max(n, 3)),
+        n
+    );
+}
+function getNPCDisinhibitionScore(e, t) {
+    const n = SexualActsDB[t];
+    if (!n) return 100;
+    const a = getActBase(t);
+    if (0 === a) return 100;
+    const o = e.sexHistory || {},
+        i = getNPCBaseReached(e),
+        s = e.stats?.comfort || 50,
+        r = e.stats?.desire || 50,
+        l = e.stats?.trust || 50,
+        c = o.encounterCount || 0;
+    if (a <= i) return 100;
+    let d = 30;
+    const p = a - i;
+    (e.personality?.confidence || 50) > 60 && (d += 10),
+        (e.personality?.flirty || 50) > 60 && (d += 10),
+        (e.personality?.kinky || e.personality?.adventurous || 50) > 60 && (d += 15),
+        (d += Math.min(20, 0.5 * (s - 40))),
+        (d += Math.min(15, 0.3 * (r - 40))),
+        (d += Math.min(15, 0.3 * (l - 40))),
+        (d += Math.min(10, 3 * c));
+    const m = buildNPCPrefs(e);
+    let u = 0;
+    (n.preferenceTags || []).forEach((e) => {
+        m[e] > 0 && (u += 3 * m[e]);
+    }),
+        (d += Math.min(20, u)),
+        (d -= 12 * p);
+    const g = 1 === p ? 25 : 5;
+    return Math.max(g, Math.min(95, Math.round(d)));
+}
+function isActAllowedByDisinhibition(e, t) {
+    const n = getNPCDisinhibitionScore(e, t);
+    if (n >= 90) return !0;
+    if (n <= 5) return !1;
+    return n > (17 * ((e.name || e.id || "").length + t.length)) % 100;
+}
+function buildNPCPrefs(e) {
+    const t = e.stats?.desire || 50,
+        n = e.stats?.comfort || 50,
+        a = e.personality?.flirty || 50,
+        o = e.personality?.confidence || 50,
+        i = {};
+    (e.kinks || []).forEach((e) => {
+        const t = mapKinkToTags(e);
+        if (t.length)
+            t.forEach((e) => {
+                i[e] = (i[e] || 0) + 2;
+            });
+        else {
+            const t = e.replace(/\s+/g, "");
+            i[t] = (i[t] || 0) + 2;
+        }
+    }),
+        a > 60 && ((i.Tease = (i.Tease || 0) + 1), (i.DirtyTalk = (i.DirtyTalk || 0) + 1)),
+        o > 70 && ((i.Dominance = (i.Dominance || 0) + 1), (i.DomPlay = (i.DomPlay || 0) + 1)),
+        o < 30 && ((i.SubPlay = (i.SubPlay || 0) + 1), (i.Submission = (i.Submission || 0) + 1)),
+        t > 70 && (i.Roughplay = (i.Roughplay || 0) + 1);
+    const s = e.personality || {};
+    (s.submissive > 60 || s.obedience > 70) &&
+        ((i.Submission = (i.Submission || 0) + 2), (i.SubPlay = (i.SubPlay || 0) + 1)),
+        s.confidence > 65 && (i.DomPlay = (i.DomPlay || 0) + 1),
+        (s.romantic > 60 || s.emotional > 60) &&
+            ((i.Emotional = (i.Emotional || 0) + 2), (i.Kissing = (i.Kissing || 0) + 1)),
+        (s.kinky > 60 || s.adventurous > 60) &&
+            ((i.kink = (i.kink || 0) + 2), (i.AnalPlay = (i.AnalPlay || 0) + 1)),
+        ("large" !== e.physical?.breastSize && "huge" !== e.physical?.breastSize) ||
+            (i.BreastPlay = (i.BreastPlay || 0) + 1),
+        o > 70 && ((i.Submission = (i.Submission || 0) - 2), (i.SubPlay = (i.SubPlay || 0) - 1)),
+        o < 30 &&
+            ((i.Roughplay = (i.Roughplay || 0) - 2),
+            (i.Dominance = (i.Dominance || 0) - 1),
+            (i.DomPlay = (i.DomPlay || 0) - 1)),
+        n < 35 &&
+            ((i.AnalPlay = (i.AnalPlay || 0) - 2),
+            (i.Bondage = (i.Bondage || 0) - 2),
+            (i.PainPlay = (i.PainPlay || 0) - 2),
+            (i.Roughplay = (i.Roughplay || 0) - 1)),
+        (s.professional || 50) > 70 && (i.Degradation = (i.Degradation || 0) - 2),
+        t < 30 && ((i.Roughplay = (i.Roughplay || 0) - 1), (i.Penetration_R = (i.Penetration_R || 0) - 1));
+    const r = e.sexHistory?.preferenceShifts;
+    if (r) for (const [e, t] of Object.entries(r)) i[e] = (i[e] || 0) + t;
+    return i;
+}
+function createEncounterState(e) {
+    const t = e.stats?.desire || 50,
+        n = e.stats?.comfort || 50,
+        a = (e.personality, e.personality, buildNPCPrefs(e));
+    e.sexHistory ||
+        (e.sexHistory = {
+            encounterCount: 0,
+            actTypesUsed: {},
+            categoryCounts: {},
+            preferenceShifts: {},
+            lastEncounterDate: null,
+        });
+    const o = 40 + Math.floor(0.4 * t),
+        i = generateNPCDesire({
+            npcPrefs: a,
+            npcExcitement: Math.floor(0.15 * t),
+            npcLibido: o,
+            currentDesire: null,
+            roundsSincePositionChange: 99,
+            history: [],
+        }),
+        s = {};
+    for (const t of Object.keys(SexualActsDB)) s[t] = isActAllowedByDisinhibition(e, t);
+    return {
+        npc: e,
+        round: 0,
+        playerExcitement: 5,
+        npcExcitement: Math.floor(0.15 * t),
+        playerExcitementPeak: 5,
+        npcExcitementPeak: Math.floor(0.15 * t),
+        intensity: 0,
+        position: "standing",
+        activeToggles: new Set(),
+        history: [],
+        npcPrefs: a,
+        npcMood: calculateMood(t, n),
+        disinhibitionMap: s,
+        orgasmsNPC: 0,
+        orgasmsPlayer: 0,
+        uniqueActsUsed: new Set(),
+        clothing: {
+            player: { top: !0, bottom: !0 },
+            npc: {
+                top: !(
+                    e.activeFlags?.some((e) => "no_clothes" === e.key || "permanent_nudity" === e.key) ||
+                    ("function" == typeof getActiveFlags &&
+                        getActiveFlags(e).some((e) => "no_clothes" === e.key || "permanent_nudity" === e.key))
+                ),
+                bottom: !(
+                    e.activeFlags?.some((e) => "no_clothes" === e.key || "permanent_nudity" === e.key) ||
+                    ("function" == typeof getActiveFlags &&
+                        getActiveFlags(e).some((e) => "no_clothes" === e.key || "permanent_nudity" === e.key))
+                ),
+            },
+        },
+        imageQueue: [],
+        currentImageUrl: null,
+        imageGenPending: !1,
+        aiEnhancePending: !1,
+        phase: "PLAYER_TURN",
+        selectedCategory: null,
+        positionsPanelOpen: !1,
+        npcLibido: o,
+        playerLibido: 50,
+        currentDesire: i,
+        desireSatisfaction: 60,
+        desireRoundsActive: 0,
+        desireShiftInterval: 4 + Math.floor(3 * Math.random()),
+        desireStreakMismatch: 0,
+        convincedCount: 0,
+        roundsSincePositionChange: 99,
+        lastPositionNarratedRound: -99,
+        sessionEnded: !1,
+    };
+}
+function calculateMood(e, t) {
+    return e > 70 && t > 60
+        ? "Eager & passionate"
+        : e > 70 && t < 40
+          ? "Turned on but nervous"
+          : e > 50 && t > 50
+            ? "Willing & curious"
+            : e < 30 && t > 60
+              ? "Relaxed but distant"
+              : e < 30 && t < 40
+                ? "Hesitant & unsure"
+                : "Curious & open";
+}
+function getIntensityStage(e) {
+    const t = (e.npcExcitement + e.playerExcitement) / 2;
+    return t >= 50 ? 2 : t >= 20 ? 1 : 0;
+}
+function updateIntensity(e) {
+    const t = getIntensityStage(e);
+    if (t > e.intensity) {
+        e.intensity = t;
+        const n = [
+            null,
+            `The playful edge dissolves. ${e.npc.name || "They"} ${e.npcExcitement > 40 ? "are breathing harder now, eyes dark" : "watch you with new focus"}.`,
+            "There's no going back from this. The room seems to shrink around just the two of you.",
+        ];
+        n[t] && showNarration(`🔥 ${n[t]}`);
+    }
+}
+const NEEDS_TOP_OFF = new Set(["breasts", "nipples", "chest"]),
+    NEEDS_BOTTOM_OFF = new Set(["vagina", "clitoris", "penis", "anus", "buttocks"]);
+function partBlockedByClothing(e, t, n) {
+    return !(!NEEDS_TOP_OFF.has(n) || !e.clothing[t].top) || !(!NEEDS_BOTTOM_OFF.has(n) || !e.clothing[t].bottom);
+}
+const EXCLUSIVE_BODY_PARTS = new Set(["mouth", "penis", "vagina", "anus", "feet"]);
+function resolveToggleConflicts(e, t) {
+    const n = SexualActsDB[t];
+    if (!n || !n.togglable) return new Set();
+    const a = new Set(),
+        o = new Set();
+    "player" === n.giver
+        ? ((n.subjectParts || []).forEach((e) => a.add(e)), (n.objectParts || []).forEach((e) => o.add(e)))
+        : ((n.subjectParts || []).forEach((e) => o.add(e)), (n.objectParts || []).forEach((e) => a.add(e)));
+    const i = new Set();
+    for (const s of e.activeToggles) {
+        if (s === t) continue;
+        const e = SexualActsDB[s];
+        if (!e) continue;
+        if (e.stageGroup === n.stageGroup) {
+            i.add(s);
+            continue;
+        }
+        const r = new Set(),
+            l = new Set();
+        "player" === e.giver
+            ? ((e.subjectParts || []).forEach((e) => r.add(e)), (e.objectParts || []).forEach((e) => l.add(e)))
+            : ((e.subjectParts || []).forEach((e) => l.add(e)), (e.objectParts || []).forEach((e) => r.add(e)));
+        let c = !1;
+        for (const e of a)
+            if (EXCLUSIVE_BODY_PARTS.has(e) && r.has(e)) {
+                c = !0;
+                break;
+            }
+        if (!c)
+            for (const e of o)
+                if (EXCLUSIVE_BODY_PARTS.has(e) && l.has(e)) {
+                    c = !0;
+                    break;
+                }
+        c || n.giver === e.giver || "penetration" !== n.actionType || "penetration" !== e.actionType || (c = !0),
+            c && i.add(s);
+    }
+    for (const t of i) e.activeToggles.delete(t);
+    return i;
+}
+function getAvailableActs(e) {
+    const t = EncounterPositions[e.position],
+        n = {};
+    for (const [a, o] of Object.entries(SexualActsDB)) {
+        if ("undress" === o.actionType) {
+            if (("Undress_NPC_Top" === a || "Undress_NPC_Top_NPC" === a) && !e.clothing.npc.top) continue;
+            if (("Undress_NPC_Bottom" === a || "Undress_NPC_Bottom_NPC" === a) && !e.clothing.npc.bottom) continue;
+            if (("Undress_Player_Top" === a || "Undress_Player_Top_NPC" === a) && !e.clothing.player.top) continue;
+            if (("Undress_Player_Bottom" === a || "Undress_Player_Bottom_NPC" === a) && !e.clothing.player.bottom)
+                continue;
+        }
+        if (o.stageLevel > e.intensity) continue;
+        if (o.stageLevel > 0 && "undress" !== o.actionType) {
+            const t = Object.keys(SexualActsDB).find((e) => {
+                const t = SexualActsDB[e];
+                return t.stageGroup === o.stageGroup && t.stageLevel === o.stageLevel - 1;
+            });
+            if (t && !e.history.some((e) => e.actKey === t) && !e.activeToggles.has(t)) {
+                const npcCap = genitalCapabilities(e.npc.physical, e.npc.gender),
+                    r = npcCap.hasPenis,
+                    l = npcCap.hasVagina,
+                    playerCap = genitalCapabilities(
+                        gameState?.playerProfile?.physical,
+                        gameState?.playerProfile?.gender
+                    ),
+                    p = playerCap.hasPenis,
+                    m = playerCap.hasVagina;
+                let u = !0;
+                if (
+                    (!r && o.objectParts?.includes("penis") && "player" === o.giver && (u = !1),
+                    !r && o.subjectParts?.includes("penis") && "npc" === o.giver && (u = !1),
+                    l ||
+                        (!o.objectParts?.includes("vagina") && !o.objectParts?.includes("clitoris")) ||
+                        "player" !== o.giver ||
+                        (u = !1),
+                    !p && o.subjectParts?.includes("penis") && "player" === o.giver && (u = !1),
+                    m ||
+                        (!o.subjectParts?.includes("vagina") && !o.subjectParts?.includes("clitoris")) ||
+                        "player" !== o.giver ||
+                        (u = !1),
+                    u)
+                ) {
+                    const e = SexualActsDB[t]?.label || t;
+                    n[o.category] || (n[o.category] = []),
+                        n[o.category].push({ key: a, locked: !0, lockReason: `Do "${e}" first`, ...o });
+                }
+                continue;
+            }
+        }
+        const _npcCap = genitalCapabilities(e.npc.physical, e.npc.gender),
+            r = _npcCap.hasPenis,
+            l = _npcCap.hasVagina;
+        if (!r) {
+            if (o.objectParts?.includes("penis") && "player" === o.giver) continue;
+            if (o.subjectParts?.includes("penis") && "npc" === o.giver) continue;
+        }
+        if (!l) {
+            if (o.objectParts?.includes("vagina") && "player" === o.giver) continue;
+            if (o.objectParts?.includes("clitoris") && "player" === o.giver) continue;
+            if (o.subjectParts?.includes("vagina") && "npc" === o.giver) continue;
+            if (o.subjectParts?.includes("clitoris") && "npc" === o.giver) continue;
+        }
+        const _playerCap = genitalCapabilities(
+                gameState?.playerProfile?.physical,
+                gameState?.playerProfile?.gender
+            ),
+            p = _playerCap.hasPenis,
+            m = _playerCap.hasVagina;
+        if (!p) {
+            if (o.subjectParts?.includes("penis") && "player" === o.giver) continue;
+            if (o.objectParts?.includes("penis") && "npc" === o.giver) continue;
+        }
+        if (!m) {
+            if (o.subjectParts?.includes("vagina") && "player" === o.giver) continue;
+            if (o.subjectParts?.includes("clitoris") && "player" === o.giver) continue;
+            if (o.objectParts?.includes("vagina") && "npc" === o.giver) continue;
+            if (o.objectParts?.includes("clitoris") && "npc" === o.giver) continue;
+        }
+        if ("orgasm" === o.actionType && e.playerExcitement < 90) continue;
+        if ("undress" !== o.actionType) {
+            if (
+                !(
+                    (t?.available || []).includes(o.category) ||
+                    ["verbal", "emotional", "power", "bondage", "toys", "control", "orgasm", "undress"].includes(
+                        o.actionType
+                    )
+                )
+            )
+                continue;
+        }
+        if ("undress" !== o.actionType) {
+            let t = !1;
+            const n = "player" === o.giver ? "npc" : "player",
+                a = "player" === o.giver ? "player" : "npc";
+            if (o.objectParts)
+                for (const a of o.objectParts)
+                    if (partBlockedByClothing(e, n, a)) {
+                        t = !0;
+                        break;
+                    }
+            if (!t && o.subjectParts)
+                for (const n of o.subjectParts)
+                    if (partBlockedByClothing(e, a, n)) {
+                        t = !0;
+                        break;
+                    }
+            if (t) continue;
+        }
+        let u = !1,
+            g = "";
+        if (
+            "undress" !== o.actionType &&
+            "orgasm" !== o.actionType &&
+            e.disinhibitionMap &&
+            !1 === e.disinhibitionMap[a]
+        ) {
+            u = !0;
+            g =
+                getActBase(a) > getNPCBaseReached(e.npc) + 1
+                    ? "Way too early for this"
+                    : `${e.npc.name || "They"} isn't ready yet`;
+        }
+        n[o.category] || (n[o.category] = []), n[o.category].push({ key: a, locked: u, lockReason: g, ...o });
+    }
+    return n;
+}
+function getNPCReactionTier(e, t) {
+    const n = SexualActsDB[t];
+    if (!n) return "Neutral";
+    let a = 0;
+    return (
+        (n.preferenceTags || []).forEach((t) => {
+            e.npcPrefs[t] && (a += e.npcPrefs[t]);
+        }),
+        (n.inclinationTags || []).forEach((t) => {
+            e.npcPrefs[t] && (a += e.npcPrefs[t]);
+        }),
+        (a += 0.05 * ((e.npc.stats?.desire || 50) - 50) + 0.03 * ((e.npc.stats?.comfort || 50) - 50)),
+        e.currentDesire && doesActMatchDesire(e, t) && (a += 2),
+        e.desireSatisfaction < 25 && (a -= 2),
+        a >= 3 ? "Liked" : a <= -1 ? "Disliked" : "Neutral"
+    );
+}
+function getNarration(e, t) {
+    const n = SexSceneResponses[e];
+    if (!n) return "The action continues...";
+    const a = n[t] || n.Neutral || [];
+    return a.length ? a[Math.floor(Math.random() * a.length)] : n.start?.[0] || "The action continues...";
+}
+function getStartNarration(e) {
+    return SexSceneResponses[e]?.start?.[0] || "A new act begins...";
+}
+function applyExcitement(e, t, n, a = !1) {
+    const o = SexualActsDB[t];
+    if (!o) return;
+    const i = getNPCReactionTier(e, t),
+        s = "Liked" === i ? 1.3 : "Disliked" === i ? 0.5 : 1,
+        r = 1 + 0.15 * e.intensity,
+        l = a ? 0.55 : 1;
+    let c = "decent",
+        d = 1;
+    if (n && "player" === o.giver) {
+        (c = rollSkillQuality(o.actionType)), (d = qualityMultiplier(c)), (e.lastQuality = c);
+        const t = 1 + o.stageLevel + ("Liked" === i ? 1 : 0);
+        addSkillXP(o.actionType, t);
+    } else e.lastQuality = null;
+    const p = getLibidoMultiplier(e.npcLibido),
+        m = getLibidoMultiplier(e.playerLibido),
+        u = doesActMatchDesire(e, t),
+        g = u ? 1.15 : e.desireStreakMismatch >= 3 ? 0.7 : 0.9,
+        h = Math.round(o.baseExcitement.subject * s * r * d * l),
+        y = Math.round(o.baseExcitement.object * s * r * d * g * l);
+    return (
+        "player" === o.giver
+            ? ((e.playerExcitement = Math.min(100, e.playerExcitement + Math.round(h * m))),
+              (e.npcExcitement = Math.min(100, e.npcExcitement + Math.round(y * p))))
+            : ((e.npcExcitement = Math.min(100, e.npcExcitement + Math.round(h * p))),
+              (e.playerExcitement = Math.min(100, e.playerExcitement + Math.round(y * m)))),
+        n && (e.lastDesireResult = updateDesireSatisfaction(e, t, c)),
+        "poor" === c &&
+            "Disliked" !== i &&
+            Math.random() < 0.3 &&
+            (e.npcExcitement = Math.max(0, e.npcExcitement - 3)),
+        tickLibido(e, t),
+        (e.playerExcitementPeak = Math.max(e.playerExcitementPeak, e.playerExcitement)),
+        (e.npcExcitementPeak = Math.max(e.npcExcitementPeak, e.npcExcitement)),
+        updateIntensity(e),
+        { quality: c, tier: i, desireMatch: u }
+    );
+}
+function npcDecideAction(e) {
+    const t = getAvailableActs(e),
+        n = [];
+    for (const e of Object.values(t)) e.filter((e) => "npc" === e.giver && !e.locked).forEach((e) => n.push(e));
+    if (!n.length) {
+        for (const e of ["DirtyTalk_NPC", "Kissing", "Cuddling"]) if (SexualActsDB[e]) return e;
+        return null;
+    }
+    const a = e.history.length ? e.history[e.history.length - 1] : null,
+        o = a ? SexualActsDB[a.actKey] : null,
+        i = o && (o.inclinationTags || []).includes("dominance"),
+        s = o && (o.inclinationTags || []).includes("submission"),
+        r =
+            (e.npcPrefs.Dominance || 0) +
+            (e.npcPrefs.DomPlay || 0) +
+            0.04 * ((e.npc.personality?.confidence || 50) - 50),
+        l = e.history.slice(-5).map((e) => e.actKey),
+        c = n.map((t) => {
+            let n = 0;
+            (t.preferenceTags || []).forEach((t) => {
+                e.npcPrefs[t] && (n += 2 * e.npcPrefs[t]);
+            }),
+                (t.inclinationTags || []).forEach((t) => {
+                    e.npcPrefs[t] && (n += e.npcPrefs[t]);
+                }),
+                l.includes(t.key) || (n += 3),
+                e.npcExcitement > 70 && (n += 2 * t.stageLevel),
+                t.togglable && e.activeToggles.has(t.key) && (n += 1),
+                e.currentDesire && doesActMatchDesire(e, t.key) && (n += 5),
+                e.npcLibido < 35 &&
+                    (0 === t.stageLevel || ["emotional", "verbal"].includes(t.actionType)
+                        ? (n += 4)
+                        : t.stageLevel >= 2 && (n -= 4));
+            const a = (t.inclinationTags || []).includes("dominance"),
+                c =
+                    (t.inclinationTags || []).includes("submission") ||
+                    (t.inclinationTags || []).includes("service");
+            return (
+                i && (a && (n -= 8 + Math.max(0, 4 - r)), c && (n += 5)),
+                s && (a && (n += 5 + r), c && (n -= 4)),
+                o && o.category === t.category && (n += 2),
+                { key: t.key, score: n + 3 * Math.random() }
+            );
+        });
+    return c.sort((e, t) => t.score - e.score), c[0]?.key || null;
+}
+function checkOrgasm(e) {
+    if (e.npcExcitement >= 85 && e.npcLibido >= 30) {
+        const t = Math.min(1, e.npcLibido / 70),
+            n = 0.02 * (e.npcExcitement - 80) * t;
+        if (Math.random() < n) return "npc";
+    }
+    if (e.playerExcitement >= 95 && e.playerLibido >= 30) {
+        const t = Math.min(1, e.playerLibido / 70),
+            n = 0.03 * (e.playerExcitement - 90) * t;
+        if (Math.random() < n) return "player";
+    }
+    return null;
+}
+function buildEncounterImagePrompt(e, t) {
+    const n = e.npc;
+    let a;
+    if ("function" == typeof getPhysicalDescriptionForPrompt)
+        a = getPhysicalDescriptionForPrompt(n, {
+            nude: !!(e.clothing && e.clothing.npc) && !(e.clothing.npc.top && e.clothing.npc.bottom),
+        });
+    else {
+        const e = n.physical;
+        a = e
+            ? `${e.bodyType || "average"} body, ${e.hairColor || "dark"} ${e.hairStyle || ""} hair, ${e.skinTone || "light"} skin`
+            : "attractive person";
+    }
+    let o = "";
+    "function" == typeof getPlayerPhysicalDescription && (o = getPlayerPhysicalDescription());
+    const i = gameState?.playerProfile?.gender || "male",
+        s = "female" === i || "woman" === i ? "woman" : "male" === i || "man" === i || "" === i ? "man" : i;
+    if (!o || o.length < 10) {
+        const e = gameState?.playerProfile?.physical;
+        if (e && (e.hair?.color || e.eyes?.color || e.skin?.tone)) {
+            const t = [];
+            e.heightBuild && t.push(e.heightBuild),
+                e.hair?.color && t.push(`${e.hair.color} hair`),
+                e.eyes?.color && t.push(`${e.eyes.color} eyes`),
+                e.skin?.tone && t.push(`${e.skin.tone} skin`),
+                (o = t.join(", "));
+        } else {
+            const e = n.physical?.hair?.color || n.physical?.hairColor || "";
+            o = `${e.includes("blonde") ? "dark-haired" : e.includes("black") || e.includes("dark") ? "light-haired" : "dark-haired"} ${s}`;
+        }
+    }
+    const r =
+            {
+                standing: "two people standing face to face, bodies pressed together",
+                missionary: "one person lying on their back, partner on top between their legs",
+                doggy: "one person on hands and knees, partner behind them",
+                cowgirl: "one person sitting on top of another, straddling, riding position",
+                sixtynine: "two people in 69 position, heads between each others legs",
+                kneeling: "one person kneeling before the other",
+                bent_over: "one person bent over furniture, partner standing behind",
+                seated: "one person seated, partner in their lap or between their legs",
+            }[e.position] ||
+            EncounterPositions[e.position]?.label ||
+            "intimate position",
+        l = ["sensual and teasing", "passionate and heated", "intense and wild"][e.intensity] || "intimate",
+        c =
+            e.clothing.npc.top || e.clothing.npc.bottom
+                ? e.clothing.npc.top
+                    ? e.clothing.npc.bottom
+                        ? "clothed"
+                        : "bottomless"
+                    : "topless"
+                : "completely nude",
+        d =
+            e.clothing.player.top || e.clothing.player.bottom
+                ? e.clothing.player.top
+                    ? e.clothing.player.bottom
+                        ? "clothed"
+                        : "pants down"
+                    : "topless"
+                : "completely nude",
+        p = [...e.activeToggles]
+            .map((e) => SexualActsDB[e]?.label)
+            .filter(Boolean)
+            .slice(0, 3),
+        m = t || p.join(", ") || "intimate moment";
+    let u;
+    u =
+        e.npcExcitement > 80
+            ? "ecstatic, moaning, overwhelmed with pleasure"
+            : e.npcExcitement > 60
+              ? "flushed, panting, very aroused"
+              : e.npcExcitement > 35
+                ? "aroused, blushing, enjoying it"
+                : "curious, slightly flushed";
+    return [
+        "(masterpiece:1.2), NSFW, two distinct people",
+        `${l} intimate scene`,
+        `PERSON 1 (${(n.gender || "female").toLowerCase().includes("male") ? "man" : "woman"}): ${a}`,
+        "clothed" !== c ? `${c}` : "",
+        u,
+        `PERSON 2 (${s}): ${o}`,
+        "clothed" !== d ? `${d}` : "",
+        `POSE: ${r}`,
+        `ACTION: ${m}`,
+        "soft focus, warm intimate lighting, detailed",
+    ]
+        .filter(Boolean)
+        .join(", ");
+}
+function generateEncounterImage(e, t = "") {
+    if (e.imageGenPending || "function" != typeof queuedGenerateImage) return;
+    e.imageGenPending = !0;
+    let n = buildEncounterImagePrompt(e, t);
+    if ("function" == typeof applyImageStyle) {
+        const e = applyImageStyle(n);
+        n = "object" == typeof e && e.prompt ? e.prompt : "string" == typeof e ? e : n;
+    }
+    "function" == typeof applyPerspective && (n = applyPerspective(n));
+    const a = `Encounter: ${t || EncounterPositions[e.position]?.label || "scene"}`,
+        o = document.getElementById("enc-img-loading");
+    o && (o.style.display = "block"),
+        queuedGenerateImage(n, a, { imageSize: "square" })
+            .then((n) => {
+                if (activeEncounter) {
+                    if ((e.imageQueue.push(n), e.npc)) {
+                        e.npc.photos || (e.npc.photos = []);
+                        const a =
+                            t ||
+                            [...e.activeToggles]
+                                .map((e) => SexualActsDB[e]?.label)
+                                .filter(Boolean)
+                                .join(", ") ||
+                            "intimate moment";
+                        e.npc.photos.push({
+                            url: n,
+                            source: "encounter",
+                            type: "encounter",
+                            caption: `Encounter: ${a}`,
+                            timestamp: gameState?.time?.currentTime || Date.now(),
+                        });
+                    }
+                    displayNextEncounterImage(e),
+                        setTimeout(() => {
+                            if (activeEncounter && activeEncounter === e && !e.imageGenPending) {
+                                const t = e.history.length ? e.history[e.history.length - 1] : null;
+                                generateEncounterImage(e, (t && SexualActsDB[t.actKey]?.label) || "");
+                            }
+                        }, 1e4);
+                }
+            })
+            .catch((e) => console.warn("[Enc] Image fail:", e))
+            .finally(() => {
+                (e.imageGenPending = !1), o && (o.style.display = "none");
+            });
+}
+function displayNextEncounterImage(e) {
+    if (!e.imageQueue.length) return;
+    const t = e.imageQueue.shift();
+    e.currentImageUrl = t;
+    const n = document.getElementById("enc-img"),
+        a = document.getElementById("enc-img-placeholder");
+    n &&
+        ((n.style.transition = "opacity 0.8s ease-in-out"),
+        (n.style.opacity = "0"),
+        setTimeout(() => {
+            (n.src = t),
+                (n.style.display = "block"),
+                a && (a.style.display = "none"),
+                (n.onload = () => {
+                    (n.style.opacity = "1"), (n.onload = null);
+                }),
+                setTimeout(() => {
+                    "0" === n.style.opacity && (n.style.opacity = "1");
+                }, 300);
+        }, 800));
+}
+function enhanceNarrationWithAI(e, t, n) {
+    if (e.aiEnhancePending || "function" != typeof queuedGenerateText) return;
+    e.aiEnhancePending = !0;
+    const a = e.npc,
+        o = SexualActsDB[n];
+    queuedGenerateText(
+        `Rewrite this intimate narration in 1-2 vivid sentences. Use ${a.name}'s name naturally. Keep the same tone.\n\nOriginal: "${t}"\nNPC: ${a.name}\nAct: ${o?.label || n}\nMood: ${e.npcMood}\n\nRewritten:`,
+        {
+            maxLength: 200,
+            stopSequences: ["\n\n"],
+            ...(!1 !== gameState.settings?.enableStreamingResponses
+                ? {
+                      onChunk: function (e) {
+                          if (!e) return;
+                          const t = document.getElementById("enc-narration-text");
+                          t && (t.textContent = e.fullTextSoFar);
+                      },
+                  }
+                : {}),
+        },
+        "Encounter narration"
+    )
+        .then((e) => {
+            if (!activeEncounter) return;
+            const n = (e || "").trim().replace(/^["']|["']$/g, ""),
+                a = document.getElementById("enc-narration-text"),
+                o = document.getElementById("enc-narration-ai-badge");
+            a &&
+                (n.length > 20 && n.length < 400
+                    ? ((a.textContent = n),
+                      a.classList.remove("enc-narration-fade"),
+                      a.offsetWidth,
+                      a.classList.add("enc-narration-fade"),
+                      o && (o.style.display = "block"))
+                    : (a.textContent = t));
+        })
+        .catch(() => {
+            const e = document.getElementById("enc-narration-text");
+            e && (e.textContent = t);
+        })
+        .finally(() => {
+            e.aiEnhancePending = !1;
+        });
+}
+function renderEncounterUI(e) {
+    (document.getElementById("enc-npc-name").textContent = e.npc.name || "Partner"),
+        (document.getElementById("enc-npc-mood").textContent = e.npcMood),
+        (document.getElementById("enc-npc-desire").textContent = e.npc.stats?.desire || 50),
+        (document.getElementById("enc-npc-trust").textContent = e.npc.stats?.trust || 50),
+        (document.getElementById("enc-npc-comfort").textContent = e.npc.stats?.comfort || 50),
+        (document.getElementById("enc-round-display").textContent = `R${e.round}`),
+        (document.getElementById("enc-npc-exc-bar").style.width = e.npcExcitement + "%"),
+        (document.getElementById("enc-npc-exc-text").textContent = e.npcExcitement + "%"),
+        (document.getElementById("enc-player-exc-bar").style.width = e.playerExcitement + "%"),
+        (document.getElementById("enc-player-exc-text").textContent = e.playerExcitement + "%");
+    const t = document.getElementById("enc-npc-exc-glow");
+    t && (t.style.opacity = e.npcExcitement > 70 ? "1" : "0");
+    for (let t = 0; t < 3; t++) {
+        const n = document.getElementById(`enc-stage-${t}`);
+        n && (n.style.background = t <= e.intensity ? "var(--l-red)" : "var(--l-neutral-3)");
+    }
+    (document.getElementById("enc-stage-label").textContent =
+        ["Teasing", "Heated", "Intense"][e.intensity] || "Teasing"),
+        (document.getElementById("enc-position-label").textContent =
+            EncounterPositions[e.position]?.label || e.position);
+    const n =
+            e.clothing.npc.top || e.clothing.npc.bottom
+                ? e.clothing.npc.top && e.clothing.npc.bottom
+                    ? "👔Dressed"
+                    : (e.clothing.npc.top ? "" : "👕❌") + (e.clothing.npc.bottom ? "" : "👖❌")
+                : "🔓Naked",
+        a =
+            e.clothing.player.top || e.clothing.player.bottom
+                ? e.clothing.player.top && e.clothing.player.bottom
+                    ? "👔Dressed"
+                    : (e.clothing.player.top ? "" : "👕❌") + (e.clothing.player.bottom ? "" : "👖❌")
+                : "🔓Naked";
+    (document.getElementById("enc-clothing-status").innerHTML =
+        `<span title="Their clothes">Them: ${n}</span> · <span title="Your clothes">You: ${a}</span>`),
+        (document.getElementById("enc-toggle-count").textContent = `⚡ ${e.activeToggles.size} active`);
+    const o = document.getElementById("enc-btn-finish");
+    o && (o.style.display = e.playerExcitement >= 90 ? "block" : "none");
+    const i = document.getElementById("enc-desire-text"),
+        s = document.getElementById("enc-desire-emoji");
+    if (i && e.currentDesire) {
+        (i.textContent = `${e.npc.name || "They"} ${e.currentDesire.label}`),
+            s && (s.textContent = e.currentDesire.emoji || "💭");
+        const t = e.desireSatisfaction;
+        i.style.color = t > 60 ? "var(--l-green)" : t > 30 ? "var(--l-gold)" : "var(--l-red)";
+    }
+    const r = document.getElementById("enc-satisfaction-bar");
+    if (r) {
+        r.style.width = e.desireSatisfaction + "%";
+        const t = e.desireSatisfaction;
+        r.style.background =
+            t > 60
+                ? "linear-gradient(90deg, var(--l-green), #3db892)"
+                : t > 30
+                  ? "linear-gradient(90deg, var(--l-gold), #e6c200)"
+                  : "linear-gradient(90deg, var(--l-red), var(--l-red-dim))";
+    }
+    const l = document.getElementById("enc-quality-badge");
+    if (l && e.lastQuality) {
+        const t = { poor: "var(--l-red)", decent: "var(--l-neutral-8)", good: "var(--l-green)", excellent: "var(--l-gold)" },
+            n = { poor: "😬", decent: "🎯", good: "✨", excellent: "🌟" };
+        (l.textContent = `${n[e.lastQuality]} ${e.lastQuality}`),
+            (l.style.color = t[e.lastQuality] || "var(--l-neutral-8)"),
+            (l.style.display = "block");
+    } else l && (l.style.display = "none");
+    const c = document.getElementById("enc-npc-libido-bar"),
+        d = document.getElementById("enc-npc-libido-text");
+    c && (c.style.width = Math.round(e.npcLibido) + "%"), d && (d.textContent = Math.round(e.npcLibido));
+    const p = document.getElementById("enc-player-libido-bar"),
+        m = document.getElementById("enc-player-libido-text");
+    p && (p.style.width = Math.round(e.playerLibido) + "%"), m && (m.textContent = Math.round(e.playerLibido));
+    const u = document.getElementById("enc-actions");
+    if (u) {
+        const t = "PLAYER_TURN" === e.phase;
+        (u.style.opacity = t ? "1" : "0.45"), (u.style.pointerEvents = t ? "auto" : "none");
+    }
+    ["enc-btn-let-lead", "enc-btn-change-pos", "enc-btn-finish"].forEach((t) => {
+        const n = document.getElementById(t);
+        n &&
+            ((n.disabled = "PLAYER_TURN" !== e.phase),
+            (n.style.opacity = "PLAYER_TURN" === e.phase ? "1" : "0.45"));
+    }),
+        renderActionCategories(e);
+}
+function renderActionCategories(e) {
+    const t = getAvailableActs(e),
+        n = document.getElementById("enc-category-tabs"),
+        a = document.getElementById("enc-action-grid"),
+        o = {},
+        i = {};
+    for (const [e, n] of Object.entries(t)) {
+        const t = n.filter((e) => "player" === e.giver),
+            a = n.filter((e) => "npc" === e.giver);
+        t.length && (o[e] = t), a.length && (i[e] = a);
+    }
+    const s = Object.values(i).reduce((e, t) => e + t.length, 0);
+    let r = "";
+    if (
+        (Object.keys(EncounterCategories).forEach((t) => {
+            const n = EncounterCategories[t],
+                a = (o[t] ? o[t].length : 0) + (i[t] ? i[t].length : 0),
+                s = e.selectedCategory === t;
+            if ("Orgasm" === t && e.playerExcitement < 75) return;
+            if (!a) return;
+            const l = e.currentDesire?.matchCategories?.includes(t),
+                c = l ? "box-shadow:0 0 6px rgba(78,204,163,0.5);" : "";
+            r += `<div class="enc-cat-tab ${s ? "active" : ""}" onclick="encounterSelectCategory('${t}')" style="${s ? `background:${n.color};border-color:${n.color};` : ""}${c}" title="${t} (${a})${l ? " ✦ They want this!" : ""}">${n.emoji} ${"SceneControl" === t ? "Control" : t}${l ? "✦" : ""}${a ? ` <span style="opacity:0.6;font-size:0.5rem;">${a}</span>` : ""}</div>`;
+        }),
+        s > 0)
+    ) {
+        const t = "_Requests" === e.selectedCategory;
+        r += `<div class="enc-cat-tab ${t ? "active" : ""}" onclick="encounterSelectCategory('_Requests')" style="${t ? "background:var(--l-violet-2);border-color:var(--l-violet-2);" : ""}box-shadow:${t ? "none" : "0 0 4px rgba(155,89,182,0.3)"};" title="Ask them to do something (${s})">🙏 Ask <span style="opacity:0.6;font-size:0.5rem;">${s}</span></div>`;
+    }
+    n.innerHTML = r;
+    let l = "";
+    const c = e.selectedCategory;
+    if ("_Requests" === c)
+        for (const [t, n] of Object.entries(i)) {
+            n.forEach((t) => {
+                const n = e.activeToggles.has(t.key),
+                    a = getNPCReactionTier(e, t.key),
+                    o = "Liked" === a ? "💗" : "Disliked" === a ? "💔" : "💭",
+                    i = doesActMatchDesire(e, t.key),
+                    s = i
+                        ? '<span style="color:var(--positive);font-size:0.55rem;" title="Matches their desire">✦</span> '
+                        : "";
+                if (t.locked)
+                    return void (l += `<button class="enc-act-btn enc-request-btn" disabled style="opacity:0.4;cursor:not-allowed;" title="${t.lockReason || "Not ready"}"><span>🔒 Ask: ${t.label.replace(/^They\s+/i, "")}</span><span class="enc-act-stage" style="color:var(--l-on-accent);">${t.lockReason || "Not ready"}</span></button>`);
+                const r = "Liked" === a ? "😏 Eager" : "Disliked" === a ? "😒 Reluctant" : "🤔 Maybe",
+                    c = t.label.replace(/^They\s+/i, "");
+                l += `<button class="enc-act-btn enc-request-btn ${n ? "active" : ""} ${i ? "enc-desire-match" : ""}" onclick="encounterRequestAct('${t.key}')" title="Ask: ${t.label}${i ? " (matches desire)" : ""}"><span>${s}Ask: ${c}</span><span class="enc-act-stage">${o} ${r}</span></button>`;
+            });
+        }
+    else if (c && (o[c] || i[c]))
+        (o[c] || []).forEach((t) => {
+            const n = e.activeToggles.has(t.key),
+                a = getNPCReactionTier(e, t.key),
+                o = "Liked" === a ? "💗" : "Disliked" === a ? "💔" : "💭",
+                i = doesActMatchDesire(e, t.key),
+                s = i
+                    ? '<span style="color:var(--positive);font-size:0.55rem;" title="Matches their desire">✦</span> '
+                    : "";
+            let r = "";
+            if ("undress" !== t.actionType) {
+                const e = getSkillLevel(t.actionType);
+                r = `<span style="color:${e.level >= 7 ? "var(--l-gold)" : e.level >= 4 ? "var(--l-green)" : "var(--l-neutral-6)"};font-size:0.45rem;margin-left:2px;" title="${e.label} Lv${e.level}">Lv${e.level}</span>`;
+            }
+            if (t.locked)
+                return void (l += `<button class="enc-act-btn" disabled style="opacity:0.4;cursor:not-allowed;border-color:#55555544;" title="${t.lockReason || "Not ready"}"><span>🔒 ${t.label}${r}</span><span class="enc-act-stage" style="color:var(--l-on-accent);">${t.lockReason || "Not ready"}</span></button>`);
+            let c = "⚡ Do";
+            t.togglable && (c = n ? "🔄 Continue" : "▶ Start");
+            let d = "";
+            if (0 === t.stageLevel && t.stageGroup) {
+                const e = Object.values(SexualActsDB).find(
+                    (e) => e.stageGroup === t.stageGroup && 1 === e.stageLevel
+                );
+                if (e) {
+                    const n = Object.values(SexualActsDB).find(
+                        (e) => e.stageGroup === t.stageGroup && 2 === e.stageLevel
+                    );
+                    d = ` → ${e.label}${n ? " → " + n.label : ""}`;
+                }
+            }
+            const p = d ? `<span style="color:var(--l-on-accent);font-size:0.4rem;"> ${d}</span>` : "";
+            (l += `<button class="enc-act-btn ${n ? "active" : ""} ${i ? "enc-desire-match" : ""}" onclick="encounterPerformAct('${t.key}')" title="${t.label}${d}${i ? " (matches desire)" : ""}"><span>${s}${t.label}${r}</span><span class="enc-act-stage">${o} ${c}${p}</span></button>`),
+                t.togglable &&
+                    n &&
+                    (l += `<button class="enc-act-btn enc-stop-btn" onclick="encounterStopAct('${t.key}')" title="Stop ${t.label}"><span>⏹ Stop ${t.label}</span><span class="enc-act-stage">Free action</span></button>`);
+        }),
+            i[c] &&
+                (o[c]?.length > 0 &&
+                    (l +=
+                        '<div style="grid-column:1/-1;border-top:1px solid #9b59b622;margin:4px 0;padding-top:6px;font-size:0.55rem;color:#9b59b6aa;letter-spacing:0.05em;text-align:left;">💬 ASK THEM TO...</div>'),
+                i[c].forEach((t) => {
+                    const n = e.activeToggles.has(t.key),
+                        a = getNPCReactionTier(e, t.key),
+                        o = "Liked" === a ? "💗" : "Disliked" === a ? "💔" : "💭",
+                        i = doesActMatchDesire(e, t.key),
+                        s = i
+                            ? '<span style="color:var(--positive);font-size:0.55rem;" title="Matches their desire">✦</span> '
+                            : "";
+                    if (t.locked)
+                        return void (l += `<button class="enc-act-btn enc-request-btn" disabled style="opacity:0.4;cursor:not-allowed;" title="${t.lockReason || "Not ready"}"><span>🔒 ${t.label}</span><span class="enc-act-stage" style="color:var(--l-on-accent);">${t.lockReason || "Not ready"}</span></button>`);
+                    const r = "Liked" === a ? "😏 Eager" : "Disliked" === a ? "😒 Reluctant" : "🤔 Maybe";
+                    l += `<button class="enc-act-btn enc-request-btn ${n ? "active" : ""} ${i ? "enc-desire-match" : ""}" onclick="encounterRequestAct('${t.key}')" title="Ask: ${t.label}${i ? " (matches desire)" : ""}"><span>${s}💬 ${t.label}</span><span class="enc-act-stage">${o} ${r}</span></button>`;
+                }));
+    else {
+        for (const t of Object.keys(EncounterCategories)) {
+            const n = o[t],
+                a = i[t];
+            if (!n && !a) continue;
+            if ("Orgasm" === t && e.playerExcitement < 75) continue;
+            const s = EncounterCategories[t] || {},
+                r = (n?.length || 0) + (a?.length || 0),
+                c = e.currentDesire?.matchCategories?.includes(t);
+            l += `<button class="enc-act-btn ${c ? "enc-desire-match" : ""}" onclick="encounterSelectCategory('${t}')" style="border-color:${fuocAlpha(s.color || "var(--l-neutral-3)", "22")};"><span>${s.emoji || "❓"} ${"SceneControl" === t ? "Control" : t}${c ? " ✦" : ""}</span><span class="enc-act-stage">${r} actions</span></button>`;
+        }
+        s > 0 &&
+            (l += `<button class="enc-act-btn" onclick="encounterSelectCategory('_Requests')" style="border-color:#9b59b622;"><span>🙏 Ask Them To...</span><span class="enc-act-stage">${s} requests</span></button>`);
+    }
+    a.innerHTML = l;
+}
+function encounterStopAct(e) {
+    const t = activeEncounter;
+    if (t && "PLAYER_TURN" === t.phase && t.activeToggles.has(e)) {
+        t.activeToggles.delete(e);
+        const n = SexualActsDB[e];
+        showNarration(`You stop ${(n?.label || "the act").toLowerCase()}.`), renderEncounterUI(t);
+    }
+}
+function encounterRequestAct(e) {
+    const t = activeEncounter;
+    if (!t || "PLAYER_TURN" !== t.phase) return;
+    const n = SexualActsDB[e];
+    if (!n || "npc" !== n.giver) return;
+    (t.phase = "ANIMATING"), t.round++, t.roundsSincePositionChange++;
+    const a = getNPCReactionTier(t, e),
+        o = t.npc.stats?.desire || 50,
+        i = t.npc.stats?.comfort || 50;
+    let s = 40;
+    "Liked" === a ? (s += 30) : "Disliked" === a && (s -= 25),
+        doesActMatchDesire(t, e) && (s += 20),
+        (s += 0.4 * (o - 50)),
+        (s += 0.3 * (i - 50)),
+        t.npcExcitement > 60 && (s += 15),
+        t.npcLibido < 25 && (s -= 20),
+        (s = Math.max(10, Math.min(95, s)));
+    const r = 100 * Math.random() < s,
+        l = (n.label || e).replace(/^They\s+/i, "");
+    if (r) {
+        const o = !t.uniqueActsUsed.has(e);
+        t.uniqueActsUsed.add(e),
+            applyExcitement(t, e, !1),
+            n.togglable && !t.activeToggles.has(e) && (resolveToggleConflicts(t, e), t.activeToggles.add(e));
+        const i = o ? getStartNarration(e) : getNarration(e, a);
+        t.history.push({ round: t.round, actKey: e, giver: "npc", narration: i, tier: a, requested: !0 }),
+            showNarration(`You ask them to ${l.toLowerCase()}... ${i}`),
+            enhanceNarrationWithAI(t, `You ask them to ${l.toLowerCase()}. ${i}`, e);
+        const s = document.getElementById("enc-npc-response"),
+            r = document.getElementById("enc-npc-action-label"),
+            c = document.getElementById("enc-npc-response-text");
+        s &&
+            c &&
+            ((r.textContent = `${t.npc.name || "They"}: ${n.label}`),
+            (c.textContent = i),
+            (s.style.display = "block"),
+            c.classList.remove("enc-narration-fade"),
+            c.offsetWidth,
+            c.classList.add("enc-narration-fade")),
+            generateEncounterImage(t, n.label);
+    } else {
+        const n = [
+                `${t.npc.name || "They"} shake${t.npc.name ? "s" : ""} their head with a teasing smile. "Not right now..."`,
+                `${t.npc.name || "They"} consider${t.npc.name ? "s" : ""} it, then gently decline${t.npc.name ? "s" : ""}. "Maybe later..."`,
+                `"Hmm, I'm not really in the mood for that," ${t.npc.name || "they"} say${t.npc.name ? "s" : ""} softly.`,
+                `${t.npc.name || "They"} give${t.npc.name ? "s" : ""} you a look. "I'd rather keep doing what we're doing."`,
+            ],
+            o = n[Math.floor(Math.random() * n.length)];
+        t.history.push({
+            round: t.round,
+            actKey: e,
+            giver: "player",
+            narration: o,
+            tier: a,
+            requested: !0,
+            refused: !0,
+        }),
+            showNarration(`You ask them to ${l.toLowerCase()}... ${o}`);
+    }
+    applyExcitementDecay(t), renderEncounterUI(t);
+    const c = checkOrgasm(t);
+    c
+        ? setTimeout(() => handleOrgasm(t, c), 1200)
+        : r
+          ? setTimeout(() => {
+                (t.phase = "PLAYER_TURN"),
+                    (t.npcMood = calculateMood(
+                        Math.min(100, (t.npc.stats?.desire || 50) + 0.3 * t.npcExcitement),
+                        Math.min(100, (t.npc.stats?.comfort || 50) + 0.5 * t.round)
+                    )),
+                    renderEncounterUI(t);
+            }, 800)
+          : setTimeout(() => npcTurn(t), 1e3);
+}
+function encounterPerformAct(e) {
+    const t = activeEncounter;
+    if (!t || "PLAYER_TURN" !== t.phase) return;
+    const n = SexualActsDB[e];
+    if (n && "undress" === n.actionType) {
+        "Undress_NPC_Top" === e
+            ? (t.clothing.npc.top = !1)
+            : "Undress_NPC_Bottom" === e
+              ? (t.clothing.npc.bottom = !1)
+              : "Undress_Player_Top" === e
+                ? (t.clothing.player.top = !1)
+                : "Undress_Player_Bottom" === e && (t.clothing.player.bottom = !1),
+            t.history.push({ actKey: e, who: "player", round: t.round });
+        const a = getNPCReactionTier(t, e),
+            o = !t.uniqueActsUsed.has(e);
+        t.uniqueActsUsed.add(e);
+        return (
+            showNarration((o ? getStartNarration(e) : getNarration(e, a)) || n.label + "..."),
+            applyExcitement(t, e, !0),
+            renderEncounterUI(t),
+            void generateEncounterImage(t, n.label)
+        );
+    }
+    const a = SexualActsDB[e];
+    if (!a) return;
+    (t.phase = "ANIMATING"), t.round++, t.roundsSincePositionChange++;
+    const o = a.togglable && t.activeToggles.has(e);
+    a.togglable && !o && (resolveToggleConflicts(t, e), t.activeToggles.add(e));
+    const i = !t.uniqueActsUsed.has(e);
+    t.uniqueActsUsed.add(e);
+    const s = applyExcitement(t, e, !0),
+        r = s?.tier || getNPCReactionTier(t, e),
+        l = s?.quality || "decent",
+        c = i ? getStartNarration(e) : getNarration(e, r);
+    t.history.push({ round: t.round, actKey: e, giver: "player", narration: c, tier: r, quality: l, continued: o });
+    let d = o ? `You keep going... ${c}` : c;
+    if (
+        ("poor" === l ? (d += " 😬") : "excellent" === l && (d += " 🌟"),
+        "convinced" === t.lastDesireResult
+            ? (d += ` ${t.npc.name || "They"} didn't ask for that, but damn — you're good at it.`)
+            : "mismatched" === t.lastDesireResult &&
+              t.desireStreakMismatch >= 3 &&
+              (d += ` ${t.npc.name || "They"} seem${t.npc.name ? "s" : ""} to want something different...`),
+        t.round - t.lastPositionNarratedRound > 3)
+    ) {
+        const e = EncounterPositions[t.position]?.description;
+        e && ((d = `[${e}] ${d}`), (t.lastPositionNarratedRound = t.round));
+    }
+    if ((showNarration(d), !i && "Liked" === r)) {
+        const t = SexSceneResponses[e]?.reaction;
+        t?.length && showReaction(t[Math.floor(Math.random() * t.length)]);
+    }
+    (document.getElementById("enc-narration-ai-badge").style.display = "none"),
+        enhanceNarrationWithAI(t, c, e),
+        applyExcitementDecay(t),
+        renderEncounterUI(t);
+    for (const n of t.activeToggles) n !== e && applyExcitement(t, n, !1, !0);
+    updateIntensity(t), renderEncounterUI(t);
+    const p = checkOrgasm(t);
+    p
+        ? setTimeout(() => handleOrgasm(t, p), 1200)
+        : (setTimeout(() => npcTurn(t), 1e3), generateEncounterImage(t, a.label));
+}
+function npcTurn(e) {
+    if (((e.phase = "NPC_TURN"), e.roundsSincePositionChange >= 3 && Math.random() < 0.25)) {
+        if ((e.npcPrefs?.Dominance || 0) + (e.npcPrefs?.DomPlay || 0) >= 3) {
+            const t = npcDecideAction(e);
+            if (t) {
+                const n = SexualActsDB[t],
+                    a = EncounterPositions[e.position],
+                    o = a?.available?.includes(n?.category);
+                if (!o && n?.category) {
+                    const t = Object.keys(EncounterPositions).find(
+                        (t) => t !== e.position && EncounterPositions[t].available?.includes(n.category)
+                    );
+                    if (t) {
+                        const n = EncounterPositions[t];
+                        (e.position = t), (e.roundsSincePositionChange = 0);
+                        const a = n.description || `${n.label} position`;
+                        showNarration(
+                            `${e.npc.name || "They"} take control, shifting you both — ${a.toLowerCase()}...`
+                        ),
+                            renderEncounterUI(e),
+                            generateEncounterImage(e, n.label);
+                    }
+                }
+            }
+        }
+    }
+    const t = npcDecideAction(e);
+    if (!t) return (e.phase = "PLAYER_TURN"), void renderEncounterUI(e);
+    const n = SexualActsDB[t];
+    if (n && "undress" === n.actionType) {
+        "Undress_NPC_Top_NPC" === t
+            ? (e.clothing.npc.top = !1)
+            : "Undress_NPC_Bottom_NPC" === t
+              ? (e.clothing.npc.bottom = !1)
+              : "Undress_Player_Top_NPC" === t
+                ? (e.clothing.player.top = !1)
+                : "Undress_Player_Bottom_NPC" === t && (e.clothing.player.bottom = !1),
+            e.history.push({ actKey: t, who: "npc", round: e.round });
+        const a = document.getElementById("enc-npc-response"),
+            o = document.getElementById("enc-npc-action-label"),
+            i = document.getElementById("enc-npc-response-text");
+        return (
+            a &&
+                i &&
+                ((o.textContent = `${e.npc.name || "They"}: ${n.label}`),
+                (i.textContent = n.label + "..."),
+                (a.style.display = "block")),
+            applyExcitement(e, t, !1),
+            renderEncounterUI(e),
+            void setTimeout(() => npcTurn(e), 400)
+        );
+    }
+    const a = !e.uniqueActsUsed.has(t);
+    e.uniqueActsUsed.add(t);
+    const o = getNPCReactionTier(e, t),
+        i = a ? getStartNarration(t) : getNarration(t, o);
+    applyExcitement(e, t, !1),
+        n && n.togglable && !e.activeToggles.has(t) && (resolveToggleConflicts(e, t), e.activeToggles.add(t)),
+        e.history.push({ round: e.round, actKey: t, giver: "npc", narration: i, tier: o });
+    const s = document.getElementById("enc-npc-response"),
+        r = document.getElementById("enc-npc-action-label"),
+        l = document.getElementById("enc-npc-response-text");
+    if (
+        (s &&
+            l &&
+            ((r.textContent = `${e.npc.name || "They"}: ${n?.label || "responds"}`),
+            (l.textContent = i),
+            (s.style.display = "block"),
+            l.classList.remove("enc-narration-fade"),
+            l.offsetWidth,
+            l.classList.add("enc-narration-fade")),
+        !a && "Liked" === o)
+    ) {
+        const e = SexSceneResponses[t]?.reaction;
+        e?.length && showReaction(e[Math.floor(Math.random() * e.length)]);
+    }
+    const c = document.getElementById("enc-npc-desire-voice");
+    if ((c && (c.style.display = "none"), e.desireSatisfaction < 35 && e.npcLibido >= 40 && e.round >= 4)) {
+        const t = e.currentDesire?.matchCategories?.[0]?.toLowerCase() || "default",
+            n = {
+                oral: [
+                    '"I want your mouth on me..."',
+                    '"Please — I need to feel your lips."',
+                    '"God, taste me..."',
+                ],
+                vaginal: ['"I need you inside me."', '"Stop teasing — I need it now."', '"Please..."'],
+                anal: ['"Take me from behind," they breathe.', '"I want to feel you in my ass."'],
+                manual: ['"Touch me. Please."', '"I need your hands on me."'],
+                emotional: ['"Hold me closer."', '"Look at me when you do that."'],
+                power: ['"Take control," they whisper.', '"I want you to use me."'],
+                default: [
+                    `${e.npc.name || "They"} bites their lip, clearly wanting more.`,
+                    "You sense their patience wearing thin.",
+                ],
+            },
+            a = n[t] || n.default,
+            o = a[Math.floor(Math.random() * a.length)],
+            i = document.getElementById("enc-npc-desire-voice");
+        i ? ((i.textContent = o), (i.style.display = "block")) : l && (l.textContent += `\n${o}`);
+    }
+    applyExcitementDecay(e), renderEncounterUI(e), generateEncounterImage(e, n?.label || "npc action");
+    const d = checkOrgasm(e);
+    if (d) return void setTimeout(() => handleOrgasm(e, d), 1e3);
+    setTimeout(
+        () => {
+            (e.phase = "PLAYER_TURN"),
+                (e.npcMood = calculateMood(
+                    Math.min(100, (e.npc.stats?.desire || 50) + 0.3 * e.npcExcitement),
+                    Math.min(100, (e.npc.stats?.comfort || 50) + 0.5 * e.round)
+                )),
+                renderEncounterUI(e);
+        },
+        "Liked" === o ? 1600 : "Disliked" === o ? 700 : 1e3
+    );
+}
+function handleOrgasm(e, t) {
+    if ("npc" === t) {
+        e.orgasmsNPC++, postOrgasmLibidoDip(e, "npc");
+        const t = e.history.length ? e.history[e.history.length - 1].actKey : null;
+        showNarration(
+            `💥 ${t && SexSceneResponses[t]?.climax?.[0] ? SexSceneResponses[t].climax[0] : `${e.npc.name || "They"} shudder as orgasm washes over them.`}`
+        );
+    } else
+        e.orgasmsPlayer++,
+            postOrgasmLibidoDip(e, "player"),
+            showNarration("💥 Waves of pleasure crash through you as you hit your peak.");
+    (e.currentDesire = generateNPCDesire(e)),
+        (e.desireRoundsActive = 0),
+        (e.desireShiftInterval = 3 + Math.floor(3 * Math.random())),
+        document.getElementById("encounterContainer")?.classList.add("enc-orgasm-overlay"),
+        setTimeout(
+            () => document.getElementById("encounterContainer")?.classList.remove("enc-orgasm-overlay"),
+            1500
+        ),
+        renderEncounterUI(e),
+        generateEncounterImage(e, "orgasm climax moment");
+    const n = e.orgasmsNPC + e.orgasmsPlayer;
+    setTimeout(() => {
+        n >= 5
+            ? showNarration(
+                  `💫 ${"npc" === t ? (e.npc.name || "They") + " look" + (e.npc.name ? "s" : "") : "You feel"} completely spent... but still ${"npc" === t ? "willing" : "able"} if you want to continue.`
+              )
+            : "npc" === t && e.npcLibido < 25
+              ? showNarration(
+                    `🌊 ${e.npc.name || "They"} need${e.npc.name ? "s" : ""} a moment to recover... some gentle attention could rekindle the fire.`
+                )
+              : "player" === t &&
+                e.playerLibido < 25 &&
+                showNarration("🌊 You need a moment to catch your breath... take it slow to build back up."),
+            (e.phase = "PLAYER_TURN"),
+            renderEncounterUI(e);
+    }, 1800);
+}
+function encounterLetThemLead() {
+    const e = activeEncounter;
+    e &&
+        "PLAYER_TURN" === e.phase &&
+        ((e.phase = "ANIMATING"),
+        showNarration("You lean back and let them take the lead..."),
+        setTimeout(() => npcTurn(e), 800));
+}
+function encounterTogglePositions() {
+    const e = activeEncounter;
+    if (!e) return;
+    const t = document.getElementById("enc-positions-panel");
+    if (
+        t &&
+        ((e.positionsPanelOpen = !e.positionsPanelOpen),
+        (t.style.display = e.positionsPanelOpen ? "block" : "none"),
+        e.positionsPanelOpen)
+    ) {
+        let t = "";
+        for (const [n, a] of Object.entries(EncounterPositions))
+            t += `<button class="enc-pos-btn ${n === e.position ? "current" : ""}" onclick="encounterChangePosition('${n}')">${a.emoji} ${a.label}${a.description ? `<br><small style="color:var(--text-mute);font-size:0.6rem;font-weight:normal;">${a.description}</small>` : ""}</button>`;
+        document.getElementById("enc-position-buttons").innerHTML = t;
+    }
+}
+function encounterChangePosition(e) {
+    const t = activeEncounter;
+    if (!t || "PLAYER_TURN" !== t.phase) return;
+    if (t.position === e) return;
+    (t.position = e),
+        (t.positionsPanelOpen = !1),
+        (t.roundsSincePositionChange = 0),
+        (document.getElementById("enc-positions-panel").style.display = "none");
+    const n = EncounterPositions[e];
+    showNarration(n?.description ? `${n.description}...` : `You shift into ${n?.label || e} position...`),
+        t.round++,
+        (t.selectedCategory = null),
+        renderEncounterUI(t),
+        generateEncounterImage(t, EncounterPositions[e]?.label || e),
+        setTimeout(() => npcTurn(t), 800);
+}
+function encounterTriggerOrgasm() {
+    const e = activeEncounter;
+    !e ||
+        "PLAYER_TURN" !== e.phase ||
+        e.playerExcitement < 75 ||
+        ((e.selectedCategory = "Orgasm"), renderEncounterUI(e));
+}
+function encounterSelectCategory(e) {
+    const t = activeEncounter;
+    t && ((t.selectedCategory = t.selectedCategory === e ? null : e), renderActionCategories(t));
+}
+function showNarration(e) {
+    const t = document.getElementById("enc-narration-text");
+    if (!t) return;
+    (t.textContent = e),
+        t.classList.remove("enc-narration-fade"),
+        t.offsetWidth,
+        t.classList.add("enc-narration-fade");
+    const n = document.getElementById("enc-narration-reaction");
+    n && ((n.textContent = ""), (n.style.display = "none"));
+}
+function showReaction(e) {
+    const t = document.getElementById("enc-narration-reaction");
+    t &&
+        e &&
+        ((t.textContent = e),
+        (t.style.display = "block"),
+        t.classList.remove("enc-narration-fade"),
+        t.offsetWidth,
+        t.classList.add("enc-narration-fade"));
+}
+function expandEncounterImage() {
+    const e = activeEncounter;
+    if (!e || !e.currentImageUrl) return;
+    const t = document.getElementById("enc-image-viewer"),
+        n = document.getElementById("enc-image-viewer-img");
+    t && n && ((n.src = e.currentImageUrl), (t.style.display = "flex"));
+}
+function closeEncounterImageViewer() {
+    document.getElementById("enc-image-viewer").style.display = "none";
+}
+function showEncounterRequestModal() {
+    if (!gameState.activeChat) return void showNotification("Open a chat first!", "error");
+    const e = document.getElementById("encounterRequestModal"),
+        t = document.getElementById("encounterRequestText");
+    if (!e || !t) return void initiateEncounterRequest();
+    (t.value = "I've been thinking about you... want to find somewhere private?"),
+        (e.style.display = "flex"),
+        t.focus();
+    const n = document.getElementById("encounterRequestSend"),
+        a = document.getElementById("encounterRequestCancel"),
+        o = n.cloneNode(!0),
+        i = a.cloneNode(!0);
+    n.parentNode.replaceChild(o, n),
+        a.parentNode.replaceChild(i, a),
+        i.addEventListener("click", () => {
+            e.style.display = "none";
+        }),
+        o.addEventListener("click", () => {
+            const n = t.value.trim();
+            (e.style.display = "none"), n && initiateEncounterRequest(n);
+        }),
+        (e.onclick = (t) => {
+            t.target === e && (e.style.display = "none");
+        });
+}
+async function initiateEncounterRequest(e) {
+    const t = gameState.activeChat;
+    if (!t) return void showNotification("Open a chat first!", "error");
+    const n = gameState.employees.find((e) => e.id === t.id);
+    if (!n) return void showNotification("Employee not found", "error");
+    const a = n.id,
+        o = n.name,
+        i = gameState.time?.currentTime || Date.now(),
+        s = e || "I've been thinking about you... want to find somewhere private?";
+    pushChatMessage(a, { sender: "You", content: s, isPlayer: !0, timestamp: i }),
+        gameState.activeChat?.id === a && addChatMessage("You", s, !0, null, null, null, i);
+    const r = n.stats?.desire || 0,
+        l = n.stats?.trust || 0,
+        c = n.stats?.comfort || 0,
+        d = n.stats?.affection || 0,
+        p = n.mood || "neutral",
+        m = buildConversationHistoryWithImages(a);
+    ensureEmployeeMemory(n);
+    let { prompt: u } = buildChatPrompt(n, m, s);
+    u += `\n\n[ENCOUNTER REQUEST]\nThe player is propositioning ${o} for an intimate encounter.\n\nCurrent relationship stats with the player:\n- Desire: ${r}/100 (sexual interest)\n- Trust: ${l}/100\n- Comfort: ${c}/100\n- Affection: ${d}/100\n- Current mood: ${p}\n\nDecision factors:\n1. RELATIONSHIP: Desire ≥40 and Trust ≥30 makes acceptance likely. Very low desire (<20) or trust (<20) makes rejection likely.\n2. SITUATION: Consider the time of day, whether they're at work, and the current conversation mood.\n3. PERSONALITY: Consider their personality traits and whether they'd be open to this.\n\nYou MUST decide: accept or reject.\n- If accepting: respond flirtatiously/enthusiastically. Your FINAL line must be exactly: [ACCEPT]\n- If rejecting: respond naturally explaining why. Your FINAL line must be exactly: [REJECT]\n\nCRITICAL: You MUST end your message with [ACCEPT] or [REJECT] as the very last thing you write. This is mandatory.`;
+    const g = document.getElementById("chatTypingIndicator"),
+        h = document.getElementById("chatTypingName");
+    g && h && gameState.activeChat?.id === a && ((g.style.display = "block"), (h.textContent = o));
+    try {
+        const e = await queuedGenerateText(u, {}, `${o} considering encounter request`);
+        g && (g.style.display = "none");
+        const t = /\[ACCEPT\]/i.test(e),
+            n = /\[REJECT\]/i.test(e),
+            i = sanitizeNpcResponse(e, 10)
+                .replace(/\[ACCEPT\]|\[REJECT\]/gi, "")
+                .trim();
+        let s;
+        if (t || n) s = t && !n;
+        else {
+            const e =
+                    /lead the way|let'?s go|come (on|here)|follow me|ready|sure|yes|okay|i'?m (yours|down|game|in)|why not|thought you'?d never ask|what are (we|you) waiting|private|bedroom|show (me|you)|can'?t wait/i.test(
+                        i
+                    ),
+                t =
+                    /no thanks|not (now|tonight|interested|ready|in the mood)|i don'?t think|maybe (later|another)|sorry|can'?t|busy|too (early|late|tired)|stop|inappropriate|uncomfortable|boundaries/i.test(
+                        i
+                    );
+            (s = !(!e || t) || (!t && r >= 40 && l >= 30)),
+                console.log(
+                    `[Enc] No tag found, heuristic: positive=${e}, negative=${t}, stats=${r}/${l}, accepted=${s}`
+                );
+        }
+        const c = gameState.time?.currentTime || Date.now();
+        if (
+            (pushChatMessage(a, { sender: o, content: i, isPlayer: !1, timestamp: c }),
+            gameState.activeChat?.id === a && (addChatMessage(o, i, !1, null, null, null, c), s))
+        ) {
+            const e = document.createElement("div");
+            (e.id = `enc-goto-btn-${a}`),
+                (e.style.cssText = "display:flex; justify-content:center; margin:8px 0;"),
+                (e.innerHTML = `<button onclick="window.startEncounterFromChat('${a}')" style="padding:12px 24px; background:linear-gradient(135deg, var(--l-red), var(--l-red-dim)); border:none; border-radius:10px; color:var(--l-ink-on-fill); font-size:0.95rem; font-weight:bold; cursor:pointer; box-shadow:0 4px 15px rgba(233,69,96,0.4); transition:all 0.2s; display:flex; align-items:center; gap:8px;">\n            💋 Go to Encounter <span style="font-size:1.1rem;">→</span>\n          </button>`);
+            const t = document.getElementById("chatMessages");
+            t && (t.appendChild(e), (t.scrollTop = t.scrollHeight));
+        }
+    } catch (e) {
+        console.error("[Enc] Encounter request AI error:", e),
+            g && (g.style.display = "none"),
+            showNotification("Failed to get response", "error");
+    }
+}
+function startEncounterFromChat(e) {
+    const t = gameState.employees.find((t) => t.id === e);
+    if (!t) return;
+    const n = document.getElementById(`enc-goto-btn-${e}`);
+    n && n.remove(), startEncounter(t), activeEncounter && (activeEncounter._chatOriginId = e);
+}
+function startEncounter(e) {
+    if (!e) return void console.error("[Enc] No NPC");
+    (activeEncounter = createEncounterState(e)), (window.activeEncounter = activeEncounter);
+    const t = activeEncounter;
+    document.getElementById("encounterModal").style.display = "flex";
+    try {
+        (document.body.dataset.encPrevOverflow = document.body.style.overflow || ""),
+            (document.body.style.overflow = "hidden");
+    } catch (e) {}
+    try {
+        const e = document.getElementById("enc-right-col"),
+            t = document.getElementById("enc-stats-toggle");
+        e && window.innerWidth <= 700
+            ? (e.classList.add("enc-stats-collapsed"), t && (t.innerHTML = "▶ Stats"))
+            : e && (e.classList.remove("enc-stats-collapsed"), t && (t.innerHTML = "▼ Stats"));
+    } catch (e) {}
+    if (e.profileImage) {
+        const n = document.getElementById("enc-img"),
+            a = document.getElementById("enc-img-placeholder");
+        n &&
+            ((n.src = e.profileImage),
+            (n.style.display = "block"),
+            (n.style.opacity = "1"),
+            (t.currentImageUrl = e.profileImage),
+            a && (a.style.display = "none"));
+    }
+    showNarration(`Your eyes meet ${e.name || "theirs"}. The air between you thickens with tension...`),
+        (document.getElementById("enc-npc-response").style.display = "none"),
+        renderEncounterUI(t),
+        generateEncounterImage(t, "beginning of intimate encounter"),
+        console.log(`[Enc] Started with ${e.name}, desire:${e.stats?.desire}, comfort:${e.stats?.comfort}`);
+}
+async function endEncounter() {
+    const e = activeEncounter;
+    if (!e) return;
+    (await showConfirm("Are you sure you want to end this encounter?", "End Encounter")) && finishEncounter(e);
+}
+function finishEncounter(e) {
+    e.phase = "FINISHED";
+    const t = e.orgasmsNPC + e.orgasmsPlayer,
+        n = e.uniqueActsUsed.size;
+    let a = "⭐";
+    const o = e.desireSatisfaction >= 70 ? 1 : 0,
+        i = e.convincedCount >= 2 ? 1 : 0,
+        s = t + Math.floor(n / 3) + o + i;
+    s >= 5 ? (a = "⭐⭐⭐⭐⭐") : s >= 4 ? (a = "⭐⭐⭐⭐") : s >= 3 ? (a = "⭐⭐⭐") : s >= 2 && (a = "⭐⭐");
+    const r = e.npc;
+    if (r.stats) {
+        const t = Math.max(0, Math.floor(0.05 * e.npcExcitementPeak)),
+            a = e.orgasmsNPC > 0 ? 3 : e.round > 3 ? 1 : 0,
+            o = n >= 4 ? 2 : 1,
+            i = e.history.some((e) => "Disliked" === e.tier) ? -1 : 1,
+            s = e.desireSatisfaction >= 70 ? 1.5 : e.desireSatisfaction >= 40 ? 1 : 0.5;
+        (r.stats.desire = Math.min(100, (r.stats.desire || 50) + Math.round(t * s))),
+            (r.stats.comfort = Math.min(100, (r.stats.comfort || 50) + Math.round(a * s))),
+            (r.stats.affection = Math.min(100, (r.stats.affection || 50) + Math.round(o * s))),
+            (r.stats.trust = Math.min(100, Math.max(0, (r.stats.trust || 50) + i)));
+    }
+    r.sexHistory ||
+        (r.sexHistory = {
+            encounterCount: 0,
+            actTypesUsed: {},
+            categoryCounts: {},
+            preferenceShifts: {},
+            lastEncounterDate: null,
+        });
+    const l = r.sexHistory;
+    (l.encounterCount = (l.encounterCount || 0) + 1),
+        (l.lastEncounterDate = gameState.time?.currentTime || Date.now());
+    const c = {},
+        d = {};
+    e.history.forEach((e) => {
+        const t = SexualActsDB[e.actKey];
+        t &&
+            "undress" !== t.actionType &&
+            ((l.actTypesUsed[t.actionType] = (l.actTypesUsed[t.actionType] || 0) + 1),
+            (l.categoryCounts[t.category] = (l.categoryCounts[t.category] || 0) + 1),
+            (c[e.actKey] = (c[e.actKey] || 0) + 1),
+            e.tier && (d[e.actKey] = e.tier));
+    }),
+        l.preferenceShifts || (l.preferenceShifts = {});
+    for (const [e, t] of Object.entries(c)) {
+        const n = SexualActsDB[e];
+        if (!n) continue;
+        const a = d[e] || "Neutral";
+        (n.preferenceTags || []).forEach((e) => {
+            l.preferenceShifts[e] =
+                "Liked" === a
+                    ? Math.min(5, (l.preferenceShifts[e] || 0) + 0.3 * Math.min(t, 3))
+                    : "Disliked" === a
+                      ? t >= 2
+                          ? Math.max(-5, (l.preferenceShifts[e] || 0) + 0.15)
+                          : Math.max(-5, (l.preferenceShifts[e] || 0) - 0.1)
+                      : Math.min(5, (l.preferenceShifts[e] || 0) + 0.1 * Math.min(t, 2));
+        });
+    }
+    let p;
+    (document.getElementById("encounterModal").style.display = "none"),
+        (document.getElementById("enc-sum-rounds").textContent = e.round),
+        (document.getElementById("enc-sum-acts").textContent = n),
+        (document.getElementById("enc-sum-npc-peak").textContent = e.npcExcitementPeak + "%"),
+        (document.getElementById("enc-sum-player-peak").textContent = e.playerExcitementPeak + "%"),
+        (document.getElementById("enc-sum-orgasms").textContent = t),
+        (document.getElementById("enc-sum-rating").textContent = a),
+        (p =
+            t >= 3
+                ? `A marathon session with ${r.name || "your partner"}. You both left thoroughly satisfied and exhausted.`
+                : t >= 2
+                  ? `An incredible session with ${r.name || "your partner"}. You both left satisfied.`
+                  : e.orgasmsNPC > 0 && e.convincedCount > 0
+                    ? `${r.name || "They"} came for you, and you impressed them with your skill.`
+                    : e.orgasmsNPC > 0
+                      ? `${r.name || "They"} came for you. Well done.`
+                      : e.orgasmsPlayer > 0
+                        ? `You got your release, but ${(r.name || "they").split(" ")[0]} might want more next time.`
+                        : e.round >= 5
+                          ? "An enjoyable encounter, though neither reached the peak."
+                          : `A brief but pleasant encounter with ${r.name || "your partner"}.`),
+        e.desireSatisfaction < 25 && (p += " They seemed unsatisfied with how well you read their desires."),
+        (document.getElementById("enc-summary-text").textContent = p);
+    const m = [];
+    r.stats &&
+        (m.push(`❤️ Desire +${Math.floor(0.05 * e.npcExcitementPeak)}`),
+        e.orgasmsNPC > 0 && m.push("💜 Comfort +3"),
+        m.push("💕 Affection +" + (n >= 4 ? 2 : 1)),
+        e.desireSatisfaction >= 70 && m.push("🎯 Satisfaction bonus!")),
+        e.convincedCount > 0 && m.push(`🌟 Convinced ${e.convincedCount}x`);
+    const u = getNPCBaseReached(r);
+    u > 0 && m.push(`🔓 Comfort: ${["Touch", "Hands", "Oral", "Full"][u] || "Full"}`);
+    const g = Object.entries(r.sexHistory?.preferenceShifts || {})
+        .filter(([, e]) => Math.abs(e) >= 0.5)
+        .slice(0, 3);
+    if (g.length) {
+        const e = g.map(([e, t]) => `${t > 0 ? "↑" : "↓"}${e}`).join(", ");
+        m.push(`📈 ${e}`);
+    }
+    if (
+        ((document.getElementById("enc-summary-effects").innerHTML = m.join(" &nbsp;·&nbsp; ")), e.currentImageUrl)
+    ) {
+        const t = document.getElementById("enc-summary-img"),
+            n = document.getElementById("enc-summary-img-placeholder");
+        t && ((t.src = e.currentImageUrl), (t.style.display = "block")), n && (n.style.display = "none");
+    }
+    (document.getElementById("enc-summary-modal").style.display = "flex"),
+        postEncounterSummaryToChat(e, r, a, t, n),
+        "function" == typeof saveGame && saveGame(!1).catch(() => {}),
+        (activeEncounter = null),
+        (window.activeEncounter = null);
+}
+function postEncounterSummaryToChat(e, t, n, a, o) {
+    const i = e._chatOriginId || t.id;
+    if (!i) return;
+    const s = {};
+    e.history.forEach((e) => {
+        const t = SexualActsDB[e.actKey];
+        t && "undress" !== t.actionType && (s[t.category] = (s[t.category] || 0) + 1);
+    });
+    const r = Object.entries(s)
+        .sort((e, t) => t[1] - e[1])
+        .slice(0, 3)
+        .map(([e, t]) => `${EncounterCategories[e]?.emoji || ""}${e} (${t})`)
+        .join(", ");
+    let l;
+    l =
+        e.desireSatisfaction >= 80
+            ? `${t.name} was very satisfied — you read them perfectly`
+            : e.desireSatisfaction >= 50
+              ? `${t.name} seemed content with the encounter`
+              : e.desireSatisfaction >= 25
+                ? `${t.name} seemed like they wanted something different at times`
+                : `${t.name} seemed unsatisfied — their desires went unmet`;
+    let c = "";
+    (c =
+        e.orgasmsNPC > 0 && e.orgasmsPlayer > 0
+            ? "Both of you reached climax"
+            : e.orgasmsNPC > 0
+              ? `${t.name} orgasmed`
+              : e.orgasmsPlayer > 0
+                ? `You orgasmed, but ${t.name} didn't`
+                : "Neither of you reached climax"),
+        a > 2 && (c += ` (${a} total orgasms!)`);
+    const d = getNPCBaseReached(t),
+        p = [
+            `💋 You and ${t.name} just shared an intimate encounter. ${n}`,
+            `📊 ${e.round} rounds, ${o} different acts.`,
+            r ? `🔥 Focused on: ${r}.` : "",
+            c ? `💥 ${c}.` : "",
+            `💭 ${l}.`,
+            d > 0
+                ? `🔓 Comfort level: ${{ 0: "New", 1: "Comfortable with touch", 2: "Open to oral", 3: "Fully intimate" }[d]}.`
+                : "",
+        ]
+            .filter(Boolean)
+            .join("\n"),
+        m = gameState.time?.currentTime || Date.now();
+    pushChatMessage(i, { sender: "Narrator", content: p, isPlayer: !1, isNarrator: !0, timestamp: m }),
+        gameState.activeChat?.id === i && addChatMessage("Narrator", p, !1, null, null, null, m, !0);
+}
+function closeEncounterSummary() {
+    document.getElementById("enc-summary-modal").style.display = "none";
+    try {
+        const e = document.body.dataset.encPrevOverflow;
+        (document.body.style.overflow = e || ""), delete document.body.dataset.encPrevOverflow;
+    } catch (e) {}
+}
+function testEncounter(e = 0) {
+    const t = (gameState?.employees || [])[e];
+    startEncounter(
+        t || {
+            name: "Test Partner",
+            gender: "female",
+            stats: { desire: 65, comfort: 55, trust: 60, affection: 50 },
+            personality: { confidence: 50, flirty: 60, outgoing: 55 },
+            kinks: ["Teasing", "Oral", "Roleplay"],
+            physical: { bodyType: "slim", hairColor: "blonde", hairStyle: "long", skinTone: "fair" },
+        }
+    );
+}
+function encounterToggleStats() {
+    const e = document.getElementById("enc-right-col"),
+        t = document.getElementById("enc-stats-toggle");
+    if (!e) return;
+    const n = e.classList.toggle("enc-stats-collapsed");
+    t && (t.innerHTML = n ? "▶ Stats" : "▼ Stats");
+}

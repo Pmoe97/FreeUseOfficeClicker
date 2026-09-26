@@ -1,0 +1,2803 @@
+/* ============================================================================
+ * 01-theme — Theme palettes + a11y/system settings (fuoc-theme-*, scale, motion, flat, targets, focus, font)
+ * ----------------------------------------------------------------------------
+ */
+
+/* ════════════════════════════════════════════════════════════════════════
+   FUOC STYLESHEET — READ THIS FIRST
+   ════════════════════════════════════════════════════════════════════════
+
+   This is the game's main stylesheet (~8.8k lines). There is one other, much
+   smaller <style> block earlier in the file holding boss-fight animations, plus
+   a few blocks the game injects at runtime from JS strings.
+
+   LAYER ORDER (cascade order matters — later wins on equal specificity):
+
+     1. TOKEN LAYER          non-colour design tokens: type scale, spacing,
+                             radius, z-index tiers, .num, the .fuoc-ui reset
+     2. THEME LAYER          GENERATED — every colour token, once per theme.
+                             Edit tools/palette.mjs, then `npm run theme:tokens`.
+                             Never hand-edit between the sentinel comments.
+     3. ACCESSIBILITY LAYER  player display options, keyed off data-fuoc-*
+                             attributes on <html>. Uses !important on purpose:
+                             it has to beat 4,400 inline styles.
+     4. COMPONENTS           .fuoc-ui components from the UI overhaul, then the
+                             older per-tab and per-modal rules, then the mobile
+                             responsive blocks at the end.
+
+   WHERE COLOURS COME FROM
+     Most of this app's colour lives in inline styles inside JS template strings,
+     where no stylesheet can reach it. Those literals were migrated to tokens
+     (var(--l-*)), so a theme can retune them from one place. When you add UI:
+
+       • use a token, not a literal — var(--surface), var(--text), var(--danger)
+       • text on a coloured button uses var(--l-ink-on-fill) (light ink) or
+         var(--l-on-accent) (dark ink); both flip per theme so the button stays
+         readable. Don't hard-code #fff there.
+       • need a colour+alpha? call fuocAlpha(colour, "44") — string-concatenating
+         an alpha onto a var() produces invalid CSS.
+
+   TOOLING (run from FreeUseOfficeClicker/)
+     npm run css:audit            health report: blocks, tokens, literals left
+     npm run css:audit -- --map   section map with current line numbers
+     npm run css:audit -- --risk  literals that can't follow a theme (should be 0)
+     npm run theme:tokens         regenerate the theme layer from the palette
+     npm run theme:audit          WCAG contrast per theme
+     npm run codemod:colors -- --stage=<surfaces|text|accents|veils|retune>
+
+   Full write-up: docs/theming.md
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ============================================================
+ FUOC DESIGN SYSTEM — TOKEN LAYER  (Mockup D · Density Fusion)
+ STEP 1 of the UI overhaul. PURELY ADDITIVE: defines design
+ tokens, the .num numeric utility, a SCOPED box-sizing reset
+ (.fuoc-ui), and 3 new keyframes. No existing rule is modified
+ and nothing here applies to current markup, so visuals are
+ unchanged until components opt in during later steps.
+
+ Intentional conflict avoidance:
+   • @keyframes bellPulse already exists (~line 30116, injected
+     via #dynamicEventStyles) — NOT redefined here.
+   • @keyframes ticker already exists (~line 101237) — NOT redefined.
+   • A global "* { box-sizing:border-box }" was deliberately NOT
+     added: this app is built on content-box; a global reset would
+     shift the box model app-wide. Border-box is scoped to .fuoc-ui.
+ ============================================================ */
+:root {
+    /* palette — every COLOUR token now lives in the THEME LAYER further down
+       (search "FUOC THEME LAYER"), which restates them per theme. Keeping them
+       in one generated block is what makes light/high-contrast/dim possible.
+       Non-colour tokens (type, spacing, radius, z-index) stay here. */
+    /* type */
+    --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-num: "SF Mono", ui-monospace, "JetBrains Mono", "Roboto Mono", Menlo, monospace;
+    /* type scale — legacy rem sizes, tokenized so inline font-size can be dropped */
+    --fs-xs: 0.75rem;
+    --fs-sm: 0.85rem;
+    --fs-md: 0.95rem;
+    --fs-lg: 1.2rem;
+    --fs-xl: 1.5rem;
+    /* gold heading accent + chat bubble palette → THEME LAYER */
+    /* spacing — dense scale */
+    --s1: 3px;
+    --s2: 6px;
+    --s3: 10px;
+    --s4: 14px;
+    --s5: 20px;
+    --s6: 28px;
+    /* radius */
+    --r1: 4px;
+    --r2: 7px;
+    --r3: 11px;
+    --rpill: 999px;
+    /* elevation → THEME LAYER (--shadow-1/-2, --sheet-shadow, --scrim) */
+    /* z-index tiers (per discovery doc) */
+    --z-ui: 100;
+    --z-fixed: 1000;
+    --z-pop: 1500;
+    --z-modal: 9000;
+    --z-take: 10000;
+    /* safe-area inset (mobile chrome) */
+    --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+/* ==== FUOC THEME LAYER · GENERATED by tools/gen-theme-css.mjs — DO NOT EDIT BY HAND ==== */
+/*  12 themes, 197 tokens each.
+    The "dark" column reproduces the pre-theme values exactly, so switching a
+    colour literal to its bridge token is a visual no-op on the default theme.
+    Edit tools/palette.mjs, then run:  npm run theme:tokens                     */
+
+/* ── Midnight (default) (dark) ─────────────────────────────── */
+:root,
+:root[data-fuoc-theme="dark"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #0a0d13;
+    --surface:            #111722;
+    --surface-2:          #18202e;
+    --surface-3:          #1f2937;
+    --border:             #26303f;
+    --border-strong:      #37445a;
+    --text:               #e7ecf3;
+    --text-dim:           #8a97ac;
+    --text-mute:          #6b7789;
+    --accent:             #4c8dff;
+    --accent-dim:         #23314f;
+    --accent-ink:         #cfe0ff;
+    --positive:           #36b37e;
+    --positive-dim:       #143a2c;
+    --danger:             #e5484d;
+    --danger-dim:         #3a1719;
+    --warning:            #f5a623;
+    --warning-dim:        #3a2c12;
+    --accent-gold:        #f5c542;
+    --accent-gold-dim:    #3a3112;
+    --chat-self:          #38bdf8;
+    --chat-self-2:        #2563eb;
+    --chat-self-fill:     #13243b;
+    --chat-other:         #ff5ec8;
+    --chat-other-2:       #b832d6;
+    --chat-narrator:      #a855f7;
+    --chat-narrator-2:    #7c3aed;
+    --chat-memory:        #f5b942;
+    --chat-memory-2:      #d97706;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(0,0,0,0.45);
+    --shadow-2:           0 10px 30px rgba(0,0,0,0.5);
+    --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.5);
+    --scrim:              rgba(0,0,0,0.7);
+    --focus-ring:         #7fb2ff;
+    --glow:               1;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #0f1419;
+    --l-bg-black:         #0a0a0a;
+    --l-bg-black-2:       #1a1a1a;
+    --l-panel:            #1a1a2e;
+    --l-panel-2:          #16213e;
+    --l-panel-3:          #1c2738;
+    --l-panel-deep:       #0e1522;
+    --l-panel-deep-2:     #101a2a;
+    --l-panel-deep-3:     #142035;
+    --l-panel-alt:        #1a1f2e;
+    --l-panel-alt-2:      #1a1d23;
+    --l-panel-violet:     #1a1028;
+    --l-slate:            #2d3436;
+    --l-slate-2:          #2f3336;
+    --l-black:            #000000;
+    --l-line:             #0f3460;
+    --l-neutral-3:        #333333;
+    --l-neutral-4:        #444444;
+    --l-neutral-5:        #555555;
+    --l-neutral-6:        #666666;
+    --l-neutral-7:        #777777;
+    --l-neutral-8:        #888888;
+    --l-neutral-9:        #999999;
+    --l-ink:              #ffffff;
+    --l-ink-dim:          #cccccc;
+    --l-ink-dim-2:        #aaaaaa;
+    --l-ink-cool:         #a0aec0;
+    --l-ink-cool-2:       #b2bec3;
+    --l-ink-cool-3:       #d1d5db;
+    --l-ink-slate:        #636e72;
+    --l-ink-soft:         #e8f0f7;
+    --l-on-accent:        #0f1419;
+    --l-ink-on-fill:      #ffffff;
+    /* legacy bridge · accents */
+    --l-indigo:           #667eea;
+    --l-indigo-lt:        #7193ff;
+    --l-indigo-deep:      #764ba2;
+    --l-indigo-dark:      #341f97;
+    --l-purple-deep:      #533483;
+    --l-red:              #e94560;
+    --l-red-lt:           #ff6b6b;
+    --l-red-2:            #d63031;
+    --l-red-3:            #e74c3c;
+    --l-red-4:            #ff4444;
+    --l-red-dim:          #c73e54;
+    --l-red-dark:         #8b0000;
+    --l-green:            #4ecca3;
+    --l-green-2:          #00b894;
+    --l-green-3:          #2ecc71;
+    --l-green-4:          #06d6a0;
+    --l-green-lt:         #5ad6a6;
+    --l-green-lt-2:       #55efc4;
+    --l-green-dark:       #2d8a6e;
+    --l-cyan:             #00d4ff;
+    --l-cyan-dark:        #0099cc;
+    --l-cyan-2:           #3fc7ff;
+    --l-cyan-3:           #3dd6ed;
+    --l-teal:             #4ecdc4;
+    --l-teal-2:           #00cec9;
+    --l-blue:             #3498db;
+    --l-blue-2:           #0984e3;
+    --l-discord:          #5865f2;
+    --l-gold:             #ffd700;
+    --l-gold-lt:          #ffc457;
+    --l-orange:           #ffa500;
+    --l-orange-2:         #ff9800;
+    --l-orange-3:         #ff9500;
+    --l-orange-4:         #e67e22;
+    --l-orange-red:       #ff4500;
+    --l-amber:            #f39c12;
+    --l-amber-2:          #f9a826;
+    --l-amber-3:          #f9a825;
+    --l-amber-4:          #ffa726;
+    --l-amber-5:          #ff9f1c;
+    --l-yellow:           #f9ca24;
+    --l-yellow-2:         #f1c40f;
+    --l-pink:             #ff6b9d;
+    --l-pink-2:           #e84393;
+    --l-pink-lt:          #fd79a8;
+    --l-pink-3:           #ff69b4;
+    --l-pink-pale:        #f093fb;
+    --l-magenta:          #f72585;
+    --l-magenta-2:        #b5179e;
+    --l-crimson:          #ff0055;
+    --l-plum:             #6b2d5b;
+    --l-x-red-pale:       #ff7e82;
+    --l-x-red-pale-2:     #ff9fb3;
+    --l-x-red-pale-3:     #ff87ab;
+    --l-x-red-pale-4:     #ffb9c9;
+    --l-x-red:            #ff6b86;
+    --l-x-red-2:          #ff7074;
+    --l-x-grey:           #71767b;
+    --l-x-yellow:         #ffc107;
+    --l-x-yellow-pale:    #ffeaa7;
+    --l-x-orange:         #ffaa00;
+    --l-x-orange-2:       #ffce54;
+    --l-x-green-pale:     #b9ffc9;
+    --l-x-teal:           #88c0d0;
+    --l-x-teal-pale:      #95e1d3;
+    --l-x-blue:           #5e81ac;
+    --l-x-blue-pale:      #b9c9ff;
+    --l-x-blue-pale-2:    #74b9ff;
+    --l-x-blue-pale-3:    #c8d6e5;
+    --l-x-blue-pale-4:    #7c8cff;
+    --l-x-blue-pale-5:    #bcd2e6;
+    --l-x-violet-pale:    #ddb6f2;
+    --l-x-violet-pale-2:  #c9a0dc;
+    --l-x-violet-pale-3:  #d4b8e8;
+    --l-x-violet-pale-4:  #d5a6f0;
+    --l-x-pink:           #b48ead;
+    --l-violet:           #c77dff;
+    --l-violet-2:         #9b59b6;
+    --l-violet-3:         #9d4edd;
+    --l-violet-4:         #8e44ad;
+    --l-violet-lt:        #a29bfe;
+    --l-violet-deep:      #6c5ce7;
+    --l-violet-deep-2:    #7c3aed;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.05);
+    --l-veil-08:          rgba(0, 0, 0, 0.08);
+    --l-veil-10:          rgba(0, 0, 0, 0.1);
+    --l-veil-12:          rgba(0, 0, 0, 0.12);
+    --l-veil-15:          rgba(0, 0, 0, 0.15);
+    --l-veil-20:          rgba(0, 0, 0, 0.2);
+    --l-veil-25:          rgba(0, 0, 0, 0.25);
+    --l-veil-30:          rgba(0, 0, 0, 0.3);
+    --l-veil-35:          rgba(0, 0, 0, 0.35);
+    --l-veil-40:          rgba(0, 0, 0, 0.4);
+    --l-veil-45:          rgba(0, 0, 0, 0.45);
+    --l-veil-50:          rgba(0, 0, 0, 0.5);
+    --l-veil-55:          rgba(0, 0, 0, 0.55);
+    --l-veil-60:          rgba(0, 0, 0, 0.6);
+    --l-veil-65:          rgba(0, 0, 0, 0.65);
+    --l-veil-70:          rgba(0, 0, 0, 0.7);
+    --l-veil-75:          rgba(0, 0, 0, 0.75);
+    --l-veil-80:          rgba(0, 0, 0, 0.8);
+    --l-veil-85:          rgba(0, 0, 0, 0.85);
+    --l-veil-90:          rgba(0, 0, 0, 0.9);
+    --l-veil-92:          rgba(0, 0, 0, 0.92);
+    --l-veil-95:          rgba(0, 0, 0, 0.95);
+    --l-veil-98:          rgba(0, 0, 0, 0.98);
+    --l-sheen-05:         rgba(255, 255, 255, 0.05);
+    --l-sheen-08:         rgba(255, 255, 255, 0.08);
+    --l-sheen-10:         rgba(255, 255, 255, 0.1);
+    --l-sheen-12:         rgba(255, 255, 255, 0.12);
+    --l-sheen-15:         rgba(255, 255, 255, 0.15);
+    --l-sheen-20:         rgba(255, 255, 255, 0.2);
+    --l-sheen-25:         rgba(255, 255, 255, 0.25);
+    --l-sheen-30:         rgba(255, 255, 255, 0.3);
+    --l-sheen-35:         rgba(255, 255, 255, 0.35);
+    --l-sheen-40:         rgba(255, 255, 255, 0.4);
+    --l-sheen-45:         rgba(255, 255, 255, 0.45);
+    --l-sheen-50:         rgba(255, 255, 255, 0.5);
+    --l-sheen-55:         rgba(255, 255, 255, 0.55);
+    --l-sheen-60:         rgba(255, 255, 255, 0.6);
+    --l-sheen-65:         rgba(255, 255, 255, 0.65);
+    --l-sheen-70:         rgba(255, 255, 255, 0.7);
+    --l-sheen-75:         rgba(255, 255, 255, 0.75);
+    --l-sheen-80:         rgba(255, 255, 255, 0.8);
+    --l-sheen-85:         rgba(255, 255, 255, 0.85);
+    --l-sheen-90:         rgba(255, 255, 255, 0.9);
+    --l-sheen-92:         rgba(255, 255, 255, 0.92);
+    --l-sheen-95:         rgba(255, 255, 255, 0.95);
+    --l-sheen-98:         rgba(255, 255, 255, 0.98);
+}
+
+/* ── Daylight (light) ─────────────────────────────── */
+:root[data-fuoc-theme="light"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #eceef3;
+    --surface:            #f8f9fc;
+    --surface-2:          #f1f3f8;
+    --surface-3:          #e9edf4;
+    --border:             #d4dae5;
+    --border-strong:      #b6bfd0;
+    --text:               #1b2129;
+    --text-dim:           #4a5566;
+    --text-mute:          #66707f;
+    --accent:             #1b5fd0;
+    --accent-dim:         #dbe6fb;
+    --accent-ink:         #0b3576;
+    --positive:           #127a51;
+    --positive-dim:       #d6f2e5;
+    --danger:             #c01c22;
+    --danger-dim:         #fbdedf;
+    --warning:            #94620a;
+    --warning-dim:        #fbeed3;
+    --accent-gold:        #8a6a05;
+    --accent-gold-dim:    #faf0cf;
+    --chat-self:          #0b6b93;
+    --chat-self-2:        #1b4bb8;
+    --chat-self-fill:     #e2eefb;
+    --chat-other:         #a3128a;
+    --chat-other-2:       #8a1ba6;
+    --chat-narrator:      #6d21b8;
+    --chat-narrator-2:    #5417b0;
+    --chat-memory:        #8a6207;
+    --chat-memory-2:      #8a4d04;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(18,25,38,0.10);
+    --shadow-2:           0 8px 24px rgba(18,25,38,0.12);
+    --sheet-shadow:       0 -10px 32px rgba(18,25,38,0.14);
+    --scrim:              rgba(32,40,54,0.42);
+    --focus-ring:         #0b53c8;
+    --glow:               0;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #eceef3;
+    --l-bg-black:         #e8eaf0;
+    --l-bg-black-2:       #f2f3f7;
+    --l-panel:            #f8f9fc;
+    --l-panel-2:          #f1f3f8;
+    --l-panel-3:          #e9edf4;
+    --l-panel-deep:       #e6eaf2;
+    --l-panel-deep-2:     #e8ecf4;
+    --l-panel-deep-3:     #eaeef5;
+    --l-panel-alt:        #f0f2f7;
+    --l-panel-alt-2:      #eef0f4;
+    --l-panel-violet:     #f3eefb;
+    --l-slate:            #dfe3e6;
+    --l-slate-2:          #e1e4e6;
+    --l-black:            #e4e7ee;
+    --l-line:             #ccd6e6;
+    --l-neutral-3:        #d6d9df;
+    --l-neutral-4:        #ccd0d6;
+    --l-neutral-5:        #b9bec7;
+    --l-neutral-6:        #a8aeb8;
+    --l-neutral-7:        #656c77;
+    --l-neutral-8:        #5a616b;
+    --l-neutral-9:        #525963;
+    --l-ink:              #1b2129;
+    --l-ink-dim:          #39414c;
+    --l-ink-dim-2:        #4d5561;
+    --l-ink-cool:         #4a5566;
+    --l-ink-cool-2:       #495259;
+    --l-ink-cool-3:       #3b424c;
+    --l-ink-slate:        #5a646a;
+    --l-ink-soft:         #2b323b;
+    --l-on-accent:        #ffffff;
+    --l-ink-on-fill:      #ffffff;
+    /* legacy bridge · accents */
+    --l-indigo:           #213fca;
+    --l-indigo-lt:        #214aca;
+    --l-indigo-deep:      #754aa0;
+    --l-indigo-dark:      #341f97;
+    --l-purple-deep:      #533483;
+    --l-red:              #c6203c;
+    --l-red-lt:           #bc1f1f;
+    --l-red-2:            #c52627;
+    --l-red-3:            #c62f20;
+    --l-red-4:            #ba1e1e;
+    --l-red-dim:          #b63449;
+    --l-red-dark:         #781313;
+    --l-green:            #1d785b;
+    --l-green-2:          #116a58;
+    --l-green-3:          #177840;
+    --l-green-4:          #116a53;
+    --l-green-lt:         #187a54;
+    --l-green-lt-2:       #126c53;
+    --l-green-dark:       #26785f;
+    --l-cyan:             #136577;
+    --l-cyan-dark:        #156884;
+    --l-cyan-2:           #16688a;
+    --l-cyan-3:           #146b78;
+    --l-teal:             #1c766f;
+    --l-teal-2:           #116664;
+    --l-blue:             #1b6fa7;
+    --l-blue-2:           #1b6ba9;
+    --l-discord:          #212fca;
+    --l-gold:             #695b11;
+    --l-gold-lt:          #7f5a15;
+    --l-orange:           #7f5a15;
+    --l-orange-2:         #845715;
+    --l-orange-3:         #885816;
+    --l-orange-4:         #985519;
+    --l-orange-red:       #ab431c;
+    --l-amber:            #845a16;
+    --l-amber-2:          #845a16;
+    --l-amber-3:          #845a15;
+    --l-amber-4:          #855816;
+    --l-amber-5:          #865716;
+    --l-yellow:           #725d12;
+    --l-yellow-2:         #6e5c12;
+    --l-pink:             #b81e52;
+    --l-pink-2:           #c4206f;
+    --l-pink-lt:          #b51e54;
+    --l-pink-3:           #b61e6a;
+    --l-pink-pale:        #a01daf;
+    --l-magenta:          #b71e64;
+    --l-magenta-2:        #af1d9a;
+    --l-crimson:          #b81e51;
+    --l-plum:             #6b2d5b;
+    --l-x-red-pale:       #bb1f24;
+    --l-x-red-pale-2:     #b91e3f;
+    --l-x-red-pale-3:     #b51e4b;
+    --l-x-red-pale-4:     #ba1e42;
+    --l-x-red:            #b81e3a;
+    --l-x-red-2:          #bc1f23;
+    --l-x-grey:           #676c70;
+    --l-x-yellow:         #735b13;
+    --l-x-yellow-pale:    #715a12;
+    --l-x-orange:         #7b5814;
+    --l-x-orange-2:       #785c14;
+    --l-x-green-pale:     #116b26;
+    --l-x-teal:           #2e7387;
+    --l-x-teal-pale:      #197866;
+    --l-x-blue:           #4b6d96;
+    --l-x-blue-pale:      #2148ca;
+    --l-x-blue-pale-2:    #1d67b3;
+    --l-x-blue-pale-3:    #426f9f;
+    --l-x-blue-pale-4:    #2135ca;
+    --l-x-blue-pale-5:    #326ea4;
+    --l-x-violet-pale:    #8f21ca;
+    --l-x-violet-pale-2:  #8b3ab1;
+    --l-x-violet-pale-3:  #8132b8;
+    --l-x-violet-pale-4:  #8c21ca;
+    --l-x-pink:           #8c5a83;
+    --l-violet:           #8121ca;
+    --l-violet-2:         #8947a3;
+    --l-violet-3:         #7e25c6;
+    --l-violet-4:         #8a42a8;
+    --l-violet-lt:        #2c21ca;
+    --l-violet-deep:      #3421ca;
+    --l-violet-deep-2:    #5f21ca;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(28, 36, 50, 0.02);
+    --l-veil-08:          rgba(28, 36, 50, 0.04);
+    --l-veil-10:          rgba(28, 36, 50, 0.05);
+    --l-veil-12:          rgba(28, 36, 50, 0.05);
+    --l-veil-15:          rgba(28, 36, 50, 0.07);
+    --l-veil-20:          rgba(28, 36, 50, 0.09);
+    --l-veil-25:          rgba(28, 36, 50, 0.11);
+    --l-veil-30:          rgba(28, 36, 50, 0.14);
+    --l-veil-35:          rgba(28, 36, 50, 0.16);
+    --l-veil-40:          rgba(28, 36, 50, 0.18);
+    --l-veil-45:          rgba(28, 36, 50, 0.2);
+    --l-veil-50:          rgba(28, 36, 50, 0.23);
+    --l-veil-55:          rgba(28, 36, 50, 0.25);
+    --l-veil-60:          rgba(28, 36, 50, 0.27);
+    --l-veil-65:          rgba(28, 36, 50, 0.29);
+    --l-veil-70:          rgba(28, 36, 50, 0.32);
+    --l-veil-75:          rgba(28, 36, 50, 0.34);
+    --l-veil-80:          rgba(28, 36, 50, 0.36);
+    --l-veil-85:          rgba(28, 36, 50, 0.38);
+    --l-veil-90:          rgba(28, 36, 50, 0.41);
+    --l-veil-92:          rgba(28, 36, 50, 0.41);
+    --l-veil-95:          rgba(28, 36, 50, 0.43);
+    --l-veil-98:          rgba(28, 36, 50, 0.44);
+    --l-sheen-05:         rgba(20, 28, 42, 0.03);
+    --l-sheen-08:         rgba(20, 28, 42, 0.04);
+    --l-sheen-10:         rgba(20, 28, 42, 0.05);
+    --l-sheen-12:         rgba(20, 28, 42, 0.06);
+    --l-sheen-15:         rgba(20, 28, 42, 0.08);
+    --l-sheen-20:         rgba(20, 28, 42, 0.1);
+    --l-sheen-25:         rgba(20, 28, 42, 0.13);
+    --l-sheen-30:         rgba(20, 28, 42, 0.15);
+    --l-sheen-35:         rgba(20, 28, 42, 0.18);
+    --l-sheen-40:         rgba(20, 28, 42, 0.2);
+    --l-sheen-45:         rgba(20, 28, 42, 0.23);
+    --l-sheen-50:         rgba(20, 28, 42, 0.25);
+    --l-sheen-55:         rgba(20, 28, 42, 0.28);
+    --l-sheen-60:         rgba(20, 28, 42, 0.3);
+    --l-sheen-65:         rgba(20, 28, 42, 0.33);
+    --l-sheen-70:         rgba(20, 28, 42, 0.35);
+    --l-sheen-75:         rgba(20, 28, 42, 0.38);
+    --l-sheen-80:         rgba(20, 28, 42, 0.4);
+    --l-sheen-85:         rgba(20, 28, 42, 0.43);
+    --l-sheen-90:         rgba(20, 28, 42, 0.45);
+    --l-sheen-92:         rgba(20, 28, 42, 0.46);
+    --l-sheen-95:         rgba(20, 28, 42, 0.48);
+    --l-sheen-98:         rgba(20, 28, 42, 0.49);
+}
+
+/* ── High Contrast (hc-dark) ─────────────────────────────── */
+:root[data-fuoc-theme="hc-dark"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #000000;
+    --surface:            #08090d;
+    --surface-2:          #0e1118;
+    --surface-3:          #151a24;
+    --border:             #9aa7bd;
+    --border-strong:      #7f8ea8;
+    --text:               #ffffff;
+    --text-dim:           #d5dde8;
+    --text-mute:          #a9b4c2;
+    --accent:             #7fb2ff;
+    --accent-dim:         #12233d;
+    --accent-ink:         #e8f1ff;
+    --positive:           #4fe3a4;
+    --positive-dim:       #0a2b1f;
+    --danger:             #ff7a7f;
+    --danger-dim:         #2c0d0f;
+    --warning:            #ffc457;
+    --warning-dim:        #2b1f08;
+    --accent-gold:        #ffdb6b;
+    --accent-gold-dim:    #2b2408;
+    --chat-self:          #7fd9ff;
+    --chat-self-2:        #6a9dff;
+    --chat-self-fill:     #001a2e;
+    --chat-other:         #ff96dc;
+    --chat-other-2:       #dd7cf0;
+    --chat-narrator:      #c896ff;
+    --chat-narrator-2:    #a986ff;
+    --chat-memory:        #ffd27a;
+    --chat-memory-2:      #ffab4d;
+    /* effects */
+    --shadow-1:           0 0 0 1px #ffffff40;
+    --shadow-2:           0 0 0 2px #ffffff33;
+    --sheet-shadow:       0 -2px 0 2px #ffffff33;
+    --scrim:              rgba(0,0,0,0.88);
+    --focus-ring:         #ffffff;
+    --glow:               0.35;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #000000;
+    --l-bg-black:         #000000;
+    --l-bg-black-2:       #0a0a0a;
+    --l-panel:            #0b0b12;
+    --l-panel-2:          #08101f;
+    --l-panel-3:          #0d1520;
+    --l-panel-deep:       #000208;
+    --l-panel-deep-2:     #02060f;
+    --l-panel-deep-3:     #050b16;
+    --l-panel-alt:        #0a0d14;
+    --l-panel-alt-2:      #0a0c0f;
+    --l-panel-violet:     #0c0616;
+    --l-slate:            #14191a;
+    --l-slate-2:          #16191a;
+    --l-black:            #000000;
+    --l-line:             #3c6ba8;
+    --l-neutral-3:        #4a4a4a;
+    --l-neutral-4:        #5c5c5c;
+    --l-neutral-5:        #7a7a7a;
+    --l-neutral-6:        #8f8f8f;
+    --l-neutral-7:        #a3a3a3;
+    --l-neutral-8:        #b5b5b5;
+    --l-neutral-9:        #c4c4c4;
+    --l-ink:              #ffffff;
+    --l-ink-dim:          #f0f0f0;
+    --l-ink-dim-2:        #e0e0e0;
+    --l-ink-cool:         #dce6f5;
+    --l-ink-cool-2:       #e4eef2;
+    --l-ink-cool-3:       #f2f5f9;
+    --l-ink-slate:        #9aa8ae;
+    --l-ink-soft:         #ffffff;
+    --l-on-accent:        #000000;
+    --l-ink-on-fill:      #000000;
+    /* legacy bridge · accents */
+    --l-indigo:           #758cf4;
+    --l-indigo-lt:        #7193ff;
+    --l-indigo-deep:      #a985ce;
+    --l-indigo-dark:      #9884f4;
+    --l-purple-deep:      #a685da;
+    --l-red:              #f7657e;
+    --l-red-lt:           #ff6b6b;
+    --l-red-2:            #ee6f6f;
+    --l-red-3:            #f56a5b;
+    --l-red-4:            #ff5e5e;
+    --l-red-dim:          #e17587;
+    --l-red-dark:         #ff6262;
+    --l-green:            #5bd7af;
+    --l-green-2:          #33ffd7;
+    --l-green-3:          #52e08e;
+    --l-green-4:          #33ffca;
+    --l-green-lt:         #55dda8;
+    --l-green-lt-2:       #4df7c7;
+    --l-green-dark:       #5ed4b0;
+    --l-cyan:             #33ddff;
+    --l-cyan-dark:        #33ccff;
+    --l-cyan-2:           #3fc7ff;
+    --l-cyan-3:           #3cdef6;
+    --l-teal:             #5ad8cf;
+    --l-teal-2:           #33fffa;
+    --l-blue:             #4aa9e8;
+    --l-blue-2:           #33a6ff;
+    --l-discord:          #7f8afe;
+    --l-gold:             #ffdf33;
+    --l-gold-lt:          #ffc457;
+    --l-orange:           #ffb733;
+    --l-orange-2:         #ffad33;
+    --l-orange-3:         #ffaa33;
+    --l-orange-4:         #f29440;
+    --l-orange-red:       #ff6a33;
+    --l-amber:            #feb034;
+    --l-amber-2:          #ffb133;
+    --l-amber-3:          #ffb133;
+    --l-amber-4:          #ffac33;
+    --l-amber-5:          #ffa933;
+    --l-yellow:           #ffd233;
+    --l-yellow-2:         #fdd535;
+    --l-pink:             #ff6b9d;
+    --l-pink-2:           #f65ea8;
+    --l-pink-lt:          #ff77a7;
+    --l-pink-3:           #ff69b4;
+    --l-pink-pale:        #f38fff;
+    --l-magenta:          #ff55a3;
+    --l-magenta-2:        #f94de0;
+    --l-crimson:          #ff578f;
+    --l-plum:             #d378bb;
+    --l-x-red-pale:       #ff7e82;
+    --l-x-red-pale-2:     #ff9fb3;
+    --l-x-red-pale-3:     #ff87ab;
+    --l-x-red-pale-4:     #ffb9c9;
+    --l-x-red:            #ff6b86;
+    --l-x-red-2:          #ff7074;
+    --l-x-grey:           #94989e;
+    --l-x-yellow:         #ffcc33;
+    --l-x-yellow-pale:    #ffeaa7;
+    --l-x-orange:         #ffbb33;
+    --l-x-orange-2:       #ffce54;
+    --l-x-green-pale:     #b9ffc9;
+    --l-x-teal:           #84c2d4;
+    --l-x-teal-pale:      #91e5d5;
+    --l-x-blue:           #7899c0;
+    --l-x-blue-pale:      #b9c9ff;
+    --l-x-blue-pale-2:    #74b9ff;
+    --l-x-blue-pale-3:    #c7d6e6;
+    --l-x-blue-pale-4:    #7c8cff;
+    --l-x-blue-pale-5:    #bad2e8;
+    --l-x-violet-pale:    #deb3f5;
+    --l-x-violet-pale-2:  #ca9ddf;
+    --l-x-violet-pale-3:  #d4b6ea;
+    --l-x-violet-pale-4:  #d6a2f4;
+    --l-x-pink:           #b68cae;
+    --l-violet:           #c77dff;
+    --l-violet-2:         #b67ece;
+    --l-violet-3:         #b876ed;
+    --l-violet-4:         #bb7dd5;
+    --l-violet-lt:        #a19aff;
+    --l-violet-deep:      #9286f5;
+    --l-violet-deep-2:    #ab7bfd;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.06);
+    --l-veil-08:          rgba(0, 0, 0, 0.09);
+    --l-veil-10:          rgba(0, 0, 0, 0.12);
+    --l-veil-12:          rgba(0, 0, 0, 0.14);
+    --l-veil-15:          rgba(0, 0, 0, 0.17);
+    --l-veil-20:          rgba(0, 0, 0, 0.23);
+    --l-veil-25:          rgba(0, 0, 0, 0.29);
+    --l-veil-30:          rgba(0, 0, 0, 0.35);
+    --l-veil-35:          rgba(0, 0, 0, 0.4);
+    --l-veil-40:          rgba(0, 0, 0, 0.46);
+    --l-veil-45:          rgba(0, 0, 0, 0.52);
+    --l-veil-50:          rgba(0, 0, 0, 0.57);
+    --l-veil-55:          rgba(0, 0, 0, 0.63);
+    --l-veil-60:          rgba(0, 0, 0, 0.69);
+    --l-veil-65:          rgba(0, 0, 0, 0.75);
+    --l-veil-70:          rgba(0, 0, 0, 0.81);
+    --l-veil-75:          rgba(0, 0, 0, 0.86);
+    --l-veil-80:          rgba(0, 0, 0, 0.92);
+    --l-veil-85:          rgba(0, 0, 0, 0.98);
+    --l-veil-90:          rgba(0, 0, 0, 1);
+    --l-veil-92:          rgba(0, 0, 0, 1);
+    --l-veil-95:          rgba(0, 0, 0, 1);
+    --l-veil-98:          rgba(0, 0, 0, 1);
+    --l-sheen-05:         rgba(255, 255, 255, 0.06);
+    --l-sheen-08:         rgba(255, 255, 255, 0.1);
+    --l-sheen-10:         rgba(255, 255, 255, 0.13);
+    --l-sheen-12:         rgba(255, 255, 255, 0.15);
+    --l-sheen-15:         rgba(255, 255, 255, 0.19);
+    --l-sheen-20:         rgba(255, 255, 255, 0.25);
+    --l-sheen-25:         rgba(255, 255, 255, 0.31);
+    --l-sheen-30:         rgba(255, 255, 255, 0.38);
+    --l-sheen-35:         rgba(255, 255, 255, 0.44);
+    --l-sheen-40:         rgba(255, 255, 255, 0.5);
+    --l-sheen-45:         rgba(255, 255, 255, 0.56);
+    --l-sheen-50:         rgba(255, 255, 255, 0.63);
+    --l-sheen-55:         rgba(255, 255, 255, 0.69);
+    --l-sheen-60:         rgba(255, 255, 255, 0.75);
+    --l-sheen-65:         rgba(255, 255, 255, 0.81);
+    --l-sheen-70:         rgba(255, 255, 255, 0.88);
+    --l-sheen-75:         rgba(255, 255, 255, 0.94);
+    --l-sheen-80:         rgba(255, 255, 255, 1);
+    --l-sheen-85:         rgba(255, 255, 255, 1);
+    --l-sheen-90:         rgba(255, 255, 255, 1);
+    --l-sheen-92:         rgba(255, 255, 255, 1);
+    --l-sheen-95:         rgba(255, 255, 255, 1);
+    --l-sheen-98:         rgba(255, 255, 255, 1);
+}
+
+/* ── Dimmed (dim) ─────────────────────────────── */
+:root[data-fuoc-theme="dim"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #151920;
+    --surface:            #1c212a;
+    --surface-2:          #232935;
+    --surface-3:          #2a313e;
+    --border:             #313947;
+    --border-strong:      #43506a;
+    --text:               #d5dae3;
+    --text-dim:           #98a4b6;
+    --text-mute:          #7b8595;
+    --accent:             #4a7fd6;
+    --accent-dim:         #28344c;
+    --accent-ink:         #bccfee;
+    --positive:           #3d9d75;
+    --positive-dim:       #1a3b2f;
+    --danger:             #c9525a;
+    --danger-dim:         #3b2024;
+    --warning:            #d09441;
+    --warning-dim:        #3a2f1b;
+    --accent-gold:        #d3ac49;
+    --accent-gold-dim:    #3a3320;
+    --chat-self:          #4098bf;
+    --chat-self-2:        #3a5fbe;
+    --chat-self-fill:     #1a2738;
+    --chat-other:         #cc63ab;
+    --chat-other-2:       #9a4bb0;
+    --chat-narrator:      #8f5cc4;
+    --chat-narrator-2:    #6d4bb8;
+    --chat-memory:        #cfa24b;
+    --chat-memory-2:      #b0742f;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(0,0,0,0.35);
+    --shadow-2:           0 10px 30px rgba(0,0,0,0.4);
+    --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.4);
+    --scrim:              rgba(0,0,0,0.62);
+    --focus-ring:         #6f9ad6;
+    --glow:               0.5;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #171b22;
+    --l-bg-black:         #14171d;
+    --l-bg-black-2:       #1f2229;
+    --l-panel:            #20242e;
+    --l-panel-2:          #1c2230;
+    --l-panel-3:          #232a36;
+    --l-panel-deep:       #161b25;
+    --l-panel-deep-2:     #181e29;
+    --l-panel-deep-3:     #1b2230;
+    --l-panel-alt:        #20242e;
+    --l-panel-alt-2:      #1f2228;
+    --l-panel-violet:     #221933;
+    --l-slate:            #333a3d;
+    --l-slate-2:          #353a3d;
+    --l-black:            #0d1014;
+    --l-line:             #1c3f6b;
+    --l-neutral-3:        #3a3d44;
+    --l-neutral-4:        #4a4d54;
+    --l-neutral-5:        #5c6068;
+    --l-neutral-6:        #6d717a;
+    --l-neutral-7:        #7d828b;
+    --l-neutral-8:        #8d929b;
+    --l-neutral-9:        #9ba0a8;
+    --l-ink:              #d5dae3;
+    --l-ink-dim:          #aeb5c0;
+    --l-ink-dim-2:        #98a0ac;
+    --l-ink-cool:         #93a0b3;
+    --l-ink-cool-2:       #a1abb1;
+    --l-ink-cool-3:       #b4bac3;
+    --l-ink-slate:        #727d83;
+    --l-ink-soft:         #c6ced8;
+    --l-on-accent:        #12161d;
+    --l-ink-on-fill:      #f2f4f8;
+    /* legacy bridge · accents */
+    --l-indigo:           #6f82d7;
+    --l-indigo-lt:        #7692eb;
+    --l-indigo-deep:      #79589a;
+    --l-indigo-dark:      #423192;
+    --l-purple-deep:      #5b4282;
+    --l-red:              #d4566b;
+    --l-red-lt:           #eb7272;
+    --l-red-2:            #c24647;
+    --l-red-3:            #d15b4f;
+    --l-red-4:            #e75555;
+    --l-red-dim:          #b65061;
+    --l-red-dark:         #8b1414;
+    --l-green:            #5dbc9d;
+    --l-green-2:          #19ad90;
+    --l-green-3:          #43bb76;
+    --l-green-4:          #21c399;
+    --l-green-lt:         #66c5a0;
+    --l-green-lt-2:       #62dab9;
+    --l-green-dark:       #3d8871;
+    --l-cyan:             #22c0df;
+    --l-cyan-dark:        #1b93bb;
+    --l-cyan-2:           #51bbe6;
+    --l-cyan-3:           #50c5d6;
+    --l-teal:             #5dbdb6;
+    --l-teal-2:           #1bbdb9;
+    --l-blue:             #4994c6;
+    --l-blue-2:           #2583cc;
+    --l-discord:          #646edd;
+    --l-gold:             #dfc222;
+    --l-gold-lt:          #e9ba63;
+    --l-orange:           #df9d22;
+    --l-orange-2:         #df9322;
+    --l-orange-3:         #df9122;
+    --l-orange-4:         #ce803b;
+    --l-orange-red:       #df5522;
+    --l-amber:            #d79630;
+    --l-amber-2:          #dea13e;
+    --l-amber-3:          #dea13e;
+    --l-amber-4:          #e3a13e;
+    --l-amber-5:          #e29a37;
+    --l-yellow:           #debb3d;
+    --l-yellow-2:         #d5b42d;
+    --l-pink:             #eb729b;
+    --l-pink-2:           #d35492;
+    --l-pink-lt:          #ea7ca3;
+    --l-pink-3:           #eb70ad;
+    --l-pink-pale:        #df86e9;
+    --l-magenta:          #dc3e86;
+    --l-magenta-2:        #a92d97;
+    --l-crimson:          #df2261;
+    --l-plum:             #6f3b62;
+    --l-x-red-pale:       #ed8083;
+    --l-x-red-pale-2:     #ed8298;
+    --l-x-red-pale-3:     #ed82a2;
+    --l-x-red-pale-4:     #ed829b;
+    --l-x-red:            #eb7288;
+    --l-x-red-2:          #eb7579;
+    --l-x-grey:           #75797d;
+    --l-x-yellow:         #e0b227;
+    --l-x-yellow-pale:    #edd482;
+    --l-x-orange:         #dfa022;
+    --l-x-orange-2:       #e8c161;
+    --l-x-green-pale:     #82ed9b;
+    --l-x-teal:           #8ab7c3;
+    --l-x-teal-pale:      #94d3c7;
+    --l-x-blue:           #6882a3;
+    --l-x-blue-pale:      #829bed;
+    --l-x-blue-pale-2:    #78b2ec;
+    --l-x-blue-pale-3:    #a4b7cb;
+    --l-x-blue-pale-4:    #7e8ced;
+    --l-x-blue-pale-5:    #9fb9d0;
+    --l-x-violet-pale:    #c392dd;
+    --l-x-violet-pale-2:  #bf9dcf;
+    --l-x-violet-pale-3:  #bc9cd3;
+    --l-x-violet-pale-4:  #c291de;
+    --l-x-pink:           #ac8ea7;
+    --l-violet:           #bd7fed;
+    --l-violet-2:         #9665aa;
+    --l-violet-3:         #995dca;
+    --l-violet-4:         #8b53a3;
+    --l-violet-lt:        #8b83ec;
+    --l-violet-deep:      #7467d4;
+    --l-violet-deep-2:    #804ed6;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.05);
+    --l-veil-08:          rgba(0, 0, 0, 0.07);
+    --l-veil-10:          rgba(0, 0, 0, 0.09);
+    --l-veil-12:          rgba(0, 0, 0, 0.11);
+    --l-veil-15:          rgba(0, 0, 0, 0.14);
+    --l-veil-20:          rgba(0, 0, 0, 0.18);
+    --l-veil-25:          rgba(0, 0, 0, 0.23);
+    --l-veil-30:          rgba(0, 0, 0, 0.27);
+    --l-veil-35:          rgba(0, 0, 0, 0.32);
+    --l-veil-40:          rgba(0, 0, 0, 0.36);
+    --l-veil-45:          rgba(0, 0, 0, 0.41);
+    --l-veil-50:          rgba(0, 0, 0, 0.45);
+    --l-veil-55:          rgba(0, 0, 0, 0.5);
+    --l-veil-60:          rgba(0, 0, 0, 0.54);
+    --l-veil-65:          rgba(0, 0, 0, 0.59);
+    --l-veil-70:          rgba(0, 0, 0, 0.63);
+    --l-veil-75:          rgba(0, 0, 0, 0.68);
+    --l-veil-80:          rgba(0, 0, 0, 0.72);
+    --l-veil-85:          rgba(0, 0, 0, 0.77);
+    --l-veil-90:          rgba(0, 0, 0, 0.81);
+    --l-veil-92:          rgba(0, 0, 0, 0.83);
+    --l-veil-95:          rgba(0, 0, 0, 0.86);
+    --l-veil-98:          rgba(0, 0, 0, 0.88);
+    --l-sheen-05:         rgba(255, 255, 255, 0.04);
+    --l-sheen-08:         rgba(255, 255, 255, 0.07);
+    --l-sheen-10:         rgba(255, 255, 255, 0.09);
+    --l-sheen-12:         rgba(255, 255, 255, 0.1);
+    --l-sheen-15:         rgba(255, 255, 255, 0.13);
+    --l-sheen-20:         rgba(255, 255, 255, 0.17);
+    --l-sheen-25:         rgba(255, 255, 255, 0.21);
+    --l-sheen-30:         rgba(255, 255, 255, 0.26);
+    --l-sheen-35:         rgba(255, 255, 255, 0.3);
+    --l-sheen-40:         rgba(255, 255, 255, 0.34);
+    --l-sheen-45:         rgba(255, 255, 255, 0.38);
+    --l-sheen-50:         rgba(255, 255, 255, 0.43);
+    --l-sheen-55:         rgba(255, 255, 255, 0.47);
+    --l-sheen-60:         rgba(255, 255, 255, 0.51);
+    --l-sheen-65:         rgba(255, 255, 255, 0.55);
+    --l-sheen-70:         rgba(255, 255, 255, 0.6);
+    --l-sheen-75:         rgba(255, 255, 255, 0.64);
+    --l-sheen-80:         rgba(255, 255, 255, 0.68);
+    --l-sheen-85:         rgba(255, 255, 255, 0.72);
+    --l-sheen-90:         rgba(255, 255, 255, 0.77);
+    --l-sheen-92:         rgba(255, 255, 255, 0.78);
+    --l-sheen-95:         rgba(255, 255, 255, 0.81);
+    --l-sheen-98:         rgba(255, 255, 255, 0.83);
+}
+
+/* ── Crimson (crimson) ─────────────────────────────── */
+:root[data-fuoc-theme="crimson"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #1f0a0c;
+    --surface:            #260d0f;
+    --surface-2:          #2d0f11;
+    --surface-3:          #321114;
+    --border:             #49272a;
+    --border-strong:      #643639;
+    --text:               #e9e2e3;
+    --text-dim:           #beb0b1;
+    --text-mute:          #ac9c9e;
+    --accent:             #ff4c60;
+    --accent-dim:         #2f0e12;
+    --accent-ink:         #e6dedf;
+    --positive:           #33b655;
+    --positive-dim:       #15281a;
+    --danger:             #e9444a;
+    --danger-dim:         #2c1112;
+    --warning:            #fa951e;
+    --warning-dim:        #2f200f;
+    --accent-gold:        #f9b53e;
+    --accent-gold-dim:    #2e230f;
+    --chat-self:          #fd3354;
+    --chat-self-2:        #f02036;
+    --chat-self-fill:     #2f0e13;
+    --chat-other:         #ff785e;
+    --chat-other-2:       #da3b2e;
+    --chat-narrator:      #fb5651;
+    --chat-narrator-2:    #f13636;
+    --chat-memory:        #f9aa3e;
+    --chat-memory-2:      #de4f01;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(0,0,0,0.45);
+    --shadow-2:           0 10px 30px rgba(0,0,0,0.5);
+    --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.5);
+    --scrim:              rgba(0,0,0,0.7);
+    --focus-ring:         #ff4c60;
+    --glow:               1;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #220d0e;
+    --l-bg-black:         #160f10;
+    --l-bg-black-2:       #1e1516;
+    --l-panel:            #2d1012;
+    --l-panel-2:          #321113;
+    --l-panel-3:          #321113;
+    --l-panel-deep:       #250c0f;
+    --l-panel-deep-2:     #290e10;
+    --l-panel-deep-3:     #2e0f12;
+    --l-panel-alt:        #2d1012;
+    --l-panel-alt-2:      #251314;
+    --l-panel-violet:     #280d10;
+    --l-slate:            #2f1b1c;
+    --l-slate-2:          #2e1c1d;
+    --l-black:            #100c0c;
+    --l-line:             #51282b;
+    --l-neutral-3:        #3f3133;
+    --l-neutral-4:        #514041;
+    --l-neutral-5:        #634e50;
+    --l-neutral-6:        #755c5e;
+    --l-neutral-7:        #96797c;
+    --l-neutral-8:        #977b7d;
+    --l-neutral-9:        #a58d8f;
+    --l-ink:              #f0efef;
+    --l-ink-dim:          #d5d1d1;
+    --l-ink-dim-2:        #c3bcbd;
+    --l-ink-cool:         #cabcbd;
+    --l-ink-cool-2:       #cec4c5;
+    --l-ink-cool-3:       #dcd5d6;
+    --l-ink-slate:        #a39596;
+    --l-ink-soft:         #eae4e4;
+    --l-on-accent:        #150a0b;
+    --l-ink-on-fill:      #150a0b;
+    /* legacy bridge · accents */
+    --l-indigo:           #ed636e;
+    --l-indigo-lt:        #ff717e;
+    --l-indigo-deep:      #b75c5a;
+    --l-indigo-dark:      #e02d31;
+    --l-purple-deep:      #c35250;
+    --l-red:              #ed415c;
+    --l-red-lt:           #ff6b6c;
+    --l-red-2:            #dc3437;
+    --l-red-3:            #eb4538;
+    --l-red-4:            #ff4446;
+    --l-red-dim:          #ce465a;
+    --l-red-dark:         #ec0002;
+    --l-green:            #4bcf78;
+    --l-green-2:          #00b854;
+    --l-green-3:          #2ad03e;
+    --l-green-4:          #01db58;
+    --l-green-lt:         #57d97d;
+    --l-green-lt-2:       #51f38f;
+    --l-green-dark:       #2b8c4e;
+    --l-cyan:             #ff0030;
+    --l-cyan-dark:        #eb0028;
+    --l-cyan-2:           #ff3f5f;
+    --l-cyan-3:           #f1395c;
+    --l-teal:             #d04b69;
+    --l-teal-2:           #ed0034;
+    --l-blue:             #df304a;
+    --l-blue-2:           #ed0425;
+    --l-discord:          #f6545f;
+    --l-gold:             #ffbb00;
+    --l-gold-lt:          #ffb557;
+    --l-orange:           #ff8f00;
+    --l-orange-2:         #ff8300;
+    --l-orange-3:         #ff8100;
+    --l-orange-4:         #eb701d;
+    --l-orange-red:       #ff3a00;
+    --l-amber:            #f98a0c;
+    --l-amber-2:          #fe9721;
+    --l-amber-3:          #fe9720;
+    --l-amber-4:          #ff9526;
+    --l-amber-5:          #ff8d1c;
+    --l-yellow:           #feb61f;
+    --l-yellow-2:         #f7ae09;
+    --l-pink:             #ff8a6b;
+    --l-pink-2:           #ec603f;
+    --l-pink-lt:          #ff9377;
+    --l-pink-3:           #ff8569;
+    --l-pink-pale:        #fe9a90;
+    --l-magenta:          #fc4a20;
+    --l-magenta-2:        #e12e14;
+    --l-crimson:          #ff004d;
+    --l-plum:             #bd5847;
+    --l-x-red-pale:       #ff7e83;
+    --l-x-red-pale-2:     #ff9fb2;
+    --l-x-red-pale-3:     #ff87a8;
+    --l-x-red-pale-4:     #ffb9c8;
+    --l-x-red:            #ff6b84;
+    --l-x-red-2:          #ff7075;
+    --l-x-grey:           #7e7374;
+    --l-x-yellow:         #ffa807;
+    --l-x-yellow-pale:    #ffe1a7;
+    --l-x-orange:         #ff9300;
+    --l-x-orange-2:       #ffbe54;
+    --l-x-green-pale:     #bcffb9;
+    --l-x-teal:           #d28694;
+    --l-x-teal-pale:      #e393a7;
+    --l-x-blue:           #b05f69;
+    --l-x-blue-pale:      #ffb9bf;
+    --l-x-blue-pale-2:    #ff7487;
+    --l-x-blue-pale-3:    #e6c7cb;
+    --l-x-blue-pale-4:    #ff7c86;
+    --l-x-blue-pale-5:    #e7bbc1;
+    --l-x-violet-pale:    #f3b8b4;
+    --l-x-violet-pale-2:  #dea29f;
+    --l-x-violet-pale-3:  #e9b9b7;
+    --l-x-violet-pale-4:  #f2a8a4;
+    --l-x-pink:           #b5928d;
+    --l-violet:           #ff827d;
+    --l-violet-2:         #b85c57;
+    --l-violet-3:         #e1504a;
+    --l-violet-4:         #c05750;
+    --l-violet-lt:        #ff9a9e;
+    --l-violet-deep:      #ea595e;
+    --l-violet-deep-2:    #f13636;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.05);
+    --l-veil-08:          rgba(0, 0, 0, 0.08);
+    --l-veil-10:          rgba(0, 0, 0, 0.1);
+    --l-veil-12:          rgba(0, 0, 0, 0.12);
+    --l-veil-15:          rgba(0, 0, 0, 0.15);
+    --l-veil-20:          rgba(0, 0, 0, 0.2);
+    --l-veil-25:          rgba(0, 0, 0, 0.25);
+    --l-veil-30:          rgba(0, 0, 0, 0.3);
+    --l-veil-35:          rgba(0, 0, 0, 0.35);
+    --l-veil-40:          rgba(0, 0, 0, 0.4);
+    --l-veil-45:          rgba(0, 0, 0, 0.45);
+    --l-veil-50:          rgba(0, 0, 0, 0.5);
+    --l-veil-55:          rgba(0, 0, 0, 0.55);
+    --l-veil-60:          rgba(0, 0, 0, 0.6);
+    --l-veil-65:          rgba(0, 0, 0, 0.65);
+    --l-veil-70:          rgba(0, 0, 0, 0.7);
+    --l-veil-75:          rgba(0, 0, 0, 0.75);
+    --l-veil-80:          rgba(0, 0, 0, 0.8);
+    --l-veil-85:          rgba(0, 0, 0, 0.85);
+    --l-veil-90:          rgba(0, 0, 0, 0.9);
+    --l-veil-92:          rgba(0, 0, 0, 0.92);
+    --l-veil-95:          rgba(0, 0, 0, 0.95);
+    --l-veil-98:          rgba(0, 0, 0, 0.98);
+    --l-sheen-05:         rgba(255, 255, 255, 0.05);
+    --l-sheen-08:         rgba(255, 255, 255, 0.08);
+    --l-sheen-10:         rgba(255, 255, 255, 0.1);
+    --l-sheen-12:         rgba(255, 255, 255, 0.12);
+    --l-sheen-15:         rgba(255, 255, 255, 0.15);
+    --l-sheen-20:         rgba(255, 255, 255, 0.2);
+    --l-sheen-25:         rgba(255, 255, 255, 0.25);
+    --l-sheen-30:         rgba(255, 255, 255, 0.3);
+    --l-sheen-35:         rgba(255, 255, 255, 0.35);
+    --l-sheen-40:         rgba(255, 255, 255, 0.4);
+    --l-sheen-45:         rgba(255, 255, 255, 0.45);
+    --l-sheen-50:         rgba(255, 255, 255, 0.5);
+    --l-sheen-55:         rgba(255, 255, 255, 0.55);
+    --l-sheen-60:         rgba(255, 255, 255, 0.6);
+    --l-sheen-65:         rgba(255, 255, 255, 0.65);
+    --l-sheen-70:         rgba(255, 255, 255, 0.7);
+    --l-sheen-75:         rgba(255, 255, 255, 0.75);
+    --l-sheen-80:         rgba(255, 255, 255, 0.8);
+    --l-sheen-85:         rgba(255, 255, 255, 0.85);
+    --l-sheen-90:         rgba(255, 255, 255, 0.9);
+    --l-sheen-92:         rgba(255, 255, 255, 0.92);
+    --l-sheen-95:         rgba(255, 255, 255, 0.95);
+    --l-sheen-98:         rgba(255, 255, 255, 0.98);
+}
+
+/* ── Terminal (terminal-green) ─────────────────────────────── */
+:root[data-fuoc-theme="terminal-green"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #061009;
+    --surface:            #09160d;
+    --surface-2:          #0b1c10;
+    --surface-3:          #0e2013;
+    --border:             #21452c;
+    --border-strong:      #2e5f3d;
+    --text:               #7ff5a3;
+    --text-dim:           #3eef73;
+    --text-mute:          #23ed60;
+    --accent:             #53ff83;
+    --accent-dim:         #0e2f17;
+    --accent-ink:         #7bf49f;
+    --positive:           #2ec07d;
+    --positive-dim:       #14291f;
+    --danger:             #f16d42;
+    --danger-dim:         #2d1710;
+    --warning:            #ffd81f;
+    --warning-dim:        #2f2a0e;
+    --accent-gold:        #fff03e;
+    --accent-gold-dim:    #2f2d0e;
+    --chat-self:          #37ff69;
+    --chat-self-2:        #1bfa5b;
+    --chat-self-fill:     #0e2f16;
+    --chat-other:         #65ffab;
+    --chat-other-2:       #2ae374;
+    --chat-narrator:      #54ff93;
+    --chat-narrator-2:    #32fb79;
+    --chat-memory:        #ffe43e;
+    --chat-memory-2:      #00e382;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(0,0,0,0.45);
+    --shadow-2:           0 10px 30px rgba(0,0,0,0.5);
+    --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.5);
+    --scrim:              rgba(0,0,0,0.7);
+    --focus-ring:         #53ff83;
+    --glow:               1;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #08120b;
+    --l-bg-black:         #080b09;
+    --l-bg-black-2:       #0d120f;
+    --l-panel:            #0c1c11;
+    --l-panel-2:          #0d2013;
+    --l-panel-3:          #0d2013;
+    --l-panel-deep:       #09150c;
+    --l-panel-deep-2:     #0a180e;
+    --l-panel-deep-3:     #0c1d11;
+    --l-panel-alt:        #0c1c11;
+    --l-panel-alt-2:      #0d1710;
+    --l-panel-violet:     #0a180e;
+    --l-slate:            #141f17;
+    --l-slate-2:          #141f18;
+    --l-black:            #040605;
+    --l-line:             #214d2e;
+    --l-neutral-3:        #2c3a30;
+    --l-neutral-4:        #394c3f;
+    --l-neutral-5:        #465d4d;
+    --l-neutral-6:        #546f5c;
+    --l-neutral-7:        #678971;
+    --l-neutral-8:        #6e9279;
+    --l-neutral-9:        #809f89;
+    --l-ink:              #8ef6ad;
+    --l-ink-dim:          #65f38f;
+    --l-ink-dim-2:        #4af07c;
+    --l-ink-cool:         #4ef17f;
+    --l-ink-cool-2:       #57f185;
+    --l-ink-cool-3:       #6df395;
+    --l-ink-slate:        #17ec57;
+    --l-ink-soft:         #81f5a4;
+    --l-on-accent:        #0a150d;
+    --l-ink-on-fill:      #0a150d;
+    /* legacy bridge · accents */
+    --l-indigo:           #62f48e;
+    --l-indigo-lt:        #78ffa0;
+    --l-indigo-deep:      #46ac6b;
+    --l-indigo-dark:      #16a346;
+    --l-purple-deep:      #309052;
+    --l-red:              #f6563e;
+    --l-red-lt:           #ff9972;
+    --l-red-2:            #e35b28;
+    --l-red-3:            #f47935;
+    --l-red-4:            #ff7c4a;
+    --l-red-dim:          #d3513c;
+    --l-red-dark:         #e53f00;
+    --l-green:            #49d6a2;
+    --l-green-2:          #00bc8c;
+    --l-green-3:          #23dc6f;
+    --l-green-4:          #00e09a;
+    --l-green-lt:         #56e0a5;
+    --l-green-lt-2:       #50fbc2;
+    --l-green-dark:       #27946e;
+    --l-cyan:             #05ff40;
+    --l-cyan-dark:        #00d033;
+    --l-cyan-2:           #45ff73;
+    --l-cyan-3:           #36fa63;
+    --l-teal:             #49d867;
+    --l-teal-2:           #00d22d;
+    --l-blue:             #2ce85d;
+    --l-blue-2:           #00f13f;
+    --l-discord:          #53fe88;
+    --l-gold:             #fbff05;
+    --l-gold-lt:          #ffe65e;
+    --l-orange:           #ffd805;
+    --l-orange-2:         #ffcd05;
+    --l-orange-3:         #ffcb05;
+    --l-orange-4:         #f5b018;
+    --l-orange-red:       #ff8605;
+    --l-amber:            #ffd20b;
+    --l-amber-2:          #ffd726;
+    --l-amber-3:          #ffd825;
+    --l-amber-4:          #ffd52c;
+    --l-amber-5:          #ffcf22;
+    --l-yellow:           #fff724;
+    --l-yellow-2:         #fffa06;
+    --l-pink:             #72ffb6;
+    --l-pink-2:           #3cf593;
+    --l-pink-lt:          #7effbd;
+    --l-pink-3:           #70ffb3;
+    --l-pink-pale:        #97ffc1;
+    --l-magenta:          #23ff8b;
+    --l-magenta-2:        #0bc55c;
+    --l-crimson:          #ff0509;
+    --l-plum:             #318e5a;
+    --l-x-red-pale:       #ffa486;
+    --l-x-red-pale-2:     #ffafa7;
+    --l-x-red-pale-3:     #ff908f;
+    --l-x-red-pale-4:     #ffc6c2;
+    --l-x-red:            #ff8272;
+    --l-x-red-2:          #ff9977;
+    --l-x-grey:           #748178;
+    --l-x-yellow:         #ffef0c;
+    --l-x-yellow-pale:    #fffbaf;
+    --l-x-orange:         #ffdd05;
+    --l-x-orange-2:       #ffef5b;
+    --l-x-green-pale:     #c2ffd0;
+    --l-x-teal:           #88d79b;
+    --l-x-teal-pale:      #95e8a6;
+    --l-x-blue:           #5cb474;
+    --l-x-blue-pale:      #c2ffd4;
+    --l-x-blue-pale-2:    #7bff9f;
+    --l-x-blue-pale-3:    #ccead4;
+    --l-x-blue-pale-4:    #84ffa9;
+    --l-x-blue-pale-5:    #bfebcb;
+    --l-x-violet-pale:    #b9f7d1;
+    --l-x-violet-pale-2:  #a1e2ba;
+    --l-x-violet-pale-3:  #bbedce;
+    --l-x-violet-pale-4:  #a8f6c6;
+    --l-x-pink:           #8fb9a2;
+    --l-violet:           #85ffb3;
+    --l-violet-2:         #56be7f;
+    --l-violet-3:         #49e884;
+    --l-violet-4:         #3db86d;
+    --l-violet-lt:        #a2ffc0;
+    --l-violet-deep:      #58f28a;
+    --l-violet-deep-2:    #32fb79;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.05);
+    --l-veil-08:          rgba(0, 0, 0, 0.08);
+    --l-veil-10:          rgba(0, 0, 0, 0.1);
+    --l-veil-12:          rgba(0, 0, 0, 0.12);
+    --l-veil-15:          rgba(0, 0, 0, 0.15);
+    --l-veil-20:          rgba(0, 0, 0, 0.2);
+    --l-veil-25:          rgba(0, 0, 0, 0.25);
+    --l-veil-30:          rgba(0, 0, 0, 0.3);
+    --l-veil-35:          rgba(0, 0, 0, 0.35);
+    --l-veil-40:          rgba(0, 0, 0, 0.4);
+    --l-veil-45:          rgba(0, 0, 0, 0.45);
+    --l-veil-50:          rgba(0, 0, 0, 0.5);
+    --l-veil-55:          rgba(0, 0, 0, 0.55);
+    --l-veil-60:          rgba(0, 0, 0, 0.6);
+    --l-veil-65:          rgba(0, 0, 0, 0.65);
+    --l-veil-70:          rgba(0, 0, 0, 0.7);
+    --l-veil-75:          rgba(0, 0, 0, 0.75);
+    --l-veil-80:          rgba(0, 0, 0, 0.8);
+    --l-veil-85:          rgba(0, 0, 0, 0.85);
+    --l-veil-90:          rgba(0, 0, 0, 0.9);
+    --l-veil-92:          rgba(0, 0, 0, 0.92);
+    --l-veil-95:          rgba(0, 0, 0, 0.95);
+    --l-veil-98:          rgba(0, 0, 0, 0.98);
+    --l-sheen-05:         rgba(255, 255, 255, 0.05);
+    --l-sheen-08:         rgba(255, 255, 255, 0.08);
+    --l-sheen-10:         rgba(255, 255, 255, 0.1);
+    --l-sheen-12:         rgba(255, 255, 255, 0.12);
+    --l-sheen-15:         rgba(255, 255, 255, 0.15);
+    --l-sheen-20:         rgba(255, 255, 255, 0.2);
+    --l-sheen-25:         rgba(255, 255, 255, 0.25);
+    --l-sheen-30:         rgba(255, 255, 255, 0.3);
+    --l-sheen-35:         rgba(255, 255, 255, 0.35);
+    --l-sheen-40:         rgba(255, 255, 255, 0.4);
+    --l-sheen-45:         rgba(255, 255, 255, 0.45);
+    --l-sheen-50:         rgba(255, 255, 255, 0.5);
+    --l-sheen-55:         rgba(255, 255, 255, 0.55);
+    --l-sheen-60:         rgba(255, 255, 255, 0.6);
+    --l-sheen-65:         rgba(255, 255, 255, 0.65);
+    --l-sheen-70:         rgba(255, 255, 255, 0.7);
+    --l-sheen-75:         rgba(255, 255, 255, 0.75);
+    --l-sheen-80:         rgba(255, 255, 255, 0.8);
+    --l-sheen-85:         rgba(255, 255, 255, 0.85);
+    --l-sheen-90:         rgba(255, 255, 255, 0.9);
+    --l-sheen-92:         rgba(255, 255, 255, 0.92);
+    --l-sheen-95:         rgba(255, 255, 255, 0.95);
+    --l-sheen-98:         rgba(255, 255, 255, 0.98);
+}
+
+/* ── Amber CRT (terminal-amber) ─────────────────────────────── */
+:root[data-fuoc-theme="terminal-amber"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #140f07;
+    --surface:            #1a140a;
+    --surface-2:          #20190c;
+    --surface-3:          #241c0e;
+    --border:             #4a3b21;
+    --border-strong:      #63502e;
+    --text:               #f6c775;
+    --text-dim:           #f2ae37;
+    --text-mute:          #f1a41e;
+    --accent:             #ffbd53;
+    --accent-dim:         #2f230e;
+    --accent-ink:         #f6c570;
+    --positive:           #2fbe60;
+    --positive-dim:       #14291b;
+    --danger:             #ef4c44;
+    --danger-dim:         #2d1210;
+    --warning:            #ffab1f;
+    --warning-dim:        #2f230e;
+    --accent-gold:        #ffc93e;
+    --accent-gold-dim:    #2f260e;
+    --chat-self:          #ffac37;
+    --chat-self-2:        #f7a51e;
+    --chat-self-fill:     #2f210e;
+    --chat-other:         #ffde65;
+    --chat-other-2:       #e1b12d;
+    --chat-narrator:      #ffcc54;
+    --chat-narrator-2:    #f8bb35;
+    --chat-memory:        #ffbe3e;
+    --chat-memory-2:      #e3ce00;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(0,0,0,0.45);
+    --shadow-2:           0 10px 30px rgba(0,0,0,0.5);
+    --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.5);
+    --scrim:              rgba(0,0,0,0.7);
+    --focus-ring:         #ffbd53;
+    --glow:               1;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #161209;
+    --l-bg-black:         #0e0c0a;
+    --l-bg-black-2:       #15130f;
+    --l-panel:            #20190d;
+    --l-panel-2:          #241c0e;
+    --l-panel-3:          #241c0e;
+    --l-panel-deep:       #19140a;
+    --l-panel-deep-2:     #1c160b;
+    --l-panel-deep-3:     #21190c;
+    --l-panel-alt:        #20190d;
+    --l-panel-alt-2:      #1a160e;
+    --l-panel-violet:     #1c150b;
+    --l-slate:            #231e15;
+    --l-slate-2:          #231e16;
+    --l-black:            #090806;
+    --l-line:             #524021;
+    --l-neutral-3:        #3d382e;
+    --l-neutral-4:        #4f473a;
+    --l-neutral-5:        #605747;
+    --l-neutral-6:        #716654;
+    --l-neutral-7:        #91836c;
+    --l-neutral-8:        #93856e;
+    --l-neutral-9:        #a0947f;
+    --l-ink:              #f7cc82;
+    --l-ink-dim:          #f5bd5c;
+    --l-ink-dim-2:        #f3b242;
+    --l-ink-cool:         #f3b447;
+    --l-ink-cool-2:       #f4b74f;
+    --l-ink-cool-3:       #f5c064;
+    --l-ink-slate:        #f09f13;
+    --l-ink-soft:         #f6c877;
+    --l-on-accent:        #15110a;
+    --l-ink-on-fill:      #15110a;
+    /* legacy bridge · accents */
+    --l-indigo:           #f2be64;
+    --l-indigo-lt:        #ffcd78;
+    --l-indigo-deep:      #ab8d47;
+    --l-indigo-dark:      #a17418;
+    --l-purple-deep:      #967833;
+    --l-red:              #f3414d;
+    --l-red-lt:           #ff7d72;
+    --l-red-2:            #e33f33;
+    --l-red-3:            #f25537;
+    --l-red-4:            #ff584a;
+    --l-red-dim:          #d64d56;
+    --l-red-dark:         #f91300;
+    --l-green:            #4bd586;
+    --l-green-2:          #00bc66;
+    --l-green-3:          #25da4b;
+    --l-green-4:          #00e06d;
+    --l-green-lt:         #58de8a;
+    --l-green-lt-2:       #52f8a0;
+    --l-green-dark:       #289258;
+    --l-cyan:             #ff9305;
+    --l-cyan-dark:        #d07800;
+    --l-cyan-2:           #ffb145;
+    --l-cyan-3:           #f8a438;
+    --l-teal:             #d6974b;
+    --l-teal-2:           #d27300;
+    --l-blue:             #e69b2f;
+    --l-blue-2:           #f18f00;
+    --l-discord:          #fbc055;
+    --l-gold:             #ffd205;
+    --l-gold-lt:          #ffc65e;
+    --l-orange:           #ffa605;
+    --l-orange-2:         #ff9b05;
+    --l-orange-3:         #ff9905;
+    --l-orange-4:         #f2841b;
+    --l-orange-red:       #ff5405;
+    --l-amber:            #ffa10b;
+    --l-amber-2:          #ffac26;
+    --l-amber-3:          #ffac25;
+    --l-amber-4:          #ffaa2c;
+    --l-amber-5:          #ffa322;
+    --l-yellow:           #ffcb24;
+    --l-yellow-2:         #ffc807;
+    --l-pink:             #ffe572;
+    --l-pink-2:           #f2cf3f;
+    --l-pink-lt:          #ffe77e;
+    --l-pink-3:           #ffe370;
+    --l-pink-pale:        #ffe497;
+    --l-magenta:          #ffd423;
+    --l-magenta-2:        #c2980e;
+    --l-crimson:          #ff053b;
+    --l-plum:             #907b34;
+    --l-x-red-pale:       #ff8c86;
+    --l-x-red-pale-2:     #ffa7b1;
+    --l-x-red-pale-3:     #ff8fa4;
+    --l-x-red-pale-4:     #ffc2c9;
+    --l-x-red:            #ff727e;
+    --l-x-red-2:          #ff7e77;
+    --l-x-grey:           #817d75;
+    --l-x-yellow:         #ffbf0c;
+    --l-x-yellow-pale:    #ffebaf;
+    --l-x-orange:         #ffab05;
+    --l-x-orange-2:       #ffce5b;
+    --l-x-green-pale:     #c2ffc4;
+    --l-x-teal:           #d6b589;
+    --l-x-teal-pale:      #e7c197;
+    --l-x-blue:           #b2915d;
+    --l-x-blue-pale:      #ffe8c2;
+    --l-x-blue-pale-2:    #ffcb7b;
+    --l-x-blue-pale-3:    #e9decc;
+    --l-x-blue-pale-4:    #ffd384;
+    --l-x-blue-pale-5:    #ebd9c0;
+    --l-x-violet-pale:    #f7e5ba;
+    --l-x-violet-pale-2:  #e1d0a2;
+    --l-x-violet-pale-3:  #eddebc;
+    --l-x-violet-pale-4:  #f5e0a9;
+    --l-x-pink:           #b9af90;
+    --l-violet:           #ffdb85;
+    --l-violet-2:         #bda157;
+    --l-violet-3:         #e6b94b;
+    --l-violet-4:         #b7963f;
+    --l-violet-lt:        #ffdfa2;
+    --l-violet-deep:      #f0bd5a;
+    --l-violet-deep-2:    #f8bb35;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.05);
+    --l-veil-08:          rgba(0, 0, 0, 0.08);
+    --l-veil-10:          rgba(0, 0, 0, 0.1);
+    --l-veil-12:          rgba(0, 0, 0, 0.12);
+    --l-veil-15:          rgba(0, 0, 0, 0.15);
+    --l-veil-20:          rgba(0, 0, 0, 0.2);
+    --l-veil-25:          rgba(0, 0, 0, 0.25);
+    --l-veil-30:          rgba(0, 0, 0, 0.3);
+    --l-veil-35:          rgba(0, 0, 0, 0.35);
+    --l-veil-40:          rgba(0, 0, 0, 0.4);
+    --l-veil-45:          rgba(0, 0, 0, 0.45);
+    --l-veil-50:          rgba(0, 0, 0, 0.5);
+    --l-veil-55:          rgba(0, 0, 0, 0.55);
+    --l-veil-60:          rgba(0, 0, 0, 0.6);
+    --l-veil-65:          rgba(0, 0, 0, 0.65);
+    --l-veil-70:          rgba(0, 0, 0, 0.7);
+    --l-veil-75:          rgba(0, 0, 0, 0.75);
+    --l-veil-80:          rgba(0, 0, 0, 0.8);
+    --l-veil-85:          rgba(0, 0, 0, 0.85);
+    --l-veil-90:          rgba(0, 0, 0, 0.9);
+    --l-veil-92:          rgba(0, 0, 0, 0.92);
+    --l-veil-95:          rgba(0, 0, 0, 0.95);
+    --l-veil-98:          rgba(0, 0, 0, 0.98);
+    --l-sheen-05:         rgba(255, 255, 255, 0.05);
+    --l-sheen-08:         rgba(255, 255, 255, 0.08);
+    --l-sheen-10:         rgba(255, 255, 255, 0.1);
+    --l-sheen-12:         rgba(255, 255, 255, 0.12);
+    --l-sheen-15:         rgba(255, 255, 255, 0.15);
+    --l-sheen-20:         rgba(255, 255, 255, 0.2);
+    --l-sheen-25:         rgba(255, 255, 255, 0.25);
+    --l-sheen-30:         rgba(255, 255, 255, 0.3);
+    --l-sheen-35:         rgba(255, 255, 255, 0.35);
+    --l-sheen-40:         rgba(255, 255, 255, 0.4);
+    --l-sheen-45:         rgba(255, 255, 255, 0.45);
+    --l-sheen-50:         rgba(255, 255, 255, 0.5);
+    --l-sheen-55:         rgba(255, 255, 255, 0.55);
+    --l-sheen-60:         rgba(255, 255, 255, 0.6);
+    --l-sheen-65:         rgba(255, 255, 255, 0.65);
+    --l-sheen-70:         rgba(255, 255, 255, 0.7);
+    --l-sheen-75:         rgba(255, 255, 255, 0.75);
+    --l-sheen-80:         rgba(255, 255, 255, 0.8);
+    --l-sheen-85:         rgba(255, 255, 255, 0.85);
+    --l-sheen-90:         rgba(255, 255, 255, 0.9);
+    --l-sheen-92:         rgba(255, 255, 255, 0.92);
+    --l-sheen-95:         rgba(255, 255, 255, 0.95);
+    --l-sheen-98:         rgba(255, 255, 255, 0.98);
+}
+
+/* ── Deep Ocean (ocean) ─────────────────────────────── */
+:root[data-fuoc-theme="ocean"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #0a1c22;
+    --surface:            #0c222a;
+    --surface-2:          #0e2831;
+    --surface-3:          #112c36;
+    --border:             #25414b;
+    --border-strong:      #335966;
+    --text:               #e1e7ea;
+    --text-dim:           #afbbbf;
+    --text-mute:          #9ba9ad;
+    --accent:             #4cd5ff;
+    --accent-dim:         #0e282f;
+    --accent-ink:         #dde4e7;
+    --positive:           #33b689;
+    --positive-dim:       #152822;
+    --danger:             #ec558b;
+    --danger-dim:         #2c111b;
+    --warning:            #faed1e;
+    --warning-dim:        #2f2d0f;
+    --accent-gold:        #f3f93e;
+    --accent-gold-dim:    #2d2e0f;
+    --chat-self:          #33dafd;
+    --chat-self-2:        #20bdf0;
+    --chat-self-fill:     #0e292f;
+    --chat-other:         #5ea8ff;
+    --chat-other-2:       #3692dc;
+    --chat-narrator:      #51b8fb;
+    --chat-narrator-2:    #36adf1;
+    --chat-memory:        #f9f53e;
+    --chat-memory-2:      #6086ff;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(0,0,0,0.45);
+    --shadow-2:           0 10px 30px rgba(0,0,0,0.5);
+    --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.5);
+    --scrim:              rgba(0,0,0,0.7);
+    --focus-ring:         #4cd5ff;
+    --glow:               1;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #0c1e25;
+    --l-bg-black:         #101618;
+    --l-bg-black-2:       #161e21;
+    --l-panel:            #0f2831;
+    --l-panel-2:          #102c36;
+    --l-panel-3:          #102c36;
+    --l-panel-deep:       #0c2129;
+    --l-panel-deep-2:     #0d242d;
+    --l-panel-deep-3:     #0f2932;
+    --l-panel-alt:        #0f2831;
+    --l-panel-alt-2:      #132329;
+    --l-panel-violet:     #0d242c;
+    --l-slate:            #1b2c32;
+    --l-slate-2:          #1c2c32;
+    --l-black:            #0c1112;
+    --l-line:             #254753;
+    --l-neutral-3:        #313c40;
+    --l-neutral-4:        #3f4d52;
+    --l-neutral-5:        #4d5e64;
+    --l-neutral-6:        #5b6f77;
+    --l-neutral-7:        #738a94;
+    --l-neutral-8:        #799099;
+    --l-neutral-9:        #8ca0a7;
+    --l-ink:              #eff0f1;
+    --l-ink-dim:          #d0d4d5;
+    --l-ink-dim-2:        #bcc1c3;
+    --l-ink-cool:         #bbc7cb;
+    --l-ink-cool-2:       #c3cbce;
+    --l-ink-cool-3:       #d5dadc;
+    --l-ink-slate:        #949fa4;
+    --l-ink-soft:         #e3e9eb;
+    --l-on-accent:        #0a1215;
+    --l-ink-on-fill:      #0a1215;
+    /* legacy bridge · accents */
+    --l-indigo:           #63c8ed;
+    --l-indigo-lt:        #71dbff;
+    --l-indigo-deep:      #5a93b7;
+    --l-indigo-dark:      #2194cd;
+    --l-purple-deep:      #4993c0;
+    --l-red:              #ef4e9a;
+    --l-red-lt:           #ff6b9c;
+    --l-red-2:            #e65d8b;
+    --l-red-3:            #f05279;
+    --l-red-4:            #ff4481;
+    --l-red-dim:          #d8659b;
+    --l-red-dark:         #ff3f7e;
+    --l-green:            #4bcfad;
+    --l-green-2:          #00b89e;
+    --l-green-3:          #2ad081;
+    --l-green-4:          #01dbb0;
+    --l-green-lt:         #57d9b1;
+    --l-green-lt-2:       #51f3d0;
+    --l-green-dark:       #2f9c84;
+    --l-cyan:             #00d9ff;
+    --l-cyan-dark:        #00aacc;
+    --l-cyan-2:           #3fdeff;
+    --l-cyan-3:           #39d7f1;
+    --l-teal:             #4bc2d0;
+    --l-teal-2:           #00b6ce;
+    --l-blue:             #30bedf;
+    --l-blue-2:           #04bbe8;
+    --l-discord:          #54c8f6;
+    --l-gold:             #ddff00;
+    --l-gold-lt:          #fff957;
+    --l-orange:           #fff500;
+    --l-orange-2:         #ffea00;
+    --l-orange-3:         #ffe700;
+    --l-orange-4:         #ebc31d;
+    --l-orange-red:       #ffa100;
+    --l-amber:            #f9e80c;
+    --l-amber-2:          #fef021;
+    --l-amber-3:          #fef020;
+    --l-amber-4:          #ffed26;
+    --l-amber-5:          #ffe81c;
+    --l-yellow:           #edfe1f;
+    --l-yellow-2:         #e0f709;
+    --l-pink:             #6ba6ff;
+    --l-pink-2:           #438ced;
+    --l-pink-lt:          #77aeff;
+    --l-pink-3:           #69aaff;
+    --l-pink-pale:        #90cbfe;
+    --l-magenta:          #378bfe;
+    --l-magenta-2:        #2e8ef0;
+    --l-crimson:          #ff29ae;
+    --l-plum:             #5f90c7;
+    --l-x-red-pale:       #ff7eac;
+    --l-x-red-pale-2:     #ff9fd0;
+    --l-x-red-pale-3:     #ff87ce;
+    --l-x-red-pale-4:     #ffb9de;
+    --l-x-red:            #ff6bb3;
+    --l-x-red-2:          #ff70a2;
+    --l-x-grey:           #858d8f;
+    --l-x-yellow:         #f2ff07;
+    --l-x-yellow-pale:    #faffa7;
+    --l-x-orange:         #fffa00;
+    --l-x-orange-2:       #fcff54;
+    --l-x-green-pale:     #b9ffd2;
+    --l-x-teal:           #86c6d2;
+    --l-x-teal-pale:      #93dce3;
+    --l-x-blue:           #5c9cae;
+    --l-x-blue-pale:      #b9edff;
+    --l-x-blue-pale-2:    #74e2ff;
+    --l-x-blue-pale-3:    #c7dfe6;
+    --l-x-blue-pale-4:    #7cdbff;
+    --l-x-blue-pale-5:    #bbdee7;
+    --l-x-violet-pale:    #b4d9f3;
+    --l-x-violet-pale-2:  #9fc3de;
+    --l-x-violet-pale-3:  #b7d5e9;
+    --l-x-violet-pale-4:  #a4d2f2;
+    --l-x-pink:           #8da0b5;
+    --l-violet:           #7dcbff;
+    --l-violet-2:         #5a91ba;
+    --l-violet-3:         #4aa5e1;
+    --l-violet-4:         #5393c2;
+    --l-violet-lt:        #9adfff;
+    --l-violet-deep:      #59bcea;
+    --l-violet-deep-2:    #36adf1;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.05);
+    --l-veil-08:          rgba(0, 0, 0, 0.08);
+    --l-veil-10:          rgba(0, 0, 0, 0.1);
+    --l-veil-12:          rgba(0, 0, 0, 0.12);
+    --l-veil-15:          rgba(0, 0, 0, 0.15);
+    --l-veil-20:          rgba(0, 0, 0, 0.2);
+    --l-veil-25:          rgba(0, 0, 0, 0.25);
+    --l-veil-30:          rgba(0, 0, 0, 0.3);
+    --l-veil-35:          rgba(0, 0, 0, 0.35);
+    --l-veil-40:          rgba(0, 0, 0, 0.4);
+    --l-veil-45:          rgba(0, 0, 0, 0.45);
+    --l-veil-50:          rgba(0, 0, 0, 0.5);
+    --l-veil-55:          rgba(0, 0, 0, 0.55);
+    --l-veil-60:          rgba(0, 0, 0, 0.6);
+    --l-veil-65:          rgba(0, 0, 0, 0.65);
+    --l-veil-70:          rgba(0, 0, 0, 0.7);
+    --l-veil-75:          rgba(0, 0, 0, 0.75);
+    --l-veil-80:          rgba(0, 0, 0, 0.8);
+    --l-veil-85:          rgba(0, 0, 0, 0.85);
+    --l-veil-90:          rgba(0, 0, 0, 0.9);
+    --l-veil-92:          rgba(0, 0, 0, 0.92);
+    --l-veil-95:          rgba(0, 0, 0, 0.95);
+    --l-veil-98:          rgba(0, 0, 0, 0.98);
+    --l-sheen-05:         rgba(255, 255, 255, 0.05);
+    --l-sheen-08:         rgba(255, 255, 255, 0.08);
+    --l-sheen-10:         rgba(255, 255, 255, 0.1);
+    --l-sheen-12:         rgba(255, 255, 255, 0.12);
+    --l-sheen-15:         rgba(255, 255, 255, 0.15);
+    --l-sheen-20:         rgba(255, 255, 255, 0.2);
+    --l-sheen-25:         rgba(255, 255, 255, 0.25);
+    --l-sheen-30:         rgba(255, 255, 255, 0.3);
+    --l-sheen-35:         rgba(255, 255, 255, 0.35);
+    --l-sheen-40:         rgba(255, 255, 255, 0.4);
+    --l-sheen-45:         rgba(255, 255, 255, 0.45);
+    --l-sheen-50:         rgba(255, 255, 255, 0.5);
+    --l-sheen-55:         rgba(255, 255, 255, 0.55);
+    --l-sheen-60:         rgba(255, 255, 255, 0.6);
+    --l-sheen-65:         rgba(255, 255, 255, 0.65);
+    --l-sheen-70:         rgba(255, 255, 255, 0.7);
+    --l-sheen-75:         rgba(255, 255, 255, 0.75);
+    --l-sheen-80:         rgba(255, 255, 255, 0.8);
+    --l-sheen-85:         rgba(255, 255, 255, 0.85);
+    --l-sheen-90:         rgba(255, 255, 255, 0.9);
+    --l-sheen-92:         rgba(255, 255, 255, 0.92);
+    --l-sheen-95:         rgba(255, 255, 255, 0.95);
+    --l-sheen-98:         rgba(255, 255, 255, 0.98);
+}
+
+/* ── Synthwave (synthwave) ─────────────────────────────── */
+:root[data-fuoc-theme="synthwave"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #1c0921;
+    --surface:            #230c29;
+    --surface-2:          #290e30;
+    --surface-3:          #2e1035;
+    --border:             #45234d;
+    --border-strong:      #5e3069;
+    --text:               #ebe4ed;
+    --text-dim:           #c1b1c5;
+    --text-mute:          #af9eb4;
+    --accent:             #d656ff;
+    --accent-dim:         #270e2f;
+    --accent-ink:         #e8e0ea;
+    --positive:           #2ec2ab;
+    --positive-dim:       #142926;
+    --danger:             #f14562;
+    --danger-dim:         #2d1015;
+    --warning:            #ff7b21;
+    --warning-dim:        #2f1b0e;
+    --accent-gold:        #ffa041;
+    --accent-gold-dim:    #2f1f0e;
+    --chat-self:          #c23aff;
+    --chat-self-2:        #c81efa;
+    --chat-self-fill:     #250e2f;
+    --chat-other:         #ff68eb;
+    --chat-other-2:       #e32de0;
+    --chat-narrator:      #f757ff;
+    --chat-narrator-2:    #eb35fb;
+    --chat-memory:        #ff9541;
+    --chat-memory-2:      #e6008a;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(0,0,0,0.45);
+    --shadow-2:           0 10px 30px rgba(0,0,0,0.5);
+    --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.5);
+    --scrim:              rgba(0,0,0,0.7);
+    --focus-ring:         #d656ff;
+    --glow:               1;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #1f0c23;
+    --l-bg-black:         #150f17;
+    --l-bg-black-2:       #1e1620;
+    --l-panel:            #290f30;
+    --l-panel-2:          #2e0f35;
+    --l-panel-3:          #2e0f35;
+    --l-panel-deep:       #220c28;
+    --l-panel-deep-2:     #250d2c;
+    --l-panel-deep-3:     #2a0e31;
+    --l-panel-alt:        #290f30;
+    --l-panel-alt-2:      #231228;
+    --l-panel-violet:     #250c2b;
+    --l-slate:            #2d1b32;
+    --l-slate-2:          #2d1c31;
+    --l-black:            #100b11;
+    --l-line:             #4c2356;
+    --l-neutral-3:        #3d3040;
+    --l-neutral-4:        #4f3e53;
+    --l-neutral-5:        #604b65;
+    --l-neutral-6:        #725978;
+    --l-neutral-7:        #93769a;
+    --l-neutral-8:        #93789a;
+    --l-neutral-9:        #a28aa8;
+    --l-ink:              #f3f1f3;
+    --l-ink-dim:          #d8d3d9;
+    --l-ink-dim-2:        #c6bfc8;
+    --l-ink-cool:         #ccbed0;
+    --l-ink-cool-2:       #d0c6d3;
+    --l-ink-cool-3:       #ded7e0;
+    --l-ink-slate:        #a697aa;
+    --l-ink-soft:         #ece5ee;
+    --l-on-accent:        #130a15;
+    --l-ink-on-fill:      #130a15;
+    /* legacy bridge · accents */
+    --l-indigo:           #d866f5;
+    --l-indigo-lt:        #e37cff;
+    --l-indigo-deep:      #b350b9;
+    --l-indigo-dark:      #cc1ae4;
+    --l-purple-deep:      #bc43c5;
+    --l-red:              #f64175;
+    --l-red-lt:           #ff768a;
+    --l-red-2:            #e42f4a;
+    --l-red-3:            #f43743;
+    --l-red-4:            #ff4e67;
+    --l-red-dim:          #d5426c;
+    --l-red-dark:         #f00023;
+    --l-green:            #4bd7cd;
+    --l-green-2:          #00b5be;
+    --l-green-3:          #25dda7;
+    --l-green-4:          #00e3e0;
+    --l-green-lt:         #58e1d0;
+    --l-green-lt-2:       #53fbf6;
+    --l-green-dark:       #279590;
+    --l-cyan:             #b62cff;
+    --l-cyan-dark:        #b825ff;
+    --l-cyan-2:           #c549ff;
+    --l-cyan-3:           #b639fa;
+    --l-teal:             #a553da;
+    --l-teal-2:           #b136ff;
+    --l-blue:             #b83ceb;
+    --l-blue-2:           #bd18ff;
+    --l-discord:          #e056fe;
+    --l-gold:             #ff9c08;
+    --l-gold-lt:          #ffa561;
+    --l-orange:           #ff7108;
+    --l-orange-2:         #ff6608;
+    --l-orange-3:         #ff6308;
+    --l-orange-4:         #f5561b;
+    --l-orange-red:       #ff1f08;
+    --l-amber:            #ff6d0e;
+    --l-amber-2:          #ff7e29;
+    --l-amber-3:          #ff7e28;
+    --l-amber-4:          #ff7e2f;
+    --l-amber-5:          #ff7424;
+    --l-yellow:           #ff9c27;
+    --l-yellow-2:         #ff9309;
+    --l-pink:             #ff76e3;
+    --l-pink-2:           #f53fd5;
+    --l-pink-lt:          #ff82e6;
+    --l-pink-3:           #ff74e7;
+    --l-pink-pale:        #ff9bfb;
+    --l-magenta:          #ff26d8;
+    --l-magenta-2:        #dc0ac8;
+    --l-crimson:          #ff0874;
+    --l-plum:             #c246b3;
+    --l-x-red-pale:       #ff899e;
+    --l-x-red-pale-2:     #ffabc7;
+    --l-x-red-pale-3:     #ff93bf;
+    --l-x-red-pale-4:     #ffc6da;
+    --l-x-red:            #ff76a0;
+    --l-x-red-2:          #ff7b91;
+    --l-x-grey:           #7f7682;
+    --l-x-yellow:         #ff8b0f;
+    --l-x-yellow-pale:    #ffdbb4;
+    --l-x-orange:         #ff7508;
+    --l-x-orange-2:       #ffac5e;
+    --l-x-green-pale:     #c6ffe5;
+    --l-x-teal:           #be8ad8;
+    --l-x-teal-pale:      #c799e9;
+    --l-x-blue:           #a061b6;
+    --l-x-blue-pale:      #f3c6ff;
+    --l-x-blue-pale-2:    #dd7fff;
+    --l-x-blue-pale-3:    #e4cfeb;
+    --l-x-blue-pale-4:    #e987ff;
+    --l-x-blue-pale-5:    #e1c2ec;
+    --l-x-violet-pale:    #f7bdf8;
+    --l-x-violet-pale-2:  #e3a4e3;
+    --l-x-violet-pale-3:  #edbeee;
+    --l-x-violet-pale-4:  #f5acf7;
+    --l-x-pink:           #bb91b6;
+    --l-violet:           #fb88ff;
+    --l-violet-2:         #bf58bf;
+    --l-violet-3:         #e34be9;
+    --l-violet-4:         #c142c1;
+    --l-violet-lt:        #f2a6ff;
+    --l-violet-deep:      #de5bf2;
+    --l-violet-deep-2:    #eb35fb;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.05);
+    --l-veil-08:          rgba(0, 0, 0, 0.08);
+    --l-veil-10:          rgba(0, 0, 0, 0.1);
+    --l-veil-12:          rgba(0, 0, 0, 0.12);
+    --l-veil-15:          rgba(0, 0, 0, 0.15);
+    --l-veil-20:          rgba(0, 0, 0, 0.2);
+    --l-veil-25:          rgba(0, 0, 0, 0.25);
+    --l-veil-30:          rgba(0, 0, 0, 0.3);
+    --l-veil-35:          rgba(0, 0, 0, 0.35);
+    --l-veil-40:          rgba(0, 0, 0, 0.4);
+    --l-veil-45:          rgba(0, 0, 0, 0.45);
+    --l-veil-50:          rgba(0, 0, 0, 0.5);
+    --l-veil-55:          rgba(0, 0, 0, 0.55);
+    --l-veil-60:          rgba(0, 0, 0, 0.6);
+    --l-veil-65:          rgba(0, 0, 0, 0.65);
+    --l-veil-70:          rgba(0, 0, 0, 0.7);
+    --l-veil-75:          rgba(0, 0, 0, 0.75);
+    --l-veil-80:          rgba(0, 0, 0, 0.8);
+    --l-veil-85:          rgba(0, 0, 0, 0.85);
+    --l-veil-90:          rgba(0, 0, 0, 0.9);
+    --l-veil-92:          rgba(0, 0, 0, 0.92);
+    --l-veil-95:          rgba(0, 0, 0, 0.95);
+    --l-veil-98:          rgba(0, 0, 0, 0.98);
+    --l-sheen-05:         rgba(255, 255, 255, 0.05);
+    --l-sheen-08:         rgba(255, 255, 255, 0.08);
+    --l-sheen-10:         rgba(255, 255, 255, 0.1);
+    --l-sheen-12:         rgba(255, 255, 255, 0.12);
+    --l-sheen-15:         rgba(255, 255, 255, 0.15);
+    --l-sheen-20:         rgba(255, 255, 255, 0.2);
+    --l-sheen-25:         rgba(255, 255, 255, 0.25);
+    --l-sheen-30:         rgba(255, 255, 255, 0.3);
+    --l-sheen-35:         rgba(255, 255, 255, 0.35);
+    --l-sheen-40:         rgba(255, 255, 255, 0.4);
+    --l-sheen-45:         rgba(255, 255, 255, 0.45);
+    --l-sheen-50:         rgba(255, 255, 255, 0.5);
+    --l-sheen-55:         rgba(255, 255, 255, 0.55);
+    --l-sheen-60:         rgba(255, 255, 255, 0.6);
+    --l-sheen-65:         rgba(255, 255, 255, 0.65);
+    --l-sheen-70:         rgba(255, 255, 255, 0.7);
+    --l-sheen-75:         rgba(255, 255, 255, 0.75);
+    --l-sheen-80:         rgba(255, 255, 255, 0.8);
+    --l-sheen-85:         rgba(255, 255, 255, 0.85);
+    --l-sheen-90:         rgba(255, 255, 255, 0.9);
+    --l-sheen-92:         rgba(255, 255, 255, 0.92);
+    --l-sheen-95:         rgba(255, 255, 255, 0.95);
+    --l-sheen-98:         rgba(255, 255, 255, 0.98);
+}
+
+/* ── Slate (slate) ─────────────────────────────── */
+:root[data-fuoc-theme="slate"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #191a1b;
+    --surface:            #1e1f21;
+    --surface-2:          #222426;
+    --surface-3:          #26282a;
+    --border:             #3b3d3f;
+    --border-strong:      #4e5053;
+    --text:               #e2e3e4;
+    --text-dim:           #b5b6b8;
+    --text-mute:          #a2a4a6;
+    --accent:             #59a1f2;
+    --accent-dim:         #101e2d;
+    --accent-ink:         #dfe0e1;
+    --positive:           #3faa89;
+    --positive-dim:       #172622;
+    --danger:             #db5c84;
+    --danger-dim:         #29141b;
+    --warning:            #e5e133;
+    --warning-dim:        #2c2b12;
+    --accent-gold:        #dce84f;
+    --accent-gold-dim:    #2a2c12;
+    --chat-self:          #46a3ea;
+    --chat-self-2:        #4089df;
+    --chat-self-fill:     #11202c;
+    --chat-other:         #7d77f5;
+    --chat-other-2:       #7380dc;
+    --chat-narrator:      #6582ec;
+    --chat-narrator-2:    #6082e6;
+    --chat-memory:        #e5e84f;
+    --chat-memory-2:      #a169f6;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(0,0,0,0.45);
+    --shadow-2:           0 10px 30px rgba(0,0,0,0.5);
+    --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.5);
+    --scrim:              rgba(0,0,0,0.7);
+    --focus-ring:         #59a1f2;
+    --glow:               1;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #1c1d1e;
+    --l-bg-black:         #181818;
+    --l-bg-black-2:       #1f2020;
+    --l-panel:            #232426;
+    --l-panel-2:          #262729;
+    --l-panel-3:          #262729;
+    --l-panel-deep:       #1d1f20;
+    --l-panel-deep-2:     #202123;
+    --l-panel-deep-3:     #232527;
+    --l-panel-alt:        #232426;
+    --l-panel-alt-2:      #212223;
+    --l-panel-violet:     #1f2022;
+    --l-slate:            #2a2b2c;
+    --l-slate-2:          #2b2b2d;
+    --l-black:            #131313;
+    --l-line:             #3f4144;
+    --l-neutral-3:        #3c3d3e;
+    --l-neutral-4:        #4c4c4e;
+    --l-neutral-5:        #5b5c5d;
+    --l-neutral-6:        #6a6b6d;
+    --l-neutral-7:        #88898b;
+    --l-neutral-8:        #888a8c;
+    --l-neutral-9:        #98999b;
+    --l-ink:              #ededed;
+    --l-ink-dim:          #d1d1d2;
+    --l-ink-dim-2:        #bebebf;
+    --l-ink-cool:         #c0c1c3;
+    --l-ink-cool-2:       #c6c7c9;
+    --l-ink-cool-3:       #d6d6d7;
+    --l-ink-slate:        #9a9b9d;
+    --l-ink-soft:         #e4e4e5;
+    --l-on-accent:        #0a0e15;
+    --l-ink-on-fill:      #0a0e15;
+    /* legacy bridge · accents */
+    --l-indigo:           #709fe0;
+    --l-indigo-lt:        #7cb0f4;
+    --l-indigo-deep:      #7684b9;
+    --l-indigo-dark:      #5d84d9;
+    --l-purple-deep:      #7386c3;
+    --l-red:              #de5591;
+    --l-red-lt:           #f4769b;
+    --l-red-2:            #d65e81;
+    --l-red-3:            #de5975;
+    --l-red-4:            #f15280;
+    --l-red-dim:          #cb6893;
+    --l-red-dark:         #fb336e;
+    --l-green:            #57c3ab;
+    --l-green-2:          #0eaa9a;
+    --l-green-3:          #3ac085;
+    --l-green-4:          #16c6aa;
+    --l-green-lt:         #63cdb0;
+    --l-green-lt-2:       #61e3cc;
+    --l-green-dark:       #3a9685;
+    --l-cyan:             #1398ec;
+    --l-cyan-dark:        #0f8de6;
+    --l-cyan-2:           #4dabf1;
+    --l-cyan-3:           #4aa7e0;
+    --l-teal:             #58a1c3;
+    --l-teal-2:           #0f8fce;
+    --l-blue:             #418dce;
+    --l-blue-2:           #1f89e7;
+    --l-discord:          #6496e6;
+    --l-gold:             #c7ec13;
+    --l-gold-lt:          #f2f264;
+    --l-orange:           #ecec13;
+    --l-orange-2:         #ece213;
+    --l-orange-3:         #ece013;
+    --l-orange-4:         #df5e4d;
+    --l-orange-red:       #f54850;
+    --l-amber:            #e2dc23;
+    --l-amber-2:          #e9e436;
+    --l-amber-3:          #e9e435;
+    --l-amber-4:          #efe636;
+    --l-amber-5:          #ee572d;
+    --l-yellow:           #d4e934;
+    --l-yellow-2:         #c6e020;
+    --l-pink:             #8776f4;
+    --l-pink-2:           #857ce8;
+    --l-pink-lt:          #9283f3;
+    --l-pink-3:           #8478f5;
+    --l-pink-pale:        #9ba3f3;
+    --l-magenta:          #8276f3;
+    --l-magenta-2:        #7a7ceb;
+    --l-crimson:          #f236a4;
+    --l-plum:             #8282c8;
+    --l-x-red-pale:       #f588aa;
+    --l-x-red-pale-2:     #f8a6cd;
+    --l-x-red-pale-3:     #f690c9;
+    --l-x-red-pale-4:     #fabedb;
+    --l-x-red:            #f476af;
+    --l-x-red-2:          #f47ba1;
+    --l-x-grey:           #84888c;
+    --l-x-yellow:         #d9ec1a;
+    --l-x-yellow-pale:    #f1f8ae;
+    --l-x-orange:         #e8ec13;
+    --l-x-orange-2:       #eaf261;
+    --l-x-green-pale:     #befad6;
+    --l-x-teal:           #8db2cb;
+    --l-x-teal-pale:      #9bc9db;
+    --l-x-blue:           #6a8aaa;
+    --l-x-blue-pale:      #bed8fa;
+    --l-x-blue-pale-2:    #7ebbf5;
+    --l-x-blue-pale-3:    #cad7e3;
+    --l-x-blue-pale-4:    #86b2f5;
+    --l-x-blue-pale-5:    #bfd2e3;
+    --l-x-violet-pale:    #bbc3ee;
+    --l-x-violet-pale-2:  #a5acd8;
+    --l-x-violet-pale-3:  #bcc3e4;
+    --l-x-violet-pale-4:  #acb6ea;
+    --l-x-pink:           #9191b1;
+    --l-violet:           #879cf5;
+    --l-violet-2:         #7a84be;
+    --l-violet-3:         #6c82d9;
+    --l-violet-4:         #7984c4;
+    --l-violet-lt:        #a2bff7;
+    --l-violet-deep:      #668ddd;
+    --l-violet-deep-2:    #6082e6;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.05);
+    --l-veil-08:          rgba(0, 0, 0, 0.08);
+    --l-veil-10:          rgba(0, 0, 0, 0.1);
+    --l-veil-12:          rgba(0, 0, 0, 0.12);
+    --l-veil-15:          rgba(0, 0, 0, 0.15);
+    --l-veil-20:          rgba(0, 0, 0, 0.2);
+    --l-veil-25:          rgba(0, 0, 0, 0.25);
+    --l-veil-30:          rgba(0, 0, 0, 0.3);
+    --l-veil-35:          rgba(0, 0, 0, 0.35);
+    --l-veil-40:          rgba(0, 0, 0, 0.4);
+    --l-veil-45:          rgba(0, 0, 0, 0.45);
+    --l-veil-50:          rgba(0, 0, 0, 0.5);
+    --l-veil-55:          rgba(0, 0, 0, 0.55);
+    --l-veil-60:          rgba(0, 0, 0, 0.6);
+    --l-veil-65:          rgba(0, 0, 0, 0.65);
+    --l-veil-70:          rgba(0, 0, 0, 0.7);
+    --l-veil-75:          rgba(0, 0, 0, 0.75);
+    --l-veil-80:          rgba(0, 0, 0, 0.8);
+    --l-veil-85:          rgba(0, 0, 0, 0.85);
+    --l-veil-90:          rgba(0, 0, 0, 0.9);
+    --l-veil-92:          rgba(0, 0, 0, 0.92);
+    --l-veil-95:          rgba(0, 0, 0, 0.95);
+    --l-veil-98:          rgba(0, 0, 0, 0.98);
+    --l-sheen-05:         rgba(255, 255, 255, 0.05);
+    --l-sheen-08:         rgba(255, 255, 255, 0.08);
+    --l-sheen-10:         rgba(255, 255, 255, 0.1);
+    --l-sheen-12:         rgba(255, 255, 255, 0.12);
+    --l-sheen-15:         rgba(255, 255, 255, 0.15);
+    --l-sheen-20:         rgba(255, 255, 255, 0.2);
+    --l-sheen-25:         rgba(255, 255, 255, 0.25);
+    --l-sheen-30:         rgba(255, 255, 255, 0.3);
+    --l-sheen-35:         rgba(255, 255, 255, 0.35);
+    --l-sheen-40:         rgba(255, 255, 255, 0.4);
+    --l-sheen-45:         rgba(255, 255, 255, 0.45);
+    --l-sheen-50:         rgba(255, 255, 255, 0.5);
+    --l-sheen-55:         rgba(255, 255, 255, 0.55);
+    --l-sheen-60:         rgba(255, 255, 255, 0.6);
+    --l-sheen-65:         rgba(255, 255, 255, 0.65);
+    --l-sheen-70:         rgba(255, 255, 255, 0.7);
+    --l-sheen-75:         rgba(255, 255, 255, 0.75);
+    --l-sheen-80:         rgba(255, 255, 255, 0.8);
+    --l-sheen-85:         rgba(255, 255, 255, 0.85);
+    --l-sheen-90:         rgba(255, 255, 255, 0.9);
+    --l-sheen-92:         rgba(255, 255, 255, 0.92);
+    --l-sheen-95:         rgba(255, 255, 255, 0.95);
+    --l-sheen-98:         rgba(255, 255, 255, 0.98);
+}
+
+/* ── Nordic (nordic) ─────────────────────────────── */
+:root[data-fuoc-theme="nordic"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #303642;
+    --surface:            #343a47;
+    --surface-2:          #373e4c;
+    --surface-3:          #3a414f;
+    --border:             #4c5362;
+    --border-strong:      #5b6475;
+    --text:               #dfe1e7;
+    --text-dim:           #b9bdc6;
+    --text-mute:          #aaafb8;
+    --accent:             #79a3e8;
+    --accent-dim:         #131c2a;
+    --accent-ink:         #dcdfe5;
+    --positive:           #52b195;
+    --positive-dim:       #182521;
+    --danger:             #dc89a2;
+    --danger-dim:         #28151b;
+    --warning:            #e18d6e;
+    --warning-dim:        #2a1a14;
+    --accent-gold:        #d3dd6a;
+    --accent-gold-dim:    #272914;
+    --chat-self:          #71a6e2;
+    --chat-self-2:        #7fa3e0;
+    --chat-self-fill:     #131e2a;
+    --chat-other:         #9f9aee;
+    --chat-other-2:       #999edd;
+    --chat-narrator:      #8f9de7;
+    --chat-narrator-2:    #8f9fe4;
+    --chat-memory:        #dd8d6a;
+    --chat-memory-2:      #b391ee;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(0,0,0,0.45);
+    --shadow-2:           0 10px 30px rgba(0,0,0,0.5);
+    --sheet-shadow:       0 -14px 40px rgba(0,0,0,0.5);
+    --scrim:              rgba(0,0,0,0.7);
+    --focus-ring:         #79a3e8;
+    --glow:               1;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #333844;
+    --l-bg-black:         #34363a;
+    --l-bg-black-2:       #3a3d41;
+    --l-panel:            #383e4c;
+    --l-panel-2:          #39414f;
+    --l-panel-3:          #39414f;
+    --l-panel-deep:       #333a47;
+    --l-panel-deep-2:     #353c49;
+    --l-panel-deep-3:     #373f4d;
+    --l-panel-alt:        #383e4c;
+    --l-panel-alt-2:      #393d46;
+    --l-panel-violet:     #353b49;
+    --l-slate:            #41454e;
+    --l-slate-2:          #42464e;
+    --l-black:            #303236;
+    --l-line:             #4e5667;
+    --l-neutral-3:        #52555b;
+    --l-neutral-4:        #606369;
+    --l-neutral-5:        #6d7078;
+    --l-neutral-6:        #7a7e86;
+    --l-neutral-7:        #a3a6ab;
+    --l-neutral-8:        #a4a7ac;
+    --l-neutral-9:        #a5a8ad;
+    --l-ink:              #eaeaec;
+    --l-ink-dim:          #d2d4d7;
+    --l-ink-dim-2:        #c3c5c9;
+    --l-ink-cool:         #c2c6ce;
+    --l-ink-cool-2:       #c9cbd1;
+    --l-ink-cool-3:       #d6d8dc;
+    --l-ink-slate:        #a4a8b0;
+    --l-ink-soft:         #e0e3e8;
+    --l-on-accent:        #0a0e15;
+    --l-ink-on-fill:      #0a0e15;
+    /* legacy bridge · accents */
+    --l-indigo:           #87a2da;
+    --l-indigo-lt:        #96b4ec;
+    --l-indigo-deep:      #99a0c5;
+    --l-indigo-dark:      #8ca0db;
+    --l-purple-deep:      #97a1cc;
+    --l-red:              #de87ad;
+    --l-red-lt:           #ec91aa;
+    --l-red-2:            #d98da2;
+    --l-red-3:            #df8b9b;
+    --l-red-4:            #ea839f;
+    --l-red-dim:          #cf8faa;
+    --l-red-dark:         #f27b9c;
+    --l-green:            #6bbdac;
+    --l-green-2:          #1fb7a9;
+    --l-green-3:          #4dba8b;
+    --l-green-4:          #27c0a9;
+    --l-green-lt:         #77c8b3;
+    --l-green-lt-2:       #79dbcb;
+    --l-green-dark:       #52b09f;
+    --l-cyan:             #62a5e7;
+    --l-cyan-dark:        #66a6eb;
+    --l-cyan-2:           #6da6e6;
+    --l-cyan-3:           #6ea6da;
+    --l-teal:             #7ca6c7;
+    --l-teal-2:           #56a7e8;
+    --l-blue:             #7fa5d5;
+    --l-blue-2:           #73a5e6;
+    --l-discord:          #84a0e0;
+    --l-gold:             #bcdb31;
+    --l-gold-lt:          #e89d7f;
+    --l-orange:           #e78862;
+    --l-orange-2:         #e98a6a;
+    --l-orange-3:         #e9886a;
+    --l-orange-4:         #de8c7f;
+    --l-orange-red:       #ee8488;
+    --l-amber:            #e28c6d;
+    --l-amber-2:          #e3896a;
+    --l-amber-3:          #e38969;
+    --l-amber-4:          #e7896c;
+    --l-amber-5:          #e7876b;
+    --l-yellow:           #cadb50;
+    --l-yellow-2:         #bcd23b;
+    --l-pink:             #a295ed;
+    --l-pink-2:           #a199e4;
+    --l-pink-lt:          #a89dec;
+    --l-pink-3:           #a097ed;
+    --l-pink-pale:        #b3b6ef;
+    --l-magenta:          #a399ed;
+    --l-magenta-2:        #9d9ce7;
+    --l-crimson:          #ec7bbc;
+    --l-plum:             #a09ece;
+    --l-x-red-pale:       #efa2b9;
+    --l-x-red-pale-2:     #f4bfd7;
+    --l-x-red-pale-3:     #f0aad0;
+    --l-x-red-pale-4:     #f8d6e6;
+    --l-x-red:            #ec91b9;
+    --l-x-red-2:          #ec95b0;
+    --l-x-grey:           #9fa1a5;
+    --l-x-yellow:         #cbdc37;
+    --l-x-yellow-pale:    #f0f5c6;
+    --l-x-orange:         #e6885e;
+    --l-x-orange-2:       #e1e87c;
+    --l-x-green-pale:     #d6f8e4;
+    --l-x-teal:           #9eb4cb;
+    --l-x-teal-pale:      #adc9db;
+    --l-x-blue:           #93a4bc;
+    --l-x-blue-pale:      #d6e2f8;
+    --l-x-blue-pale-2:    #99bced;
+    --l-x-blue-pale-3:    #dae0e9;
+    --l-x-blue-pale-4:    #a0b9ee;
+    --l-x-blue-pale-5:    #d0dae7;
+    --l-x-violet-pale:    #cfd2ee;
+    --l-x-violet-pale-2:  #b6b9d9;
+    --l-x-violet-pale-3:  #cdd1e7;
+    --l-x-violet-pale-4:  #c0c5ea;
+    --l-x-pink:           #a0a0b7;
+    --l-violet:           #a1abee;
+    --l-violet-2:         #9ca1c8;
+    --l-violet-3:         #929dda;
+    --l-violet-4:         #9ba0cd;
+    --l-violet-lt:        #bbcaf2;
+    --l-violet-deep:      #8ca0dc;
+    --l-violet-deep-2:    #8f9fe4;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(0, 0, 0, 0.05);
+    --l-veil-08:          rgba(0, 0, 0, 0.08);
+    --l-veil-10:          rgba(0, 0, 0, 0.1);
+    --l-veil-12:          rgba(0, 0, 0, 0.12);
+    --l-veil-15:          rgba(0, 0, 0, 0.15);
+    --l-veil-20:          rgba(0, 0, 0, 0.2);
+    --l-veil-25:          rgba(0, 0, 0, 0.25);
+    --l-veil-30:          rgba(0, 0, 0, 0.3);
+    --l-veil-35:          rgba(0, 0, 0, 0.35);
+    --l-veil-40:          rgba(0, 0, 0, 0.4);
+    --l-veil-45:          rgba(0, 0, 0, 0.45);
+    --l-veil-50:          rgba(0, 0, 0, 0.5);
+    --l-veil-55:          rgba(0, 0, 0, 0.55);
+    --l-veil-60:          rgba(0, 0, 0, 0.6);
+    --l-veil-65:          rgba(0, 0, 0, 0.65);
+    --l-veil-70:          rgba(0, 0, 0, 0.7);
+    --l-veil-75:          rgba(0, 0, 0, 0.75);
+    --l-veil-80:          rgba(0, 0, 0, 0.8);
+    --l-veil-85:          rgba(0, 0, 0, 0.85);
+    --l-veil-90:          rgba(0, 0, 0, 0.9);
+    --l-veil-92:          rgba(0, 0, 0, 0.92);
+    --l-veil-95:          rgba(0, 0, 0, 0.95);
+    --l-veil-98:          rgba(0, 0, 0, 0.98);
+    --l-sheen-05:         rgba(255, 255, 255, 0.05);
+    --l-sheen-08:         rgba(255, 255, 255, 0.08);
+    --l-sheen-10:         rgba(255, 255, 255, 0.1);
+    --l-sheen-12:         rgba(255, 255, 255, 0.12);
+    --l-sheen-15:         rgba(255, 255, 255, 0.15);
+    --l-sheen-20:         rgba(255, 255, 255, 0.2);
+    --l-sheen-25:         rgba(255, 255, 255, 0.25);
+    --l-sheen-30:         rgba(255, 255, 255, 0.3);
+    --l-sheen-35:         rgba(255, 255, 255, 0.35);
+    --l-sheen-40:         rgba(255, 255, 255, 0.4);
+    --l-sheen-45:         rgba(255, 255, 255, 0.45);
+    --l-sheen-50:         rgba(255, 255, 255, 0.5);
+    --l-sheen-55:         rgba(255, 255, 255, 0.55);
+    --l-sheen-60:         rgba(255, 255, 255, 0.6);
+    --l-sheen-65:         rgba(255, 255, 255, 0.65);
+    --l-sheen-70:         rgba(255, 255, 255, 0.7);
+    --l-sheen-75:         rgba(255, 255, 255, 0.75);
+    --l-sheen-80:         rgba(255, 255, 255, 0.8);
+    --l-sheen-85:         rgba(255, 255, 255, 0.85);
+    --l-sheen-90:         rgba(255, 255, 255, 0.9);
+    --l-sheen-92:         rgba(255, 255, 255, 0.92);
+    --l-sheen-95:         rgba(255, 255, 255, 0.95);
+    --l-sheen-98:         rgba(255, 255, 255, 0.98);
+}
+
+/* ── Sepia Paper (sepia) ─────────────────────────────── */
+:root[data-fuoc-theme="sepia"] {
+    /* design-system tokens (.fuoc-ui components) */
+    --bg:                 #f6ead9;
+    --surface:            #f5e7d4;
+    --surface-2:          #f4e4d0;
+    --surface-3:          #f2e2cd;
+    --border:             #d8c9b6;
+    --border-strong:      #c8b499;
+    --text:               #3c3020;
+    --text-dim:           #6c573a;
+    --text-mute:          #806645;
+    --accent:             #8e4d00;
+    --accent-dim:         #f4ebe1;
+    --accent-ink:         #403322;
+    --positive:           #226b3b;
+    --positive-dim:       #e6efe9;
+    --danger:             #b8231e;
+    --danger-dim:         #f1e4e4;
+    --warning:            #855406;
+    --warning-dim:        #f3ede2;
+    --accent-gold:        #7b5905;
+    --accent-gold-dim:    #f3eee2;
+    --chat-self:          #974c05;
+    --chat-self-2:        #88500d;
+    --chat-self-fill:     #f3eae2;
+    --chat-other:         #725d00;
+    --chat-other-2:       #755c18;
+    --chat-narrator:      #7d5603;
+    --chat-narrator-2:    #7e560b;
+    --chat-memory:        #7f5505;
+    --chat-memory-2:      #616104;
+    /* effects */
+    --shadow-1:           0 1px 2px rgba(18,25,38,0.10);
+    --shadow-2:           0 8px 24px rgba(18,25,38,0.12);
+    --sheet-shadow:       0 -10px 32px rgba(18,25,38,0.14);
+    --scrim:              rgba(32,40,54,0.42);
+    --focus-ring:         #8e4d00;
+    --glow:               0;
+    /* legacy bridge · surfaces, lines, ink */
+    --l-bg:               #f4e8d8;
+    --l-bg-black:         #eeeae4;
+    --l-bg-black-2:       #eae5df;
+    --l-panel:            #f3e4d0;
+    --l-panel-2:          #f3e3cd;
+    --l-panel-3:          #f3e3cd;
+    --l-panel-deep:       #f5e7d5;
+    --l-panel-deep-2:     #f5e6d3;
+    --l-panel-deep-3:     #f4e4cf;
+    --l-panel-alt:        #f3e4d0;
+    --l-panel-alt-2:      #efe5d8;
+    --l-panel-violet:     #f5e6d3;
+    --l-slate:            #e9e0d3;
+    --l-slate-2:          #e8dfd3;
+    --l-black:            #f0ece8;
+    --l-line:             #d7c5ae;
+    --l-neutral-3:        #cec8c0;
+    --l-neutral-4:        #beb6ac;
+    --l-neutral-5:        #aea598;
+    --l-neutral-6:        #9f9384;
+    --l-neutral-7:        #766b5c;
+    --l-neutral-8:        #756b5c;
+    --l-neutral-9:        #675e51;
+    --l-ink:              #32281b;
+    --l-ink-dim:          #50402b;
+    --l-ink-dim-2:        #635036;
+    --l-ink-cool:         #604d34;
+    --l-ink-cool-2:       #5a4830;
+    --l-ink-cool-3:       #4a3b28;
+    --l-ink-slate:        #896d4a;
+    --l-ink-soft:         #3b2f20;
+    --l-on-accent:        #ffffff;
+    --l-ink-on-fill:      #f8f7f7;
+    /* legacy bridge · accents */
+    --l-indigo:           #875411;
+    --l-indigo-lt:        #905000;
+    --l-indigo-deep:      #705d36;
+    --l-indigo-dark:      #7a571e;
+    --l-purple-deep:      #715c31;
+    --l-red:              #bd1a27;
+    --l-red-lt:           #c20d00;
+    --l-red-2:            #b03128;
+    --l-red-3:            #b2311a;
+    --l-red-4:            #be0e00;
+    --l-red-dim:          #aa3740;
+    --l-red-dark:         #840f07;
+    --l-green:            #1f6c3f;
+    --l-green-2:          #036e3c;
+    --l-green-3:          #196c2a;
+    --l-green-4:          #046d36;
+    --l-green-lt:         #1a6e39;
+    --l-green-lt-2:       #086b36;
+    --l-green-dark:       #276c46;
+    --l-cyan:             #9b4903;
+    --l-cyan-dark:        #944905;
+    --l-cyan-2:           #964800;
+    --l-cyan-3:           #924a0e;
+    --l-teal:             #885128;
+    --l-teal-2:           #9b4605;
+    --l-blue:             #8a521a;
+    --l-blue-2:           #914e09;
+    --l-discord:          #895309;
+    --l-gold:             #705b00;
+    --l-gold-lt:          #855500;
+    --l-orange:           #845401;
+    --l-orange-2:         #885201;
+    --l-orange-3:         #885001;
+    --l-orange-4:         #904f12;
+    --l-orange-red:       #aa3704;
+    --l-amber:            #885508;
+    --l-amber-2:          #875404;
+    --l-amber-3:          #865304;
+    --l-amber-4:          #8c5300;
+    --l-amber-5:          #8c5100;
+    --l-yellow:           #775b03;
+    --l-yellow-2:         #745b07;
+    --l-pink:             #6b5c00;
+    --l-pink-2:           #6d5d0c;
+    --l-pink-lt:          #6d5e00;
+    --l-pink-3:           #6e5b00;
+    --l-pink-pale:        #7b5a00;
+    --l-magenta:          #6d5c03;
+    --l-magenta-2:        #735e12;
+    --l-crimson:          #c10630;
+    --l-plum:             #685d30;
+    --l-x-red-pale:       #c00800;
+    --l-x-red-pale-2:     #c30017;
+    --l-x-red-pale-3:     #bf0025;
+    --l-x-red-pale-4:     #c30019;
+    --l-x-red:            #c20013;
+    --l-x-red-2:          #c20900;
+    --l-x-grey:           #635f5c;
+    --l-x-yellow:         #7c5a00;
+    --l-x-yellow-pale:    #795900;
+    --l-x-orange:         #845701;
+    --l-x-orange-2:       #7d5700;
+    --l-x-green-pale:     #006d02;
+    --l-x-teal:           #7e5532;
+    --l-x-teal-pale:      #8a4f25;
+    --l-x-blue:           #755b3e;
+    --l-x-blue-pale:      #8b4f00;
+    --l-x-blue-pale-2:    #934c00;
+    --l-x-blue-pale-3:    #7a5834;
+    --l-x-blue-pale-4:    #8b5100;
+    --l-x-blue-pale-5:    #81572c;
+    --l-x-violet-pale:    #7a5b10;
+    --l-x-violet-pale-2:  #745d28;
+    --l-x-violet-pale-3:  #765b21;
+    --l-x-violet-pale-4:  #785810;
+    --l-x-pink:           #665f43;
+    --l-violet:           #7e5600;
+    --l-violet-2:         #6d5c31;
+    --l-violet-3:         #7b5b17;
+    --l-violet-4:         #715d2e;
+    --l-violet-lt:        #865100;
+    --l-violet-deep:      #7f5511;
+    --l-violet-deep-2:    #7e560b;
+    /* translucent fills (dark veils / white sheens) */
+    --l-veil-05:          rgba(28, 36, 50, 0.02);
+    --l-veil-08:          rgba(28, 36, 50, 0.04);
+    --l-veil-10:          rgba(28, 36, 50, 0.05);
+    --l-veil-12:          rgba(28, 36, 50, 0.05);
+    --l-veil-15:          rgba(28, 36, 50, 0.07);
+    --l-veil-20:          rgba(28, 36, 50, 0.09);
+    --l-veil-25:          rgba(28, 36, 50, 0.11);
+    --l-veil-30:          rgba(28, 36, 50, 0.14);
+    --l-veil-35:          rgba(28, 36, 50, 0.16);
+    --l-veil-40:          rgba(28, 36, 50, 0.18);
+    --l-veil-45:          rgba(28, 36, 50, 0.2);
+    --l-veil-50:          rgba(28, 36, 50, 0.23);
+    --l-veil-55:          rgba(28, 36, 50, 0.25);
+    --l-veil-60:          rgba(28, 36, 50, 0.27);
+    --l-veil-65:          rgba(28, 36, 50, 0.29);
+    --l-veil-70:          rgba(28, 36, 50, 0.32);
+    --l-veil-75:          rgba(28, 36, 50, 0.34);
+    --l-veil-80:          rgba(28, 36, 50, 0.36);
+    --l-veil-85:          rgba(28, 36, 50, 0.38);
+    --l-veil-90:          rgba(28, 36, 50, 0.41);
+    --l-veil-92:          rgba(28, 36, 50, 0.41);
+    --l-veil-95:          rgba(28, 36, 50, 0.43);
+    --l-veil-98:          rgba(28, 36, 50, 0.44);
+    --l-sheen-05:         rgba(20, 28, 42, 0.03);
+    --l-sheen-08:         rgba(20, 28, 42, 0.04);
+    --l-sheen-10:         rgba(20, 28, 42, 0.05);
+    --l-sheen-12:         rgba(20, 28, 42, 0.06);
+    --l-sheen-15:         rgba(20, 28, 42, 0.08);
+    --l-sheen-20:         rgba(20, 28, 42, 0.1);
+    --l-sheen-25:         rgba(20, 28, 42, 0.13);
+    --l-sheen-30:         rgba(20, 28, 42, 0.15);
+    --l-sheen-35:         rgba(20, 28, 42, 0.18);
+    --l-sheen-40:         rgba(20, 28, 42, 0.2);
+    --l-sheen-45:         rgba(20, 28, 42, 0.23);
+    --l-sheen-50:         rgba(20, 28, 42, 0.25);
+    --l-sheen-55:         rgba(20, 28, 42, 0.28);
+    --l-sheen-60:         rgba(20, 28, 42, 0.3);
+    --l-sheen-65:         rgba(20, 28, 42, 0.33);
+    --l-sheen-70:         rgba(20, 28, 42, 0.35);
+    --l-sheen-75:         rgba(20, 28, 42, 0.38);
+    --l-sheen-80:         rgba(20, 28, 42, 0.4);
+    --l-sheen-85:         rgba(20, 28, 42, 0.43);
+    --l-sheen-90:         rgba(20, 28, 42, 0.45);
+    --l-sheen-92:         rgba(20, 28, 42, 0.46);
+    --l-sheen-95:         rgba(20, 28, 42, 0.48);
+    --l-sheen-98:         rgba(20, 28, 42, 0.49);
+}
+
+/* Page canvas follows the active theme. */
+html[data-fuoc-theme] {
+    background: var(--l-bg);
+}
+html[data-fuoc-theme] body {
+    background-color: var(--l-bg);
+    color: var(--l-ink);
+}
+
+/* Light themes need dark form controls chrome (scrollbars, date pickers). */
+:root[data-fuoc-theme="light"] {
+    color-scheme: light;
+}
+:root[data-fuoc-theme="dark"],
+:root[data-fuoc-theme="hc-dark"],
+:root[data-fuoc-theme="dim"] {
+    color-scheme: dark;
+}
+/* ==== END FUOC THEME LAYER ==== */
+
+/* ============================================================
+ FUOC ACCESSIBILITY LAYER
+ Player-controlled display options, keyed off data-* attributes that
+ DisplaySettings writes onto <html> before first paint. Every rule here is
+ inert until the matching attribute is present, so the default look is
+ untouched.
+
+ These fight ~2,900 inline styles, which is why !important shows up: an
+ inline style beats any stylesheet selector, and accessibility settings must
+ win. That is the one place in this file where !important is the correct tool.
+ ============================================================ */
+
+/* ---- UI scale ----------------------------------------------------------
+ 97% of the type in this file is sized in rem (1,963 rem vs 61 px), so
+ scaling the root font size scales nearly all text without touching layout. */
+html[data-fuoc-scale] {
+    font-size: calc(100% * var(--ui-scale, 1));
+}
+
+/* ---- Reduce motion ----------------------------------------------------
+ In-game switch, independent of the OS-level @media (prefers-reduced-motion)
+ block further down — players on shared machines can't always change the OS. */
+html[data-fuoc-motion="off"] *,
+html[data-fuoc-motion="off"] *::before,
+html[data-fuoc-motion="off"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+}
+html[data-fuoc-motion="off"] {
+    scroll-behavior: auto !important;
+}
+
+/* ---- Reduce glow & transparency ---------------------------------------
+ Neon text-shadow on a dark field is the classic astigmatism problem: the
+ halo smears and doubles. This strips glow, blur and see-through panels, and
+ swaps drop shadows for a crisp 1px edge so cards keep their separation. */
+html[data-fuoc-flat="1"] * {
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+html[data-fuoc-flat="1"] *:not(img):not(video):not(canvas) {
+    box-shadow: 0 0 0 1px var(--border) !important;
+}
+/* Elements that only ever had a glow shouldn't gain a visible ring. */
+html[data-fuoc-flat="1"] span:not(.chip):not(.pill),
+html[data-fuoc-flat="1"] b,
+html[data-fuoc-flat="1"] strong,
+html[data-fuoc-flat="1"] em,
+html[data-fuoc-flat="1"] h1,
+html[data-fuoc-flat="1"] h2,
+html[data-fuoc-flat="1"] h3,
+html[data-fuoc-flat="1"] h4,
+html[data-fuoc-flat="1"] p,
+html[data-fuoc-flat="1"] label {
+    box-shadow: none !important;
+}
+/* filter: blur()/drop-shadow() glows — but keep brightness/grayscale intact
+ for the image-effect utilities the game uses on portraits. */
+html[data-fuoc-flat="1"] *:not(img):not(video) {
+    filter: none !important;
+}
+
+/* ---- Larger tap targets ---------------------------------------------- */
+html[data-fuoc-targets="big"] button,
+html[data-fuoc-targets="big"] select,
+html[data-fuoc-targets="big"] summary,
+html[data-fuoc-targets="big"] [role="button"],
+html[data-fuoc-targets="big"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+    min-height: 44px !important;
+}
+html[data-fuoc-targets="big"] button {
+    min-width: 44px;
+}
+html[data-fuoc-targets="big"] input[type="checkbox"],
+html[data-fuoc-targets="big"] input[type="radio"] {
+    width: 22px !important;
+    height: 22px !important;
+}
+html[data-fuoc-targets="big"] input[type="range"] {
+    height: 32px !important;
+}
+/* 16px inputs stop iOS Safari zooming on focus. */
+html[data-fuoc-targets="big"] input,
+html[data-fuoc-targets="big"] select,
+html[data-fuoc-targets="big"] textarea {
+    font-size: max(1rem, 16px) !important;
+}
+
+/* ---- Focus visibility -------------------------------------------------
+ The base ring is always on (keyboard-only, so it costs mouse users nothing);
+ the setting makes it thicker and adds a contrasting halo. */
+:is(button, a, select, summary, textarea, input, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus-ring, #7fb2ff);
+    outline-offset: 2px;
+}
+html[data-fuoc-focus="1"] :is(button, a, select, summary, textarea, input, [tabindex]):focus-visible {
+    outline: 3px solid var(--focus-ring, #7fb2ff) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--focus-ring, #7fb2ff) 35%, transparent) !important;
+}
+
+/* ---- Readable font ----------------------------------------------------
+ Verdana carries the stack: wide, open apertures, distinct 1/l/I, and it is
+ installed everywhere. Atkinson Hyperlegible is used when the player has it. */
+html[data-fuoc-font="readable"] {
+    --font-ui: "Atkinson Hyperlegible", Verdana, "Trebuchet MS", "Segoe UI", sans-serif;
+}
+html[data-fuoc-font="readable"] body,
+html[data-fuoc-font="readable"] body *:not(.num):not(code):not(pre):not(.emoji) {
+    font-family: "Atkinson Hyperlegible", Verdana, "Trebuchet MS", "Segoe UI", sans-serif !important;
+    letter-spacing: 0.012em;
+}
+/* Numbers stay tabular so counters don't jitter as they climb. */
+html[data-fuoc-font="readable"] .num {
+    font-variant-numeric: tabular-nums lining-nums !important;
+}
+
+/* ---- Settings → Display panel ---------------------------------------- */
+.fuoc-theme-group + .fuoc-theme-group {
+    margin-top: 14px;
+}
+.fuoc-theme-group .tg-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+}
+.fuoc-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+}
+.fuoc-theme-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    transition: border-color 0.15s, transform 0.15s;
+}
+.fuoc-theme-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+}
+.fuoc-theme-card.is-active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+}
+.fuoc-theme-card .tc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.fuoc-theme-card .tc-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+.fuoc-theme-card .tc-check {
+    color: var(--accent);
+    font-weight: 700;
+}
+.fuoc-theme-card .tc-swatches {
+    display: flex;
+    gap: 4px;
+}
+.fuoc-theme-card .tc-blurb {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.fuoc-scale-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.fuoc-scale-row input[type="range"] {
+    flex: 1;
+    min-width: 120px;
+    accent-color: var(--accent);
+}
+.fuoc-scale-row output {
+    min-width: 3.5em;
+    text-align: right;
+    font-weight: 700;
+}

@@ -1,2 +1,12 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log
 node_modules/
-FreeUseOfficeClicker/node_modules/
+package-lock.json
+
+# Written by `npm run theme:preview`
+theme-preview.html
+
+# Old paste-into-Perchance build output (only the archived monolith produces it)
+index.perchance.html

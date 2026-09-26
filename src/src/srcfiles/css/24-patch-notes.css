@@ -1,0 +1,102 @@
+/* ============================================================================
+   24-patch-notes — collapsible release list (rendered by loadPatchNotes, 56-patch-notes.js)
+   ============================================================================ */
+.pn-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.82rem;
+    color: var(--text-mute);
+}
+.pn-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+.pn-toggle:hover {
+    border-color: var(--l-indigo);
+    color: var(--text);
+}
+.pn-entry {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+.pn-entry[open] {
+    border-color: var(--l-indigo);
+}
+.pn-entry summary {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 14px 10px 32px;
+    cursor: pointer;
+    list-style: none;
+    position: relative;
+}
+.pn-entry summary::-webkit-details-marker {
+    display: none;
+}
+.pn-entry summary::before {
+    content: "▸";
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    color: var(--l-indigo);
+    transition: transform 0.15s;
+}
+.pn-entry[open] summary::before {
+    transform: rotate(90deg);
+}
+.pn-title {
+    font-weight: 700;
+    color: var(--l-indigo);
+    font-size: 1rem;
+}
+.pn-meta {
+    font-size: 0.78rem;
+    color: var(--text-mute);
+}
+.pn-body {
+    padding: 0 16px 14px 32px;
+}
+.pn-summary {
+    margin: 0 0 12px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.pn-cat h4 {
+    margin: 12px 0 6px;
+    color: var(--accent);
+    font-size: 0.95rem;
+}
+.pn-cat ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--l-ink-cool-3);
+}
+.pn-cat li {
+    margin-bottom: 6px;
+    line-height: 1.5;
+    font-size: 0.88rem;
+}
+.pn-cat li.pn-sub {
+    list-style: none;
+    margin-left: 6px;
+    color: var(--text-dim);
+}
+@media (max-width: 600px) {
+    .pn-entry summary {
+        padding-left: 28px;
+    }
+    .pn-body {
+        padding: 0 12px 12px 20px;
+    }
+}
