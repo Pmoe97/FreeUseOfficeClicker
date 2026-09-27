@@ -118,7 +118,7 @@ theme:picker | codemod:colors | colors:inventory`. All of them read the whole so
 | `15-company-events.js` | 43 KB | Company events: event definitions COMPANY_EVENTS, checkForCompanyEvent, resolution, scheduled effects. |
 | `16-npc-schedule.js` | 65 KB | NPC performance metrics, schedules, status messages, morning/evening posts, activity system, createSocialPost. |
 | `17-flags-detection.js` | 130 KB | Flag detection: FLAG_DETECTION_PATTERNS, AI scans, flag chains, flag management modal, plus family/pregnancy/birth events. |
-| `18-skills.js` | 4 KB | Skill XP/specialization system + duplicate `$` helper. |
+| `18-skills.js` | 13 KB | Skills: XP curve and pacing knobs (SKILL_GROWTH), passive on-the-job growth (accrueWorkHourSkills), aptitude/mentor multipliers, chat-topic XP, specializations, batched level-up notices + duplicate `$` helper. |
 | `19-appearance.js` | 62 KB | Appearance/gender/race rendering: pools (APPEARANCE_OPTIONS), combo builders, card renderers, physical descriptions, getPhysicalDescriptionForPrompt. |
 | `20-ai-context.js` | 29 KB | AI context: player profile/company helpers, context-usage tracking, NuclearEmbeddingService, token estimation, selectIntelligentContext context builder. |
 | `21-gifts.js` | 48 KB | Gifts: generateCustomGift, gift store, reactions, pet names, giveGiftToEmployee. |

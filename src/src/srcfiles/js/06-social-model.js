@@ -327,6 +327,8 @@ function initializeEmployeeSocialData(e) {
                     ((e.skills.social.level = 2 + Math.floor(3 * Math.random())),
                     (e.skills.social.xp = Math.floor(Math.random() * e.skills.social.maxXp)));
         }
+        // Every hire path builds skills with maxXp 500 whatever the level; put them on the curve.
+        "function" == typeof normalizeEmployeeSkills && normalizeEmployeeSkills(e);
         if (
             (e.specializations || (e.specializations = []),
             e.social ||

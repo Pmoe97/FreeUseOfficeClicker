@@ -20,6 +20,35 @@
 //             an item starting with "• " renders as a sub-point of the one above.
 const PATCH_NOTES = [
         {
+            version: "202609271800",
+            date: "September 27, 2026",
+            title: "📈 Skills Grow on Their Own",
+            summary:
+                "Skills used to grow so slowly, and for so few people, that nobody ever reached the management levels the executive seats need. Now everyone learns steadily from their work and their evenings, without you having to do anything.",
+            changes: [
+                {
+                    category: "📈 Skill Growth",
+                    items: [
+                        "<strong>CHANGED:</strong> Every employee on the clock learns from their work each hour: the skills their site uses (R&amp;D builds technical, the Creative Studio creative, and so on) plus management from the responsibility of their seat. Managers learn more for every seat that reports to them.",
+                        "<strong>FIXED:</strong> Management experience stopped completely once someone was promoted off a product, exactly when they needed it for the next rung. Managers now keep growing.",
+                        "<strong>NEW:</strong> People learn at their own pace. Traits and personality set how quickly they pick up each skill (an ambitious, strategic hire is a natural manager; a shy one takes longer to build social skills). Productive people learn faster, and working for a boss with more management experience rubs off.",
+                        "<strong>CHANGED:</strong> Each level now costs the same XP for everyone, rising steadily from 100 XP (Lv 1 → 2) to 816 (Lv 9 → 10). Before, what a level cost depended on when someone was hired. An average employee promoted as soon as they qualify can reach CFO/COO after about three game weeks and Senior Executive after about six; a natural leader, sooner.",
+                        "• Existing saves keep every level and how far through it each person was.",
+                        "<strong>CHANGED:</strong> Talking shop in chat teaches whatever you talked about. A chat about the team's hiring plan builds management, one about a server bug builds technical. It used to feed only their best skill.",
+                        "<strong>CHANGED:</strong> Most hobbies now build a skill on evenings off (chess and reading build management, running fitness, baking cooking…). Only eight of them used to.",
+                        "<strong>CHANGED:</strong> When several people level up at once, the level-ups arrive as one notification instead of a stack.",
+                    ],
+                },
+                {
+                    category: "🎓 Programs",
+                    items: [
+                        "<strong>CHANGED:</strong> The Training Workshop now has a 7-day cooldown. Spamming it used to be the only real way to level management; it's a boost now, not a requirement.",
+                        "<strong>FIXED:</strong> Team Building's 14-day cooldown counted real days, not game days. Both cooldowns now show on the Programs card.",
+                    ],
+                },
+            ],
+        },
+        {
             version: "202609261800",
             date: "September 26, 2026",
             title: "🧰 The Big Fix-Up — Saves, Images, Transfers & 40+ Fixes",
