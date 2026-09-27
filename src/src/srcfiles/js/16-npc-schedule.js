@@ -637,6 +637,16 @@ function generateEveningActivity(e) {
     for (const t of a) if (((i -= t.weight), i <= 0)) return generateActivityDetails(e, t.type);
     return { type: "relaxing", details: "Chilling at home" };
 }
+// Hobby name -> the skill an evening of it builds. First match wins; quiet solo hobbies
+// (gardening, fishing, meditation...) build none.
+const HOBBY_SKILLS = [
+    [/chess|board game|strateg|debate|invest|reading|book/i, "management"],
+    [/gam(e|ing)|puzzle|cod(e|ing)|tech|electronics/i, "technical"],
+    [/sport|yoga|danc|climb|hik|run|cycl|swim|fitness|martial|ski|snowboard|surf|gym|sail/i, "fitness"],
+    [/photo|paint|art|writ|music|craft|knit|theat|movie|film|design|draw|sing/i, "creative"],
+    [/cook|bak/i, "cooking"],
+    [/volunteer|travel|karaoke|club|party/i, "social"],
+];
 function generateActivityDetails(e, t) {
     const n = { type: t, description: "", skillGain: null };
     switch (t) {
@@ -686,18 +696,11 @@ function generateActivityDetails(e, t) {
             break;
         case "hobby":
             if (e.personalLife.activeHobbies.length > 0) {
-                const t = e.personalLife.activeHobbies[0];
+                const h = e.personalLife.activeHobbies,
+                    t = h[Math.floor(Math.random() * h.length)];
                 n.description = `Doing my ${t.name} hobby tonight`;
-                const a = {
-                    Gaming: "technical",
-                    Photography: "creative",
-                    Painting: "creative",
-                    Writing: "creative",
-                    Music: "creative",
-                    Sports: "fitness",
-                    Yoga: "fitness",
-                    Dancing: "fitness",
-                }[t.name];
+                // Most hobbies teach something now (only eight of the ~35 used to).
+                const a = HOBBY_SKILLS.find(([re]) => re.test(t.name || ""))?.[1];
                 a && (n.skillGain = { skill: a, xp: 4 });
             }
             break;

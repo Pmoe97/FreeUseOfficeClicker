@@ -8,7 +8,7 @@
 
 function onHourChange(e, t) {
     9 === e && clockInEmployees(),
-        17 === e && clockOutEmployees(),
+        17 === e && (clockOutEmployees(), flushSkillWorkDigest()),
         processNpcScheduledEvents(),
         updateEmployeeActivities(),
         updateAllNPCStatuses();
@@ -28,21 +28,9 @@ function onHourChange(e, t) {
         }
     }),
         gameState.employees.forEach((e) => {
-            if (e.schedule && e.schedule.isCurrentlyWorking) {
-                const t = gameState.products.find((t) => t.name === e.productManaged);
-                if (t) {
-                    const n = t.locationId || "garage";
-                    "rnd" === n
-                        ? gainSkillXP(e, "technical", 3, "work hour")
-                        : "creative_studio" === n
-                          ? gainSkillXP(e, "creative", 3, "work hour")
-                          : "office_suite" === n || "factory" === n
-                            ? gainSkillXP(e, "management", 2, "work hour")
-                            : (gainSkillXP(e, "technical", 1, "work hour"),
-                              gainSkillXP(e, "social", 1, "work hour"));
-                }
-                e.schedule.hoursWorkedToday += 1;
-            }
+            e.schedule &&
+                e.schedule.isCurrentlyWorking &&
+                (accrueWorkHourSkills(e), (e.schedule.hoursWorkedToday += 1));
         }),
         updateTimeDisplay();
 }

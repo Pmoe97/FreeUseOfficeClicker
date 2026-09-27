@@ -536,13 +536,20 @@ function startPromotionFlow(e) {
 function conductTrainingWorkshop() {
     const e = gameState.employees.filter((e) => "active" === e.employmentStatus);
     if (0 === e.length) return void showNotification("No active employees to train!", "error");
+    // Cooldown in game days, shared with the Programs card (it was unlimited, so spamming it
+    // was the only real way to level management).
+    gameState.productivitySystems || (gameState.productivitySystems = {});
+    const cds = gameState.productivitySystems.programCooldowns || (gameState.productivitySystems.programCooldowns = {}),
+        today = gameState.currentDay || gameDayNumber();
+    if ((cds.training || 0) > today)
+        return void showNotification(`The last workshop is still sinking in. Next one in ${cds.training - today} day(s).`, "error");
     const t = 500 * e.length;
     if (gameState.cash < t)
         return void showNotification(
             `Not enough cash! Training costs $${formatNumber(t)} ($${formatNumber(500)} per employee)`,
             "error"
         );
-    gameState.cash -= t;
+    (gameState.cash -= t), (cds.training = today + SKILL_GROWTH.workshopCooldownDays);
     let n = 0;
     e.forEach((e) => {
         e.stats || (e.stats = {});
@@ -552,7 +559,7 @@ function conductTrainingWorkshop() {
     }),
         gameState.productivitySystems || (gameState.productivitySystems = {}),
         (gameState.productivitySystems.lastWorkshop = Date.now()),
-        showNotification(`🎓 Training Workshop completed! ${n} employees gained +5-10 productivity!`, "success"),
+        showNotification(`🎓 Training Workshop completed! ${n} employees gained +5-10 productivity and some management experience.`, "success"),
         logCompanyEvent({
             type: "training",
             description: "Company-wide training workshop conducted",
@@ -609,11 +616,12 @@ function conductTeamBuilding() {
     const e = gameState.employees.filter((e) => "active" === e.employmentStatus);
     if (0 === e.length) return void showNotification("No active employees for team building!", "error");
     gameState.productivitySystems || (gameState.productivitySystems = {});
-    const t = gameState.productivitySystems.lastTeamBuilding || 0,
-        n = (Date.now() - t) / 864e5;
-    if (n < 14) {
+    // 14 game days, shared with the Programs card. (It used to count real days via Date.now().)
+    const cds = gameState.productivitySystems.programCooldowns || (gameState.productivitySystems.programCooldowns = {}),
+        today = gameState.currentDay || gameDayNumber();
+    if ((cds.teambuilding || 0) > today) {
         return void showNotification(
-            `Team building activities need time to be effective. Wait ${Math.ceil(14 - n)} more day(s).`,
+            `Team building activities need time to be effective. Wait ${cds.teambuilding - today} more day(s).`,
             "error"
         );
     }
@@ -623,7 +631,7 @@ function conductTeamBuilding() {
             `Not enough cash! Team building costs $${formatNumber(a)} ($${formatNumber(800)} per employee)`,
             "error"
         );
-    gameState.cash -= a;
+    (gameState.cash -= a), (cds.teambuilding = today + 14);
     let o = 0;
     e.forEach((e) => {
         e.stats || (e.stats = {});
@@ -635,7 +643,6 @@ function conductTeamBuilding() {
             gainSkillXP(e, "social", 30, "team_building"),
             o++;
     }),
-        (gameState.productivitySystems.lastTeamBuilding = Date.now()),
         showNotification(
             `🎉 Team Building Activity completed! ${o} employees bonded and improved! (+3-7 productivity, +8 morale)`,
             "success"

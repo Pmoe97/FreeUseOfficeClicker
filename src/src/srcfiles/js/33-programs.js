@@ -74,7 +74,7 @@ const PROGRAMS = [
         flavor: "Mandatory upskilling. Productivity rises; enthusiasm is assumed.",
         legacy: !0,
         run: () => conductTrainingWorkshop(),
-        cost: { display: "$500/emp", cashFn: () => 500 * _progActive().length, cooldownDays: 0 },
+        cost: { display: "$500/emp · 7d", cashFn: () => 500 * _progActive().length, cooldownDays: 7 },
     },
     {
         id: "teambuilding",
@@ -473,7 +473,7 @@ function renderProgramsCard() {
         rows = PROGRAMS.filter((p) => "all" === _programsTierFilter || p.tier === _programsTierFilter)
             .map((p) => {
                 const locked = p.unlockCondition && !p.unlockCondition(gameState),
-                    onCd = !p.legacy && (cds[p.id] || 0) > today,
+                    onCd = (cds[p.id] || 0) > today, // legacy programs that have a cooldown record it here too
                     cdLeft = onCd ? (cds[p.id] || 0) - today : 0;
                 let cost = "";
                 try {

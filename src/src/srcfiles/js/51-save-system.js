@@ -1679,6 +1679,15 @@ function repairEmployeeLook(e) {
         });
     return changed;
 }
+// Skills moved to a per-level XP curve (skillXpToNext): everyone keeps their level and how far
+// through it they were, measured on the new scale.
+function migrateSkillCurve() {
+    if (gameState.skillCurveV2 || "function" != typeof normalizeEmployeeSkills) return;
+    [...(gameState.employees || []), ...(gameState.onboarding || []), ...(gameState.rehirePool || [])].forEach(
+        (e) => e && normalizeEmployeeSkills(e)
+    );
+    gameState.skillCurveV2 = !0;
+}
 function repairEthnicityLooks() {
     if (gameState.ethnicityLooksRepaired) return;
     let n = 0;
@@ -1926,6 +1935,7 @@ async function loadGame() {
                 });
             repairFlatSalaries();
             repairEthnicityLooks();
+            migrateSkillCurve();
             // Hotfix 2: self-heal legacy saves where a group message's imageDesc was corrupted with a
             // DOM node (pre-DataCloneError-fix). Reset any non-string imageDesc to "" so loads don't throw.
             Array.isArray(gameState.groups) &&
@@ -3573,6 +3583,7 @@ async function loadSaveData(e) {
                 }),
             repairFlatSalaries(),
             repairEthnicityLooks(),
+            migrateSkillCurve(),
             console.log("[LoadSave] Merged save data with default state (migration-safe)"),
             gameState.autosaveTracking ||
                 ((gameState.autosaveTracking = {
