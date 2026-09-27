@@ -1126,7 +1126,9 @@ function selectPostType(e, t) {
         };
     if (t.chatContext?.hasRecentChat) {
         const n = t.chatContext.themes || [];
-        n.includes("flirty/romantic") &&
+        // An explicit chat is tagged "explicit/intimate" instead of "flirty/romantic"; it's the
+        // more intimate of the two, so it has to count here too.
+        (n.includes("flirty/romantic") || n.includes("explicit/intimate")) &&
             ((i.text += 8),
             (i.selfie += 10),
             (i.thirst_trap += 12),
@@ -1548,15 +1550,36 @@ async function generateOrganicPost(e, t, n) {
     function u(e) {
         gameState.socialNetwork.recentMentions[e] = d;
     }
+    // Tag whoever the post is about. The boss is the subject when they asked for the post, when
+    // it follows a recent chat with them, or when the tea is about them. The nudges below used to
+    // pick a rival or a random coworker regardless, so posts about the boss tagged someone else.
+    const chatThemes = n.chatContext?.hasRecentChat ? n.chatContext.themes || [] : null,
+        intimateChat =
+            !!chatThemes && (chatThemes.includes("flirty/romantic") || chatThemes.includes("explicit/intimate")),
+        knownTea = "gossip" === t || "tea_spilling" === t ? getKnownGossip(e.id, 3) : [],
+        teaAboutBoss = knownTea.some((x) => "player" === x.subjectId || "player" === x.targetId),
+        bossTopic = !!n.requestedByBoss || !!chatThemes;
     const g =
+            !bossTopic &&
             Math.random() < 0.3 &&
             ["text", "work", "life_update", "food"].includes(t) &&
             s.length > 0 &&
             s.some((e) => e.username),
-        h = Math.random() < 0.05 + (c / 100) * 0.15 && ["text", "work", "food", "life_update"].includes(t),
+        h =
+            ["text", "work", "food", "life_update"].includes(t) &&
+            (!!n.requestedByBoss || Math.random() < (chatThemes ? 0.5 : 0.05 + (c / 100) * 0.15)),
         y = s.filter((e) => e.username && !m(e.coworkerId));
     let f = "";
-    if (("gossip" === t || "tea_spilling" === t) && !f) {
+    if (("gossip" === t || "tea_spilling" === t) && teaAboutBoss)
+        f =
+            "tea_spilling" === t
+                ? "\n🎯 DRAMA CONTEXT: The tea below involves the boss. Tag them as @TheBoss — don't pin it on a coworker who isn't part of the story."
+                : "\n🎯 DRAMA CONTEXT: The gossip below involves the boss. Keep it cryptic, and don't pin it on a coworker who isn't part of the story.";
+    else if (knownTea.length > 0)
+        "tea_spilling" === t &&
+            (f = "\n🎯 DRAMA CONTEXT: Only tag the people the tea below is actually about — don't drag anyone else in.");
+    else if ("gossip" === t || "tea_spilling" === t) {
+        // No tea to go on: a grudge is the natural target of a vague post.
         const e = s.filter(
             (e) => e.username && ("enemy" === e.relationship || "rival" === e.relationship) && !m(e.coworkerId)
         );
@@ -1601,7 +1624,10 @@ async function generateOrganicPost(e, t, n) {
         );
     });
     let v;
-    if (b.length > 0) {
+    if ((intimateChat || n.requestedByBoss) && !n._isRelationshipEvent)
+        // The flirty chat with the boss is what made this post likely (see the type weights).
+        v = "If you tag who you were with, it's your boss: @TheBoss. Don't tag a coworker — they weren't involved.";
+    else if (b.length > 0) {
         const e = b[Math.floor(Math.random() * b.length)];
         u(e.coworkerId),
             (v = `You can mention @${e.username} (${e.name}) as someone involved — they're a coworker you're attracted to.`);
@@ -1692,7 +1718,7 @@ async function generateOrganicPost(e, t, n) {
     let $ = "";
     if (n.chatContext?.hasRecentChat) {
         const e = n.chatContext;
-        $ = `\n\n💬 RECENT CHAT WITH BOSS (${e.timeAgo < 60 ? `${e.timeAgo} minutes ago` : `${Math.round(e.timeAgo / 60)} hours ago`}):\nConversation themes: ${e.themes.length > 0 ? e.themes.join(", ") : "casual conversation"}\nLast messages:\n${e.lastMessages.map((e) => `${e.sender}: "${e.preview}${e.preview.length >= 100 ? " [truncated]" : ""}"`).join("\n")}\n\n⚠️ NOTE: If you see "..." (ellipses) in messages above, that's just typing style for dramatic effect - NOT the person trailing off incomplete. Don't make posts about "mysterious unfinished sentences" or "what were they going to say?"\n\n${l > 60 ? "🔥 IMPORTANT: You have a very intimate, consensual relationship with your boss. You genuinely enjoy this dynamic! If posting about intimate conversations or requests, be positive, excited, teasing, or playful." : l > 30 ? "💕 You have a developing close relationship with your boss. Frame flirty or intimate content positively and teasingly." : c > 60 ? "😊 You have good rapport with your boss. Keep posts about interactions positive or playful." : ""}\n\n💡 OPTIONAL: You could make a post inspired by this conversation! Examples:\n- If it was flirty: "Still thinking about that conversation... 😏" or "Feeling some type of way today 🔥"\n- If it was about projects: "Excited about this new thing I'm working on!" or "Time to crush it 💪"\n- If it was personal: "Good talks hit different" or "Grateful for good listeners"\n- Or post about something COMPLETELY DIFFERENT - you don't have to reference the chat!\n\n${e.themes.includes("flirty/romantic") && ["text", "selfie", "thirst_trap"].includes(t) ? "🔥 Since you had a flirty chat recently, feel free to make a suggestive/spicy post if it feels natural!" : ""}`;
+        $ = `\n\n💬 RECENT CHAT WITH BOSS (${e.timeAgo < 60 ? `${e.timeAgo} minutes ago` : `${Math.round(e.timeAgo / 60)} hours ago`}):\nConversation themes: ${e.themes.length > 0 ? e.themes.join(", ") : "casual conversation"}\nLast messages:\n${e.lastMessages.map((e) => `${e.sender}: "${e.preview}${e.preview.length >= 100 ? " [truncated]" : ""}"`).join("\n")}\n\n⚠️ NOTE: If you see "..." (ellipses) in messages above, that's just typing style for dramatic effect - NOT the person trailing off incomplete. Don't make posts about "mysterious unfinished sentences" or "what were they going to say?"\n\n${l > 60 ? "🔥 IMPORTANT: You have a very intimate, consensual relationship with your boss. You genuinely enjoy this dynamic! If posting about intimate conversations or requests, be positive, excited, teasing, or playful." : l > 30 ? "💕 You have a developing close relationship with your boss. Frame flirty or intimate content positively and teasingly." : c > 60 ? "😊 You have good rapport with your boss. Keep posts about interactions positive or playful." : ""}\n\n💡 OPTIONAL: You could make a post inspired by this conversation! Examples:\n- If it was flirty: "Still thinking about that conversation... 😏" or "Feeling some type of way today 🔥"\n- If it was about projects: "Excited about this new thing I'm working on!" or "Time to crush it 💪"\n- If it was personal: "Good talks hit different" or "Grateful for good listeners"\n- Or post about something COMPLETELY DIFFERENT - you don't have to reference the chat!\n\n${(e.themes.includes("flirty/romantic") || e.themes.includes("explicit/intimate")) && ["text", "selfie", "thirst_trap"].includes(t) ? "🔥 Since you had a flirty chat recently, feel free to make a suggestive/spicy post if it feels natural!" : ""}`;
     }
     let I = "";
     n.requestedByBoss &&
@@ -1701,7 +1727,7 @@ async function generateOrganicPost(e, t, n) {
         P = "the boss" !== M ? `\n\n👤 ABOUT YOUR BOSS:\n${M}` : "";
     let A = "";
     if ("gossip" === t || "tea_spilling" === t) {
-        const n = getKnownGossip(e.id, 3);
+        const n = knownTea;
         if (n.length > 0) {
             const e = n
                 .map((e) => {
@@ -1711,7 +1737,7 @@ async function generateOrganicPost(e, t, n) {
                                 : gameState.employees.find((t) => t.id === e.subjectId)?.name || "someone",
                         a =
                             "player" === e.subjectId
-                                ? "@boss"
+                                ? "@TheBoss"
                                 : gameState.employees.find((t) => t.id === e.subjectId)?.social?.username || null,
                         o = e.targetId
                             ? "player" === e.targetId
@@ -1720,7 +1746,7 @@ async function generateOrganicPost(e, t, n) {
                             : "",
                         i = e.targetId
                             ? "player" === e.targetId
-                                ? "@boss"
+                                ? "@TheBoss"
                                 : gameState.employees.find((t) => t.id === e.targetId)?.social?.username || null
                             : "",
                         s =

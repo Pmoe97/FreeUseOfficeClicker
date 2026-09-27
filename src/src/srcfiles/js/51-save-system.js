@@ -1569,6 +1569,129 @@ function repairFlatSalaries() {
     (gameState.salaryResetRepaired = !0),
         n > 0 && console.log(`[LoadGame Migration] Restored market-rate salaries for ${n} employee(s)`);
 }
+// Characters made before the appearance fixes can carry looks that contradict their ethnicity,
+// and image prompts faithfully drew the contradiction (dark skin one day, orange or grey the
+// next). Each case below is one of those bugs' fingerprints; only the contradicting part is
+// re-rolled from the ethnicity, once per save.
+//  • Every generated human got the race-bio default skin and a random palette eye colour.
+//    Those were stored with the noun attached ("beige skin", "purple eyes").
+//  • Hire and accountant profiles let the AI pick skin without telling it the ethnicity, so
+//    most came back "fair" or "light", even for ethnicities with no light tones.
+//  • An ethnicity changed in the profile editor never reached physical, which the prompts read.
+//  • The colour codemod put var(--…) tokens in race bios, which reached prompts verbatim.
+const LOOK_TOKEN_HEX = {
+    "var(--l-bg-black-2)": "#1a1a1a",
+    "var(--l-ink-cool-2)": "#c0c0c0",
+    "var(--l-ink-soft)": "#e6e6e6",
+    "var(--l-ink)": "#ffffff",
+    "var(--l-ink-dim)": "#cccccc",
+    "var(--l-cyan)": "#00d4ff",
+    "var(--l-cyan-2)": "#3fc7ff",
+    "var(--l-slate-2)": "#2a2a3a",
+    "var(--l-panel)": "#1a1a2a",
+};
+// Ethnicities whose skin palette (getEthnicityFeatures) has no light tone.
+const NO_LIGHT_SKIN_ETHNICITIES = new Set([
+    "black", "latino", "southAsian", "middleEastern", "southeastAsian",
+    "pacificIslander", "nativeAmerican", "indigenous", "mixed",
+]);
+function repairEmployeeLook(e) {
+    const p = e && e.physical;
+    if (!p || "object" != typeof p) return !1;
+    let changed = !1;
+    // [old, new, noun]: rewritten in the stored descriptions only where followed by the noun,
+    // so "light skin" → "caramel skin" leaves "light brown hair" alone. Also collapses the
+    // doubled noun the bug left behind ("beige skin skin").
+    const esc = (v) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        descSwaps = [],
+        swaps = [],
+        swap = (from, to, noun) => {
+            const core = (v) => String(v || "").replace(new RegExp(`\\s+${noun}$`, "i"), "").trim(),
+                f = core(from),
+                t = core(to);
+            f && t && f !== t && swaps.push([f, t, noun]);
+        };
+    // Codemod tokens: exact hex in the bio, a colour word in the descriptive fields.
+    const hasToken = (v) => "string" == typeof v && /var\(--[a-z0-9-]+\)/.test(v),
+        untoken = (v) => v.replace(/var\(--[a-z0-9-]+\)/g, (t) => (LOOK_TOKEN_HEX[t] ? nearestColorName(LOOK_TOKEN_HEX[t]) : t));
+    p.bio &&
+        "object" == typeof p.bio &&
+        Object.keys(p.bio).forEach((k) => {
+            LOOK_TOKEN_HEX[p.bio[k]] && ((p.bio[k] = LOOK_TOKEN_HEX[p.bio[k]]), (changed = !0));
+        });
+    [
+        [p.skin, "tone", "skin"],
+        [p.eyes, "color", "eyes"],
+        [p.hair, "color", "hair"],
+    ].forEach(([o, k, noun]) => {
+        if (!o || !hasToken(o[k])) return;
+        const v = untoken(o[k]);
+        swap(o[k], v, noun), (o[k] = v), (changed = !0);
+    });
+    const race = String(e.race || p.race || "human").toLowerCase();
+    if ("human" !== race) {
+        changed && RACES[canonicalRace(race)] && p.bio && (p.raceFeatures = deriveRaceFeaturesFromBio(race, p.bio));
+    } else {
+        const top = e.ethnicity || null,
+            base = top ? String(top).split("-")[0] : p.ethnicity || null;
+        if (base) {
+            const old = { skin: p.skin?.tone, eyes: p.eyes?.color, hair: p.hair?.color };
+            if (top && p.ethnicity && base !== p.ethnicity) {
+                // The editor changed the ethnicity but the look kept the old one's colours.
+                const was = p.ethnicityFeatures?.description,
+                    wasShape = p.eyes?.shape,
+                    wasTexture = p.hair?.texture;
+                applyEthnicityLook(p, top), (changed = !0);
+                [
+                    [wasShape, p.eyes.shape],
+                    [wasTexture, p.hair.texture],
+                ].forEach(([a, b]) => a && b && a !== b && descSwaps.push([new RegExp(`\\b${esc(a)}\\b`, "g"), b]));
+                const now = p.ethnicityFeatures.description + (p.ethnicityFeatures.subType ? " - " + p.ethnicityFeatures.subType : "");
+                was && descSwaps.push([new RegExp(`\\b${esc(was)}( - [^)\\s]+)?`, "g"), (m, sub) => (sub ? now : p.ethnicityFeatures.description)]);
+            } else {
+                top || ((e.ethnicity = base), (changed = !0));
+                const f = getEthnicityFeatures(base);
+                (p.ethnicity && p.ethnicityFeatures?.description) ||
+                    ((p.ethnicity = base), (p.ethnicityFeatures = f), (changed = !0));
+                const tone = String(p.skin?.tone || p.skinTone || "").trim(),
+                    toneWord = tone.toLowerCase().replace(/\b(skin|complexion)\b/g, "").trim(),
+                    lightOffPalette =
+                        !e.isCustomEmployee &&
+                        NO_LIGHT_SKIN_ETHNICITIES.has(base) &&
+                        /^(fair|pale|porcelain|ivory|light|alabaster)$/.test(toneWord);
+                (/\sskin$/i.test(tone) || lightOffPalette) &&
+                    ((p.skin = p.skin || {}),
+                    (p.skin.tone = f.skinTone),
+                    "skinTone" in p && (p.skinTone = f.skinTone),
+                    (changed = !0));
+                /\seyes$/i.test(String(p.eyes?.color || "")) && ((p.eyes.color = f.eyeColor), (changed = !0));
+            }
+            swap(old.skin, p.skin?.tone, "skin"), swap(old.eyes, p.eyes?.color, "eyes"), swap(old.hair, p.hair?.color, "hair");
+        }
+    }
+    swaps.forEach(([a, b, noun]) => descSwaps.push([new RegExp(`\\b${esc(a)}(\\s+${noun})+\\b`, "gi"), `${b} ${noun}`]));
+    descSwaps.length &&
+        [p, p.skin, p.eyes, p.hair].forEach((o) => {
+            o &&
+                ["shortDescription", "fullDescription", "full"].forEach((k) => {
+                    "string" == typeof o[k] && descSwaps.forEach(([re, to]) => (o[k] = o[k].replace(re, to)));
+                });
+        });
+    return changed;
+}
+function repairEthnicityLooks() {
+    if (gameState.ethnicityLooksRepaired) return;
+    let n = 0;
+    [...(gameState.employees || []), ...(gameState.onboarding || [])].forEach((e) => {
+        try {
+            repairEmployeeLook(e) && n++;
+        } catch (err) {
+            console.warn("[LoadGame Migration] Look repair failed for", e && e.name, err);
+        }
+    });
+    (gameState.ethnicityLooksRepaired = !0),
+        n > 0 && console.log(`[LoadGame Migration] Repaired skin/eyes that contradicted ethnicity for ${n} character(s)`);
+}
 async function loadGame() {
     try {
         await migrateLegacySave();
@@ -1802,6 +1925,7 @@ async function loadGame() {
                     }
                 });
             repairFlatSalaries();
+            repairEthnicityLooks();
             // Hotfix 2: self-heal legacy saves where a group message's imageDesc was corrupted with a
             // DOM node (pre-DataCloneError-fix). Reset any non-string imageDesc to "" so loads don't throw.
             Array.isArray(gameState.groups) &&
@@ -3448,6 +3572,7 @@ async function loadSaveData(e) {
                         e.career.salary > 0 || (e.career.salary = getMarketRate(e)); // see loadGame: never reset to baseSalary
                 }),
             repairFlatSalaries(),
+            repairEthnicityLooks(),
             console.log("[LoadSave] Merged save data with default state (migration-safe)"),
             gameState.autosaveTracking ||
                 ((gameState.autosaveTracking = {

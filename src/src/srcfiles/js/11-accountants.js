@@ -275,44 +275,31 @@ async function finalizeAccountantOnboarding(t) {
     const g = t.gender || "female",
         article = "male" === g || "transMan" === g ? "male" : "female";
     try {
-        const prompt = `\n  Create an in-world, adult ${article} NPC profile (no meta-talk) for: ${t.name}, age ${t.age}.\n  Gender: ${g}.\n  Role: Accountant (handles company payroll). Department: ${(gameState.locations || []).find((e) => e.id === t.locationId)?.name || t.locationId}.\n  Personality traits: ${(t.personalityTraits || []).join(", ")}. Key trait: ${t.keyTrait || ""}.\n  Hobbies: ${(t.hobbies || []).join(", ")}. Kink preferences: ${(t.kinks || []).join(", ")}.\n\n  Respond as a compact JSON object with these keys ONLY:\n  {\n  "name": {"first":"", "last":""},\n  "age": <number>,\n  "gender": "${g}",\n  "bio": "<2-3 sentence personality/background, world-grounded, references their work as an accountant>",\n  "appearance": {\n  "heightBuild": "",\n  "hair": {"color":"","style":"","length":""},\n  "eyes": {"color":"","shape":""},\n  "skinTone": "",\n  "bodyShape": "",\n  "breastSize": "",\n  "buttSize": "",\n  "fashion": ""\n  },\n  "personalityTraits": [${(t.personalityTraits || []).map((e) => `"${e}"`).join(", ")}],\n  "kinks": [${(t.kinks || []).map((e) => `"${e}"`).join(", ")}]\n  }\n  `,
+        // Roll the look first so the AI writes around it rather than inventing colours.
+        t.physical = generateDetailedPhysicalAppearance(g, t.race || "human", t.ethnicity || null);
+        const prompt = `\n  Create an in-world, adult ${article} NPC profile (no meta-talk) for: ${t.name}, age ${t.age}.\n  Gender: ${g}.\n  ${describeFixedLookForAi(t)}\n  Role: Accountant (handles company payroll). Department: ${(gameState.locations || []).find((e) => e.id === t.locationId)?.name || t.locationId}.\n  Personality traits: ${(t.personalityTraits || []).join(", ")}. Key trait: ${t.keyTrait || ""}.\n  Hobbies: ${(t.hobbies || []).join(", ")}. Kink preferences: ${(t.kinks || []).join(", ")}.\n\n  Respond as a compact JSON object with these keys ONLY:\n  {\n  "name": {"first":"", "last":""},\n  "age": <number>,\n  "gender": "${g}",\n  "bio": "<2-3 sentence personality/background, world-grounded, references their work as an accountant>",\n  "appearance": {\n  "bodyShape": "",\n  "breastSize": "",\n  "buttSize": "",\n  "fashion": ""\n  },\n  "personalityTraits": [${(t.personalityTraits || []).map((e) => `"${e}"`).join(", ")}],\n  "kinks": [${(t.kinks || []).map((e) => `"${e}"`).join(", ")}]\n  }\n  `,
             raw =
                 "function" == typeof generateText
                     ? await queuedGenerateText(prompt, {}, `Accountant Profile - ${t.name}`)
                     : `{"name":{"first":"${t.name.split(" ")[0]}","last":"${t.name.split(" ")[1] || ""}"},"age":${t.age},"gender":"${g}","bio":"A meticulous accountant who keeps the company's books airtight and its auditors bored.","appearance":{"heightBuild":"average","hair":{"color":"brown","style":"neat","length":"medium"},"eyes":{"color":"brown","shape":"almond"},"skinTone":"medium","bodyShape":"average","breastSize":"medium","buttSize":"average","fashion":"business casual"},"personalityTraits":["${(t.personalityTraits || []).join('","')}"],"kinks":["${(t.kinks || []).join('","')}"]}`;
         let o;
         try {
-            o = JSON.parse(raw);
+            // Local models often wrap the JSON in prose or a code fence.
+            o = JSON.parse((extractText(raw).match(/\{[\s\S]*\}/) || ["null"])[0]);
         } catch {
             o = null;
         }
-        if (o && o.name)
-            (t.name = `${o.name.first} ${o.name.last}`.trim() || t.name),
-                (t.age = o.age ?? t.age),
-                (t.bio = o.bio || "Keeps the ledgers clean and the audits short."),
-                (t.physical = generateDetailedPhysicalAppearance(g, t.race || "human", t.ethnicity || null)),
-                (() => {
-                    const e = o.appearance || {};
-                    e.heightBuild && (t.physical.heightBuild = e.heightBuild),
-                        e.hair && (t.physical.hair = { ...t.physical.hair, ...e.hair }),
-                        e.eyes && (t.physical.eyes = { ...t.physical.eyes, ...e.eyes }),
-                        e.skinTone && t.physical.skin && (t.physical.skin.tone = e.skinTone),
-                        e.bodyShape && t.physical.body && (t.physical.body.shape = e.bodyShape),
-                        (e.breastSize || e.chestSize) &&
-                            t.physical.body &&
-                            ((t.physical.body.chestSize = e.chestSize || e.breastSize),
-                            (t.physical.body.breastSize = e.chestSize || e.breastSize)),
-                        e.buttSize && t.physical.body && (t.physical.body.buttSize = e.buttSize),
-                        e.fashion && (t.physical.fashion = e.fashion),
-                        (t.personalityTraits = o.personalityTraits || t.personalityTraits),
-                        (t.kinks = o.kinks || t.kinks);
-                })();
-        else
-            (t.bio = "A meticulous accountant who keeps the company's books airtight and its auditors bored."),
-                (t.physical = generateDetailedPhysicalAppearance(g, t.race || "human", t.ethnicity || null));
+        o && o.name
+            ? ((t.name = `${o.name.first} ${o.name.last}`.trim() || t.name),
+              (t.age = o.age ?? t.age),
+              (t.bio = o.bio || "Keeps the ledgers clean and the audits short."),
+              mergeAiAppearance(t.physical, o.appearance, g),
+              (t.personalityTraits = o.personalityTraits || t.personalityTraits),
+              (t.kinks = o.kinks || t.kinks))
+            : (t.bio = "A meticulous accountant who keeps the company's books airtight and its auditors bored.");
         if ("function" == typeof generateImage && t.physical)
             try {
-                const e = `Professional portrait photo: ${t.physical.shortDescription || ""}. ${t.physical.face?.full || ""}. ${t.physical.fashion || "business casual"} style outfit. Office setting, soft professional lighting, friendly expression, high quality`,
+                const e = buildProfilePortraitPrompt(t),
                     n = await queuedGenerateImage(applyImageStyle(e), `Profile image for new accountant ${t.name}`);
                 n &&
                     ((t.profileImage = n),

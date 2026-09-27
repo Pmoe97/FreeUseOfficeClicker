@@ -397,6 +397,9 @@ function showCharacterConfirmationModal(e, t, n = "URL") {
             age: e.age || 22 + Math.floor(12 * Math.random()),
             gender: o,
             race: i,
+            // The look below was rolled from an ethnicity even when none was given; show that
+            // one rather than "Auto-generate", which would roll a different one at hire.
+            ethnicity: s || ("human" === canonicalRace(i) ? r.ethnicity || null : null),
             bio:
                 e.bio ||
                 `A dedicated ${"human" === i ? "professional" : i} who brings unique skills to the workplace.`,
@@ -456,17 +459,70 @@ function showCharacterConfirmationModal(e, t, n = "URL") {
               ? derivePersonalityAxes(l)
               : {};
     renderPersonalityAxes(a.querySelector("#confirmAxesHost"), confirmAxesState);
-    // Bridge-sync read: derive the legacy flat-five from the edited axes (Pass 3).
-    const readConfirmFlat = () => {
-        const _t = { personality: { axes: confirmAxesState } };
-        return "function" == typeof syncFlatFiveFromAxes && syncFlatFiveFromAxes(_t), _t.personality;
-    };
     const confirmBioState =
         l.physical && l.physical.bio && "object" == typeof l.physical.bio
             ? JSON.parse(JSON.stringify(l.physical.bio))
             : getDefaultBio(canonicalRace(l.race || "human"));
     const confirmBioHost = a.querySelector("#confirmBiologyHost");
     renderBiologyFields(confirmBioHost, l.race || "human", confirmBioState);
+    // The form's appearance fields, read the same way for the preview portrait and the hire.
+    const readConfirmPhysical = () => ({
+        bio: confirmBioState,
+        hairColor:
+            a.querySelector("#confirmHairColor")?.value?.trim() ||
+            l.physical?.hairColor ||
+            l.physical?.hair?.color,
+        hairStyle:
+            a.querySelector("#confirmHairStyle")?.value?.trim() ||
+            l.physical?.hairStyle ||
+            l.physical?.hair?.style,
+        hairLength:
+            a.querySelector("#confirmHairLength")?.value?.trim() ||
+            l.physical?.hairLength ||
+            l.physical?.hair?.length,
+        hairTexture:
+            a.querySelector("#confirmHairTexture")?.value?.trim() ||
+            l.physical?.hairTexture ||
+            l.physical?.hair?.texture,
+        eyeColor:
+            a.querySelector("#confirmEyeColor")?.value?.trim() ||
+            l.physical?.eyeColor ||
+            l.physical?.eyes?.color,
+        eyeShape:
+            a.querySelector("#confirmEyeShape")?.value?.trim() ||
+            l.physical?.eyeShape ||
+            l.physical?.eyes?.shape,
+        skinTone: a.querySelector("#confirmSkinTone")?.value?.trim() || l.physical?.skinTone,
+        bodyShape: a.querySelector("#confirmBodyShape")?.value?.trim() || l.physical?.bodyShape,
+        heightBuild:
+            a.querySelector("#confirmHeightBuild")?.value?.trim() || l.physical?.heightBuild,
+        breastSize:
+            a.querySelector("#confirmBreastSize")?.value?.trim() || l.physical?.breastSize,
+        buttSize: a.querySelector("#confirmButtSize")?.value?.trim() || l.physical?.buttSize,
+        fashion: a.querySelector("#confirmFashion")?.value?.trim() || l.physical?.fashion,
+        accessories:
+            a.querySelector("#confirmAccessories")?.value?.trim() || l.physical?.accessories,
+        notableFeatures:
+            a.querySelector("#confirmNotableFeatures")?.value?.trim() ||
+            l.physical?.notableFeatures,
+        genitalType: a.querySelector("#confirmGenitalType")?.value || l.physical?.genitalType,
+        genitalSize:
+            a.querySelector("#confirmGenitalSize")?.value?.trim() || l.physical?.genitalSize,
+        genitalCharacteristics:
+            a.querySelector("#confirmGenitalCharacteristics")?.value?.trim() ||
+            l.physical?.genitalCharacteristics,
+    });
+    const readConfirmCharacter = () => {
+        const gender = normalizeGender(a.querySelector("#confirmGender")?.value || l.gender),
+            race = canonicalRace(a.querySelector("#confirmRace")?.value || "human"),
+            ethnicity = ("human" === race && a.querySelector("#confirmEthnicity")?.value) || null;
+        return {
+            gender,
+            race,
+            ethnicity,
+            physical: createCustomPhysicalAppearance(readConfirmPhysical(), gender, race, ethnicity, r),
+        };
+    };
     const c = a.querySelector("#confirmAge");
     c &&
         c.addEventListener("change", () => {
@@ -503,64 +559,9 @@ function showCharacterConfirmationModal(e, t, n = "URL") {
             const e = a.querySelector("#generateProfileImageBtn"),
                 t = a.querySelector("#profileImagePreview"),
                 n = a.querySelector("#generatedProfileImageUrl"),
-                o = a.querySelector("#confirmGender")?.value || l.gender || "female",
-                i = a.querySelector("#confirmRace")?.value?.trim() || "human",
-                s = a.querySelector("#confirmEthnicity")?.value || "",
-                r = a.querySelector("#confirmAge")?.value || l.age || 25,
-                c = a.querySelector("#confirmHairColor")?.value?.trim() || l.physical?.hairColor || "brown",
-                d = a.querySelector("#confirmHairStyle")?.value?.trim() || l.physical?.hairStyle || "medium length",
-                p = a.querySelector("#confirmEyeColor")?.value?.trim() || l.physical?.eyeColor || "brown",
-                m = a.querySelector("#confirmSkinTone")?.value?.trim() || l.physical?.skinTone || "fair",
-                u = a.querySelector("#confirmBodyShape")?.value?.trim() || l.physical?.bodyShape || "average",
-                g =
-                    a.querySelector("#confirmHeightBuild")?.value?.trim() ||
-                    l.physical?.heightBuild ||
-                    "average height";
-            let h = "";
-            if ("human" === i && s) {
-                h =
-                    {
-                        caucasian: "Caucasian/European",
-                        black: "Black/African",
-                        latino: "Latino/Hispanic",
-                        eastAsian: "East Asian",
-                        "eastAsian-japanese": "Japanese",
-                        "eastAsian-chinese": "Chinese",
-                        "eastAsian-korean": "Korean",
-                        southeastAsian: "Southeast Asian",
-                        "southeastAsian-thai": "Thai",
-                        "southeastAsian-vietnamese": "Vietnamese",
-                        "southeastAsian-filipino": "Filipino",
-                        "southeastAsian-indonesian": "Indonesian",
-                        southAsian: "South Asian/Indian",
-                        centralAsian: "Central Asian",
-                        middleEastern: "Middle Eastern",
-                        pacificIslander: "Pacific Islander",
-                        "pacificIslander-hawaiian": "Hawaiian",
-                        "pacificIslander-samoan": "Samoan",
-                        "pacificIslander-maori": "Māori",
-                        nativeAmerican: "Native American",
-                        indigenous: "Indigenous Australian",
-                        mixed: "mixed ethnicity",
-                    }[s] || s;
-            }
-            const _cf = readConfirmFlat(),
-                y = _cf.confidence || 50,
-                f = _cf.flirty || 50;
-            let b = "neutral";
-            y > 70 && (b = "confident"),
-                f > 70 && (b = "flirty smirk"),
-                (_cf.professional || 50) > 70 &&
-                    f < 50 &&
-                    (b = "professional"),
-                y > 70 && f > 70 && (b = "confident, seductive");
-            const v = a.querySelector("#confirmAccessories")?.value?.trim() || "",
-                _cr = canonicalRace(i),
-                _raceClause = "human" !== _cr ? interpolateImagePrompt(_cr, { ...confirmBioState, gender: o }) : "",
-                _subject = _raceClause || `${h ? `${h}` : i} ${o}`,
-                w = applyImageStyle(
-                    `portrait photo of a ${r} year old ${_subject}, ${c} ${d} hair, ${p} eyes, ${m} skin, ${u} body type, ${g}, ${b} expression${v && "none" !== v.toLowerCase() ? `, wearing ${v}` : ", no glasses, no accessories"}, professional headshot, office background, high quality, detailed face`
-                );
+                // Same description the character will have after hiring, so the portrait
+                // matches the photos that come later.
+                w = applyImageStyle(buildProfilePortraitPrompt(readConfirmCharacter()));
             (e.disabled = !0),
                 (e.innerHTML =
                     '<span style="display:inline-block; animation:rotate 1.5s linear infinite;">⏳</span> Generating...'),
@@ -587,6 +588,24 @@ function showCharacterConfirmationModal(e, t, n = "URL") {
             g && (g.style.display = "human" === canonicalRace(e) ? "" : "none");
             reconcileBio(e, confirmBioState);
             renderBiologyFields(confirmBioHost, e, confirmBioState);
+        });
+    // Picking an ethnicity re-rolls the looks that come from it, so the skin tone and eyes in
+    // the form can't be left describing the previous one.
+    const ethSel = a.querySelector("#confirmEthnicity");
+    ethSel &&
+        ethSel.addEventListener("change", () => {
+            const f = applyEthnicityLook(r, ethSel.value || null);
+            if (!f) return;
+            const set = (id, v) => {
+                const el = a.querySelector(id);
+                el && v && (el.value = v);
+            };
+            set("#confirmSkinTone", r.skin.tone),
+                set("#confirmEyeColor", r.eyes.color),
+                set("#confirmEyeShape", r.eyes.shape),
+                set("#confirmHairColor", r.hair.color),
+                set("#confirmHairTexture", r.hair.texture),
+                showNotification(`🧬 Skin tone, eyes and hair colour updated for ${formatEthnicity(ethSel.value)}.`, "info");
         }),
         a.querySelector("#confirmHireBtn")?.addEventListener("click", async () => {
             const e = a.querySelector("#confirmHireBtn");
@@ -622,52 +641,10 @@ function showCharacterConfirmationModal(e, t, n = "URL") {
                             return "function" == typeof syncFlatFiveFromAxes && syncFlatFiveFromAxes({ personality: _p }), _p;
                         })(),
                         voice: { override: a.querySelector("#confirmVoiceOverride")?.value?.trim() || "" },
-                        physical: {
-                            bio: confirmBioState,
-                            hairColor:
-                                a.querySelector("#confirmHairColor")?.value?.trim() ||
-                                l.physical?.hairColor ||
-                                l.physical?.hair?.color,
-                            hairStyle:
-                                a.querySelector("#confirmHairStyle")?.value?.trim() ||
-                                l.physical?.hairStyle ||
-                                l.physical?.hair?.style,
-                            hairLength:
-                                a.querySelector("#confirmHairLength")?.value?.trim() ||
-                                l.physical?.hairLength ||
-                                l.physical?.hair?.length,
-                            hairTexture:
-                                a.querySelector("#confirmHairTexture")?.value?.trim() ||
-                                l.physical?.hairTexture ||
-                                l.physical?.hair?.texture,
-                            eyeColor:
-                                a.querySelector("#confirmEyeColor")?.value?.trim() ||
-                                l.physical?.eyeColor ||
-                                l.physical?.eyes?.color,
-                            eyeShape:
-                                a.querySelector("#confirmEyeShape")?.value?.trim() ||
-                                l.physical?.eyeShape ||
-                                l.physical?.eyes?.shape,
-                            skinTone: a.querySelector("#confirmSkinTone")?.value?.trim() || l.physical?.skinTone,
-                            bodyShape: a.querySelector("#confirmBodyShape")?.value?.trim() || l.physical?.bodyShape,
-                            heightBuild:
-                                a.querySelector("#confirmHeightBuild")?.value?.trim() || l.physical?.heightBuild,
-                            breastSize:
-                                a.querySelector("#confirmBreastSize")?.value?.trim() || l.physical?.breastSize,
-                            buttSize: a.querySelector("#confirmButtSize")?.value?.trim() || l.physical?.buttSize,
-                            fashion: a.querySelector("#confirmFashion")?.value?.trim() || l.physical?.fashion,
-                            accessories:
-                                a.querySelector("#confirmAccessories")?.value?.trim() || l.physical?.accessories,
-                            notableFeatures:
-                                a.querySelector("#confirmNotableFeatures")?.value?.trim() ||
-                                l.physical?.notableFeatures,
-                            genitalType: a.querySelector("#confirmGenitalType")?.value || l.physical?.genitalType,
-                            genitalSize:
-                                a.querySelector("#confirmGenitalSize")?.value?.trim() || l.physical?.genitalSize,
-                            genitalCharacteristics:
-                                a.querySelector("#confirmGenitalCharacteristics")?.value?.trim() ||
-                                l.physical?.genitalCharacteristics,
-                        },
+                        physical: readConfirmPhysical(),
+                        // The look rolled when this modal opened, so the saved character keeps
+                        // the face and figure the preview portrait was drawn from.
+                        basePhysical: r,
                         generatedProfileImage: a.querySelector("#generatedProfileImageUrl")?.value || null,
                         pendingFamilyLink: l.pendingFamilyLink || null,
                         existingPartnerInfo: l.existingPartnerInfo || null,
@@ -954,7 +931,7 @@ async function finalizeCustomEmployee(e, t) {
             onboarding: !1,
             bioComplete: !0,
             bio: e.bio || "A dedicated professional who brings energy to the workplace.",
-            physical: createCustomPhysicalAppearance(e.physical, a, i, e.ethnicity),
+            physical: createCustomPhysicalAppearance(e.physical, a, i, e.ethnicity, e.basePhysical),
             profileImage: null,
             hireDate: gameNow(),
             employmentStatus: "active",
@@ -986,6 +963,9 @@ async function finalizeCustomEmployee(e, t) {
             nicknameForPlayer: e.nicknameForPlayer || null,
             customRace: s,
         };
+    // The ethnicity picked in the confirmation modal was only used for the name; keep it (or
+    // the one the look was rolled from) so the profile and every prompt agree with the skin tone.
+    "human" === i && (d.ethnicity = e.ethnicity || d.physical?.ethnicity || null);
     e.career?.salary || (d.career.salary = getMarketRate(d));
     if (s && s.details && s.details.length > 0) {
         const e = s.details
@@ -1256,18 +1236,8 @@ async function finalizeCustomEmployee(e, t) {
     else {
         showNotification("🎨 Generating profile image...", "info", 3e3);
         try {
-            // Same portrait shape as a normal hire's (selectManagerCandidate); this helper
-            // used to be called but never defined, so custom employees got no picture.
-            const ph = d.physical || {},
-                e = [
-                    "Professional portrait photo",
-                    ph.shortDescription || ph.fullDescription || `${d.age || ""} year old ${d.gender || ""} ${d.race || ""}`.trim(),
-                    ph.face?.full,
-                    ph.fashion && `${ph.fashion} style outfit`,
-                    "Office setting, soft lighting",
-                ]
-                    .filter(Boolean)
-                    .join(". ");
+            // Same portrait as a normal hire's (selectManagerCandidate).
+            const e = buildProfilePortraitPrompt(d);
             if ("function" == typeof generateImage) {
                 const t = await queuedGenerateImage(applyImageStyle(e), `Profile Image - ${d.name}`);
                 t &&

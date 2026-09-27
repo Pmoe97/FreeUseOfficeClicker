@@ -741,14 +741,17 @@ async function selectManagerCandidate(e) {
         try {
             const mg = normalizeGender(t.gender),
                 mArticle = "male" === mg || "transMan" === mg ? "male" : "female"; // the candidate's own gender (this was hard-coded "female")
-            const e = `\n  Create an in-world, adult ${mArticle} NPC profile (no meta-talk) for: ${t.name}, age ${t.age}.\n  Gender: ${mg}.\n  Role: ${t.position}. Product managed: ${n.name}.\n  Personality traits: ${t.personalityTraits.join(", ")}. Key trait: ${t.keyTrait}.\n  Hobbies: ${t.hobbies.join(", ")}. Kink preferences: ${t.kinks.join(", ")}.\n\n  Respond as a compact JSON object with these keys ONLY:\n  {\n  "name": {"first":"", "last":""},\n  "age": <number>,\n  "gender": "${mg}",\n  "productManaged": "${n.name}",\n  "bio": "<2-3 sentence personality/background, world-grounded>",\n  "appearance": {\n  "heightBuild": "",\n  "hair": {"color":"","style":"","length":""},\n  "eyes": {"color":"","shape":""},\n  "skinTone": "",\n  "bodyShape": "",\n  "breastSize": "",\n  "buttSize": "",\n  "fashion": ""\n  },\n  "personalityTraits": [${t.personalityTraits.map((e) => `"${e}"`).join(", ")}],\n  "kinks": [${t.kinks.map((e) => `"${e}"`).join(", ")}]\n  }\n  `,
+            // Roll the look first so the AI writes around it rather than inventing colours.
+            t.physical = generateDetailedPhysicalAppearance(t.gender || "female", t.race || "human", t.ethnicity || null);
+            const e = `\n  Create an in-world, adult ${mArticle} NPC profile (no meta-talk) for: ${t.name}, age ${t.age}.\n  Gender: ${mg}.\n  ${describeFixedLookForAi(t)}\n  Role: ${t.position}. Product managed: ${n.name}.\n  Personality traits: ${t.personalityTraits.join(", ")}. Key trait: ${t.keyTrait}.\n  Hobbies: ${t.hobbies.join(", ")}. Kink preferences: ${t.kinks.join(", ")}.\n\n  Respond as a compact JSON object with these keys ONLY:\n  {\n  "name": {"first":"", "last":""},\n  "age": <number>,\n  "gender": "${mg}",\n  "productManaged": "${n.name}",\n  "bio": "<2-3 sentence personality/background, world-grounded>",\n  "appearance": {\n  "bodyShape": "",\n  "breastSize": "",\n  "buttSize": "",\n  "fashion": ""\n  },\n  "personalityTraits": [${t.personalityTraits.map((e) => `"${e}"`).join(", ")}],\n  "kinks": [${t.kinks.map((e) => `"${e}"`).join(", ")}]\n  }\n  `,
                 a =
                     "function" == typeof generateText
                         ? await queuedGenerateText(e, {}, `Manager Profile - ${t.name}`)
                         : `{"name":{"first":"${t.name.split(" ")[0]}","last":"${t.name.split(" ")[1] || ""}"},"age":${t.age},"productManaged":"${n.name}","bio":"Quick learner; keeps launches smooth.","appearance":{"heightBuild":"average","hair":{"color":"brown","style":"soft waves","length":"shoulder"},"eyes":{"color":"green","shape":"almond"},"skinTone":"light","bodyShape":"curvy","breastSize":"medium","buttSize":"full","fashion":"smart casual"},"personalityTraits":["${t.personalityTraits.join('","')}"],"kinks":["${t.kinks.join('","')}"]}`;
             let o;
             try {
-                o = JSON.parse(a);
+                // Local models often wrap the JSON in prose or a code fence.
+                o = JSON.parse((extractText(a).match(/\{[\s\S]*\}/) || ["null"])[0]);
             } catch {
                 o = null;
             }
@@ -757,33 +760,12 @@ async function selectManagerCandidate(e) {
                     (t.age = o.age ?? t.age),
                     (t.productManaged = o.productManaged || n.name),
                     (t.bio = o.bio || "Keeps things moving; loves clean launches."),
-                    (t.physical = generateDetailedPhysicalAppearance(
-                        t.gender || "female",
-                        t.race || "human",
-                        t.ethnicity || null
-                    ));
-                const e = o.appearance || {};
-                e.heightBuild && (t.physical.heightBuild = e.heightBuild),
-                    e.hair && (t.physical.hair = { ...t.physical.hair, ...e.hair }),
-                    e.eyes && (t.physical.eyes = { ...t.physical.eyes, ...e.eyes }),
-                    e.skinTone && (t.physical.skin.tone = e.skinTone),
-                    e.bodyShape && (t.physical.body.shape = e.bodyShape),
-                    (e.breastSize || e.chestSize) &&
-                        ((t.physical.body.chestSize = e.chestSize || e.breastSize),
-                        (t.physical.body.breastSize = e.chestSize || e.breastSize)),
-                    e.buttSize && (t.physical.body.buttSize = e.buttSize),
-                    e.fashion && (t.physical.fashion = e.fashion),
+                    mergeAiAppearance(t.physical, o.appearance, t.gender),
                     (t.personalityTraits = o.personalityTraits || t.personalityTraits),
                     (t.kinks = o.kinks || t.kinks);
-            } else
-                (t.bio = "Quick learner; keeps launches smooth. Friendly and playful in the office."),
-                    (t.physical = generateDetailedPhysicalAppearance(
-                        t.gender || "female",
-                        t.race || "human",
-                        t.ethnicity || null
-                    ));
+            } else t.bio = "Quick learner; keeps launches smooth. Friendly and playful in the office.";
             if ("function" == typeof generateImage) {
-                const e = `Professional portrait photo: ${t.physical.shortDescription}. ${t.physical.face.full}. ${t.physical.fashion} style outfit. Office setting, soft professional lighting, friendly expression, high quality`;
+                const e = buildProfilePortraitPrompt(t);
                 try {
                     const n = await queuedGenerateImage(applyImageStyle(e), `Profile image for new hire ${t.name}`);
                     n &&

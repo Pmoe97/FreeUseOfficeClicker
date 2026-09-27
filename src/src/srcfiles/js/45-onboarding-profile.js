@@ -477,6 +477,30 @@ function upgradeUnifiedAppearanceEdit() {
                 }
             });
         }
+        // Ethnicity re-rolls the looks that come from it, like gender does for the body above.
+        // It also has to reach physical, which is what image prompts read: changing only
+        // employee.ethnicity left them describing the old one.
+        const ethEl = modal.querySelector('select[onchange*="editedData.ethnicity"]');
+        ethEl &&
+            ethEl.addEventListener("change", function () {
+                if ("human" !== String(ed.race || "human").toLowerCase()) return;
+                ed.physical = ed.physical || {};
+                if (!applyEthnicityLook(ed.physical, this.value || null))
+                    return (ed.physical.ethnicity = null), (ed.physical.ethnicityFeatures = null), void syncUnifiedStructured();
+                const put = (frag, v) => {
+                    const el = byPath(frag);
+                    el && v && (el.value = v);
+                };
+                put("skin.tone", ed.physical.skin.tone),
+                    put("eyes.color", ed.physical.eyes.color),
+                    put("eyes.shape", ed.physical.eyes.shape),
+                    put("hair.color", ed.physical.hair.color),
+                    put("hair.texture", ed.physical.hair.texture),
+                    syncUnifiedStructured(),
+                    showNotification(
+                        "🧬 " + (ed.name || "Character") + " is now " + formatEthnicity(this.value) + " — skin tone, eyes and hair colour re-rolled. Fine-tune them above."
+                    );
+            });
         const gType = byPath("genitals.type");
         if (gType) {
             const sizeEl = byPath("genitals.size"),
@@ -1276,7 +1300,7 @@ async function generateNewProfilePicture(e) {
     if (t) {
         showNotification(`🎨 Generating new profile picture for ${t.name}...`, "info", 5e3);
         try {
-            const n = `Professional portrait photo: ${getPhysicalDescriptionForPrompt(t)}. ${t.physical?.fashion || "professional"} style outfit. Office setting, soft professional lighting, friendly expression, high quality portrait`,
+            const n = buildProfilePortraitPrompt(t),
                 a = await queuedGenerateImage(applyImageStyle(n), {}, `New Profile Picture - ${t.name}`);
             a
                 ? ((t.profileImage = a),

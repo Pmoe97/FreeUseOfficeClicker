@@ -24,7 +24,7 @@ const PATCH_NOTES = [
             date: "September 26, 2026",
             title: "🧰 The Big Fix-Up — Saves, Images, Transfers & 40+ Fixes",
             summary:
-                "A full audit of the game turned up a lot of quiet breakage. This patch fixes it: saves that lost progress, images that bloated every save, transfers that didn't move anyone, timers that never ran, and a long list of smaller bugs. It also adds the Save Manager changes you asked for, gallery controls and a rebuilt cheat panel.",
+                "A full audit of the game turned up a lot of quiet breakage. This patch fixes it: saves that lost progress, images that bloated every save, transfers that didn't move anyone, timers that never ran, characters whose skin didn't match their ethnicity, and a long list of smaller bugs. It also adds the Save Manager changes you asked for, gallery controls and a rebuilt cheat panel.",
             changes: [
                 {
                     category: "💾 Saves",
@@ -66,6 +66,18 @@ const PATCH_NOTES = [
                     ],
                 },
                 {
+                    category: "🧬 Characters & Looks",
+                    items: [
+                        "<strong>FIXED:</strong> Every generated human had \"beige skin\" and a random eye colour (purple, teal, maroon…) whatever their ethnicity, so the same character came out dark-skinned in one picture and orange or grey in the next. Skin and eyes now come from their ethnicity.",
+                        "<strong>FIXED:</strong> New managers and accountants had their skin chosen by an AI that was never told their ethnicity, so most profiles said \"fair\" skin, even for Black characters. The AI now writes around the look the character already has.",
+                        "<strong>FIXED:</strong> Changing ethnicity (in the profile editor or on the hire screen) didn't reach the image prompts, which kept drawing the old one. It now does, and re-rolls the skin tone, eyes and hair colour to match, which you can fine-tune after.",
+                        "<strong>FIXED:</strong> Characters from the custom creator didn't keep the ethnicity you picked, and the hire screen showed \"Auto-generate\" even though their look was already based on one.",
+                        "<strong>FIXED:</strong> Profile pictures often didn't look like the character's later photos. They were drawn from a shorter, sometimes outdated description in a stiff corporate-headshot style (hence the very short hair). They now use the same description as every other photo, and the preview on the hire screen is the same person you end up hiring.",
+                        "<strong>FIXED:</strong> Non-human characters (aliens, slimes, cyborgs and others) could get garbled colour names like <code>var(--l-cyan-2)</code> in their picture prompts.",
+                        "• Existing saves are repaired on load: skin or eyes that contradict a character's ethnicity are re-rolled. Profile pictures aren't redrawn; use 🎨 Generate New Profile Picture in a character's gallery for a new one.",
+                    ],
+                },
+                {
                     category: "⏳ Things That Take Days",
                     items: [
                         "<strong>FIXED:</strong> Anything meant to last a number of days never ended: a product closed for a Renovation stayed closed (and earned nothing), employees sent away by a story event never came back, and timed story effects ran forever. They now end on time, and anything stuck in your save clears at the next in-game midnight.",
@@ -82,6 +94,8 @@ const PATCH_NOTES = [
                         "<strong>NEW:</strong> When someone asks you for money in the middle of a chat, you get the Accept / Counter / Deny card, just like when they ask out of the blue.",
                         "<strong>NEW:</strong> The ✏️ Custom action button (enable it with ⚙️) now asks what they should do. Groups get a ❔ button and <code>/help</code> listing every group command.",
                         "<strong>CHANGED:</strong> If someone posts about the same thing as a post from a few minutes earlier, the game asks for a different topic once.",
+                        "<strong>FIXED:</strong> Posts about you often tagged someone else. After a flirty chat with you, a hookup post would tag a random coworker, and tea about you was pinned on the poster's rival. Posts that follow a chat with you, that you asked for, or whose gossip involves you now tag <strong>@TheBoss</strong>, and tea only tags the people it's about.",
+                        "<strong>FIXED:</strong> An explicit chat stopped counting as flirty, so it no longer nudged what people posted afterwards.",
                         "<strong>FIXED:</strong> Manager bios were always written as if the hire were a woman; custom employees without a picture never got one; rehire welcome messages and gossip replies were always canned text.",
                         "<strong>FIXED:</strong> A dozen emojis showed as <code>�</code> (ladder level icons, some race names, the prestige lock and more).",
                     ],
