@@ -5177,10 +5177,14 @@ function getEthnicityFeatures(e) {
    from it via deriveRaceFeaturesFromBio() so the existing description + image
    pipeline keeps working unchanged.
    ============================================================================ */
+// fuoc-codemod:ignore-start — the colours from here to _COLOR_NAMES are data, not styles:
+// they feed <input type="color"> (hex only) and nearestColorName() for image prompts. The
+// colour codemod once turned them into var(--…) tokens, which put "var(--l-cyan-2) gel body"
+// into prompts.
 const BIOLOGY_FIELDS = {
     skinTone:     { label: "Skin Tone",       type: "color",  default: "#e8c0a0", group: "skin" },
     hairColor:    { label: "Hair Color",      type: "color",  default: "#3b2417", group: "skin",
-                    palette: ["var(--l-bg-black-2)","#3b2417","#5c3a21","#8b5a2b","#b8860b","#d9a066","#e8c170","var(--l-ink-cool-2)","var(--l-ink-soft)","#7a3b3b","#a64dff","#ff66cc","#66ccff","#33cc99"] },
+                    palette: ["#1a1a1a","#3b2417","#5c3a21","#8b5a2b","#b8860b","#d9a066","#e8c170","#c0c0c0","#e6e6e6","#7a3b3b","#a64dff","#ff66cc","#66ccff","#33cc99"] },
     hairStyle:    { label: "Hair Style",       type: "select", group: "skin",
                     options: ["straight","wavy","curly","coily","braided","ponytail","bun","pixie","long flowing","undercut","tousled"] },
     eyeColor:     { label: "Eye Color",        type: "color",  default: "#5b3a1a", group: "skin",
@@ -5189,7 +5193,7 @@ const BIOLOGY_FIELDS = {
     eyeCount:     { label: "Eye Count",        type: "select", group: "head",  options: ["2","3","4"], default: "2" },
     ears:         { label: "Ears",             type: "select", group: "head",  options: ["rounded","pointed","long","floppy","none"], default: "rounded" },
     horns:        { label: "Horns",            type: "select", group: "head",  options: ["none","small","curved","ram","straight","antler","crown"], default: "none" },
-    hornColor:    { label: "Horn Color",       type: "color",  default: "var(--l-bg-black-2)", group: "head" },
+    hornColor:    { label: "Horn Color",       type: "color",  default: "#1a1a1a", group: "head" },
     tail:         { label: "Tail",             type: "select", group: "scales",options: ["none","slim","fluffy","spade","scaled","serpentine"], default: "none" },
     tailColor:    { label: "Tail Color",       type: "color",  default: "#3b2417", group: "scales" },
     scaleColor:   { label: "Scale Color",      type: "color",  default: "#3a9d5d", group: "scales" },
@@ -5203,12 +5207,12 @@ const BIOLOGY_FIELDS = {
     wingPattern:  { label: "Wing Pattern",     type: "select", group: "wings", options: ["clear","veined","spotted","gradient","glowing"], default: "clear" },
     wingSize:     { label: "Wing Size",        type: "select", group: "wings", options: ["small","medium","large"], default: "medium" },
     feathers:     { label: "Feathers",         type: "select", group: "wings", options: ["none","accents","full"], default: "none" },
-    featherColor: { label: "Feather Color",    type: "color",  default: "var(--l-ink)", group: "wings" },
+    featherColor: { label: "Feather Color",    type: "color",  default: "#ffffff", group: "wings" },
     metalFinish:  { label: "Metal Finish",     type: "select", group: "scales",options: ["chrome","matte black","brushed steel","gold","rose-gold","carbon"], default: "chrome" },
     metalCoverage:{ label: "Metal Coverage",   type: "select", group: "scales",options: ["accents","panels","full plating"], default: "panels" },
-    accentColor:  { label: "LED / Glow Accent",type: "color",  default: "var(--l-cyan)", group: "scales" },
-    slimeColor:   { label: "Slime Color",      type: "color",  default: "var(--l-cyan-2)", group: "scales" },
-    slimeHairColor:{ label: "Gel Hair Color",  type: "color",  default: "var(--l-cyan-2)", group: "skin" },
+    accentColor:  { label: "LED / Glow Accent",type: "color",  default: "#00d4ff", group: "scales" },
+    slimeColor:   { label: "Slime Color",      type: "color",  default: "#3fc7ff", group: "scales" },
+    slimeHairColor:{ label: "Gel Hair Color",  type: "color",  default: "#3fc7ff", group: "skin" },
     slimeOpacity: { label: "Slime Opacity",    type: "select", group: "scales",options: ["translucent","semi-opaque","opaque"], default: "translucent" },
     slimeCore:    { label: "Visible Core",     type: "toggle", group: "scales",default: true },
     augLevel:     { label: "Augmentation Level",type:"select", group: "scales",options: ["chrome accents","balanced human+","heavily augmented"], default: "balanced human+" },
@@ -5224,7 +5228,10 @@ const BIO_GROUP_LABELS = { skin: "Skin & Hair", head: "Head, Eyes & Horns", wing
 
 const RACES = {
     human: { id:"human", displayName:"Human", emoji:"👤", color:"var(--accent)", category:"human",
-        visualSignature:[], editableBiology:["skinTone","hairColor","hairStyle","eyeColor","build","height"],
+        // No skin/hair/eye colours here: a human's come from their ethnicity and live in the
+        // regular appearance fields (skin.tone, hair.color, eyes.color). Copies in the bio were
+        // never read for humans except to overwrite those with a beige default.
+        visualSignature:[], editableBiology:["hairStyle","build","height"],
         defaults:{ build:"athletic" }, namePool:null, surnames:null,
         personalitySpectrum:["reserved ↔ outgoing","grounded ↔ ambitious"], allure:["natural charm","approachable warmth"],
         imagePrompt:{ base:"a {build} human {gender}, {skinTone} skin, {hairStyle} {hairColor} hair, {eyeColor} eyes, {allure}" } },
@@ -5272,7 +5279,7 @@ const RACES = {
     demon: { id:"demon", displayName:"Demon", emoji:"😈", color:"#b83b5e", category:"fiend",
         visualSignature:["crimson-toned skin","imposing infernal presence","spaded tail"],
         editableBiology:["horns","hornColor","tail","tailColor","skinTone","eyeGlow","markings","claws","build"],
-        defaults:{ horns:"ram", hornColor:"var(--l-bg-black-2)", tail:"spade", tailColor:"#8b1a1a", skinTone:"#a83232", eyeGlow:"glowing", claws:true, build:"athletic", markings:"tribal" },
+        defaults:{ horns:"ram", hornColor:"#1a1a1a", tail:"spade", tailColor:"#8b1a1a", skinTone:"#a83232", eyeGlow:"glowing", claws:true, build:"athletic", markings:"tribal" },
         namePool:["Malphas","Vael","Dre'kar","Vesryn","Azrok","Bael","Morgoth","Xaphan","Raum","Vornak","Belial","Sabnak","Draven","Orobas","Zagan","Murmur","Valac","Andras","Naberius","Caim","Furcas","Haures","Ronwe","Abaddon","Asmodai","Belphagor","Mephis","Nergal","Pazuzu","Sariel","Tutivillus","Valafar","Xeryx","Zalgoth","Behemoth","Cresil","Dagon","Eligos","Forneus","Glasya","Halphas","Ipos","Krampus","Leraje","Marbas","Nybras","Oriax","Phenex","Raumel","Stolas","Thamuz","Verrier","Volac","Zepar","Amon","Barbas","Crocell","Decarabia"], surnames:null,
         personalitySpectrum:["coldly dominant ↔ possessive","cruel ↔ honor-bound"], allure:["raw power","dangerous heat","dominant magnetism","intimidating attraction"],
         imagePrompt:{ base:"a {build} demon {gender}, {skinTone} crimson-toned skin, {hornColor} {horns} horns, {tailColor} {tail} tail, {eyeGlow} eyes, clawed hands, imposing infernal presence, {markings} markings, {allure}" } },
@@ -5288,7 +5295,7 @@ const RACES = {
     angel: { id:"angel", displayName:"Angel", emoji:"😇", color:"var(--l-gold)", category:"divine",
         visualSignature:["radiant feathered wings","soft divine glow","serene flawless features"],
         editableBiology:["wingType","wingColor","feathers","featherColor","skinTone","hairColor","eyeGlow","build"],
-        defaults:{ wingType:"feathered", wingColor:"var(--l-ink)", feathers:"full", featherColor:"#fff8e0", eyeGlow:"radiant", skinTone:"#f5e0d0", build:"lithe" },
+        defaults:{ wingType:"feathered", wingColor:"#ffffff", feathers:"full", featherColor:"#fff8e0", eyeGlow:"radiant", skinTone:"#f5e0d0", build:"lithe" },
         namePool:["Seraphiel","Lumina","Cassiel","Auriel","Zadkiel","Elara","Raziel","Celestine","Anael","Israfel","Gavreel","Sariel","Nathaniel","Selaphiel","Ariel","Jophiel","Verael","Solenne","Halcyon","Eirian","Aurelia","Sabriel","Ithuriel","Seraphina","Uriel","Gabriel","Camael","Haniel","Barachiel","Jegudiel","Remiel","Zerachiel","Phanuel","Raguel","Lailah","Pravuil","Radueriel","Temeluch","Akatriel","Anahita","Caliel","Damiel","Evangeline","Galilea","Hosanna","Immanuelle","Jubilee","Luminael","Mercy","Noelani","Oriane","Peniel","Quenby","Rhamiel","Serenel","Thaddiel","Valentiel","Zaniel"], surnames:null,
         personalitySpectrum:["serene ↔ zealous","merciful ↔ exacting"], allure:["divine allure","untouchable purity","luminous serenity"],
         imagePrompt:{ base:"a {build} angel {gender}, {feathers} {featherColor} feathered wings, soft divine glow, {skinTone} skin, {hairColor} hair, {eyeGlow} eyes, serene flawless features, {allure}" } },
@@ -5296,7 +5303,7 @@ const RACES = {
     vampire: { id:"vampire", displayName:"Vampire", emoji:"🧛", color:"#800020", category:"undead",
         visualSignature:["pale immortal skin","elongated fangs","aristocratic poise"],
         editableBiology:["skinTone","hairColor","hairStyle","eyeColor","eyeGlow","fangs","build"],
-        defaults:{ skinTone:"#ece0e0", hairColor:"var(--l-bg-black-2)", fangs:true, eyeColor:"#8b1a1a", build:"lithe" }, lockedBio:["fangs"],
+        defaults:{ skinTone:"#ece0e0", hairColor:"#1a1a1a", fangs:true, eyeColor:"#8b1a1a", build:"lithe" }, lockedBio:["fangs"],
         namePool:["Vladis","Carmilla","Lestain","Mircalla","Dorian","Vesper","Lucretia","Alucard","Seraphine","Mortimer","Ligeia","Varney","Drusilla","Cassius","Nocturne","Selene","Ambrose","Ravenna","Sebastian","Morwenna","Lazarus","Isolde","Valdric","Carpathia","Vladimir","Strahd","Nosfera","Belmonte","Orlok","Magnus","Vesperia","Lenore","Mordecai","Sanguina","Erzsebet","Bathory","Lucian","Drusus","Octavia","Renfeld","Vornheim","Hesper","Acheron","Brontes","Caine","Damaris","Evraine","Hadrian","Illyana","Korvain","Lestat","Marius","Nadya","Ophelia","Vukan","Wilhelmina","Xenia","Yelena"], surnames:null,
         personalitySpectrum:["aloof ↔ obsessive","refined ↔ feral"], allure:["hypnotic gaze","predatory elegance","dark immortal seduction"],
         imagePrompt:{ base:"a {build} vampire {gender}, pale immortal {skinTone} skin, {hairStyle} {hairColor} hair, {eyeGlow} {eyeColor} eyes, elongated fangs, aristocratic poise, {allure}" } },
@@ -5313,7 +5320,7 @@ const RACES = {
     dragonborn: { id:"dragonborn", displayName:"Dragonborn", emoji:"🐲", color:"#4169e1", category:"draconic",
         visualSignature:["scaled draconic hide","ridged horns","reptilian slit-pupil eyes"],
         editableBiology:["scaleColor","scalePattern","scaleCoverage","horns","hornColor","eyeColor","fangs","tail","tailColor","build"],
-        defaults:{ scaleColor:"#3a6bd6", scalePattern:"banded", scaleCoverage:"full", horns:"straight", hornColor:"var(--l-slate-2)", fangs:true, tail:"scaled", tailColor:"#3a6bd6", build:"athletic" },
+        defaults:{ scaleColor:"#3a6bd6", scalePattern:"banded", scaleCoverage:"full", horns:"straight", hornColor:"#2a2a3a", fangs:true, tail:"scaled", tailColor:"#3a6bd6", build:"athletic" },
         namePool:["Rhogar","Sora","Balasar","Vrakka","Tazlyn","Mehen","Kriv","Akra","Pandjed","Surina","Donaar","Thava","Heskan","Nala","Medrash","Daar","Kepesk","Savashare","Torinn","Perra","Garrik","Sethra","Adrex","Vyrid","Arjhan","Bharash","Ghesh","Kava","Patrin","Shedinn","Trynn","Valoreth","Zykroff","Nemmonis","Drahkso","Kerrhylon","Myastan","Norixius","Prexijan","Shestreth","Turnuroth","Verthisa","Yarjerit","Akkhad","Belzoroth","Caldrax","Draxxis","Emberlash","Fyrakk","Goravex","Ignar","Jalterra","Kavoth","Maagheth","Pyralis","Roskar","Sarraketh","Vorkath"], surnames:null,
         personalitySpectrum:["proud ↔ humble","fierce ↔ measured"], allure:["primal draconic power","ancient majesty","smoldering intensity"],
         imagePrompt:{ base:"a {build} dragonborn {gender}, {scaleCoverage} {scaleColor} {scalePattern} draconic scales, ridged {hornColor} {horns} horns, reptilian {eyeColor} slit-pupil eyes, {tailColor} {tail} tail, sharp fangs, {allure}" } },
@@ -5348,7 +5355,7 @@ const RACES = {
     rabbit: { id:"rabbit", displayName:"Rabbitkin", emoji:"🐰", color:"#ffc2d1", category:"beastkin",
         visualSignature:["long rabbit ears","fluffy cottontail","soft fur accents","humanoid body"],
         editableBiology:["furColor","furPattern","furCoverage","ears","tail","tailColor","eyeColor","skinTone","hairColor","build"],
-        defaults:{ furColor:"#f0e0d8", furPattern:"solid", furCoverage:"ears/tail only", ears:"long", tail:"fluffy", tailColor:"var(--l-ink)", build:"soft" }, lockedBio:["ears","tail"],
+        defaults:{ furColor:"#f0e0d8", furPattern:"solid", furCoverage:"ears/tail only", ears:"long", tail:"fluffy", tailColor:"#ffffff", build:"soft" }, lockedBio:["ears","tail"],
         namePool:["Clover","Hazel","Bramble","Pelt","Ash","Cottontail","Bun","Pippa","Daisy","Marsh","Thistle","Velveteen","Nibbles","Honey","Briar","Flopsy","Sorrel","Maple","Tansy","Whisk","Dandelion","Poppy","Sage","Hop","Cinnabun","Hopscotch","Cloverly","Dandy","Fluff","Gingersnap","Marshmallow","Oatmeal","Patch","Quilt","Radish","Snowdrop","Tumble","Acorn","Buttons","Cottonball","Dewberry","Ferndown","Gumdrop","Honeycomb","Lettuce","Mossbun","Nibblet","Parsley","Rutabaga","Pumpkinseed","Twitch","Velour","Willow","Bracken","Pepper","Posy","Biscuit","Cloverleaf"],
         surnames:["Cottonhill","Softhop","Meadowtail","Briarwarren","Cloverfield","Whitefoot","Thumper","Greendell","Burrowdown","Hopwell","Meadowsweet","Clovermeadow","Fluffhill","Greenwarren","Briarhop","Dewfield","Hazelwarren","Mossburrow","Nettledown","Puddlehop","Sweetgrass","Underburrow","Warrenby","Wildmeadow"],
         personalitySpectrum:["timid ↔ trusting","anxious ↔ cheerful"], allure:["soft twitchy charm","gentle softness","sweet skittish appeal"],
@@ -5390,7 +5397,7 @@ const RACES = {
         visualSignature:["translucent gel body","visible glowing core","soft malleable form","glossy wet surface"],
         bodyPlan:{ hairMode:"gel", eyeMode:"gel", skinMode:"raceOnly", faceMode:"stylized" },
         editableBiology:["slimeColor","slimeHairColor","slimeOpacity","slimeCore","accentColor","hairStyle","build"],
-        defaults:{ slimeColor:"var(--l-cyan-2)", slimeHairColor:"var(--l-cyan-2)", slimeOpacity:"translucent", slimeCore:true, accentColor:"#7cf0ff", build:"curvy" },
+        defaults:{ slimeColor:"#3fc7ff", slimeHairColor:"#3fc7ff", slimeOpacity:"translucent", slimeCore:true, accentColor:"#7cf0ff", build:"curvy" },
         namePool:["Goop","Jelly","Marsh","Ooze","Pudding","Glim","Dewdrop","Blob","Squish","Gel","Bubbles","Splash","Drizzle","Wobble","Plop","Sappho","Syrup","Mochi","Slush","Dribble","Glob","Pearl","Aqua","Gloop","Jiggle","Squelch","Goo","Slurp","Dollop","Splatter","Glaze","Sludge","Puddle","Bloop","Wiggle","Squidge","Gooba","Plip","Sloosh","Custard","Marshmallow","Taffy","Gummi","Slosh","Burble","Globule","Schmoo","Nectar","Dew","Mucky","Splish","Glop","Quiver","Jellybean","Slip","Gellie","Blorp","Mochiko"], surnames:null,
         personalitySpectrum:["bubbly ↔ mellow","clingy ↔ free-flowing"], allure:["playful squishiness","impossible softness","novel jiggly tactility"],
         imagePrompt:{ base:"a {build} adult slime {gender}, of-age mature proportions, entirely made of {slimeOpacity} {slimeColor} gel including face and skin, visible glowing {accentColor} core, glossy wet translucent surface, {slimeHairColor} gel-formed {hairStyle} hair flowing like liquid, large glossy gel eyes, soft smooth featureless gel facial features, soft malleable form, {allure}" } },
@@ -5407,7 +5414,7 @@ const RACES = {
         visualSignature:["augmented human, human face and physique","integrated chrome cybernetics","subtle cyber detailing","glowing accent lines"],
         bodyPlan:{ hairMode:"human", eyeMode:"cyber", skinMode:"human", faceMode:"augmented" },
         editableBiology:["skinTone","metalFinish","metalCoverage","augLevel","faceAug","accentColor","eyeGlow","hairColor","build"],
-        defaults:{ skinTone:"#e8d0c0", metalFinish:"chrome", metalCoverage:"panels", augLevel:"balanced human+", faceAug:"subtle cyber ports", accentColor:"var(--l-cyan)", eyeGlow:"glowing", build:"athletic" },
+        defaults:{ skinTone:"#e8d0c0", metalFinish:"chrome", metalCoverage:"panels", augLevel:"balanced human+", faceAug:"subtle cyber ports", accentColor:"#00d4ff", eyeGlow:"glowing", build:"athletic" },
         namePool:["Unit-V","Nyx-7","Cipher","Halcyon","Vex","Tessellate","Echo-9","Sable","Quill","Vector","Onyx-3","Lattice","Pyre","Vesper","Cobalt","Zephyr","Helix","Argent","Nova-2","Riven","Sigma","Aria-X","Flux","Dren","Axiom","Binary","Cortex","Delta-4","Ember-7","Fenix","Glitch","Hexa","Ion","Jolt","Kelvin","Lumen","Mecha","Nyx-9","Optic","Pixel","Quark","Rune-3","Synth","Tau","Ultra","Volt","Watt","Xenon","Yotta","Zenith","Apex","Byte","Circuit","Drift-2","Echelon","Forge","Gauss","Halo-5"], surnames:null,
         personalitySpectrum:["coldly precise ↔ quietly warm","logical ↔ rebelliously curious"], allure:["sleek precision","human-machine contrast","cold surface over warm intent"],
         imagePrompt:{ base:"a {build} augmented human cyborg {gender}, {augLevel}, attractive human face and {skinTone} skin with {faceAug}, sleek {metalFinish} cybernetic augmentation ({metalCoverage}) integrated into a human physique, glowing {accentColor} accent lines, {eyeGlow} eyes, {hairColor} hair, advanced chrome aesthetic, {allure}" } },
@@ -5415,7 +5422,7 @@ const RACES = {
     alien: { id:"alien", displayName:"Alien", emoji:"👽", color:"#32cd32", category:"exotic",
         visualSignature:["unmistakably non-human skin tone","exotic markings","otherworldly attractive features"],
         editableBiology:["skinTone","markings","markingColor","eyeCount","eyeColor","eyeGlow","ears","build"],
-        defaults:{ skinTone:"#6ad0c0", markings:"geometric", markingColor:"#7cf0ff", eyeCount:"2", eyeColor:"var(--l-panel)", eyeGlow:"glowing", build:"lithe" },
+        defaults:{ skinTone:"#6ad0c0", markings:"geometric", markingColor:"#7cf0ff", eyeCount:"2", eyeColor:"#1a1a2a", eyeGlow:"glowing", build:"lithe" },
         namePool:["Zhae","Qixil","Oolun","Threx","Yaa'vi","Xel","Vorn","Iridia","Zhamel","Kesh","Ulara","Nyx'tai","Vael","Oqo","Threna","Zyl","Aevi","Qor","Lumi'ax","Sszael","Vexa","Onuu","Theln","Azhul","Xa'roth","Quesh","Voolan","Threllik","Yssa","Klaxx","Mor'vai","Ixol","Zephyx","Naal","Ulisha","Tyk'tik","Vrenn","Oqua","Thrella","Zynl","Aexis","Qorvan","Lumeth","Sszorn","Vexil","Onaru","Thelka","Azhel","Xixoth","Qenna","Vooloth","Threnix","Yssol","Klynn","Morvath","Ixara","Zenthi","Naalix"], surnames:null,
         personalitySpectrum:["unknowable ↔ curious","detached ↔ fascinated"], allure:["exotic mystery","unknowable allure","novel beauty"],
         imagePrompt:{ base:"a {build} alien {gender}, {skinTone} unmistakably non-human skin, {markingColor} {markings} markings, {eyeCount} {eyeGlow} {eyeColor} eyes, {ears} ears, otherworldly attractive features, {allure}" } },
@@ -5452,14 +5459,17 @@ function foldRaceWeights(src) {
 
 /* ---- Color hex -> nearest descriptive word (for free-text & prompt paths) ---- */
 const _COLOR_NAMES = [
-    ["black","var(--l-black)"],["charcoal","var(--l-neutral-3)"],["gray","var(--l-neutral-8)"],["silver","var(--l-ink-cool-2)"],["white","var(--l-ink-soft)"],
+    ["black","#000000"],["charcoal","#333333"],["gray","#808080"],["silver","#c0c0c0"],["white","#f5f5f5"],
     ["crimson","#990000"],["red","#d22020"],["maroon","#7a1a1a"],["rose","#ff5a8a"],["pink","#ff8fc0"],
     ["orange","#ff7f00"],["russet","#a0531f"],["copper","#b87333"],["gold","#d4af37"],["amber","#ffbf00"],["yellow","#f0e040"],
     ["olive","#808000"],["green","#2e8b2e"],["emerald","#009060"],["teal","#0f8080"],["lime","#7fdf30"],
-    ["blue","#2266dd"],["navy","var(--l-line)"],["cyan","#00ced1"],["ice blue","#aee0ff"],["sky blue","#6fbfe8"],
+    ["blue","#2266dd"],["navy","#1a2a6b"],["cyan","#00ced1"],["ice blue","#aee0ff"],["sky blue","#6fbfe8"],
     ["purple","#8030c0"],["violet","#9400d3"],["lavender","#c4a0ff"],["magenta","#c000c0"],
     ["brown","#7a4a2a"],["tan","#d2b48c"],["bronze","#cd7f32"],["beige","#e8c0a0"],["peach","#f0c0a0"],["porcelain","#f2e0d8"],
 ];
+// Fallback for a colour bio field with no default (hex: it seeds <input type="color">).
+const BIO_COLOR_FALLBACK = "#cccccc";
+// fuoc-codemod:ignore-end
 function nearestColorName(v) {
     if (v == null || v === "") return "";
     const s = String(v).trim();
@@ -5491,7 +5501,7 @@ function randomizeBio(raceId, gender) {
         if (f.type === "select" && f.options && f.options.length)
             bio[k] = k in def && Math.random() < 0.5 ? def[k] : f.options[Math.floor(Math.random() * f.options.length)];
         else if (f.type === "toggle") bio[k] = k in def ? def[k] : Math.random() < 0.5;
-        else if (f.type === "color") bio[k] = f.palette && !(k in def) ? f.palette[Math.floor(Math.random() * f.palette.length)] : def[k] || f.default || "var(--l-ink-dim)";
+        else if (f.type === "color") bio[k] = f.palette && !(k in def) ? f.palette[Math.floor(Math.random() * f.palette.length)] : def[k] || f.default || BIO_COLOR_FALLBACK;
         else bio[k] = def[k] || f.default || "";
     });
     (race.lockedBio || []).forEach((k) => { if (k in def) bio[k] = def[k]; });
@@ -5653,8 +5663,8 @@ const BIO_CONTROL_FACTORY = {
         wrap.style.cssText = "display:flex; gap:6px; align-items:center;";
         const c = document.createElement("input");
         c.type = "color";
-        let v = null != bio[key] ? String(bio[key]) : f.default || "var(--l-ink-dim)";
-        "#" !== v[0] && (v = f.default || "var(--l-ink-dim)"), (c.value = v), (bio[key] = c.value);
+        let v = null != bio[key] ? String(bio[key]) : f.default || BIO_COLOR_FALLBACK;
+        "#" !== v[0] && (v = f.default || BIO_COLOR_FALLBACK), (c.value = v), (bio[key] = c.value);
         c.style.cssText = "width:36px; height:28px; padding:0; background:none; border:1px solid var(--border-strong); border-radius:4px; cursor:pointer;";
         const name = document.createElement("span");
         name.textContent = nearestColorName(c.value), (name.style.cssText = "color:var(--text-mute); font-size:0.72rem;");

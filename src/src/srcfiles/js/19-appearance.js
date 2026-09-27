@@ -6,8 +6,14 @@
 // (function hoisting does not cross files). Do not reorder these files.
 // ============================================================================
 
-function createCustomPhysicalAppearance(e, t, n, a) {
-    const o = generateDetailedPhysicalAppearance(t, n, a);
+// base: a look already rolled for this character (the hire-confirmation modal rolls one when
+// it opens). Reusing it keeps what the form doesn't show (face, texture, figure) the same from
+// the preview portrait to the saved character; re-rolling here made the two different people.
+// It's only reused while gender, race and ethnicity still match what it was rolled for.
+function createCustomPhysicalAppearance(e, t, n, a, base = null) {
+    const o = lookFitsBasis(base, t, n, a)
+        ? JSON.parse(JSON.stringify(base))
+        : generateDetailedPhysicalAppearance(t, n, a);
     if (!e || 0 === Object.keys(e).length) return o;
     const i = (e) => null != e && "" !== e,
         s = { ...o };
@@ -20,6 +26,7 @@ function createCustomPhysicalAppearance(e, t, n, a) {
         (i(e.hairColor) && ((s.hairColor = e.hairColor), s.hair && (s.hair.color = e.hairColor)),
         i(e.hairStyle) && ((s.hairStyle = e.hairStyle), s.hair && (s.hair.style = e.hairStyle)),
         i(e.hairLength) && ((s.hairLength = e.hairLength), s.hair && (s.hair.length = e.hairLength)),
+        i(e.hairTexture) && ((s.hairTexture = e.hairTexture), s.hair && (s.hair.texture = e.hairTexture)),
         i(e.eyeColor) && ((s.eyeColor = e.eyeColor), s.eyes && (s.eyes.color = e.eyeColor)),
         i(e.eyeShape) && ((s.eyeShape = e.eyeShape), s.eyes && (s.eyes.shape = e.eyeShape)),
         i(e.skinTone) && ((s.skinTone = e.skinTone), s.skin && (s.skin.tone = e.skinTone)),
@@ -48,6 +55,38 @@ function createCustomPhysicalAppearance(e, t, n, a) {
         (s.fullDescription = `${s.height || "average"} ${s.build || "average"} ${d} with ${r} (${s.hairStyle || "natural"}), ${l}, ${c}. ${p}${m}${u}. ${s.distinguishingFeature || ""} Style: ${s.fashion || "professional"}.`),
         s
     );
+}
+function lookFitsBasis(base, gender, race, ethnicity) {
+    if (!base || "object" != typeof base) return !1;
+    if (normalizeGender(base.gender) !== normalizeGender(gender)) return !1;
+    if (canonicalRace(base.race) !== canonicalRace(race)) return !1;
+    return !ethnicity || String(ethnicity).split("-")[0] === base.ethnicity;
+}
+// Re-rolls the ethnicity-driven parts of a human's look (skin tone, eye colour and shape, hair
+// colour and texture) and records the ethnicity on physical, where image prompts read it.
+// Changing ethnicity used to update only employee.ethnicity, so the prompts kept describing
+// the old one ("East Asian ... fair skin" for a character now set to Caucasian, and so on).
+// Returns the rolled features, or null when there is no ethnicity to roll from.
+function applyEthnicityLook(physical, ethnicity) {
+    if (!physical || !ethnicity) return null;
+    const [base, sub] = String(ethnicity).split("-"),
+        f = getEthnicityFeatures(base);
+    sub && (f.subType = sub.charAt(0).toUpperCase() + sub.slice(1));
+    physical.ethnicity = base;
+    physical.ethnicityFeatures = f;
+    physical.skin = physical.skin || {};
+    physical.eyes = physical.eyes || {};
+    physical.hair = physical.hair || {};
+    physical.skin.tone = f.skinTone;
+    physical.eyes.color = f.eyeColor;
+    physical.eyes.shape = f.eyeShape;
+    physical.hair.color = f.hairColor;
+    f.hairTexture && (physical.hair.texture = f.hairTexture);
+    // Older saves also carry flat copies; keep those in step where they exist.
+    "skinTone" in physical && (physical.skinTone = f.skinTone);
+    "eyeColor" in physical && (physical.eyeColor = f.eyeColor);
+    "hairColor" in physical && (physical.hairColor = f.hairColor);
+    return f;
 }
 function generateDetailedPhysicalAppearance(e = "female", t = "human", n = null) {
     let a;
@@ -350,10 +389,14 @@ function generateDetailedPhysicalAppearance(e = "female", t = "human", n = null)
         O = R?.description ? R.description + " " : "",
         q = B || O,
         z = G.build || u;
+    // A non-human's bio owns its skin and eyes. A human's come from the ethnicity picked
+    // above: letting the bio override them gave every human the bio default ("beige skin")
+    // and a random palette eye colour, whatever their ethnicity.
+    const _bioOwnsLook = "human" !== _canonRace;
     let j = C;
-    G.skin && (j = G.skin);
+    _bioOwnsLook && G.skin && (j = G.skin.replace(/\s+skin$/i, ""));
     let H = b;
-    G.eyes && (H = G.eyes);
+    _bioOwnsLook && G.eyes && (H = G.eyes.replace(/\s+eyes$/i, ""));
     const U = [];
     G.ears && U.push(G.ears),
         G.tail && U.push(G.tail),
@@ -361,8 +404,8 @@ function generateDetailedPhysicalAppearance(e = "female", t = "human", n = null)
         G.furPattern && U.push(G.furPattern),
         G.horns && U.push(G.horns),
         G.wings && U.push(G.wings),
-        G.skin && "human" !== _canonRace && U.push(G.skin),
-        G.eyes && U.push(G.eyes),
+        G.skin && _bioOwnsLook && U.push(G.skin),
+        G.eyes && _bioOwnsLook && U.push(G.eyes),
         G.other.length > 0 && U.push(...G.other);
     const Y = U.length > 0 ? ` Race features: ${U.join(", ")}.` : "",
         W = `${$} physique with ${"chest" === i ? I + " chest" : I + " " + i}, ${M} bottom, ${P}`;
@@ -1025,9 +1068,8 @@ function syncPhysicalDescriptions(p, gender) {
     );
 }
 function getPhysicalDescriptionForPrompt(e, opts = {}) {
-    e.physical || (e.physical = generateDetailedPhysicalAppearance(e.gender || "female", e.race || "human")),
-        e.physical.fullDescription ||
-            (e.physical = generateDetailedPhysicalAppearance(e.gender || "female", e.race || "human"));
+    (e.physical && e.physical.fullDescription) ||
+        (e.physical = generateDetailedPhysicalAppearance(e.gender || "female", e.race || "human", e.ethnicity || null));
     const t = e.physical,
         n = [];
     t.heightBuild ? n.push(t.heightBuild) : t.height && t.build && n.push(`${t.height}, ${t.build}`);
@@ -1172,4 +1214,39 @@ function getPhysicalDescriptionForPrompt(e, opts = {}) {
             }));
     }
     return k;
+}
+// The look a new hire already has, for the AI that writes their profile. Skin, eyes and hair
+// colour come from race/ethnicity, so the AI is told them instead of being asked to choose:
+// asked blind, it answered "fair" or "light" for nearly everyone, whatever their ethnicity.
+function describeFixedLookForAi(emp) {
+    const p = emp.physical || {},
+        race = emp.race || p.race || "human",
+        eth = "human" === race ? emp.ethnicity || p.ethnicity || null : null,
+        who = "human" !== race ? race : eth ? `human, ${formatEthnicity(eth)}` : "human";
+    return `Race: ${who}.\n  Appearance (already decided — keep the bio consistent with it): ${p.shortDescription || "unspecified"}.`;
+}
+// Merges an AI-written appearance onto a generated one. The AI was shown the rolled look
+// (describeFixedLookForAi), so it only picks what that leaves open: figure and fashion. Hair,
+// eyes and skin stay as rolled — taking the AI's colours gave "fair" skin to everyone, and its
+// hair ("short pixie cut") could contradict the length it had just been told.
+// Rebuilds the derived descriptions so every later prompt sees the merged look.
+function mergeAiAppearance(physical, a, gender) {
+    if (!physical || !a || "object" != typeof a) return physical;
+    const s = (v) => ("string" == typeof v ? v.trim() : "");
+    physical.body = physical.body || {};
+    s(a.bodyShape) && (physical.body.shape = s(a.bodyShape));
+    const chest = s(a.chestSize) || s(a.breastSize);
+    chest && ((physical.body.chestSize = chest), (physical.body.breastSize = chest));
+    s(a.buttSize) && (physical.body.buttSize = s(a.buttSize));
+    s(a.fashion) && (physical.fashion = s(a.fashion));
+    return syncPhysicalDescriptions(physical, gender);
+}
+// Prompt for a profile picture. It describes the character with the same text as every later
+// photo (getPhysicalDescriptionForPrompt), so the profile picture looks like the person in the
+// selfies and scenes that follow. The old "Professional portrait photo" headshot used a
+// shorter description that could predate the final look, and pulled toward stock corporate
+// photos (short cropped hair, generic faces).
+function buildProfilePortraitPrompt(emp) {
+    const look = getPhysicalDescriptionForPrompt(emp, { noGenitals: !0 });
+    return `portrait photo, ${look}\nRelaxed pose at the office, natural lighting, friendly expression, looking at the camera, high quality`;
 }
