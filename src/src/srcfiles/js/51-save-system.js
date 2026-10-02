@@ -141,8 +141,19 @@ async function saveGame(e = !0, force = !1) {
         }
 }
 let saveInProgress = !1,
-    lastSaveTime = 0;
-const MIN_SAVE_INTERVAL = 500;
+    lastSaveTime = 0,
+    saveStartedAt = 0,
+    saveRerunTimer = null;
+const MIN_SAVE_INTERVAL = 500,
+    SAVE_STALE_MS = 3e4;
+// One deferred auto-save, however many were turned away meanwhile.
+function scheduleSaveRerun(delay) {
+    saveRerunTimer ||
+        (saveRerunTimer = setTimeout(() => {
+            saveRerunTimer = null;
+            saveGame(!1).catch(() => {});
+        }, Math.max(50, delay)));
+}
 async function saveGameToSlot(e, t = "manual", n = !0) {
     if (isResetting) return null;
     // GUARD 1 + GUARD 2: auto-saves (timer + event-driven) are the only path that can
@@ -158,13 +169,19 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
             );
     }
     const a = Date.now();
+    // A write that never finishes (the page was frozen mid-save, e.g. by a phone call) must not
+    // block every save after it.
+    saveInProgress && a - saveStartedAt > SAVE_STALE_MS && (console.warn("[SaveManager] Previous save never finished — releasing it"), (saveInProgress = !1));
     if (saveInProgress) {
-        if ("auto" === t) return console.log("[SaveManager] Skipping auto-save (save already in progress)"), null;
+        // An auto-save that finds another save running used to be dropped, and nothing retried it,
+        // so what changed since that save began (a new hire, a purchase) stayed unsaved until the
+        // next 5 s tick — and a reload before that lost it. Now one follow-up is queued instead.
+        if ("auto" === t) return console.log("[SaveManager] Auto-save deferred (save already in progress)"), scheduleSaveRerun(250), null;
         for (; saveInProgress; ) await new Promise((e) => setTimeout(e, 50));
     }
     if ("auto" === t && a - lastSaveTime < MIN_SAVE_INTERVAL)
-        return console.log("[SaveManager] Throttling auto-save (too soon since last save)"), null;
-    (saveInProgress = !0), (lastSaveTime = a);
+        return console.log("[SaveManager] Auto-save deferred (too soon since last save)"), scheduleSaveRerun(MIN_SAVE_INTERVAL - (a - lastSaveTime) + 50), null;
+    (saveInProgress = !0), (lastSaveTime = a), (saveStartedAt = a);
     try {
         const a = gameState.totalPlayTime || 0,
             o = {

@@ -12,33 +12,16 @@ async function queuedGenerateText(e, t = {}, n = "Text Generation") {
             console.warn("[AI Queue] generateText not available, using fallback"),
             AIRequestQueue.getFallbackResponse(n, new Error("generateText not available"))
         );
-    gameState.pendingAIRequests || (gameState.pendingAIRequests = { text: [], image: [] });
-    const a = Date.now() + Math.random(),
-        o = {
-            id: a,
-            prompt: e,
-            options: Object.fromEntries(Object.entries(t).filter(([, e]) => "function" != typeof e)),
-            description: n,
-            timestamp: Date.now(),
-        };
-    gameState.pendingAIRequests.text.push(o),
-        console.log(`[AI Queue] 💾 Auto-persisted: ${n} (${gameState.pendingAIRequests.text.length} pending)`),
-        "function" == typeof saveGame && saveGame(!1).catch((e) => console.warn("[AI Queue] Save warning:", e));
+    // (Requests used to be copied into the save, with a full save per request, so a reload could
+    // re-run them. The re-run result went nowhere, so it was only wasted work — see
+    // restorePendingRequests — and the extra saves collided with the autosave.)
+    // unqueuedGenerateText: this already runs inside the queue; the queued generateText would
+    // enqueue a second time (see 25-init.js).
+    const raw = "function" == typeof window.unqueuedGenerateText ? window.unqueuedGenerateText : generateText;
     try {
-        const o = await AIRequestQueue.enqueue(() => generateText(e, t, n), n),
-            i = gameState.pendingAIRequests.text.findIndex((e) => e.id === a);
-        return (
-            -1 !== i &&
-                (gameState.pendingAIRequests.text.splice(i, 1),
-                console.log(
-                    `[AI Queue] ✅ Completed & removed: ${n} (${gameState.pendingAIRequests.text.length} remaining)`
-                )),
-            o
-        );
+        return await AIRequestQueue.enqueue(() => raw(e, t, n), n);
     } catch (e) {
-        console.error(`[AI Queue] Final fallback for ${n}:`, e);
-        const t = gameState.pendingAIRequests.text.findIndex((e) => e.id === a);
-        return -1 !== t && gameState.pendingAIRequests.text.splice(t, 1), AIRequestQueue.getFallbackResponse(n, e);
+        return console.error(`[AI Queue] Final fallback for ${n}:`, e), AIRequestQueue.getFallbackResponse(n, e);
     }
 }
 async function queuedGenerateTextPersistent(e) {
@@ -417,42 +400,13 @@ const ImageRequestQueue = {
                 "function" == typeof debouncedSave && debouncedSave();
         }
     },
+    // Requests saved here by an earlier session are not run again. Nothing was waiting on them: the
+    // callers (a chat reply, a scene image) were gone with the old page, and the re-run result was
+    // thrown away. Re-running only spent generations (and timed out, retried and re-saved in a
+    // pile when a save held a dozen stale image requests). So they're just cleared.
     async restorePendingRequests() {
-        if (!gameState.pendingAIRequests?.image || 0 === gameState.pendingAIRequests.image.length)
-            return void console.log("[Image Queue] No pending requests to restore");
-        const e = gameState.pendingAIRequests.image.length;
-        console.log(`[Image Queue] 🔄 Restoring ${e} pending image generation requests...`);
-        const t = [...gameState.pendingAIRequests.image];
-        gameState.pendingAIRequests.image = [];
-        let n = 0;
-        for (const e of t)
-            try {
-                const t = (Date.now() - e.timestamp) / 36e5;
-                if (t > 24) {
-                    console.log(`[Image Queue] ⏭️ Skipping stale request (${t.toFixed(1)}h old): ${e.description}`);
-                    continue;
-                }
-                console.log(`[Image Queue] 🔄 Re-queueing: ${e.description}`),
-                    n++,
-                    gameState.pendingAIRequests.image.push(e),
-                    this.enqueue(() => generateImage(e.prompt), e.description)
-                        .then((t) => {
-                            const n = gameState.pendingAIRequests.image.findIndex((t) => t.id === e.id);
-                            -1 !== n &&
-                                (gameState.pendingAIRequests.image.splice(n, 1),
-                                console.log(`[Image Queue] ✅ Restored request completed: ${e.description}`));
-                        })
-                        .catch((t) => {
-                            const n = gameState.pendingAIRequests.image.findIndex((t) => t.id === e.id);
-                            -1 !== n && gameState.pendingAIRequests.image.splice(n, 1),
-                                console.error(`[Image Queue] Restored request failed: ${e.description}`, t);
-                        });
-            } catch (t) {
-                console.error(`[Image Queue] Error restoring request ${e.description}:`, t);
-            }
-        "function" == typeof showNotification &&
-            n > 0 &&
-            showNotification(`🔄 Restored ${n} pending image requests`, "info", 4e3);
+        const n = gameState.pendingAIRequests?.image?.length || 0;
+        n > 0 && ((gameState.pendingAIRequests.image = []), console.log(`[Image Queue] Dropped ${n} request(s) left over from the last session`));
     },
     async enqueuePersistent(e) {
         const t = this.savePersistentRequest(e);
@@ -484,29 +438,10 @@ async function queuedGenerateImage(e, t = "Image Generation", n = {}) {
             console.warn("[Image Queue] generateImage not available, using fallback"),
             ImageRequestQueue.getFallbackResponse(t, new Error("generateImage not available"))
         );
-    gameState.pendingAIRequests || (gameState.pendingAIRequests = { text: [], image: [] });
-    const a = Date.now() + Math.random(),
-        o = { id: a, prompt: e, description: t, timestamp: Date.now() };
-    gameState.pendingAIRequests.image.push(o),
-        console.log(`[Image Queue] 💾 Auto-persisted: ${t} (${gameState.pendingAIRequests.image.length} pending)`),
-        "function" == typeof saveGame && saveGame(!1).catch((e) => console.warn("[Image Queue] Save warning:", e));
     try {
-        const o = await ImageRequestQueue.enqueue(() => generateImage(e, Object.keys(n).length ? n : void 0), t),
-            i = gameState.pendingAIRequests.image.findIndex((e) => e.id === a);
-        return (
-            -1 !== i &&
-                (gameState.pendingAIRequests.image.splice(i, 1),
-                console.log(
-                    `[Image Queue] ✅ Completed & removed: ${t} (${gameState.pendingAIRequests.image.length} remaining)`
-                )),
-            o
-        );
+        return await ImageRequestQueue.enqueue(() => generateImage(e, Object.keys(n).length ? n : void 0), t);
     } catch (e) {
-        console.error(`[Image Queue] Final fallback for ${t}:`, e);
-        const n = gameState.pendingAIRequests.image.findIndex((e) => e.id === a);
-        return (
-            -1 !== n && gameState.pendingAIRequests.image.splice(n, 1), ImageRequestQueue.getFallbackResponse(t, e)
-        );
+        return console.error(`[Image Queue] Final fallback for ${t}:`, e), ImageRequestQueue.getFallbackResponse(t, e);
     }
 }
 window.imageQueueDebug = {

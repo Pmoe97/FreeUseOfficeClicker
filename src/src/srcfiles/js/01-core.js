@@ -947,49 +947,18 @@ const gameBalance = {
                     "function" == typeof debouncedSave && debouncedSave();
             }
         },
+        // Requests saved here by an earlier session are not run again. Nothing was waiting on them: the
+        // callers (a chat reply, a scene image) were gone with the old page, and the re-run result was
+        // thrown away. Re-running only spent generations (and timed out, retried and re-saved in a
+        // pile when a save held a dozen stale image requests). So they're just cleared.
         async restorePendingRequests() {
-            if (!gameState.pendingAIRequests?.text || 0 === gameState.pendingAIRequests.text.length)
-                return void console.log("[AI Queue] No pending requests to restore");
-            const e = gameState.pendingAIRequests.text.length;
-            console.log(`[AI Queue] 🔄 Restoring ${e} pending text generation requests...`);
-            const t = [...gameState.pendingAIRequests.text];
-            gameState.pendingAIRequests.text = [];
-            let n = 0;
-            for (const e of t)
-                try {
-                    const t = (Date.now() - e.timestamp) / 36e5;
-                    if (t > 24) {
-                        console.log(
-                            `[AI Queue] ⏭️ Skipping stale request (${t.toFixed(1)}h old): ${e.description}`
-                        );
-                        continue;
-                    }
-                    console.log(`[AI Queue] 🔄 Re-queueing: ${e.description}`),
-                        n++,
-                        gameState.pendingAIRequests.text.push(e),
-                        this.enqueue(() => generateText(e.prompt, e.options || {}), e.description)
-                            .then((t) => {
-                                const n = gameState.pendingAIRequests.text.findIndex((t) => t.id === e.id);
-                                -1 !== n &&
-                                    (gameState.pendingAIRequests.text.splice(n, 1),
-                                    console.log(`[AI Queue] ✅ Restored request completed: ${e.description}`));
-                            })
-                            .catch((t) => {
-                                const n = gameState.pendingAIRequests.text.findIndex((t) => t.id === e.id);
-                                -1 !== n && gameState.pendingAIRequests.text.splice(n, 1),
-                                    console.error(`[AI Queue] Restored request failed: ${e.description}`, t);
-                            });
-                } catch (t) {
-                    console.error(`[AI Queue] Error restoring request ${e.description}:`, t);
-                }
-            "function" == typeof showNotification &&
-                n > 0 &&
-                showNotification(`🔄 Restored ${n} pending AI requests`, "info", 4e3);
+            const n = gameState.pendingAIRequests?.text?.length || 0;
+            n > 0 && ((gameState.pendingAIRequests.text = []), console.log(`[AI Queue] Dropped ${n} request(s) left over from the last session`));
         },
         async enqueuePersistent(e) {
             const t = this.savePersistentRequest(e);
             try {
-                const n = await this.enqueue(() => generateText(e.prompt, e.options || {}), e.description);
+                const n = await this.enqueue(() => (window.unqueuedGenerateText || generateText)(e.prompt, e.options || {}, e.description), e.description);
                 if ((this.completePersistentRequest(t), e.callback && "function" == typeof window[e.callback]))
                     try {
                         await window[e.callback](n, e.callbackData);

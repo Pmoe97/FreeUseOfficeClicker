@@ -146,11 +146,11 @@ async function initGame() {
             console.log("[Image Queue] Initialized with max concurrent requests:", ImageRequestQueue.maxConcurrent),
             "function" == typeof generateText &&
                 ((window.originalGenerateText = generateText),
-                (window.generateText = async (e, t, desc) => {
-                    // Prefer the explicit call-site description (passed through from
-                    // queuedGenerateText) — it's accurate and distinct per call. The old
-                    // content-sniffing heuristic mislabeled nearly everything "Social Post"
-                    // because almost every prompt contains the word "post" or "social".
+                // Prefer the explicit call-site description (passed through from
+                // queuedGenerateText) — it's accurate and distinct per call. The old
+                // content-sniffing heuristic mislabeled nearly everything "Social Post"
+                // because almost every prompt contains the word "post" or "social".
+                (window.describeTextRequest = (e, desc) => {
                     let n = desc || "Text Generation";
                     return (
                         !desc &&
@@ -166,12 +166,22 @@ async function initGame() {
                                       : e.includes("meeting") || e.includes("group")
                                         ? (n = "Meeting Content")
                                         : (e.includes("image") || e.includes("photo")) && (n = "Image Analysis")),
-                        console.log(
-                            `[Prompt] 📝 TEXT · ${n} (${String(e).length} chars):\n${String(e)}`
-                        ),
-                        await AIRequestQueue.enqueue(() => window.originalGenerateText(e, t), n)
+                        n
                     );
                 }),
+                // The raw call, with no queueing: queuedGenerateText already runs inside the
+                // queue and calls this. It used to call the queued generateText below, so every
+                // request sat in the queue twice — and once as many were in flight as the limit
+                // allowed, the outer ones held every slot while the inner ones waited for one.
+                (window.unqueuedGenerateText = async (e, t, desc) => {
+                    console.log(
+                        `[Prompt] 📝 TEXT · ${describeTextRequest(e, desc)} (${String(e).length} chars):\n${String(e)}`
+                    );
+                    return await window.originalGenerateText(e, t);
+                }),
+                // Everything else that calls generateText directly is queued here.
+                (window.generateText = async (e, t, desc) =>
+                    await AIRequestQueue.enqueue(() => window.unqueuedGenerateText(e, t, desc), describeTextRequest(e, desc))),
                 console.log("[AI Queue] Wrapped generateText with queue system")),
             gameState.onboarding || (gameState.onboarding = []),
             Array.isArray(gameState.employees) || (gameState.employees = []),

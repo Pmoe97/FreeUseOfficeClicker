@@ -30,6 +30,9 @@ const PATCH_NOTES = [
                     items: [
                         "<strong>FIXED:</strong> The game could freeze or crawl after you switched to another app or tab and came back (a phone call, answering a message). Coming back replays the time you were away, and that used to happen all at once; it now runs in short steps so the game stays responsive while it catches up.",
                         "<strong>FIXED:</strong> Changing a character's ethnicity re-rolled their hair colour (black hair turning brown or blonde). Skin tone and eyes still follow the ethnicity, but hair colour is left as you set it.",
+                        "<strong>FIXED:</strong> Reloading the game could freeze it: leftover boss/story image requests from the last session were started again all at once, timing out and retrying. They're now dropped on load, since nothing was waiting for those images anymore. Requests also no longer trigger a save each.",
+                        "<strong>FIXED:</strong> Every text request was queued twice, so once enough were running at the same time the queue could jam until they timed out. Each request now takes one slot.",
+                        "<strong>FIXED:</strong> An autosave that landed while another save was running was thrown away, so a change made right then (a new hire, say) could be missing after a reload. It is now retried a moment later.",
                         "<strong>FIXED:</strong> Scene visualizations in POV mode drew a random man in the background. The scene prompt no longer includes the player when you're the camera, and phrases like \"next to the player\" or \"with the player\" are removed before the image is made.",
                     ],
                 },
