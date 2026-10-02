@@ -49,15 +49,51 @@ function fastForwardGameTime(deltaMs) {
     }
     updateTimeDisplay();
 }
-function applyOfflineTimePassage(realElapsedMs, label = "offline") {
+// The same replay as fastForwardGameTime, but in short slices with the UI free in between. Coming
+// back to the tab replays up to 48 game-hours (hourly NPC updates, daily payroll and events) and
+// doing that in one blocking call froze the page, worst on phones and with big saves. The live
+// clock stays held (_offlinePaused) until the last slice so nothing interleaves with the replay.
+let _catchupRemainingMs = 0,
+    _catchupRunning = !1;
+const OFFLINE_CATCHUP_SLICE_MS = 12;
+function fastForwardGameTimeSliced(deltaMs) {
+    if (!(deltaMs > 0)) return;
+    _catchupRemainingMs += deltaMs;
+    if (_catchupRunning) return; // a replay is already under way (tab hidden and shown again): it takes the extra time
+    _catchupRunning = !0;
+    gameState.time._offlinePaused = !0;
+    const slice = () => {
+        if (!gameState.time) return void (_catchupRunning = !1);
+        try {
+            for (const start = performance.now(); _catchupRemainingMs > 0 && performance.now() - start < OFFLINE_CATCHUP_SLICE_MS; ) {
+                const prevHour = timeHelpers.getHour(),
+                    prevDay = timeHelpers.getDay(),
+                    step = Math.min(_catchupRemainingMs, 36e5);
+                (gameState.time.currentTime += step), (_catchupRemainingMs -= step);
+                const h = timeHelpers.getHour(),
+                    day = timeHelpers.getDay();
+                h !== prevHour && onHourChange(h, prevHour), day !== prevDay && onDayChange(day);
+            }
+        } catch (e) {
+            console.warn("[Offline Time] Catch-up error:", e), (_catchupRemainingMs = 0);
+        }
+        if (_catchupRemainingMs > 0) return void setTimeout(slice, 0);
+        _catchupRunning = !1;
+        updateTimeDisplay();
+        gameState.time._offlinePaused = document.hidden; // hidden again meanwhile: stay held until the next return
+    };
+    slice();
+}
+function applyOfflineTimePassage(realElapsedMs, label = "offline", sliced = !1) {
     if (!gameState.time) return;
-    gameState.time._offlinePaused = !1;
+    // A replay still running keeps the clock held; otherwise release it as before.
+    _catchupRunning || (gameState.time._offlinePaused = !1);
     if (!gameState.time.enabled || !(realElapsedMs > 6e4)) return;
     const delta = Math.min(realElapsedMs * OFFLINE_TIME_SCALE, OFFLINE_MAX_CATCHUP_GAME_MS);
     console.log(
         `[Offline Time] ${label}: ${(realElapsedMs / 36e5).toFixed(2)}h away → +${(delta / 36e5).toFixed(1)} game-hours (x${OFFLINE_TIME_SCALE})`
     ),
-        fastForwardGameTime(delta);
+        sliced ? fastForwardGameTimeSliced(delta) : fastForwardGameTime(delta);
 }
 function updateGameTime(e) {
     if (!gameState.time || !gameState.time.enabled || gameState.time.paused || gameState.time._offlinePaused)

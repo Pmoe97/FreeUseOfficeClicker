@@ -498,7 +498,7 @@ function upgradeUnifiedAppearanceEdit() {
                     put("hair.texture", ed.physical.hair.texture),
                     syncUnifiedStructured(),
                     showNotification(
-                        "🧬 " + (ed.name || "Character") + " is now " + formatEthnicity(this.value) + " — skin tone, eyes and hair colour re-rolled. Fine-tune them above."
+                        "🧬 " + (ed.name || "Character") + " is now " + formatEthnicity(this.value) + " — skin tone and eyes re-rolled. Fine-tune them above."
                     );
             });
         const gType = byPath("genitals.type");

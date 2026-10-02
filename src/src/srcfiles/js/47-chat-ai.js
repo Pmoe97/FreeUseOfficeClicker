@@ -557,6 +557,8 @@ async function visualizeCurrentScene() {
                 "human" !== l
                     ? `\n⚠️ CRITICAL: ${n} is a ${l}${c ? ` with ${c}` : ""}. Include these non-human features!`
                     : "",
+            // POV / selfie: the player is the camera, so the scene must not contain them.
+            behindCam = ["pov", "selfie"].includes(gameState.settings?.imagePerspective),
             p =
                 (gameState.chatHistory[t]
                     ?.filter((e) => e.isPlayer)
@@ -568,7 +570,7 @@ async function visualizeCurrentScene() {
                     ?.slice(-3)
                     .map((e) => e.content)
                     .join(" "),
-                `You are generating an image prompt for the CURRENT MOMENT in this conversation.\n\nRecent conversation between player and ${n}:\n${a}\n\n⚠️ CHARACTER ACCURACY - MUST FOLLOW:\n${n}: ${o}\n- Species/Race: ${l}${c ? ` (${c})` : ""}\n- Gender: ${e.gender || "female"}${d}\n\nPlayer: ${r}\n\n📊 SCENE PARTICIPANTS: This scene involves EXACTLY 2 people - ${n} and the player. Do NOT add extra people unless the conversation explicitly mentions others being present.\n\nBased on the conversation context, create a DETAILED, SPECIFIC image generation prompt showing:\n1. The exact current activity or scene (what are they doing RIGHT NOW based on the last messages?)\n2. BOTH characters (${n} and the player) - their poses, expressions, body language\n3. ${n}'s distinctive features (${"human" !== l ? `their ${l} features, ` : ""}hair color, eye color, body type)\n4. The specific location/setting details (where are they?)\n5. Current mood/atmosphere from the conversation\n\n⚠️ ACCURACY RULES:\n- Include ${n}'s EXACT physical traits from the description above\n- ${"human" !== l ? `Show ${n} as a ${l} with appropriate non-human features!` : ""}\n- Only 2 people in the image unless the conversation mentions others\n\nCRITICAL: Write ONLY the image description itself. NO markdown, NO headers, NO labels. Just the raw visual description.\n\nImage prompt (50-150 words):`);
+                `You are generating an image prompt for the CURRENT MOMENT in this conversation.\n\nRecent conversation between player and ${n}:\n${a}\n\n⚠️ CHARACTER ACCURACY - MUST FOLLOW:\n${n}: ${o}\n- Species/Race: ${l}${c ? ` (${c})` : ""}\n- Gender: ${e.gender || "female"}${d}${behindCam ? `\n\n📷 CAMERA: The player is the camera (first-person view) and is NOT in the picture. Show ONLY ${n}, looking toward the viewer. Do NOT draw, mention, or hint at the player or any other person. Never write "the player", "with the player", "next to the player" or "close to the player" - say "the camera" if you must.` : `\n\nPlayer: ${r}`}\n\n📊 SCENE PARTICIPANTS: ${behindCam ? `This scene shows EXACTLY 1 person - ${n}.` : `This scene involves EXACTLY 2 people - ${n} and the player. Do NOT add extra people unless the conversation explicitly mentions others being present.`}\n\nBased on the conversation context, create a DETAILED, SPECIFIC image generation prompt showing:\n1. The exact current activity or scene (what are they doing RIGHT NOW based on the last messages?)\n2. ${behindCam ? `${n} - their pose, expression, body language toward the viewer` : `BOTH characters (${n} and the player) - their poses, expressions, body language`}\n3. ${n}'s distinctive features (${"human" !== l ? `their ${l} features, ` : ""}hair color, eye color, body type)\n4. The specific location/setting details (where are they?)\n5. Current mood/atmosphere from the conversation\n\n⚠️ ACCURACY RULES:\n- Include ${n}'s EXACT physical traits from the description above\n- ${"human" !== l ? `Show ${n} as a ${l} with appropriate non-human features!` : ""}\n- ${behindCam ? `Only ${n} in the image - nobody else, no background figures` : "Only 2 people in the image unless the conversation mentions others"}\n\nCRITICAL: Write ONLY the image description itself. NO markdown, NO headers, NO labels. Just the raw visual description.\n\nImage prompt (50-150 words):`);
         let m = await queuedGenerateText(
             p,
             {
@@ -897,6 +899,7 @@ async function generateAutoVisualization(e) {
             (g = g.trim()),
             t.customPrompt && t.customPrompt.trim() && (g += ", " + t.customPrompt.trim()),
             console.log("[Auto-Vis] Generated prompt:", g.substring(0, 100) + "...");
+        "first-person" === m && (g = scrubPlayerReferences(g)); // the player is the camera here too
         const h = applyPerspective(g);
         console.log(
             "[Auto-Vis] Applying style:",
@@ -1100,6 +1103,7 @@ async function regenerateAutoVisualization(e, t, n) {
             (b = b.replace(/\n\s*-\s+\*\*.*?:\*\*/g, "")),
             (b = b.trim()),
             console.log("[Auto-Vis Regen] New prompt:", b.substring(0, 100) + "...");
+        "first-person" === u && (b = scrubPlayerReferences(b));
         const v = applyPerspective(b);
         console.log(
             "[Auto-Vis Regen] Applying style:",

@@ -20,6 +20,22 @@
 //             an item starting with "• " renders as a sub-point of the one above.
 const PATCH_NOTES = [
         {
+            version: "202610021200",
+            date: "October 2, 2026",
+            title: "🛠️ Tab Switching, Hair Colour & POV Scenes",
+            summary: "Fixes for three things players reported on Discord.",
+            changes: [
+                {
+                    category: "🛠️ Fixes",
+                    items: [
+                        "<strong>FIXED:</strong> The game could freeze or crawl after you switched to another app or tab and came back (a phone call, answering a message). Coming back replays the time you were away, and that used to happen all at once; it now runs in short steps so the game stays responsive while it catches up.",
+                        "<strong>FIXED:</strong> Changing a character's ethnicity re-rolled their hair colour (black hair turning brown or blonde). Skin tone and eyes still follow the ethnicity, but hair colour is left as you set it.",
+                        "<strong>FIXED:</strong> Scene visualizations in POV mode drew a random man in the background. The scene prompt no longer includes the player when you're the camera, and phrases like \"next to the player\" or \"with the player\" are removed before the image is made.",
+                    ],
+                },
+            ],
+        },
+        {
             version: "202609271800",
             date: "September 27, 2026",
             title: "📈 Skills Grow on Their Own",

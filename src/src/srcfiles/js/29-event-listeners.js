@@ -1970,7 +1970,7 @@ function setupEventListeners() {
             } else {
                 const awayMs = Date.now() - (gameState.pageHiddenTime || Date.now());
                 checkAfkIncome(awayMs),
-                    applyOfflineTimePassage(awayMs, "tab refocus"),
+                    applyOfflineTimePassage(awayMs, "tab refocus", !0),
                     (gameState.pageHiddenTime = null),
                     (gameState.lastInteractionTime = Date.now());
             }

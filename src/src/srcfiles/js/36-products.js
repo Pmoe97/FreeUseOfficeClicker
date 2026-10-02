@@ -106,15 +106,46 @@ function applyImageStyle(e) {
         { prompt: r }
     );
 }
+// When the player IS the camera (POV / selfie) they must not be drawn. The text model likes to
+// write "next to the player" / "with the player" anyway, and the image model reads that as a
+// second person (usually a man) hovering in the background. Turn looks at the player into looks
+// at the camera and drop every other mention.
+function scrubPlayerReferences(e) {
+    if (!e || "string" != typeof e) return e;
+    const who = "(?:the\\s+)?(?:player|boss|viewer)(?:'s)?",
+        t = e
+            .replace(
+                new RegExp(`\\b(looking|looks|smiling|smiles|gazing|gazes|staring|stares|glancing|glances|winking|winks|eye contact)\\s+(?:at|with)\\s+${who}`, "gi"),
+                (m, v) => (/eye contact/i.test(v) ? "eye contact with the camera" : `${v} at the camera`)
+            )
+            .replace(
+                new RegExp(`,?\\s*\\b(?:(?:and|&)\\s+${who}|(?:close(?:\\s+to)?|closer\\s+to|next(?:\\s+to)?|near|beside|alongside|with|facing|opposite|across\\s+from|touching|kissing|hugging|embracing|leaning\\s+(?:on|against|into))\\s+${who})(?=\\W|$)`, "gi"),
+                ""
+            )
+            .replace(/\b(?:two|2)\s+(?:people|persons|characters)\b/gi, "one person")
+            .replace(/\bthe\s+player\b/gi, "the camera");
+    return t
+        .replace(/\(\s*\)/g, "")
+        .replace(/([,;:])\s*([,.;:])/g, "$2")
+        .replace(/\s+([,.;:])/g, "$1")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+}
 function applyPerspective(e, t = !1) {
     if (t) return e;
     const n = gameState.settings?.imagePerspective || "standard";
     if ("standard" === n) return e;
-    const a = {
-        pov: "POV shot, first-person perspective, from viewer point of view, no male figure visible, no man in frame, subjective camera angle, intimate close perspective, as if you are there",
-        selfie: "selfie photo, subject holding camera at arm's length, looking directly at camera, smartphone selfie style, casual self-portrait",
-    }[n];
-    return a ? (console.log(`[Perspective] Applying ${n} perspective`), `${e}, ${a}`) : e;
+    const g = String((gameState.playerProfile || {}).gender || "").toLowerCase(),
+        nobody = /fem|woman|girl/.test(g)
+            ? "no other person visible in frame, no second figure"
+            : "no male figure visible, no man in frame",
+        a = {
+            pov: `POV shot, first-person perspective, from viewer point of view, ${nobody}, subjective camera angle, intimate close perspective, as if you are there`,
+            selfie: "selfie photo, subject holding camera at arm's length, looking directly at camera, smartphone selfie style, casual self-portrait",
+        }[n];
+    return a
+        ? (console.log(`[Perspective] Applying ${n} perspective`), `${"string" == typeof e ? scrubPlayerReferences(e) : e}, ${a}`)
+        : e;
 }
 function generateEmployeeStat(e) {
     const t = gameState.hrSettings.startingStatRanges[e];

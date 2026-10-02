@@ -63,9 +63,11 @@ function lookFitsBasis(base, gender, race, ethnicity) {
     return !ethnicity || String(ethnicity).split("-")[0] === base.ethnicity;
 }
 // Re-rolls the ethnicity-driven parts of a human's look (skin tone, eye colour and shape, hair
-// colour and texture) and records the ethnicity on physical, where image prompts read it.
+// texture) and records the ethnicity on physical, where image prompts read it.
 // Changing ethnicity used to update only employee.ethnicity, so the prompts kept describing
 // the old one ("East Asian ... fair skin" for a character now set to Caucasian, and so on).
+// Hair COLOUR is deliberately left alone: it isn't a fixed trait of any ethnicity, and
+// re-rolling it turned a black-haired character blonde just because her ethnicity was edited.
 // Returns the rolled features, or null when there is no ethnicity to roll from.
 function applyEthnicityLook(physical, ethnicity) {
     if (!physical || !ethnicity) return null;
@@ -80,12 +82,12 @@ function applyEthnicityLook(physical, ethnicity) {
     physical.skin.tone = f.skinTone;
     physical.eyes.color = f.eyeColor;
     physical.eyes.shape = f.eyeShape;
-    physical.hair.color = f.hairColor;
+    physical.hair.color || (physical.hair.color = f.hairColor); // only fills a blank
     f.hairTexture && (physical.hair.texture = f.hairTexture);
     // Older saves also carry flat copies; keep those in step where they exist.
     "skinTone" in physical && (physical.skinTone = f.skinTone);
     "eyeColor" in physical && (physical.eyeColor = f.eyeColor);
-    "hairColor" in physical && (physical.hairColor = f.hairColor);
+    "hairColor" in physical && !physical.hairColor && (physical.hairColor = f.hairColor);
     return f;
 }
 function generateDetailedPhysicalAppearance(e = "female", t = "human", n = null) {

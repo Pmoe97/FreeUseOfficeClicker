@@ -605,7 +605,7 @@ function showCharacterConfirmationModal(e, t, n = "URL") {
                 set("#confirmEyeShape", r.eyes.shape),
                 set("#confirmHairColor", r.hair.color),
                 set("#confirmHairTexture", r.hair.texture),
-                showNotification(`🧬 Skin tone, eyes and hair colour updated for ${formatEthnicity(ethSel.value)}.`, "info");
+                showNotification(`🧬 Skin tone and eyes updated for ${formatEthnicity(ethSel.value)}.`, "info");
         }),
         a.querySelector("#confirmHireBtn")?.addEventListener("click", async () => {
             const e = a.querySelector("#confirmHireBtn");
