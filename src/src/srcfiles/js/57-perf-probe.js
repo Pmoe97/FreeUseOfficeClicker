@@ -107,22 +107,61 @@ window.PerfProbe = (function () {
         return { n, mb: +(chars / 1048576).toFixed(1) };
     }
 
-    function measureFps(ms = 2000) {
+    const domCount = () => document.getElementsByTagName("*").length,
+        heapMB = () => (performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null);
+
+    // Watches the page for `ms` while the player plays: frame rate (per second), slow frames, timer
+    // drift, DOM churn, and the stalls / saves that fall inside the window. onTick gets the whole
+    // seconds left. The window ends on a timer, not a frame, so hiding the tab can't leave it hanging.
+    function measureWindow(ms, onTick) {
         return new Promise((resolve) => {
-            if (document.hidden || !window.requestAnimationFrame) return resolve(null);
-            let frames = 0;
-            const t0 = performance.now(),
-                tick = (now) => (now - t0 < ms ? (frames++, requestAnimationFrame(tick)) : resolve(Math.round((frames * 1000) / (now - t0))));
-            requestAnimationFrame(tick);
+            const startWall = Date.now(),
+                t0 = performance.now(),
+                w = { ms, frames: 0, slow: 0, worstFrame: 0, perSec: [], lagWorst: 0, lagOver100: 0, muts: 0, domStart: domCount(), heapStart: heapMB() };
+            let lf = t0,
+                secStart = t0,
+                secFrames = 0,
+                lastTimer = t0,
+                raf;
+            const mo = new MutationObserver((l) => (w.muts += l.length));
+            mo.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
+            const loop = (n) => {
+                const d = n - lf;
+                lf = n;
+                if (!document.hidden && d < 1000) (w.frames++, secFrames++, d > 50 && w.slow++, d > w.worstFrame && (w.worstFrame = Math.round(d)));
+                n - secStart >= 1000 && (w.perSec.push(secFrames), (secFrames = 0), (secStart = n));
+                raf = requestAnimationFrame(loop);
+            };
+            raf = requestAnimationFrame(loop);
+            const timer = setInterval(() => {
+                const n = performance.now(),
+                    d = n - lastTimer - 250;
+                lastTimer = n;
+                if (!document.hidden) {
+                    d > w.lagWorst && (w.lagWorst = Math.round(d));
+                    d > 100 && w.lagOver100++;
+                }
+                const left = Math.max(0, ms - (n - t0));
+                onTick && onTick(Math.ceil(left / 1000));
+                if (left > 0) return;
+                clearInterval(timer), cancelAnimationFrame(raf), mo.disconnect();
+                w.secs = +((n - t0) / 1000).toFixed(1);
+                w.domEnd = domCount();
+                w.heapEnd = heapMB();
+                w.long = P.long.filter((x) => x.at >= startWall);
+                w.saves = P.saves.filter((x) => x.at >= startWall);
+                w.hidden = P.vis.some((v) => v.at >= startWall && v.ev === "hidden");
+                resolve(w);
+            }, 250);
         });
     }
 
-    P.report = async function () {
+    P.report = async function (ms = 10000, onTick) {
         const gs = (0, eval)("gameState"),
             time = (t) => new Date(t).toTimeString().slice(0, 8),
             L = [],
             add = (s) => L.push(s);
-        const fps = await measureFps();
+        const w = await measureWindow(ms, onTick);
         let imgs = { n: "?", mb: "?" };
         try {
             imgs = liveImages();
@@ -136,7 +175,15 @@ window.PerfProbe = (function () {
         add(`Screen ${screen.width}x${screen.height} @${window.devicePixelRatio}x, viewport ${innerWidth}x${innerHeight}, cores ${navigator.hardwareConcurrency || "?"}, memory ${navigator.deviceMemory || "?"} GB`);
         add(`Page open ${Math.round((Date.now() - P.start) / 1000)} s · tab "${tabName()}" · employees ${gs.employees?.length ?? "?"} · cash ${Math.round(gs.cash || 0)}`);
         add(`Memory: JS heap ${performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) + " MB" : "n/a"} · DOM nodes ${document.getElementsByTagName("*").length} · <img> on page ${document.images.length} (loaded ${domImgs.length}, ~${decodedMB} MB decoded) · images held in game state ${imgs.n} (${imgs.mb} MB as text)`);
-        add(`Frame rate (2 s sample, idle): ${fps === null ? "n/a (hidden)" : fps + " fps"} · running CSS animations ${document.getAnimations ? document.getAnimations().filter((a) => a.playState === "running").length : "n/a"}`);
+        const wl = w.long.reduce((a, x) => a + x.ms, 0);
+        add(
+            w.frames < 3
+                ? `MEASURED ${w.secs} s: only ${w.frames} frame(s) were drawn — the page was not painting (frozen, or the window was in the background)`
+                : `MEASURED ${w.secs} s of play: ${Math.round(w.frames / w.secs)} fps average (per second: ${w.perSec.join(" ") || "n/a"}) · frames over 50 ms: ${w.slow}, slowest ${w.worstFrame} ms`
+        );
+        add(`  Stalls in window: ${P.longTaskApi ? `${w.long.length}, worst ${w.long.reduce((a, x) => Math.max(a, x.ms), 0)} ms, ${wl} ms total` : "n/a (not supported by this browser)"} · timer lag worst ${w.lagWorst} ms, ${w.lagOver100} ticks over 100 ms`);
+        add(`  DOM changes ${Math.round(w.muts / w.secs)}/s · DOM nodes ${w.domStart} → ${w.domEnd} · JS heap ${w.heapStart ?? "n/a"} → ${w.heapEnd ?? "n/a"} MB · saves in window ${w.saves.length}${w.saves.length ? ` (slowest ${Math.max(...w.saves.map((x) => x.ms))} ms)` : ""} · tab hidden during window: ${w.hidden ? "yes" : "no"}`);
+        add(`  Running CSS animations: ${document.getAnimations ? document.getAnimations().filter((a) => a.playState === "running").length : "n/a"}`);
         const lastDur = typeof lastSaveDurationMs !== "undefined" ? lastSaveDurationMs : "n/a";
         add(`Saves: ${P.saveCount} this session, avg ${P.saveCount ? Math.round(P.saveTotalMs / P.saveCount) : 0} ms, slowest ${P.saveMaxMs} ms, last ${lastDur} ms`);
         P.saves.slice(-8).forEach((s) => add(`  ${time(s.at)} ${s.slot} ${s.ms} ms${s.kb ? ` (${s.kb} KB)` : ""}`));
@@ -155,6 +202,36 @@ window.PerfProbe = (function () {
         add(`Recent warnings/errors (${bad.length}):`);
         bad.forEach((e) => add(`  ${time(e.t)} [${e.level}] ${String(e.text).replace(/\s+/g, " ").slice(0, 160)}`));
         return L.join("\n");
+    };
+
+    // The button's flow: close Settings so the player can play, count down in a small banner,
+    // then reopen Settings → Logging with the finished report.
+    P.lastReport = "";
+    P.measuring = !1;
+    P.runMeasurement = async function (seconds = 10) {
+        if (P.measuring) return;
+        P.measuring = !0;
+        const modal = document.getElementById("settingsModal"),
+            panel = document.getElementById("settingsPanel"),
+            banner = document.createElement("div");
+        modal && (modal.style.display = "none");
+        panel && (panel.hidden = !0);
+        banner.style.cssText =
+            "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100200;pointer-events:none;padding:10px 18px;border-radius:999px;background:rgba(20,20,30,.92);color:#fff;border:1px solid var(--l-indigo,#667eea);font-weight:600;font-size:.9rem;box-shadow:0 4px 18px rgba(0,0,0,.5);white-space:nowrap";
+        document.body.appendChild(banner);
+        const show = (n) => (banner.textContent = `📊 Measuring… play normally (${n} s)`);
+        show(seconds);
+        try {
+            P.lastReport = await P.report(seconds * 1000, show);
+        } catch (e) {
+            P.lastReport = "Couldn't build the report: " + e.message;
+        }
+        banner.remove();
+        P.measuring = !1;
+        modal && (modal.style.display = "flex");
+        const tab = document.querySelector('.settings-tab-btn[data-settings-tab="logging"]');
+        tab && tab.click();
+        typeof showNotification === "function" && showNotification("📊 Measurement done — tap Copy report", "success");
     };
 
     // Clipboard, with the old textarea route for browsers that refuse the modern one.
