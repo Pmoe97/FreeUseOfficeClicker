@@ -42,8 +42,8 @@ In document order (`index.html`):
    `window.root` onto `window`. The code used to be one inline `<script>`, where Perchance
    resolves those bare names itself; external files don't get that. **If you add an
    `{import:…}` to `main.pjs`, add its name to the bridge list too.**
-4. `js/00-bootstrap.js` … `js/56-patch-notes.js`, in order. `53-exports.js` registers
-   `DOMContentLoaded → initGame`; 54–56 load after it, which is fine because nothing in
+4. `js/00-bootstrap.js` … `js/57-perf-probe.js`, in order. `53-exports.js` registers
+   `DOMContentLoaded → initGame`; 54–57 load after it, which is fine because nothing in
    them runs until the game has booted (a save, a click).
 5. A tiny inline script (`cycleCashDisplay`), then `css/01-theme.css` … `css/22-story.css`.
    The stylesheet stays *after* the scripts on purpose: that's where the old `<style>` block
@@ -156,6 +156,7 @@ theme:picker | codemod:colors | colors:inventory`. All of them read the whole so
 | `53-exports.js` | 11 KB | Final window.* export chain + DOMContentLoaded boot listener (initGame). |
 | `54-image-store.js` | 16 KB | Image store: every image kept once in its own kv entry (`fuoc_img_<id>`, content-hashed); saves hold `fuocimg:<id>` references. Save/load/export hooks, garbage collection, Settings → Data storage report. |
 | `55-cheats.js` | 23 KB | Cheats & Debugging panel, rendered into `#cheatsModal` on open (`openCheatPanel`). |
+| `57-perf-probe.js` | 8 KB | `window.PerfProbe`: always-on recorder (long tasks, timer lag, tab hide/show, save timings) + `report()` behind Settings → Logging → "Copy performance report". |
 | `56-patch-notes.js` | 275 KB | `PATCH_NOTES` (newest first — add releases at the top) + the collapsible renderer `loadPatchNotes`. |
 
 ## CSS files (cascade order)

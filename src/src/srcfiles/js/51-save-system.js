@@ -166,6 +166,7 @@ function scheduleSaveRerun(delay) {
 function noteSaveFinished(slot, bytes) {
     const ms = Date.now() - saveStartedAt;
     (lastSaveDurationMs = ms),
+        window.PerfProbe && window.PerfProbe.noteSave(slot, ms, bytes),
         ms > SLOW_SAVE_MS && console.warn(`[SaveManager] ⏱ Slow save: ${ms} ms${bytes ? ` (${Math.round(bytes / 1024)} KB)` : ""} → slot "${slot}"`),
         saveRerunWanted && ((saveRerunWanted = !1), scheduleSaveRerun(Math.max(1e3, 2 * ms)));
 }
@@ -195,11 +196,11 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
         // An auto-save that finds another save running used to be dropped, and nothing retried it,
         // so what changed since that save began (a new hire, a purchase) stayed unsaved until the
         // next 5 s tick — and a reload before that lost it. Now one follow-up is queued instead.
-        if ("auto" === t) return console.log("[SaveManager] Auto-save deferred (save already in progress)"), (saveRerunWanted = !0), null;
+        if ("auto" === t) return (saveRerunWanted = !0), null; // (not logged: it happens often and would crowd the console mirror)
         for (; saveInProgress; ) await new Promise((e) => setTimeout(e, 50));
     }
     if ("auto" === t && a - lastSaveTime < MIN_SAVE_INTERVAL)
-        return console.log("[SaveManager] Auto-save deferred (too soon since last save)"), scheduleSaveRerun(MIN_SAVE_INTERVAL - (a - lastSaveTime) + 50), null;
+        return scheduleSaveRerun(MIN_SAVE_INTERVAL - (a - lastSaveTime) + 50), null;
     (saveInProgress = !0), (lastSaveTime = a), (saveStartedAt = a);
     try {
         const a = gameState.totalPlayTime || 0,

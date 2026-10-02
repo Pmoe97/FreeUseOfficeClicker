@@ -453,6 +453,15 @@ window.renderLoggingSettings = function () {
         `<textarea id="logMirrorCopyArea" readonly style="position:absolute;left:-9999px;top:-9999px;opacity:0" aria-hidden="true"></textarea>` +
         `</div>`;
 
+    // Performance report card (see 57-perf-probe.js): a copy-paste summary for "it lags / gets hot" reports.
+    html +=
+        `<div style="${cardCss}">` +
+        `<h3 style="margin:0 0 6px 0;color:var(--accent)">📱 Performance Report</h3>` +
+        `<p style="color:var(--text-dim);font-size:.82rem;margin:0 0 10px 0">If the game is slow, freezes or makes your device hot: play for a minute (switch away and back if that's when it happens), then tap this and paste the result to the developer. It holds timings and counts only. No save data.</p>` +
+        `<button id="perfReportCopy" style="${btnCss("#2e7d52")}">📋 Copy performance report</button>` +
+        `<textarea id="perfReportOut" readonly style="display:none;width:100%;height:180px;margin-top:10px;background:var(--l-bg-black);color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;box-sizing:border-box"></textarea>` +
+        `</div>`;
+
     // Header card: master + protected level switches.
     html +=
         `<div style="${cardCss}">` +
@@ -602,6 +611,26 @@ window.renderLoggingSettings = function () {
         autoBox.addEventListener("change", () => {
             ui.mirrorAutoscroll = autoBox.checked;
             scrollMirror();
+        });
+
+    const perfBtn = root.querySelector("#perfReportCopy");
+    if (perfBtn)
+        perfBtn.addEventListener("click", async () => {
+            const out = root.querySelector("#perfReportOut");
+            perfBtn.disabled = true;
+            perfBtn.textContent = "⏳ Measuring (2 s)…";
+            try {
+                const text = window.PerfProbe ? await window.PerfProbe.report() : "Performance probe not loaded.";
+                out.style.display = "block";
+                out.value = text;
+                const ok = window.PerfProbe && (await window.PerfProbe.copyText(text, out));
+                typeof showNotification === "function" &&
+                    showNotification(ok ? "📋 Report copied to clipboard" : "Select the text below and copy it manually", ok ? "success" : "info");
+            } catch (e) {
+                typeof showNotification === "function" && showNotification("Couldn't build the report: " + e.message, "error");
+            }
+            perfBtn.disabled = false;
+            perfBtn.textContent = "📋 Copy performance report";
         });
 
     const clearBtn = root.querySelector("#logMirrorClear");
