@@ -299,6 +299,23 @@ async function initGame() {
             }),
             (window.__productsDelegationBound__ = !0));
     }
+    // Diagnostics for "the game freezes / my phone gets hot" reports: note, at most every 3 s,
+    // when something blocks the main thread for a quarter second or more. It shows in the
+    // Settings → Logging console mirror, so a phone can report it without dev tools.
+    try {
+        if (window.PerformanceObserver && !window.__longTaskObserver) {
+            let lastNote = 0;
+            (window.__longTaskObserver = new PerformanceObserver((list) => {
+                list.getEntries().forEach((t) => {
+                    const now = Date.now();
+                    t.duration >= 250 &&
+                        !document.hidden &&
+                        now - lastNote > 3e3 &&
+                        ((lastNote = now), console.warn(`[Perf] ⏱ Main thread blocked for ${Math.round(t.duration)} ms`));
+                });
+            })).observe({ entryTypes: ["longtask"] });
+        }
+    } catch (e) {}
     window.__gameIntervalIds__ && window.__gameIntervalIds__.forEach((e) => clearInterval(e)),
         (window.__gameIntervalIds__ = []),
         window.__gameIntervalIds__.push(setInterval(gameTick, 100)),

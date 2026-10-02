@@ -143,9 +143,14 @@ async function saveGame(e = !0, force = !1) {
 let saveInProgress = !1,
     lastSaveTime = 0,
     saveStartedAt = 0,
-    saveRerunTimer = null;
+    lastSaveDurationMs = 0,
+    saveRerunWanted = !1,
+    saveRerunTimer = null,
+    autosaveBytes = 0,
+    autosavesSinceSizeCheck = 0;
 const MIN_SAVE_INTERVAL = 500,
-    SAVE_STALE_MS = 3e4;
+    SAVE_STALE_MS = 3e4,
+    SLOW_SAVE_MS = 1e3;
 // One deferred auto-save, however many were turned away meanwhile.
 function scheduleSaveRerun(delay) {
     saveRerunTimer ||
@@ -153,6 +158,20 @@ function scheduleSaveRerun(delay) {
             saveRerunTimer = null;
             saveGame(!1).catch(() => {});
         }, Math.max(50, delay)));
+}
+// Called when a save ends. Notes how long it took (a phone can take seconds, and every save is
+// main-thread work: if they overlap the page crawls and the phone heats up) and runs the one
+// auto-save that was turned away meanwhile — after a pause that grows with the save time, so
+// slow saves never run back to back.
+function noteSaveFinished(slot, bytes) {
+    const ms = Date.now() - saveStartedAt;
+    (lastSaveDurationMs = ms),
+        ms > SLOW_SAVE_MS && console.warn(`[SaveManager] ⏱ Slow save: ${ms} ms${bytes ? ` (${Math.round(bytes / 1024)} KB)` : ""} → slot "${slot}"`),
+        saveRerunWanted && ((saveRerunWanted = !1), scheduleSaveRerun(Math.max(1e3, 2 * ms)));
+}
+// The autosave timer fires every 5 s, but not again until the last save has had time to breathe.
+function autosaveDue() {
+    return !saveInProgress && Date.now() - saveStartedAt >= Math.max(5e3, 4 * lastSaveDurationMs);
 }
 async function saveGameToSlot(e, t = "manual", n = !0) {
     if (isResetting) return null;
@@ -176,7 +195,7 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
         // An auto-save that finds another save running used to be dropped, and nothing retried it,
         // so what changed since that save began (a new hire, a purchase) stayed unsaved until the
         // next 5 s tick — and a reload before that lost it. Now one follow-up is queued instead.
-        if ("auto" === t) return console.log("[SaveManager] Auto-save deferred (save already in progress)"), scheduleSaveRerun(250), null;
+        if ("auto" === t) return console.log("[SaveManager] Auto-save deferred (save already in progress)"), (saveRerunWanted = !0), null;
         for (; saveInProgress; ) await new Promise((e) => setTimeout(e, 50));
     }
     if ("auto" === t && a - lastSaveTime < MIN_SAVE_INTERVAL)
@@ -272,7 +291,12 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
         } catch (e) {
             console.warn("[ImageStore] Couldn't store images separately — saving them inline:", e);
         }
-        (o.meta.bytes = estimateSize(o)), // stamp serialized size for manifest + size logging
+        // Stamp the serialized size for the manifest + size logging. Measuring means serializing the whole
+        // save a second time, so the live autosave slot (written every 5 s) re-measures only every 12th write.
+        (o.meta.bytes =
+            "autosave" === e && "auto" === t && autosaveBytes && ++autosavesSinceSizeCheck % 12
+                ? autosaveBytes
+                : ((autosavesSinceSizeCheck = 0), (autosaveBytes = estimateSize(o)))),
             "auto" === t &&
                 bootLog(`Autosave WRITE → slot "${e}" (${o.meta.bytes} bytes)`, gameStateSummary());
         if (
@@ -295,7 +319,7 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
                     : `✅ Game saved: ${e}`),
                 showNotification(t);
         }
-        return (saveInProgress = !1), o;
+        return (saveInProgress = !1), noteSaveFinished(e, o.meta.bytes), o;
     } catch (a) {
         if (
             (console.error(`[SaveManager] Error saving to slot ${e}:`, a),
@@ -336,13 +360,13 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
                         "success"
                     );
                 }
-                return (saveInProgress = !1), r;
+                return (saveInProgress = !1), noteSaveFinished(e, 0), r;
             } catch (e) {
                 console.error("[SaveManager] Retry failed:", e),
                     n && showNotification("❌ Save failed even after recovery!", "error");
             }
         } else n && showNotification("❌ Failed to save game!", "error");
-        throw ((saveInProgress = !1), a);
+        throw ((saveInProgress = !1), noteSaveFinished(e, 0), a);
     }
 }
 async function loadGameFromSlot(e) {
@@ -3423,8 +3447,9 @@ function setupAutosave() {
                 (gameState.autosaveTracking.lastSnapshotPlayTime = 0),
             (autosaveIntervalId = setInterval(async () => {
                 const e = gameState.autosaveTracking || (gameState.autosaveTracking = { lastSnapshotPlayTime: 0, snapshots: [] });
-                // Keep the live "autosave" slot fresh every tick (boot-load target).
-                await saveGameToSlot("autosave", "auto", !1);
+                // Keep the live "autosave" slot fresh every tick (boot-load target) — unless the last save
+                // was slow and is still recovering (see autosaveDue).
+                autosaveDue() && (await saveGameToSlot("autosave", "auto", !1));
                 // Take a curated snapshot every SNAPSHOT_BASE_MS of *gameplay* time.
                 // Gating on totalPlayTime means snapshots pause when the tab is hidden.
                 const t = gameState.totalPlayTime || 0;
