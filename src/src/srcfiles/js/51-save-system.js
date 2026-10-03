@@ -144,6 +144,8 @@ let saveInProgress = !1,
     lastSaveTime = 0,
     saveStartedAt = 0,
     lastSaveDurationMs = 0,
+    lastSaveParts = null,
+    saveT0 = 0,
     saveRerunWanted = !1,
     saveRerunTimer = null,
     autosaveBytes = 0,
@@ -166,7 +168,7 @@ function scheduleSaveRerun(delay) {
 function noteSaveFinished(slot, bytes) {
     const ms = Date.now() - saveStartedAt;
     (lastSaveDurationMs = ms),
-        window.PerfProbe && window.PerfProbe.noteSave(slot, ms, bytes),
+        window.PerfProbe && window.PerfProbe.noteSave(slot, ms, bytes, lastSaveParts),
         ms > SLOW_SAVE_MS && console.warn(`[SaveManager] ⏱ Slow save: ${ms} ms${bytes ? ` (${Math.round(bytes / 1024)} KB)` : ""} → slot "${slot}"`),
         saveRerunWanted && ((saveRerunWanted = !1), scheduleSaveRerun(Math.max(1e3, 2 * ms)));
 }
@@ -201,7 +203,7 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
     }
     if ("auto" === t && a - lastSaveTime < MIN_SAVE_INTERVAL)
         return scheduleSaveRerun(MIN_SAVE_INTERVAL - (a - lastSaveTime) + 50), null;
-    (saveInProgress = !0), (lastSaveTime = a), (saveStartedAt = a);
+    (saveInProgress = !0), (lastSaveTime = a), (saveStartedAt = a), (saveT0 = performance.now()), (lastSaveParts = null);
     try {
         const a = gameState.totalPlayTime || 0,
             o = {
@@ -287,11 +289,13 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
         }
         // Images go to the shared image store (54-image-store.js); the save keeps a short
         // reference to each. Nothing awaits between this and the kv write below.
+        const tPre = performance.now();
         try {
             o.gameState = await externalizeImagesForSave(o.gameState);
         } catch (e) {
             console.warn("[ImageStore] Couldn't store images separately — saving them inline:", e);
         }
+        const tExt = performance.now();
         // Stamp the serialized size for the manifest + size logging. Measuring means serializing the whole
         // save a second time, so the live autosave slot (written every 5 s) re-measures only every 12th write.
         (o.meta.bytes =
@@ -300,8 +304,11 @@ async function saveGameToSlot(e, t = "manual", n = !0) {
                 : ((autosavesSinceSizeCheck = 0), (autosaveBytes = estimateSize(o)))),
             "auto" === t &&
                 bootLog(`Autosave WRITE → slot "${e}" (${o.meta.bytes} bytes)`, gameStateSummary());
+        const tSize = performance.now();
         if (
             (await kv.gameSave.set(`fuoc_save_${e}`, o),
+            // Where the time went, for the performance report (Settings → Logging).
+            (lastSaveParts = { pre: Math.round(tPre - saveT0), ext: Math.round(tExt - tPre), size: Math.round(tSize - tExt), set: Math.round(performance.now() - tSize) }),
             i.length > 0 &&
                 i.forEach(({ id: e, url: t }) => {
                     const n = gameState.socialNetwork?.posts?.find((t) => t.id === e);
