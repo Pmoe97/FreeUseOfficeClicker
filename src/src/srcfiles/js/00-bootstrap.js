@@ -453,19 +453,24 @@ window.renderLoggingSettings = function () {
         `<textarea id="logMirrorCopyArea" readonly style="position:absolute;left:-9999px;top:-9999px;opacity:0" aria-hidden="true"></textarea>` +
         `</div>`;
 
-    // Performance report card (see 57-perf-probe.js): measures 10 s of play, then gives a copy-paste summary
-    // (split into parts that each fit one Discord message).
+    // Performance report card (see 57-perf-probe.js): measures 10 s of play, then offers the report as a
+    // .txt file (full detail) or as short pasteable text split to fit one chat message.
     const perfParts = (window.PerfProbe && window.PerfProbe.lastParts) || [],
-        perfText = perfParts.join("\n\n");
+        perfFull = (window.PerfProbe && window.PerfProbe.lastReport) || "";
     html +=
         `<div style="${cardCss}">` +
         `<h3 style="margin:0 0 6px 0;color:var(--accent)">📱 Performance Report</h3>` +
-        `<p style="color:var(--text-dim);font-size:.82rem;margin:0 0 10px 0">If the game is slow, freezes or makes your device hot: tap Measure. This menu closes for 10 seconds so you can play (do whatever makes it lag, like switching away and back), then it comes back with a report to copy and send to the developer. It holds timings and counts only. No save data. The game runs a little slower while measuring.</p>` +
+        `<p style="color:var(--text-dim);font-size:.82rem;margin:0 0 10px 0">If the game is slow, freezes or makes your device hot: tap Measure. This menu closes for 10 seconds so you can play (do whatever makes it lag, like switching away and back), then it comes back with a report. Save it as a file and send that to the developer. It holds timings and counts only. No save data. The game runs a little slower while measuring.</p>` +
         `<div style="display:flex;gap:8px;flex-wrap:wrap">` +
         `<button id="perfReportRun" style="${btnCss("#2e7d52")}">▶ Measure 10 seconds</button>` +
-        perfParts.map((_, i) => `<button class="perfReportCopy" data-part="${i}" style="${btnCss("#3a5a9a")}">📋 Copy${perfParts.length > 1 ? " part " + (i + 1) + "/" + perfParts.length : " report"}</button>`).join("") +
+        (perfFull ? `<button id="perfReportFile" style="${btnCss("#b8741a")}">📤 Share / save .txt</button>` : "") +
         `</div>` +
-        `<textarea id="perfReportOut" readonly style="display:${perfText ? "block" : "none"};width:100%;height:220px;margin-top:10px;background:var(--l-bg-black);color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;box-sizing:border-box">${esc(perfText)}</textarea>` +
+        (perfFull
+            ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><span style="color:var(--text-dim);font-size:.78rem">Or paste a short version:</span>` +
+              perfParts.map((_, i) => `<button class="perfReportCopy" data-part="${i}" style="${btnCss("#3a5a9a")}">📋 Copy${perfParts.length > 1 ? " part " + (i + 1) + "/" + perfParts.length : " short report"}</button>`).join("") +
+              `</div>`
+            : "") +
+        `<textarea id="perfReportOut" readonly style="display:${perfFull ? "block" : "none"};width:100%;height:220px;margin-top:10px;background:var(--l-bg-black);color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;box-sizing:border-box">${esc(perfFull)}</textarea>` +
         `</div>`;
 
     // Header card: master + protected level switches.
@@ -621,6 +626,16 @@ window.renderLoggingSettings = function () {
 
     const perfRun = root.querySelector("#perfReportRun");
     perfRun && perfRun.addEventListener("click", () => window.PerfProbe && window.PerfProbe.runMeasurement(10));
+    const perfFile = root.querySelector("#perfReportFile");
+    perfFile &&
+        perfFile.addEventListener("click", async () => {
+            const P = window.PerfProbe,
+                name = P.fileName(),
+                how = await P.saveFile(P.lastReport, name);
+            typeof showNotification === "function" &&
+                how !== "cancelled" &&
+                showNotification(how === "shared" ? "📤 Report shared" : "💾 Report saved to your downloads (" + name + ")", "success");
+        });
     root.querySelectorAll(".perfReportCopy").forEach((btn) =>
         btn.addEventListener("click", async () => {
             const parts = (window.PerfProbe && window.PerfProbe.lastParts) || [],

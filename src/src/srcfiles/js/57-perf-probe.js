@@ -114,8 +114,8 @@ window.PerfProbe = (function () {
         prof = { stats, slow, installed };
         const rec = (name, ms, self, depth) => {
             let s = stats.get(name);
-            s || stats.set(name, (s = { n: 0, self: 0, max: 0 }));
-            s.n++, (s.self += self), ms > s.max && (s.max = ms);
+            s || stats.set(name, (s = { n: 0, self: 0, total: 0, max: 0 }));
+            s.n++, (s.self += self), (s.total += ms), ms > s.max && (s.max = ms);
             ms >= 150 && slow.length < 200 && slow.push({ at: Date.now(), name, ms: Math.round(ms), self: Math.round(self), depth });
         };
         const wrap = (name, f) => {
@@ -172,7 +172,7 @@ window.PerfProbe = (function () {
         p.installed.forEach(([host, key, f, w]) => host[key] === w && (host[key] = f));
         return {
             wrapped: p.count,
-            top: [...p.stats].sort((a, b) => b[1].self - a[1].self).slice(0, 8).map(([name, s]) => ({ name, self: Math.round(s.self), n: s.n, max: Math.round(s.max) })),
+            top: [...p.stats].sort((a, b) => b[1].self - a[1].self).slice(0, 25).map(([name, s]) => ({ name, self: Math.round(s.self), total: Math.round(s.total), n: s.n, max: Math.round(s.max) })),
             slow: p.slow,
         };
     }
@@ -262,11 +262,15 @@ window.PerfProbe = (function () {
     }
     P.chunk = chunk;
 
+    // Builds two versions of the same report: `compact` (short enough to paste into a chat message) and
+    // `full` (everything, for saving as a .txt file). Both start with the same measured window.
     P.report = async function (ms = 10000, onTick, profile = true) {
         const g = gs(),
             time = (t) => new Date(t).toTimeString().slice(0, 8),
-            L = [],
-            add = (s) => L.push(s);
+            C = [],
+            F = [],
+            add = (s, f) => (C.push(s), F.push(f === undefined ? s : f)),
+            only = (s) => F.push(s);
         const w = await measureWindow(ms, onTick, profile);
         let imgs = { n: "?", mb: "?" };
         try {
@@ -277,8 +281,21 @@ window.PerfProbe = (function () {
             ver = [...document.scripts].map((s) => s.src.split("/").pop()).filter((n) => /^(01|02|25|51|57)-/.test(n)).map((n) => n.slice(0, 2) + ":" + (n.split("?v=")[1] || "?")).join(" ");
         add(`FUOC perf ${new Date().toLocaleDateString(undefined, { month: "numeric", day: "numeric" })} ${time(Date.now()).slice(0, 5)} | build ${ver || "inline"}`);
         add(`${shortUA()} · ${screen.width}x${screen.height}@${window.devicePixelRatio}x · ${navigator.hardwareConcurrency || "?"} cores · ${navigator.deviceMemory || "?"} GB`);
+        only(`User agent: ${navigator.userAgent}`);
         add(`tab ${tabName()} · up ${Math.round((Date.now() - P.start) / 1000)}s · employees ${g.employees?.length ?? "?"}`);
         add(`Mem heap ${w.heapStart ?? "n/a"}→${w.heapEnd ?? "n/a"} MB · DOM ${w.domStart}→${w.domEnd} · img on page ${document.images.length} (~${decodedMB} MB decoded) · img in state ${imgs.n} (${imgs.mb} MB)`);
+        // Storage: how full the browser's quota is, and what the game keeps in it.
+        let storage = "n/a",
+            kvInfo = "n/a";
+        try {
+            const e = await navigator.storage.estimate();
+            storage = `${Math.round(e.usage / 1048576)} of ${Math.round(e.quota / 1048576)} MB`;
+        } catch (e) {}
+        try {
+            const keys = (await kv.gameSave.keys()) || [];
+            kvInfo = `${keys.filter((k) => k.startsWith("fuoc_save_")).length} save slots, ${keys.filter((k) => k.startsWith("fuoc_img_")).length} stored images`;
+        } catch (e) {}
+        add(`Storage: browser ${storage} · ${kvInfo}`);
         const wl = w.long.reduce((a, x) => a + x.ms, 0),
             wlMax = w.long.reduce((a, x) => Math.max(a, x.ms), 0);
         add(
@@ -288,27 +305,87 @@ window.PerfProbe = (function () {
         );
         add(`  stalls ${P.longTaskApi ? `${w.long.length} (max ${wlMax}ms, ${wl}ms total)` : "n/a"} · lag max ${w.lagWorst}ms (${w.lagOver100} ticks>100ms) · DOM chg ${Math.round(w.muts / w.secs)}/s · saves ${w.saves.length}${w.saves.length ? ` (max ${Math.max(...w.saves.map((x) => x.ms))}ms)` : ""} · hidden ${w.hidden ? "yes" : "no"}`);
         if (w.prof) {
-            add(`Profile (${w.prof.wrapped} fns) top self ms/calls/max:`);
-            add("  " + (w.prof.top.map((t) => `${t.name} ${t.self}/${t.n}/${t.max}`).join("; ") || "none"));
-            const slow = w.prof.slow.slice(-12);
-            add(`Slow calls >=150ms (inner first${w.prof.slow.length > 12 ? `, last 12 of ${w.prof.slow.length}` : ""}):`);
-            add("  " + (slow.map((s) => `${s.name} ${s.ms}ms (self ${s.self}, d${s.depth})`).join("; ") || "none"));
+            const p = w.prof,
+                line = (t) => `${t.name} ${t.self}/${t.n}/${t.max}`;
+            add(`Profile (${p.wrapped} fns) top self ms/calls/max:`, `Profile (${p.wrapped} functions timed). Top by SELF time (self ms / total ms incl. callees / calls / slowest call ms):`);
+            add("  " + (p.top.slice(0, 8).map(line).join("; ") || "none"), p.top.map((t) => `  ${t.name}: ${t.self} / ${t.total} / ${t.n} / ${t.max}`).join("\n") || "  none");
+            const slow = p.slow.slice(-12);
+            add(
+                `Slow calls >=150ms (inner first${p.slow.length > 12 ? `, last 12 of ${p.slow.length}` : ""}):`,
+                `Slow calls >=150 ms, in order they finished (inner calls first; d = call depth) — ${p.slow.length}:`
+            );
+            add("  " + (slow.map((x) => `${x.name} ${x.ms}ms (self ${x.self}, d${x.depth})`).join("; ") || "none"), p.slow.map((x) => `  ${time(x.at)} ${x.name} ${x.ms} ms (self ${x.self}, d${x.depth})`).join("\n") || "  none");
         }
         const lastDur = typeof lastSaveDurationMs !== "undefined" ? lastSaveDurationMs : "n/a";
         add(`Saves ${P.saveCount}: avg ${P.saveCount ? Math.round(P.saveTotalMs / P.saveCount) : 0}ms, max ${P.saveMaxMs}ms, last ${lastDur}ms`);
-        P.saves.slice(-5).forEach((s) => add(`  ${time(s.at)} ${s.ms}ms${s.kb ? ` ${s.kb}KB` : ""}${s.parts ? ` (pre ${s.parts.pre}/img ${s.parts.ext}/size ${s.parts.size}/kv ${s.parts.set})` : ""}`));
-        add(`Stalls (session) ${P.longTaskApi ? `${P.long.length}: ` + (P.long.slice(-6).map((x) => `${time(x.at)} ${x.ms}ms ${x.tab}`).join("; ") || "none") : "n/a"}`);
+        const saveLine = (x) => `  ${time(x.at)} ${x.slot} ${x.ms}ms${x.kb ? ` ${x.kb}KB` : ""}${x.parts ? ` (pre ${x.parts.pre}/img ${x.parts.ext}/size ${x.parts.size}/kv ${x.parts.set})` : ""}`;
+        C.push(...P.saves.slice(-5).map(saveLine));
+        F.push(...P.saves.map(saveLine));
+        const stallLine = (x) => `${time(x.at)} ${x.ms}ms ${x.tab}${x.sinceReturnS === null ? "" : ` (${x.sinceReturnS}s after return)`}`;
+        add(`Stalls (session) ${P.longTaskApi ? `${P.long.length}: ` + (P.long.slice(-6).map(stallLine).join("; ") || "none") : "n/a"}`, `Main-thread stalls >=50 ms this session: ${P.longTaskApi ? P.long.length : "not supported by this browser"}${P.long.length ? "\n" + P.long.map((x) => "  " + stallLine(x)).join("\n") : ""}`);
         add(`Timer lag max ${P.lagWorst}ms (${P.lagWorstAfterReturn}ms in 30s after last return)`);
-        add(`Tab switches: ${P.vis.length ? P.vis.slice(-6).map((v) => `${time(v.at)} ${v.ev}${v.awaySec !== undefined ? ` (away ${v.awaySec}s)` : ""}`).join(" | ") : "none"}`);
-        P.afterReturn.slice(-2).forEach((s) => add(`  after return ${s.label}: DOM ${s.dom}, heap ${s.heapMB ?? "n/a"}MB, stalls ${s.longTasksSoFar}, lag ${s.lagWorstMs}ms`));
+        add(
+            `Tab switches: ${P.vis.length ? P.vis.slice(-6).map((v) => `${time(v.at)} ${v.ev}${v.awaySec !== undefined ? ` (away ${v.awaySec}s)` : ""}`).join(" | ") : "none"}`,
+            `Tab switches: ${P.vis.length ? "\n" + P.vis.map((v) => `  ${time(v.at)} ${v.ev}${v.awaySec !== undefined ? ` (away ${v.awaySec}s)` : ""}`).join("\n") : "none"}`
+        );
+        const retLine = (x) => `  after return ${x.label}: DOM ${x.dom}, heap ${x.heapMB ?? "n/a"}MB, animations ${x.anims}, queues ${x.textQ}/${x.imageQ}, stalls ${x.longTasksSoFar}, lag ${x.lagWorstMs}ms`;
+        C.push(...P.afterReturn.slice(-2).map(retLine));
+        F.push(...P.afterReturn.map(retLine));
         const qs = (n) => {
             const s = queueStats(n);
             return s ? `${s.active}/${s.queued}` : "n/a";
         };
         add(`AI queues text ${qs("AIRequestQueue")} image ${qs("ImageRequestQueue")} (active/queued)`);
-        const bad = (window.__logMirror || []).filter((e) => (e.level === "warn" || e.level === "error") && !/\[Perf\]|Slow save/.test(e.text)).slice(-4);
-        bad.length && add(`Warn/err: ` + bad.map((e) => `${time(e.t)} ${String(e.text).replace(/\s+/g, " ").slice(0, 90)}`).join(" | "));
-        return L.join("\n");
+        // What the save is made of (images counted as the short references a save actually holds).
+        try {
+            const t0 = performance.now();
+            await loadImageIndex();
+            const walked = externalizeWalk(g).result,
+                size = (v) => {
+                    try {
+                        return JSON.stringify(v)?.length || 0;
+                    } catch (e) {
+                        return 0;
+                    }
+                },
+                rows = Object.keys(walked).map((k) => [k, size(walked[k])]).sort((a, b) => b[1] - a[1]),
+                kb = (n) => Math.round(n / 1024),
+                took = Math.round(performance.now() - t0);
+            add(`Save parts KB: ${rows.slice(0, 5).map(([k, n]) => k + " " + kb(n)).join("; ")}`, `Save composition, KB (largest first; ${took} ms to measure):\n${rows.slice(0, 15).map(([k, n]) => `  ${k}: ${kb(n)}`).join("\n")}`);
+            const emps = (walked.employees || []).map((e) => [e.name || "?", size(e)]).sort((a, b) => b[1] - a[1]).slice(0, 8);
+            emps.length && only(`Largest employees, KB: ${emps.map(([n, v]) => n + " " + kb(v)).join("; ")}`);
+        } catch (e) {
+            only("Save composition: couldn't measure (" + e.message + ")");
+        }
+        const mirror = (window.__logMirror || []).filter((e) => (e.level === "warn" || e.level === "error") && !/\[Perf\]|Slow save/.test(e.text)),
+            bad = mirror.slice(-4);
+        bad.length && C.push("Warn/err: " + bad.map((e) => `${time(e.t)} ${String(e.text).replace(/\s+/g, " ").slice(0, 90)}`).join(" | "));
+        mirror.length && F.push(`Recent warnings/errors (${Math.min(mirror.length, 40)} of ${mirror.length} in the log):\n` + mirror.slice(-40).map((e) => `  ${time(e.t)} [${e.level}] ${String(e.text).replace(/\s+/g, " ").slice(0, 220)}`).join("\n"));
+        return { compact: C.join("\n"), full: F.join("\n") };
+    };
+
+    // Hands the report to the player as a file: the phone's share sheet when there is one (straight
+    // to Discord, say), otherwise a normal download.
+    P.saveFile = async function (text, name) {
+        const file = new File([text], name, { type: "text/plain" });
+        try {
+            if (/Mobi|Android|iPhone|iPad/.test(navigator.userAgent) && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: name });
+                return "shared";
+            }
+        } catch (e) {
+            if (e && e.name === "AbortError") return "cancelled";
+        }
+        const url = URL.createObjectURL(file),
+            a = document.createElement("a");
+        (a.href = url), (a.download = name), (a.style.display = "none"), document.body.appendChild(a), a.click();
+        setTimeout(() => (a.remove(), URL.revokeObjectURL(url)), 10000);
+        return "downloaded";
+    };
+    P.fileName = () => {
+        const d = new Date(),
+            p = (n) => String(n).padStart(2, "0");
+        return `fuoc-perf-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.txt`;
     };
 
     // The button's flow: close Settings so the player can play, count down in a small banner,
@@ -327,17 +404,17 @@ window.PerfProbe = (function () {
         const show = (n) => (banner.textContent = `📊 Measuring… play normally (${n} s)`);
         show(seconds);
         try {
-            P.lastReport = await P.report(seconds * 1000, show);
+            const r = await P.report(seconds * 1000, show);
+            (P.lastReport = r.full), (P.lastParts = chunk(r.compact));
         } catch (e) {
-            P.lastReport = "Couldn't build the report: " + e.message;
+            (P.lastReport = "Couldn't build the report: " + e.message), (P.lastParts = [P.lastReport]);
         }
-        P.lastParts = chunk(P.lastReport);
         banner.remove();
         P.measuring = !1;
         modal && (modal.style.display = "flex");
         const tab = document.querySelector('.settings-tab-btn[data-settings-tab="logging"]');
         tab && tab.click();
-        typeof showNotification === "function" && showNotification(`📊 Measurement done — tap Copy${P.lastParts.length > 1 ? " (" + P.lastParts.length + " parts)" : ""}`, "success");
+        typeof showNotification === "function" && showNotification("📊 Measurement done — tap Share / save .txt", "success");
     };
 
     // Clipboard, with the old textarea route for browsers that refuse the modern one.
